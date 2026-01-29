@@ -56,6 +56,9 @@ get_awen <- function(df, cohort) {
 
 # -----------------------------------------------------------------------------
 # YASSO07 MAPPING (expects annual output with 3 litter types)
+# 
+# USED ALSO FOR YASSO15!
+#
 # -----------------------------------------------------------------------------
 
 #' Map unified input to Yasso07 format

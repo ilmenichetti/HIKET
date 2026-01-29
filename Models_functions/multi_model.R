@@ -1,14 +1,14 @@
 # =============================================================================
-# UNIFIED SOC MODEL COMPARISON WRAPPER (extended: Yasso07/Yasso15/Yasso20/RothC/Q)
+# UNIFIED SOC MODEL COMPARISON WRAPPER 
 # =============================================================================
 
-source("./Models_functions/Input_matching_functions.R")
-source("./Models_functions/Yasso07.R")
-source("./Models_functions/Yasso15.R")
-source("./Models_functions/Yasso20.R")
-source("./Models_functions/RothC.R")
-source("./Models_functions/Q_transient_T.R")
-source("./Models_functions/Q_transient_T_hybrid.R")
+source("./Models_functions/Input_matching_functions.R") # load the input matching functins to unify the input flow
+source("./Models_functions/Yasso07.R") # load Yasso07 model functions
+source("./Models_functions/Yasso15.R") # load Yasso15 model functions
+source("./Models_functions/Yasso20.R") # load Yasso20 model functions
+source("./Models_functions/RothC.R") # load RothC model functions
+source("./Models_functions/Q_transient_T.R") # load Q-model functions
+source("./Models_functions/Q_transient_T_hybrid.R") # load the wrapper with the hybrid initialization approach for Q-model
 
 if(!require(Matrix)) install.packages("Matrix")
 library(Matrix)
@@ -164,14 +164,17 @@ run_soc_models <- function(input_df,
 }
 
 # -----------------------------------------------------------------------------
-# HELPERS
+# HELPERS (they aggregate monthly models to annual, currently just RothC)
 # -----------------------------------------------------------------------------
 
+# aggregate based on mean
+# accessible via an option when running the wrapper,  rothc_annual_stat = c("eoy", "mean")
 aggregate_monthly_to_annual_mean <- function(monthly_soc, years) {
   unique_years <- unique(years)
   sapply(unique_years, function(y) mean(monthly_soc[years == y], na.rm = TRUE))
 }
 
+# aggregate based on end-of-year (December), default
 aggregate_monthly_to_annual_eoy <- function(monthly_soc, years, months) {
   unique_years <- unique(years)
   sapply(unique_years, function(y) {

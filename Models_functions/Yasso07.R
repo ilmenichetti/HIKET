@@ -82,15 +82,38 @@ yasso07_annual_step <- function(pools, input_awen, params, temp_mean, temp_amp, 
 }
 
 # Steady state for one litter type
-yasso07_steady_state <- function(params, input_awen, temp_mean, temp_amp, precip, diameter = NULL, n_years = 5000) {
-  pools <- c(1, 1, 1, 1, 10)
+# yasso07_steady_state <- function(params, input_awen, temp_mean, temp_amp, precip, diameter = NULL, n_years = 5000) {
+#   pools <- c(1, 1, 1, 1, 10)
+#   
+#   for(i in 1:n_years) {
+#     result <- yasso07_annual_step(pools, input_awen, params, temp_mean, temp_amp, precip, diameter)
+#     pools <- result$pools
+#   }
+#   pools
+# }
+
+# Steady state for one litter type (ANALYTICAL, no fallback)
+yasso07_steady_state <- function(params, input_awen, temp_mean, temp_amp, precip,
+                                 diameter = NULL, n_years = 5000) {
   
-  for(i in 1:n_years) {
-    result <- yasso07_annual_step(pools, input_awen, params, temp_mean, temp_amp, precip, diameter)
-    pools <- result$pools
-  }
-  pools
+  # Climate modifiers
+  temp_mod <- yasso07_temp_mod(temp_mean, temp_amp, params$beta1, params$beta2)
+  precip_mod <- yasso07_precip_mod(precip, params$gamma)
+  size_mod <- yasso07_size_mod(diameter, params$delta1, params$delta2, params$r)
+  
+  # Build coefficient matrix A
+  A <- yasso07_build_matrix(params, temp_mod, precip_mod, size_mod)
+  
+  # Inputs (AWEN + no direct H input)
+  b <- c(input_awen, 0)
+  
+  # Analytical steady state: A x + b = 0  =>  x = -A^{-1} b
+  xt <- as.vector(-solve(A, b))
+  
+  pmax(0, xt)
 }
+
+
 
 # Main run function - handles 3 litter types
 #' @param params Model parameters
