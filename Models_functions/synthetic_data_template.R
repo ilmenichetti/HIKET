@@ -110,7 +110,7 @@ cat(sprintf("Time span: %d-%d\n", min(input_data$year), max(input_data$year)))
 results <- run_soc_models(
   input_df = input_data,
   site_row = site_data,
-  models = c("yasso07", "rothc", "q_model"),
+  models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
   spinup_years = 200  # Shorter spinup for demonstration
 )
 
@@ -126,52 +126,155 @@ print(head(results$summary, 10))
 cat("\n")
 print(tail(results$summary, 10))
 
-# Calculate statistics
-stats <- calculate_model_stats(results)
-print(stats)
-
-# =============================================================================
-# STEP 4: Visualize Results
-# =============================================================================
-plot_model_comparison(results)
 
 
 # =============================================================================
-# ADDITIONAL ANALYSES
+# ADDITIONAL ANALYSES (ALL MODELS + 2 FIGURES)
 # =============================================================================
 
+# ---- Helper: annual input (Mg C/ha/yr) for each model ----
+get_annual_input <- function(model_name, input_data, site_data) {
+  
+  if (model_name %in% c("yasso07", "yasso15")) {
+    mapped <- map_input_to_yasso07(input_data)
+    return(mean(mapped$C_nwl + mapped$C_fwl + mapped$C_cwl, na.rm = TRUE))
+  }
+  
+  if (model_name == "yasso20") {
+    mapped <- map_input_to_yasso20(input_data)  # strict monthly forcing required
+    nwl <- mapped$nwl_A + mapped$nwl_W + mapped$nwl_E + mapped$nwl_N
+    fwl <- mapped$fwl_A + mapped$fwl_W + mapped$fwl_E + mapped$fwl_N
+    cwl <- mapped$cwl_A + mapped$cwl_W + mapped$cwl_E + mapped$cwl_N
+    return(mean(nwl + fwl + cwl, na.rm = TRUE))
+  }
+  
+  if (model_name == "q_model") {
+    mapped <- map_input_to_q_model(input_data)
+    return(mean(mapped$C_needles + mapped$C_branches + mapped$C_stems +
+                  mapped$C_fine_roots + mapped$C_understorey, na.rm = TRUE))
+  }
+  
+  if (model_name == "rothc") {
+    mapped <- map_input_to_rothc(input_data, site_data)
+    annual <- aggregate(mapped$C_DPM + mapped$C_RPM, by = list(year = mapped$year), FUN = sum)
+    return(mean(annual$x, na.rm = TRUE))
+  }
+  
+  stop(sprintf("Unknown model for annual input: %s", model_name))
+}
 
-# Turnover times
-for(model_name in c("yasso07", "rothc", "q_model")) {
-  if(model_name %in% names(results$summary)) {
-    avg_soc <- mean(results$summary[[model_name]])
-    
-    # Get annual input
-    if(model_name == "yasso07") {
-      mapped <- map_input_to_yasso07(input_data)
-      annual_input <- mean(mapped$C_nwl + mapped$C_fwl + mapped$C_cwl)
-    } else if(model_name == "q_model") {
-      mapped <- map_input_to_q_model(input_data)
-      annual_input <- mean(mapped$C_needles + mapped$C_branches + mapped$C_stems + 
-                             mapped$C_fine_roots + mapped$C_understorey)
-    } else {
-      mapped <- map_input_to_rothc(input_data, site_data)
-      annual_input <- mean(aggregate(mapped$C_DPM + mapped$C_RPM, 
-                                     by=list(mapped$year), FUN=sum)$x)
-    }
-    
-    turnover <- avg_soc / annual_input
-    cat(sprintf("  %s: %.1f years\n", model_name, turnover))
+# ---- 1) Turnover times for ALL models in the summary ----
+model_cols <- setdiff(names(results$summary), "year")
+
+turnover_df <- data.frame(
+  model = model_cols,
+  mean_soc = NA_real_,
+  annual_input = NA_real_,
+  turnover_years = NA_real_
+)
+
+for (m in model_cols) {
+  avg_soc <- mean(results$summary[[m]], na.rm = TRUE)
+  ann_in <- get_annual_input(m, input_data, site_data)
+  
+  turnover_df[turnover_df$model == m, "mean_soc"] <- avg_soc
+  turnover_df[turnover_df$model == m, "annual_input"] <- ann_in
+  turnover_df[turnover_df$model == m, "turnover_years"] <- avg_soc / ann_in
+}
+
+cat("\nTurnover times (mean SOC / mean annual input):\n")
+print(turnover_df)
+
+# ---- 2) Divergence across models per year ----
+soc_divergence <- apply(results$summary[, model_cols, drop = FALSE], 1, function(x) {
+  (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)) / mean(x, na.rm = TRUE) * 100
+})
+cat(sprintf("\nModel divergence across years (range/mean):\n  Mean: %.1f%%\n  Range: %.1f%% - %.1f%%\n",
+            mean(soc_divergence, na.rm = TRUE),
+            min(soc_divergence, na.rm = TRUE),
+            max(soc_divergence, na.rm = TRUE)))
+
+# =============================================================================
+# FIGURE 1: SOC time series comparison (all models)
+# =============================================================================
+
+png("./Figures/syntetic_data_soc_model_comparison_C_timeseries.png", width = 800, height = 600)
+
+years <- results$summary$year
+
+ylim_all <- range(results$summary[, model_cols, drop = FALSE], na.rm = TRUE)
+
+plot(years, results$summary[[model_cols[1]]],
+     type = "l", lwd = 2,
+     xlab = "Year", ylab = "SOC (Mg C/ha)",
+     ylim = ylim_all,
+     main = "SOC model comparison (annual)")
+
+if (length(model_cols) > 1) {
+  for (i in 2:length(model_cols)) {
+    lines(years, results$summary[[model_cols[i]]], lwd = 2, lty = i)
   }
 }
 
-# Model divergence
-soc_range <- apply(results$summary[, -1], 1, function(x) {
-  (max(x) - min(x)) / mean(x) * 100
-})
-cat(sprintf("  Mean CV across years: %.1f%%\n", mean(soc_range)))
-cat(sprintf("  Range: %.1f%% - %.1f%%\n", min(soc_range), max(soc_range)))
+legend("topleft",
+       legend = model_cols,
+       lty = seq_along(model_cols),
+       lwd = 2,
+       bty = "n")
 
+dev.off()
+
+
+# =============================================================================
+# SET OF FIGUREs 2: Pairwise scatter vs a reference model (all models vs ref)
+# =============================================================================
+
+model_cols <- setdiff(names(results$summary), "year")
+
+# Choose which models to cycle as references
+ref_models <- c("yasso07", "yasso15", "yasso20", "rothc")
+ref_models <- ref_models[ref_models %in% model_cols]
+
+for (ref_model in ref_models) {
+  
+  # One PNG per reference model
+  fn <- sprintf("./Figures/synthetic_data_soc_scatter_ref_%s.png", ref_model)
+  png(fn, width = 1200, height = 800)
+  
+  others <- setdiff(model_cols, ref_model)
+  x <- results$summary[[ref_model]]
+  
+  op <- par(mfrow = c(2, 2), mar = c(4, 4, 2.5, 1))
+  
+  for (m in head(others, 4)) {
+    
+    y <- results$summary[[m]]
+    ok <- is.finite(x) & is.finite(y)
+    
+    plot(x[ok], y[ok],
+         xlab = paste(ref_model, "SOC"),
+         ylab = paste(m, "SOC"),
+         main = paste(m, "vs", ref_model))
+    
+    abline(0, 1, lty = 2)
+    
+    rmse <- sqrt(mean((y[ok] - x[ok])^2))
+    bias <- mean(y[ok] - x[ok])
+    corv <- suppressWarnings(cor(x[ok], y[ok]))
+    
+    mtext(sprintf("r = %.2f   RMSE = %.2f   bias = %.2f",
+                  corv, rmse, bias),
+          side = 3, line = -1.2, cex = 0.8)
+  }
+  
+  mtext(paste("SOC comparison – reference:", ref_model),
+        outer = TRUE, line = -1, cex = 1.2)
+  
+  par(op)
+  dev.off()
+  
+  cat("Saved:", fn, "\n")
+}
 
 # =============================================================================
 # WRITE THE TEMPLATE WITH THE INPUT DATA
