@@ -11,7 +11,7 @@
 
 <meta name="author" content="Lorenzo Menichetti" />
 
-<meta name="date" content="2026-01-28" />
+<meta name="date" content="2026-01-29" />
 
 <title>Yasso</title>
 
@@ -1372,6 +1372,230 @@ window.initializeCodeFolding = function(show) {
 
 }
 </script>
+<script>$(document).ready(function(){
+    if (typeof $('[data-toggle="tooltip"]').tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    if ($('[data-toggle="popover"]').popover === 'function') {
+        $('[data-toggle="popover"]').popover();
+    }
+});
+</script>
+<style type="text/css">
+.lightable-minimal {
+border-collapse: separate;
+border-spacing: 16px 1px;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-minimal td {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal th {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal thead tr:last-child th {
+border-bottom: 2px solid #00000050;
+empty-cells: hide;
+}
+.lightable-minimal tbody tr:first-child td {
+padding-top: 0.5em;
+}
+.lightable-minimal.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-minimal.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic {
+border-top: 0.16em solid #111111;
+border-bottom: 0.16em solid #111111;
+width: 100%;
+margin-bottom: 10px;
+margin: 10px 5px;
+}
+.lightable-classic tfoot tr td {
+border: 0;
+}
+.lightable-classic tfoot tr:first-child td {
+border-top: 0.14em solid #111111;
+}
+.lightable-classic caption {
+color: #222222;
+}
+.lightable-classic td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic thead tr:last-child th {
+border-bottom: 0.10em solid #111111;
+}
+.lightable-classic.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic-2 {
+border-top: 3px double #111111;
+border-bottom: 3px double #111111;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-classic-2 tfoot tr td {
+border: 0;
+}
+.lightable-classic-2 tfoot tr:first-child td {
+border-top: 3px double #111111;
+}
+.lightable-classic-2 caption {
+color: #222222;
+}
+.lightable-classic-2 td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic-2 th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic-2 tbody tr:last-child td {
+border-bottom: 3px double #111111;
+}
+.lightable-classic-2 thead tr:last-child th {
+border-bottom: 1px solid #111111;
+}
+.lightable-classic-2.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic-2.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #EEE;
+border-collapse: collapse;
+margin-bottom: 10px;
+}
+.lightable-material tfoot tr td {
+border: 0;
+}
+.lightable-material tfoot tr:first-child td {
+border-top: 1px solid #EEE;
+}
+.lightable-material th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+}
+.lightable-material td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+border-top: 1px solid #eeeeee;
+}
+.lightable-material.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #ddd;
+}
+.lightable-material-dark {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #FFFFFF12;
+border-collapse: collapse;
+margin-bottom: 10px;
+background-color: #363640;
+}
+.lightable-material-dark tfoot tr td {
+border: 0;
+}
+.lightable-material-dark tfoot tr:first-child td {
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF60;
+}
+.lightable-material-dark td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF;
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark.lightable-hover tbody tr:hover {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody tr:nth-child(even) {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material-dark.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #FFFFFF12;
+}
+.lightable-paper {
+width: 100%;
+margin-bottom: 10px;
+color: #444;
+}
+.lightable-paper tfoot tr td {
+border: 0;
+}
+.lightable-paper tfoot tr:first-child td {
+border-top: 1px solid #00000020;
+}
+.lightable-paper thead tr:last-child th {
+color: #666;
+vertical-align: bottom;
+border-bottom: 1px solid #00000020;
+line-height: 1.15em;
+padding: 10px 5px;
+}
+.lightable-paper td {
+vertical-align: middle;
+border-bottom: 1px solid #00000010;
+line-height: 1.15em;
+padding: 7px 5px;
+}
+.lightable-paper.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-paper.lightable-striped tbody tr:nth-child(even) {
+background-color: #00000008;
+}
+.lightable-paper.lightable-striped tbody td {
+border: 0;
+}
+</style>
 
 <style type="text/css">
 code{white-space: pre-wrap;}
@@ -1668,52 +1892,195 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Yasso</h1>
 <h4 class="author">Lorenzo Menichetti</h4>
-<h4 class="date">2026-01-28</h4>
+<h4 class="date">2026-01-29</h4>
 
 </div>
 
 
-<div id="yasso07-model-documentation" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Yasso07 Model
-Documentation</h1>
+<div id="yasso-model-family-documentation-yasso07-yasso15-yasso20" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Yasso model family
+documentation (Yasso07, Yasso15, Yasso20)</h1>
 <div id="overview" class="section level2" number="1.1">
 <h2><span class="header-section-number">1.1</span> Overview</h2>
-<p>Yasso07 is a chemical fractionation model for soil organic carbon
-decomposition based on the AWENH pool structure. It handles multiple
-litter types with different wood sizes and uses annual time steps.</p>
+<p>The <strong>Yasso</strong> family of soil organic carbon (SOC) models
+describes litter decomposition using a <strong>chemical
+fractionation</strong> approach based on the <strong>AWENH</strong> pool
+structure. All variants used here are <strong>linear compartment
+models</strong> with climate modifiers and (optionally) woody size
+effects, solved with a matrix exponential for annual time steps.</p>
+<p>This document describes: - <strong>Yasso07</strong>: classic AWENH
+model with annual mean temperature + amplitude and annual precipitation
+drivers. - <strong>Yasso15</strong>: updated parameterization and
+fraction-specific climate sensitivities (still annual drivers). -
+<strong>Yasso20</strong>: updated model that uses <strong>monthly
+temperature forcing</strong> (12-month vector) plus <strong>annual
+precipitation</strong>.</p>
+<hr />
+</div>
+<div id="comparison-table-quick-reference" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Comparison table
+(quick reference)</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>yasso_comp <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="sc">~</span>Model, <span class="sc">~</span>Pools, <span class="sc">~</span>Time_step, <span class="sc">~</span>Climate_forcing, <span class="sc">~</span>Precipitation_use, <span class="sc">~</span>Temp_use, <span class="sc">~</span>Woody_size, <span class="sc">~</span>Typical_initialization,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="st">&quot;Yasso07&quot;</span>, <span class="st">&quot;AWENH (5)&quot;</span>, <span class="st">&quot;Annual&quot;</span>, <span class="st">&quot;Annual mean T + amplitude; annual P&quot;</span>, <span class="st">&quot;Annual scalar&quot;</span>, <span class="st">&quot;4-point approx using mean+amplitude&quot;</span>, <span class="st">&quot;Yes (applied in implementation via size modifier)&quot;</span>, <span class="st">&quot;Analytical steady state (A x + b = 0) per litter type&quot;</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="st">&quot;Yasso15&quot;</span>, <span class="st">&quot;AWENH (5)&quot;</span>, <span class="st">&quot;Annual&quot;</span>, <span class="st">&quot;Annual mean T + amplitude; annual P&quot;</span>, <span class="st">&quot;Annual scalar (fraction-specific gamma)&quot;</span>, <span class="st">&quot;4-point approx; fraction-specific betas (AWE/N/H)&quot;</span>, <span class="st">&quot;Yes (size modifier)&quot;</span>, <span class="st">&quot;Analytical steady state (A x + b = 0) per litter type&quot;</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="st">&quot;Yasso20&quot;</span>, <span class="st">&quot;AWENH (5)&quot;</span>, <span class="st">&quot;Annual (model step)&quot;</span>, <span class="st">&quot;Monthly T (12 values) + annual P&quot;</span>, <span class="st">&quot;Annual scalar (plus optional leaching term)&quot;</span>, <span class="st">&quot;Mean of exp(beta1*T + beta2*T^2) over months (fraction-specific)&quot;</span>, <span class="st">&quot;Yes (size modifier)&quot;</span>, <span class="st">&quot;Analytical steady state (A x + b = 0) per litter type (spinup/SS_pred)&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">kable</span>(yasso_comp, <span class="at">format =</span> <span class="st">&quot;html&quot;</span>, <span class="at">caption =</span> <span class="st">&quot;Table 1. Comparison of Yasso variants used in the wrapper.&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>, <span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>,<span class="st">&quot;hover&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="fu">column_spec</span>(<span class="dv">1</span>, <span class="at">width =</span> <span class="st">&quot;7em&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  <span class="fu">column_spec</span>(<span class="dv">4</span>, <span class="at">width =</span> <span class="st">&quot;20em&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="fu">column_spec</span>(<span class="dv">8</span>, <span class="at">width =</span> <span class="st">&quot;20em&quot;</span>)</span></code></pre></div>
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Table 1. Comparison of Yasso variants used in the wrapper.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:left;">
+Pools
+</th>
+<th style="text-align:left;">
+Time_step
+</th>
+<th style="text-align:left;">
+Climate_forcing
+</th>
+<th style="text-align:left;">
+Precipitation_use
+</th>
+<th style="text-align:left;">
+Temp_use
+</th>
+<th style="text-align:left;">
+Woody_size
+</th>
+<th style="text-align:left;">
+Typical_initialization
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;width: 7em; ">
+Yasso07
+</td>
+<td style="text-align:left;">
+AWENH (5)
+</td>
+<td style="text-align:left;">
+Annual
+</td>
+<td style="text-align:left;width: 20em; ">
+Annual mean T + amplitude; annual P
+</td>
+<td style="text-align:left;">
+Annual scalar
+</td>
+<td style="text-align:left;">
+4-point approx using mean+amplitude
+</td>
+<td style="text-align:left;">
+Yes (applied in implementation via size modifier)
+</td>
+<td style="text-align:left;width: 20em; ">
+Analytical steady state (A x + b = 0) per litter type
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 7em; ">
+Yasso15
+</td>
+<td style="text-align:left;">
+AWENH (5)
+</td>
+<td style="text-align:left;">
+Annual
+</td>
+<td style="text-align:left;width: 20em; ">
+Annual mean T + amplitude; annual P
+</td>
+<td style="text-align:left;">
+Annual scalar (fraction-specific gamma)
+</td>
+<td style="text-align:left;">
+4-point approx; fraction-specific betas (AWE/N/H)
+</td>
+<td style="text-align:left;">
+Yes (size modifier)
+</td>
+<td style="text-align:left;width: 20em; ">
+Analytical steady state (A x + b = 0) per litter type
+</td>
+</tr>
+<tr>
+<td style="text-align:left;width: 7em; ">
+Yasso20
+</td>
+<td style="text-align:left;">
+AWENH (5)
+</td>
+<td style="text-align:left;">
+Annual (model step)
+</td>
+<td style="text-align:left;width: 20em; ">
+Monthly T (12 values) + annual P
+</td>
+<td style="text-align:left;">
+Annual scalar (plus optional leaching term)
+</td>
+<td style="text-align:left;">
+Mean of exp(beta1<em>T + beta2</em>T^2) over months (fraction-specific)
+</td>
+<td style="text-align:left;">
+Yes (size modifier)
+</td>
+<td style="text-align:left;width: 20em; ">
+Analytical steady state (A x + b = 0) per litter type (spinup/SS_pred)
+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+</div>
+<div id="yasso07" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Yasso07</h1>
+<div id="overview-1" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Overview</h2>
+<p><strong>Yasso07</strong> is a chemical fractionation model for SOC
+decomposition based on the <strong>AWENH</strong> pool structure. It
+supports multiple litter types with different wood sizes and uses
+<strong>annual</strong> time steps.</p>
 <p><strong>Key features:</strong> - Chemical fractionation (AWEN + Humus
 pools) - Three litter types: non-woody (nwl), fine woody (fwl), coarse
 woody (cwl) - Wood size effects on decomposition - Temperature and
 precipitation modifiers - Matrix exponential solution for accurate
-integration</p>
-<p><strong>Reference:</strong> Tuomi et al. (2009). <em>Heterotrophic
-soil respiration—Comparison of different models describing its
-temperature dependence.</em> Ecological Modelling, 220(21),
-3362-3371.</p>
+annual integration</p>
+<p><strong>Reference:</strong> Tuomi et al. (2009). <em>Ecological
+Modelling</em>, 220, 3362–3371.</p>
 <hr />
 </div>
-<div id="model-structure" class="section level2" number="1.2">
-<h2><span class="header-section-number">1.2</span> Model Structure</h2>
-<div id="chemical-pools" class="section level3" number="1.2.1">
-<h3><span class="header-section-number">1.2.1</span> Chemical Pools</h3>
+<div id="model-structure" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Model structure</h2>
+<div id="chemical-pools" class="section level3" number="2.2.1">
+<h3><span class="header-section-number">2.2.1</span> Chemical pools</h3>
 <p>Yasso07 tracks five organic matter pools:</p>
 <ol style="list-style-type: decimal">
-<li><strong>A (Acid-soluble)</strong>: Sugars, starches, soluble
-proteins</li>
-<li><strong>W (Water-soluble)</strong>: Simple compounds (e.g., glucose,
-amino acids)<br />
-</li>
-<li><strong>E (Ethanol-soluble)</strong>: Lipids, waxes, resins</li>
-<li><strong>N (Neither-soluble)</strong>: Recalcitrant compounds (e.g.,
-lignin, suberin)</li>
-<li><strong>H (Humus)</strong>: Stabilized organic matter</li>
+<li><strong>A (Acid-soluble)</strong></li>
+<li><strong>W (Water-soluble)</strong></li>
+<li><strong>E (Ethanol-soluble)</strong></li>
+<li><strong>N (Neither-soluble)</strong></li>
+<li><strong>H (Humus)</strong></li>
 </ol>
 </div>
-<div id="litter-type-classification" class="section level3" number="1.2.2">
-<h3><span class="header-section-number">1.2.2</span> Litter Type
-Classification</h3>
-<p>The model differentiates litter by wood diameter, which affects
-decomposition rates:</p>
+<div id="litter-type-classification" class="section level3" number="2.2.2">
+<h3><span class="header-section-number">2.2.2</span> Litter type
+classification</h3>
 <table>
 <thead>
 <tr>
@@ -1724,533 +2091,251 @@ decomposition rates:</p>
 </thead>
 <tbody>
 <tr>
-<td><strong>nwl</strong> (non-woody)</td>
+<td><strong>nwl</strong></td>
 <td>0 cm</td>
 <td>Foliage, fine roots, understorey</td>
 </tr>
 <tr>
-<td><strong>fwl</strong> (fine woody)</td>
+<td><strong>fwl</strong></td>
 <td>2 cm</td>
 <td>Small branches</td>
 </tr>
 <tr>
-<td><strong>cwl</strong> (coarse woody)</td>
+<td><strong>cwl</strong></td>
 <td>15 cm</td>
 <td>Large branches, stems, coarse roots</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="decomposition-dynamics" class="section level3" number="1.2.3">
-<h3><span class="header-section-number">1.2.3</span> Decomposition
-Dynamics</h3>
-<p><strong>Decomposition rates</strong> for each AWEN pool: <span class="math display">\[k_i = \alpha_i \cdot f_{temp} \cdot
-f_{precip}\]</span></p>
-<p>Where: - <span class="math inline">\(\alpha_i\)</span>: Base
-decomposition rate for pool <span class="math inline">\(i\)</span> -
-<span class="math inline">\(f_{temp}\)</span>: Temperature modifier
-(accounts for mean + amplitude) - <span class="math inline">\(f_{precip}\)</span>: Precipitation modifier</p>
-<p><strong>Wood size effect</strong> (N pool only): <span class="math display">\[f_{size} = \min\left(1, \exp\left(-\delta_1 \cdot
-d^{\delta_2} \cdot |r|\right)\right)\]</span></p>
-<p>Where <span class="math inline">\(d\)</span> is wood diameter
-(cm).</p>
-<p><strong>Transfer between pools</strong>: Decomposing material from
-pool <span class="math inline">\(i\)</span> transfers to other pools
-according to transfer coefficients <span class="math inline">\(p_{ij}\)</span>, with the remainder respired as
-CO₂.</p>
-<p><strong>Humus formation</strong>: A fraction (<span class="math inline">\(p_H\)</span>) of decomposed AWEN material forms
-stabilized humus.</p>
-<hr />
-</div>
-</div>
-<div id="mathematical-formulation" class="section level2" number="1.3">
-<h2><span class="header-section-number">1.3</span> Mathematical
-Formulation</h2>
-<div id="transfer-matrix" class="section level3" number="1.3.1">
-<h3><span class="header-section-number">1.3.1</span> Transfer
-Matrix</h3>
-<p>The model uses a 5×5 transfer matrix <span class="math inline">\(\mathbf{A}\)</span>:</p>
+<div id="mathematical-formulation" class="section level3" number="2.2.3">
+<h3><span class="header-section-number">2.2.3</span> Mathematical
+formulation</h3>
+<p>Continuous-time compartment model:</p>
 <p><span class="math display">\[\frac{d\mathbf{C}}{dt} = \mathbf{A}
-\cdot \mathbf{C} + \mathbf{I}\]</span></p>
-<p>Where: - <span class="math inline">\(\mathbf{C} = [C_A, C_W, C_E,
-C_N, C_H]^T\)</span>: Carbon in each pool - <span class="math inline">\(\mathbf{I} = [I_A, I_W, I_E, I_N, 0]^T\)</span>:
-Annual litter inputs (no direct input to H)</p>
-<p><strong>Diagonal elements</strong> (loss from pool <span class="math inline">\(i\)</span>): <span class="math display">\[A_{ii} =
--k_i\]</span></p>
-<p>With <span class="math inline">\(k_N\)</span> modified by size
-effect: <span class="math inline">\(k_N = \alpha_N \cdot f_{temp} \cdot
-f_{precip} \cdot f_{size}\)</span></p>
-<p><strong>Off-diagonal elements</strong> (transfer from pool <span class="math inline">\(j\)</span> to pool <span class="math inline">\(i\)</span>): <span class="math display">\[A_{ij} =
-p_{ij} \cdot |k_j|\]</span></p>
-<p><strong>Humus row</strong> (bottom row accumulates from all AWEN
-pools): <span class="math display">\[A_{5i} = p_H \cdot |k_i| \quad
-\text{for } i \in \{A,W,E,N\}\]</span></p>
-</div>
-<div id="analytical-solution" class="section level3" number="1.3.2">
-<h3><span class="header-section-number">1.3.2</span> Analytical
-Solution</h3>
-<p>For annual time step <span class="math inline">\(\Delta t =
-1\)</span> year:</p>
-<p><span class="math display">\[\mathbf{C}(t+1) = e^{\mathbf{A}} \cdot
-\mathbf{C}(t) + \left(e^{\mathbf{A}} - \mathbf{I}_5\right) \cdot
-\mathbf{A}^{-1} \cdot \mathbf{I}\]</span></p>
-<p>Where <span class="math inline">\(e^{\mathbf{A}}\)</span> is the
-matrix exponential.</p>
-<p><strong>Special case</strong>: When <span class="math inline">\(\max(|A_{ij}|) &lt; 10^{-10}\)</span> (negligible
-decomposition): <span class="math display">\[\mathbf{C}(t+1) =
-\mathbf{C}(t) + \mathbf{I}\]</span></p>
-</div>
-<div id="respiration" class="section level3" number="1.3.3">
-<h3><span class="header-section-number">1.3.3</span> Respiration</h3>
-<p>Heterotrophic respiration in year <span class="math inline">\(t\)</span>: <span class="math display">\[R_h(t) =
-C_{total}(t) + I_{total}(t) - C_{total}(t+1)\]</span></p>
-<p>By mass balance, this equals carbon lost to CO₂.</p>
+\mathbf{C} + \mathbf{I}\]</span></p>
+<p>with <span class="math inline">\(\mathbf{C}=[C_A,C_W,C_E,C_N,C_H]^T\)</span> and
+<span class="math inline">\(\mathbf{I}=[I_A,I_W,I_E,I_N,0]^T\)</span>.</p>
+<p>Annual update (<span class="math inline">\(\Delta t =
+1\)</span>):</p>
+<p><span class="math display">\[\mathbf{C}(t+1) = e^{\mathbf{A}}
+\mathbf{C}(t) + (e^{\mathbf{A}} - \mathbf{I}_5)\, \mathbf{A}^{-1}
+\mathbf{I}\]</span></p>
+<p>Respiration by mass balance:</p>
+<p><span class="math display">\[R_h(t)=\sum C(t) + \sum I(t) - \sum
+C(t+1)\]</span></p>
 <hr />
 </div>
 </div>
-<div id="environmental-modifiers" class="section level2" number="1.4">
-<h2><span class="header-section-number">1.4</span> Environmental
-Modifiers</h2>
-<div id="temperature-modifier" class="section level3" number="1.4.1">
-<h3><span class="header-section-number">1.4.1</span> Temperature
-Modifier</h3>
-<p>Yasso07 accounts for both mean temperature and seasonal amplitude
-using a four-point approximation:</p>
+<div id="environmental-modifiers" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> Environmental
+modifiers</h2>
+<div id="temperature-modifier-mean-amplitude" class="section level3" number="2.3.1">
+<h3><span class="header-section-number">2.3.1</span> Temperature
+modifier (mean + amplitude)</h3>
+<p>Yasso07 uses a four-point approximation for seasonal temperature
+dependence:</p>
 <p><span class="math display">\[f_{temp} = \frac{1}{4} \sum_{i=1}^{4}
 \exp(\beta_1 T_i + \beta_2 T_i^2)\]</span></p>
-<p>Where the four quarterly temperatures are: <span class="math display">\[T_1 = \bar{T} +
-\frac{4A}{\pi}\left(\frac{1}{\sqrt{2}} - 1\right)\]</span> <span class="math display">\[T_2 = \bar{T} - \frac{4A}{\sqrt{2}\pi}\]</span>
-<span class="math display">\[T_3 = \bar{T} + \frac{4A}{\pi}\left(1 -
-\frac{1}{\sqrt{2}}\right)\]</span> <span class="math display">\[T_4 =
-\bar{T} + \frac{4A}{\sqrt{2}\pi}\]</span></p>
-<p>With <span class="math inline">\(\bar{T}\)</span> = annual mean
-temperature (°C), <span class="math inline">\(A\)</span> = annual
-temperature amplitude (°C).</p>
-<p><strong>Default parameters:</strong> <span class="math inline">\(\beta_1 = 0.096\)</span>, <span class="math inline">\(\beta_2 = -0.0014\)</span></p>
-<p>This quadratic formulation captures the reduced decomposition at
-extreme temperatures.</p>
+<p>where <span class="math inline">\(T_i\)</span> are quarterly
+temperatures derived from annual mean <span class="math inline">\(\bar{T}\)</span> and amplitude <span class="math inline">\(A\)</span>.</p>
 </div>
-<div id="precipitation-modifier" class="section level3" number="1.4.2">
-<h3><span class="header-section-number">1.4.2</span> Precipitation
-Modifier</h3>
-<p>Moisture effects on decomposition:</p>
+<div id="precipitation-modifier" class="section level3" number="2.3.2">
+<h3><span class="header-section-number">2.3.2</span> Precipitation
+modifier</h3>
 <p><span class="math display">\[f_{precip} = 1 - \exp\left(\gamma \cdot
 \frac{P}{1000}\right)\]</span></p>
-<p>Where <span class="math inline">\(P\)</span> is annual precipitation
-(mm).</p>
-<p><strong>Default parameter:</strong> <span class="math inline">\(\gamma = -1.21\)</span></p>
-<p>This saturating function reflects limited moisture effects at high
-precipitation.</p>
 </div>
-<div id="wood-size-modifier" class="section level3" number="1.4.3">
-<h3><span class="header-section-number">1.4.3</span> Wood Size
-Modifier</h3>
-<p>Larger wood decomposes more slowly due to: - Lower surface area to
-volume ratio - Anaerobic microsites in large pieces - Physical
-protection of inner material</p>
+<div id="wood-size-modifier" class="section level3" number="2.3.3">
+<h3><span class="header-section-number">2.3.3</span> Wood size
+modifier</h3>
+<p>A size modifier slows decomposition for woody litter:</p>
 <p><span class="math display">\[f_{size} = \min\left(1,
-\exp\left(-\delta_1 \cdot d^{\delta_2} \cdot
-|r|\right)\right)\]</span></p>
-<p><strong>Default parameters:</strong> <span class="math inline">\(\delta_1 = -1.7\)</span>, <span class="math inline">\(\delta_2 = 0.86\)</span>, <span class="math inline">\(r = -0.306\)</span></p>
-<p>The modifier only affects the <strong>N pool</strong> (lignin-like
-compounds).</p>
+\exp\left(-\delta_1 d^{\delta_2} |r|\right)\right)\]</span></p>
+<p>In the implementation, size is applied through a size modifier term
+when building <span class="math inline">\(\mathbf{A}\)</span> for each
+litter type.</p>
 <hr />
 </div>
 </div>
-<div id="initialization" class="section level2" number="1.5">
-<h2><span class="header-section-number">1.5</span> Initialization</h2>
-<div id="steady-state-approach" class="section level3" number="1.5.1">
-<h3><span class="header-section-number">1.5.1</span> Steady-State
-Approach</h3>
-<p>For model spinup, the steady-state is found by iterating until
-equilibrium:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">yasso07_steady_state</span>(</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">params =</span> YASSO07_DEFAULT_PARAMS,</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">input_awen =</span> <span class="fu">c</span>(mean_A, mean_W, mean_E, mean_N),</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">temp_mean =</span> mean_temp,</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">temp_amp =</span> mean_amplitude,</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">precip =</span> mean_precip,</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">diameter =</span> wood_diameter,</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">n_years =</span> <span class="dv">5000</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>)</span></code></pre></div>
-<p><strong>Algorithm:</strong> 1. Initialize pools to small non-zero
-values 2. Iterate for <code>n_years</code> with average climate and
-inputs 3. Pools converge to steady-state (typically &lt;1000 years for
-fast pools, up to 5000 years for humus)</p>
-<p><strong>Alternative (faster):</strong> Analytical steady-state using
-matrix inversion: <span class="math display">\[\mathbf{C}_{ss} =
--\mathbf{A}^{-1} \cdot \mathbf{I}\]</span></p>
-<p>However, this requires that <span class="math inline">\(\mathbf{A}\)</span> is non-singular and assumes
-constant climate.</p>
-</div>
-<div id="initial-conditions" class="section level3" number="1.5.2">
-<h3><span class="header-section-number">1.5.2</span> Initial
-Conditions</h3>
-<p>The model can be initialized three ways:</p>
-<ol style="list-style-type: decimal">
-<li><strong>Steady-state spinup</strong> (recommended for new
-sites)</li>
-<li><strong>User-provided initial pools</strong> via <code>C0</code>
-parameter</li>
-<li><strong>Separate spinup for each litter type</strong> (accounts for
-different wood sizes)</li>
-</ol>
+<div id="initialization" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> Initialization</h2>
+<div id="analytical-steady-state-recommended" class="section level3" number="2.4.1">
+<h3><span class="header-section-number">2.4.1</span> Analytical
+steady-state (recommended)</h3>
+<p>In the wrapper implementation, the default steady state for each
+litter type is computed analytically under <strong>mean climate</strong>
+and <strong>mean annual inputs</strong>:</p>
+<p><span class="math display">\[\mathbf{C}_{ss} =
+-\mathbf{A}^{-1}\mathbf{I}\]</span></p>
+<p>This corresponds to equilibrium under stationary forcing and avoids
+long numerical spinups.</p>
 <hr />
 </div>
 </div>
-<div id="implementation-notes" class="section level2" number="1.6">
-<h2><span class="header-section-number">1.6</span> Implementation
-Notes</h2>
-<div id="multiple-litter-types" class="section level3" number="1.6.1">
-<h3><span class="header-section-number">1.6.1</span> Multiple Litter
-Types</h3>
-<p>The model runs <strong>separately</strong> for each litter type, then
-sums results:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Each litter type has independent pools</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="cf">for</span>(litter_type <span class="cf">in</span> <span class="fu">c</span>(<span class="st">&quot;nwl&quot;</span>, <span class="st">&quot;fwl&quot;</span>, <span class="st">&quot;cwl&quot;</span>)) {</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="co"># Run with appropriate wood size</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  pools_lt <span class="ot">&lt;-</span> <span class="fu">simulate_litter_type</span>(...)</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  </span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="co"># Accumulate to total</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  total_pools <span class="ot">&lt;-</span> total_pools <span class="sc">+</span> pools_lt</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>}</span></code></pre></div>
-<p>This approach: - Correctly applies size modifiers to each litter type
-- Allows different initialization for woody vs non-woody material -
-Maintains computational efficiency</p>
 </div>
-<div id="input-data-structure" class="section level3" number="1.6.2">
-<h3><span class="header-section-number">1.6.2</span> Input Data
-Structure</h3>
-<p>Annual input dataframe must contain:</p>
-<p><strong>Climate variables:</strong> - <code>temp_mean</code>: Annual
-mean temperature (°C) - <code>temp_amplitude</code>: Annual temperature
-amplitude (°C) - <code>precip</code>: Annual precipitation (mm)</p>
-<p><strong>Litter inputs for each type</strong> (Mg C/ha/yr): -
-<code>nwl_A</code>, <code>nwl_W</code>, <code>nwl_E</code>,
-<code>nwl_N</code>: Non-woody AWEN fractions - <code>fwl_A</code>,
-<code>fwl_W</code>, <code>fwl_E</code>, <code>fwl_N</code>: Fine woody
-AWEN fractions - <code>cwl_A</code>, <code>cwl_W</code>,
-<code>cwl_E</code>, <code>cwl_N</code>: Coarse woody AWEN fractions</p>
+<div id="yasso15" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Yasso15</h1>
+<div id="overview-2" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Overview</h2>
+<p><strong>Yasso15</strong> retains the same AWENH structure and annual
+integration approach as Yasso07, but uses updated parameterization and
+allows <strong>fraction-specific climate sensitivities</strong>:</p>
+<ul>
+<li>Separate temperature response parameters for <strong>AWE</strong>,
+<strong>N</strong>, and <strong>H</strong></li>
+<li>Separate precipitation response parameters for <strong>AWE</strong>,
+<strong>N</strong>, and <strong>H</strong></li>
+<li>Same three litter types (nwl/fwl/cwl) with wood size effects (via a
+size modifier)</li>
+</ul>
+<p>Practically, Yasso15 is often used when one wants a more flexible
+climate response than Yasso07 while keeping the same pool structure and
+annual timestep.</p>
+<hr />
 </div>
-<div id="matrix-exponential-computation" class="section level3" number="1.6.3">
-<h3><span class="header-section-number">1.6.3</span> Matrix Exponential
-Computation</h3>
-<p>The model uses <code>Matrix::expm()</code> for accurate computation
-of <span class="math inline">\(e^{\mathbf{A}}\)</span>. This ensures: -
-Numerical stability for stiff systems - Exact solution to the ODE system
-- No time-step artifacts</p>
-<p>For very small decomposition rates, a simpler approximation is used
-to avoid numerical issues.</p>
+<div id="climate-forcing" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Climate forcing</h2>
+<p>Yasso15 uses the same annual climate summaries as Yasso07: -
+<code>temp_mean</code> (annual mean temperature) -
+<code>temp_amplitude</code> (annual temperature amplitude) -
+<code>precip</code> (annual precipitation total)</p>
+<p>Temperature dependence is computed using a four-point approximation
+(same structure as Yasso07), but with separate parameters: - <span class="math inline">\((\beta_1,\beta_2)\)</span> for A/W/E - <span class="math inline">\((\beta_{N1},\beta_{N2})\)</span> for N - <span class="math inline">\((\beta_{H1},\beta_{H2})\)</span> for H</p>
+<p>Precipitation dependence is also fraction-specific: - <span class="math inline">\(\gamma\)</span> (A/W/E), <span class="math inline">\(\gamma_N\)</span> (N), <span class="math inline">\(\gamma_H\)</span> (H)</p>
+<hr />
+</div>
+<div id="mathematical-structure" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Mathematical
+structure</h2>
+<p>Same linear ODE form:</p>
+<p><span class="math display">\[\frac{d\mathbf{C}}{dt} =
+\mathbf{A}(\text{climate}, d)\, \mathbf{C} + \mathbf{I}\]</span></p>
+<p>but with fraction-specific scaling in <span class="math inline">\(\mathbf{A}\)</span>. Annual update is again based
+on the matrix exponential.</p>
+<hr />
+</div>
+<div id="initialization-1" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> Initialization</h2>
+<p>In the current framework, Yasso15 uses <strong>analytical steady
+state</strong> per litter type (nwl/fwl/cwl) under mean climate and mean
+litter input:</p>
+<p><span class="math display">\[\mathbf{C}_{ss} =
+-\mathbf{A}^{-1}\mathbf{I}\]</span></p>
+<p>The total site SOC trajectory is obtained by summing the litter-type
+trajectories because the system is linear and litter types are simulated
+independently.</p>
 <hr />
 </div>
 </div>
-<div id="default-parameters" class="section level2" number="1.7">
-<h2><span class="header-section-number">1.7</span> Default
-Parameters</h2>
-<div id="decomposition-rates-yr¹" class="section level3" number="1.7.1">
-<h3><span class="header-section-number">1.7.1</span> Decomposition Rates
-(yr⁻¹)</h3>
-<table>
-<thead>
-<tr>
-<th>Pool</th>
-<th>Parameter</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>A</td>
-<td><code>alpha_A</code></td>
-<td>0.66</td>
-</tr>
-<tr>
-<td>W</td>
-<td><code>alpha_W</code></td>
-<td>4.30</td>
-</tr>
-<tr>
-<td>E</td>
-<td><code>alpha_E</code></td>
-<td>0.35</td>
-</tr>
-<tr>
-<td>N</td>
-<td><code>alpha_N</code></td>
-<td>0.22</td>
-</tr>
-<tr>
-<td>H</td>
-<td><code>alpha_H</code></td>
-<td>0.0033</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Interpretation:</strong> W pool is fastest (turnover ~3
-months), H pool is slowest (turnover ~300 years).</p>
+<div id="yasso20" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Yasso20</h1>
+<div id="overview-3" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Overview</h2>
+<p><strong>Yasso20</strong> uses the same AWENH pool structure and
+annual model step, but differs in climate forcing:</p>
+<ul>
+<li><strong>Monthly temperatures</strong> (vector of length 12) are used
+directly in the temperature response.</li>
+<li><strong>Precipitation is an annual scalar</strong> (as in the
+original Yasso20 interface).</li>
+<li>Fraction-specific temperature and precipitation sensitivities (AWE
+vs N vs H), similar in spirit to Yasso15 but with monthly-T
+evaluation.</li>
+</ul>
+<p>This makes Yasso20 the most suitable Yasso variant in the framework
+when monthly temperature forcing is available and you want to avoid
+reducing temperature forcing to mean + amplitude.</p>
+<hr />
 </div>
-<div id="transfer-coefficients" class="section level3" number="1.7.2">
-<h3><span class="header-section-number">1.7.2</span> Transfer
-Coefficients</h3>
-<p>Transfer from pool <span class="math inline">\(j\)</span> to pool
-<span class="math inline">\(i\)</span> (fraction of decomposed
-material):</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>to A</th>
-<th>to W</th>
-<th>to E</th>
-<th>to N</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>from A</strong></td>
-<td>-</td>
-<td>0.32</td>
-<td>0.01</td>
-<td>0.93</td>
-</tr>
-<tr>
-<td><strong>from W</strong></td>
-<td>0.34</td>
-<td>-</td>
-<td>0.00</td>
-<td>0.00</td>
-</tr>
-<tr>
-<td><strong>from E</strong></td>
-<td>0.00</td>
-<td>0.035</td>
-<td>-</td>
-<td>0.005</td>
-</tr>
-<tr>
-<td><strong>from N</strong></td>
-<td>0.01</td>
-<td>0.0005</td>
-<td>0.03</td>
-<td>-</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Humus formation:</strong> <code>p_H = 0.04</code> (4% of
-decomposed AWEN → humus)</p>
-<p><strong>Interpretation:</strong> - N pool receives material from all
-other pools (recalcitrant endproduct) - W and E pools transfer mainly to
-A pool - Most decomposed material is respired (transfer fractions
-&lt;&lt; 1)</p>
+<div id="climate-forcing-1" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Climate forcing</h2>
+<p>Inputs required (per year): - Monthly temperature vector: <span class="math inline">\(T_1, \ldots, T_{12}\)</span> - Annual
+precipitation total: <span class="math inline">\(P\)</span></p>
+<p>Temperature dependence is computed as an average over months:</p>
+<p><span class="math display">\[tem = \frac{1}{12}\sum_{m=1}^{12}
+\exp(\beta_1 T_m + \beta_2 T_m^2)\]</span></p>
+<p>and similarly for N and H with <span class="math inline">\((\beta_{N1},\beta_{N2})\)</span>, <span class="math inline">\((\beta_{H1},\beta_{H2})\)</span>.</p>
+<p>Precipitation scaling uses the same saturating function form as
+Yasso07/15 but with fraction-specific parameters.</p>
+<blockquote>
+<p><strong>Important:</strong> Yasso20 (as implemented from the original
+function signature) does <strong>not</strong> use monthly precipitation
+values month-by-month; precipitation enters as an
+<strong>annual</strong> scalar.</p>
+</blockquote>
+<hr />
 </div>
-<div id="environmental-response" class="section level3" number="1.7.3">
-<h3><span class="header-section-number">1.7.3</span> Environmental
-Response</h3>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Value</th>
-<th>Effect</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>beta1</code></td>
-<td>0.096</td>
-<td>Linear temperature term</td>
-</tr>
-<tr>
-<td><code>beta2</code></td>
-<td>-0.0014</td>
-<td>Quadratic temperature term</td>
-</tr>
-<tr>
-<td><code>gamma</code></td>
-<td>-1.21</td>
-<td>Precipitation response</td>
-</tr>
-<tr>
-<td><code>delta1</code></td>
-<td>-1.7</td>
-<td>Wood size effect (scale)</td>
-</tr>
-<tr>
-<td><code>delta2</code></td>
-<td>0.86</td>
-<td>Wood size effect (exponent)</td>
-</tr>
-<tr>
-<td><code>r</code></td>
-<td>-0.306</td>
-<td>Wood size effect (direction)</td>
-</tr>
-</tbody>
-</table>
+<div id="mathematical-structure-1" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> Mathematical
+structure</h2>
+<p>Same linear ODE form, with <span class="math inline">\(\mathbf{A}\)</span> constructed using
+monthly-temperature-based modifiers and annual precipitation:</p>
+<p><span class="math display">\[\frac{d\mathbf{C}}{dt} =
+\mathbf{A}(T_{1..12}, P, d)\, \mathbf{C} + \mathbf{I}\]</span></p>
+<p>Annual update is solved analytically (matrix exponential).</p>
+<hr />
+</div>
+<div id="initialization-2" class="section level2" number="4.4">
+<h2><span class="header-section-number">4.4</span> Initialization</h2>
+<p>Yasso20 supports analytical steady-state initialization via the
+original “steady state prediction” option (SS_pred/spinup):</p>
+<p><span class="math display">\[\mathbf{C}_{ss} =
+-\mathbf{A}^{-1}\mathbf{I}\]</span></p>
+<p>In the wrapper, Yasso20 is initialized analytically per litter type
+when <code>C0 = NULL</code> and <code>spinup = TRUE</code>.</p>
 <hr />
 </div>
 </div>
-<div id="usage-examples" class="section level2" number="1.8">
-<h2><span class="header-section-number">1.8</span> Usage Examples</h2>
-<div id="basic-simulation" class="section level3" number="1.8.1">
-<h3><span class="header-section-number">1.8.1</span> Basic
-Simulation</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Prepare annual input data</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>input_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">temp_mean =</span> <span class="fu">c</span>(<span class="fl">5.2</span>, <span class="fl">5.5</span>, <span class="fl">5.8</span>),</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">temp_amplitude =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>),</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">precip =</span> <span class="fu">c</span>(<span class="dv">600</span>, <span class="dv">650</span>, <span class="dv">620</span>),</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">nwl_A =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>),</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">nwl_W =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>),</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">nwl_E =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>),</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">nwl_N =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span>),</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">fwl_A =</span> <span class="fu">c</span>(<span class="fl">0.2</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span>),</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">fwl_W =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>),</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">fwl_E =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.05</span>, <span class="fl">0.05</span>),</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">fwl_N =</span> <span class="fu">c</span>(<span class="fl">0.15</span>, <span class="fl">0.15</span>, <span class="fl">0.15</span>)</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>)</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co"># Run model with steady-state spinup</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">yasso07_run</span>(</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">params =</span> YASSO07_DEFAULT_PARAMS,</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="at">C0 =</span> <span class="cn">NULL</span>,  <span class="co"># Will compute steady-state</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="at">input_df =</span> input_df,</span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="dv">5000</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>)</span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co"># Extract results</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>total_soc <span class="ot">&lt;-</span> results<span class="sc">$</span>total_soc  <span class="co"># Total SOC (Mg C/ha)</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>pools <span class="ot">&lt;-</span> results<span class="sc">$</span>pools  <span class="co"># AWENH pools over time</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>respiration <span class="ot">&lt;-</span> results<span class="sc">$</span>respiration  <span class="co"># Annual Rh</span></span></code></pre></div>
+<div id="practical-notes-for-intercomparison" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Practical notes for
+intercomparison</h1>
+<div id="what-is-consistent-across-yasso-variants-here" class="section level2" number="5.1">
+<h2><span class="header-section-number">5.1</span> What is consistent
+across Yasso variants here?</h2>
+<ul>
+<li>Same pool structure: AWENH</li>
+<li>Same litter-type separation: nwl/fwl/cwl (different wood sizes)</li>
+<li>Linear dynamics with matrix-exponential annual integration</li>
+<li>Outputs: pool trajectories + total SOC + respiration (mass
+balance)</li>
+</ul>
 </div>
-<div id="custom-initial-conditions" class="section level3" number="1.8.2">
-<h3><span class="header-section-number">1.8.2</span> Custom Initial
-Conditions</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Provide initial pools for each litter type</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>C0 <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">nwl =</span> <span class="fu">c</span>(<span class="at">A=</span><span class="dv">10</span>, <span class="at">W=</span><span class="dv">5</span>, <span class="at">E=</span><span class="dv">3</span>, <span class="at">N=</span><span class="dv">8</span>, <span class="at">H=</span><span class="dv">50</span>),</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">fwl =</span> <span class="fu">c</span>(<span class="at">A=</span><span class="dv">5</span>, <span class="at">W=</span><span class="dv">2</span>, <span class="at">E=</span><span class="dv">2</span>, <span class="at">N=</span><span class="dv">6</span>, <span class="at">H=</span><span class="dv">30</span>),</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">cwl =</span> <span class="fu">c</span>(<span class="at">A=</span><span class="dv">3</span>, <span class="at">W=</span><span class="dv">1</span>, <span class="at">E=</span><span class="dv">1</span>, <span class="at">N=</span><span class="dv">15</span>, <span class="at">H=</span><span class="dv">40</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>)</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">yasso07_run</span>(</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">params =</span> YASSO07_DEFAULT_PARAMS,</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">C0 =</span> C0,</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="at">input_df =</span> input_df,</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="dv">0</span>  <span class="co"># Skip spinup</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>)</span></code></pre></div>
-</div>
-<div id="parameter-calibration" class="section level3" number="1.8.3">
-<h3><span class="header-section-number">1.8.3</span> Parameter
-Calibration</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Test different parameter set</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>custom_params <span class="ot">&lt;-</span> YASSO07_DEFAULT_PARAMS</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>custom_params<span class="sc">$</span>alpha_A <span class="ot">&lt;-</span> <span class="fl">0.70</span>  <span class="co"># Faster A pool decomposition</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>custom_params<span class="sc">$</span>beta1 <span class="ot">&lt;-</span> <span class="fl">0.10</span>     <span class="co"># Stronger temperature sensitivity</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">yasso07_run</span>(</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">params =</span> custom_params,</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">input_df =</span> input_df</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>)</span></code></pre></div>
+<div id="main-differences-that-matter" class="section level2" number="5.2">
+<h2><span class="header-section-number">5.2</span> Main differences that
+matter</h2>
+<ul>
+<li><strong>Temperature forcing resolution</strong>
+<ul>
+<li>Yasso07/15: annual mean + amplitude</li>
+<li>Yasso20: monthly temperatures</li>
+</ul></li>
+<li><strong>Climate sensitivity flexibility</strong>
+<ul>
+<li>Yasso07: shared temperature &amp; precipitation sensitivity across
+pools (in typical use)</li>
+<li>Yasso15/20: fraction-specific climate sensitivity (AWE vs N vs
+H)</li>
+</ul></li>
+<li><strong>Precipitation handling</strong>
+<ul>
+<li>all variants here use precipitation as an annual scalar; RothC
+(outside Yasso) is the one using monthly moisture balance in your
+framework</li>
+</ul></li>
+</ul>
 <hr />
 </div>
-</div>
-<div id="model-comparison-considerations" class="section level2" number="1.9">
-<h2><span class="header-section-number">1.9</span> Model Comparison
-Considerations</h2>
-<div id="structural-features" class="section level3" number="1.9.1">
-<h3><span class="header-section-number">1.9.1</span> Structural
-Features</h3>
-<p>For model intercomparison studies, key Yasso07 characteristics:</p>
-<ol style="list-style-type: decimal">
-<li><strong>Pool structure:</strong> Discrete (5 pools) based on
-chemical composition</li>
-<li><strong>Temperature response:</strong> Quadratic (captures
-extremes)</li>
-<li><strong>Temperature sensitivity:</strong> Uniform across pools (same
-<span class="math inline">\(\beta_1\)</span>, <span class="math inline">\(\beta_2\)</span> for all)</li>
-<li><strong>Spatial resolution:</strong> Single-horizon (no A/B
-distinction)</li>
-<li><strong>Litter quality:</strong> Implicit in AWEN fractions</li>
-<li><strong>Wood effects:</strong> Explicit size modifier on N pool
-only</li>
-</ol>
-</div>
-<div id="comparison-with-other-models" class="section level3" number="1.9.2">
-<h3><span class="header-section-number">1.9.2</span> Comparison with
-Other Models</h3>
-<p><strong>vs. RothC:</strong> - Yasso07 uses chemical fractionation;
-RothC uses decomposability classes - Yasso07 has explicit wood size
-effects; RothC does not - Both use environmental modifiers on all
-pools</p>
-<p><strong>vs. Q-model:</strong> - Yasso07: discrete pools; Q-model:
-continuous quality spectrum - Yasso07: fixed pool interactions; Q-model:
-quality-dependent transformation - Yasso07: uniform temperature
-sensitivity; Q-model: quality-dependent <span class="math inline">\(E_a\)</span></p>
-</div>
-<div id="fair-comparison-protocol" class="section level3" number="1.9.3">
-<h3><span class="header-section-number">1.9.3</span> Fair Comparison
-Protocol</h3>
-<p>To compare Yasso07 fairly with other models:</p>
-<ol style="list-style-type: decimal">
-<li><strong>Recalibrate</strong> all models to same dataset</li>
-<li><strong>Use consistent</strong> climate forcing and litter
-inputs</li>
-<li><strong>Initialize to steady-state</strong> under same historical
-conditions</li>
-<li><strong>Separate</strong> structural uncertainty from parameter
-uncertainty</li>
-<li><strong>Test variants</strong> (e.g., linear vs quadratic
-temperature response)</li>
-</ol>
-<hr />
-</div>
-</div>
-<div id="computational-performance" class="section level2" number="1.10">
-<h2><span class="header-section-number">1.10</span> Computational
-Performance</h2>
-<p><strong>Typical runtimes</strong> (5000-year spinup + 100-year
-simulation): - Single litter type: ~0.1 seconds - Three litter types:
-~0.3 seconds - 1000 Monte Carlo iterations: ~5 minutes</p>
-<p><strong>Memory usage:</strong> Minimal (&lt;10 MB for century-scale
-simulations)</p>
-<p><strong>Bottlenecks:</strong> Matrix exponential computation (can be
-optimized for repeated <span class="math inline">\(\mathbf{A}\)</span>
-matrices)</p>
-<hr />
-</div>
-<div id="limitations-and-assumptions" class="section level2" number="1.11">
-<h2><span class="header-section-number">1.11</span> Limitations and
-Assumptions</h2>
-<ol style="list-style-type: decimal">
-<li><strong>Annual time step:</strong> Cannot resolve seasonal dynamics
-within years</li>
-<li><strong>Homogeneous mixing:</strong> All pools subject to same
-climate conditions</li>
-<li><strong>No priming effects:</strong> Litter additions don’t affect
-existing SOC decomposition</li>
-<li><strong>No nutrient constraints:</strong> Decomposition limited only
-by climate and substrate quality</li>
-<li><strong>Single horizon:</strong> No vertical stratification or
-leaching to B horizon</li>
-<li><strong>Steady-state climate assumption</strong> during spinup (may
-not reflect historical variability)</li>
-</ol>
-<hr />
-</div>
-<div id="references" class="section level2" number="1.12">
-<h2><span class="header-section-number">1.12</span> References</h2>
-<p><strong>Primary reference:</strong> - Tuomi, M., Thum, T., Järvinen,
-H., Fronzek, S., Berg, B., Harmon, M., … &amp; Liski, J. (2009). Leaf
-litter decomposition—Estimates of global variability based on Yasso07
-model. <em>Ecological Modelling</em>, 220(23), 3362-3371.</p>
-<p><strong>Original development:</strong> - Liski, J., Palosuo, T.,
-Peltoniemi, M., &amp; Sievänen, R. (2005). Carbon and decomposition
-model Yasso for forest soils. <em>Ecological Modelling</em>, 189(1-2),
-168-182.</p>
-<p><strong>Wood decomposition:</strong> - Tuomi, M., Laiho, R., Repo,
-A., &amp; Liski, J. (2011). Wood decomposition model for boreal forests.
-<em>Ecological Modelling</em>, 222(3), 709-718.</p>
+<div id="references" class="section level2" number="5.3">
+<h2><span class="header-section-number">5.3</span> References</h2>
+<ul>
+<li>Tuomi, M., Thum, T., Järvinen, H., et al. (2009). <em>Ecological
+Modelling</em>, 220, 3362–3371.</li>
+<li>Liski, J., Palosuo, T., Peltoniemi, M., &amp; Sievänen, R. (2005).
+<em>Ecological Modelling</em>, 189, 168–182.</li>
+<li>Tuomi, M., Laiho, R., Repo, A., &amp; Liski, J. (2011).
+<em>Ecological Modelling</em>, 222, 709–718.</li>
+</ul>
 </div>
 </div>
 

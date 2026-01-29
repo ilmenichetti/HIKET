@@ -11,7 +11,7 @@
 
 <meta name="author" content="Lorenzo Menichetti" />
 
-<meta name="date" content="2026-01-28" />
+<meta name="date" content="2026-01-29" />
 
 <title>Model wrapper function</title>
 
@@ -1372,6 +1372,230 @@ window.initializeCodeFolding = function(show) {
 
 }
 </script>
+<script>$(document).ready(function(){
+    if (typeof $('[data-toggle="tooltip"]').tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    if ($('[data-toggle="popover"]').popover === 'function') {
+        $('[data-toggle="popover"]').popover();
+    }
+});
+</script>
+<style type="text/css">
+.lightable-minimal {
+border-collapse: separate;
+border-spacing: 16px 1px;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-minimal td {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal th {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal thead tr:last-child th {
+border-bottom: 2px solid #00000050;
+empty-cells: hide;
+}
+.lightable-minimal tbody tr:first-child td {
+padding-top: 0.5em;
+}
+.lightable-minimal.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-minimal.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic {
+border-top: 0.16em solid #111111;
+border-bottom: 0.16em solid #111111;
+width: 100%;
+margin-bottom: 10px;
+margin: 10px 5px;
+}
+.lightable-classic tfoot tr td {
+border: 0;
+}
+.lightable-classic tfoot tr:first-child td {
+border-top: 0.14em solid #111111;
+}
+.lightable-classic caption {
+color: #222222;
+}
+.lightable-classic td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic thead tr:last-child th {
+border-bottom: 0.10em solid #111111;
+}
+.lightable-classic.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic-2 {
+border-top: 3px double #111111;
+border-bottom: 3px double #111111;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-classic-2 tfoot tr td {
+border: 0;
+}
+.lightable-classic-2 tfoot tr:first-child td {
+border-top: 3px double #111111;
+}
+.lightable-classic-2 caption {
+color: #222222;
+}
+.lightable-classic-2 td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic-2 th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic-2 tbody tr:last-child td {
+border-bottom: 3px double #111111;
+}
+.lightable-classic-2 thead tr:last-child th {
+border-bottom: 1px solid #111111;
+}
+.lightable-classic-2.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic-2.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #EEE;
+border-collapse: collapse;
+margin-bottom: 10px;
+}
+.lightable-material tfoot tr td {
+border: 0;
+}
+.lightable-material tfoot tr:first-child td {
+border-top: 1px solid #EEE;
+}
+.lightable-material th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+}
+.lightable-material td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+border-top: 1px solid #eeeeee;
+}
+.lightable-material.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #ddd;
+}
+.lightable-material-dark {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #FFFFFF12;
+border-collapse: collapse;
+margin-bottom: 10px;
+background-color: #363640;
+}
+.lightable-material-dark tfoot tr td {
+border: 0;
+}
+.lightable-material-dark tfoot tr:first-child td {
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF60;
+}
+.lightable-material-dark td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF;
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark.lightable-hover tbody tr:hover {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody tr:nth-child(even) {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material-dark.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #FFFFFF12;
+}
+.lightable-paper {
+width: 100%;
+margin-bottom: 10px;
+color: #444;
+}
+.lightable-paper tfoot tr td {
+border: 0;
+}
+.lightable-paper tfoot tr:first-child td {
+border-top: 1px solid #00000020;
+}
+.lightable-paper thead tr:last-child th {
+color: #666;
+vertical-align: bottom;
+border-bottom: 1px solid #00000020;
+line-height: 1.15em;
+padding: 10px 5px;
+}
+.lightable-paper td {
+vertical-align: middle;
+border-bottom: 1px solid #00000010;
+line-height: 1.15em;
+padding: 7px 5px;
+}
+.lightable-paper.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-paper.lightable-striped tbody tr:nth-child(even) {
+background-color: #00000008;
+}
+.lightable-paper.lightable-striped tbody td {
+border: 0;
+}
+</style>
 
 <style type="text/css">
 code{white-space: pre-wrap;}
@@ -1668,7 +1892,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Model wrapper function</h1>
 <h4 class="author">Lorenzo Menichetti</h4>
-<h4 class="date">2026-01-28</h4>
+<h4 class="date">2026-01-29</h4>
 
 </div>
 
@@ -1678,261 +1902,234 @@ border-radius: 0px;
 Comparison Wrapper</h1>
 <div id="overview" class="section level2" number="1.1">
 <h2><span class="header-section-number">1.1</span> Overview</h2>
-<p>Wrapper function to run multiple SOC models (Yasso07, RothC, Q-model)
-on the same input data for structural comparison.</p>
+<p>Wrapper function to run multiple SOC models on the same input data
+for structural comparison.</p>
+<p>Supported models: - Yasso07 - Yasso15 - Yasso20 - RothC - Q-model</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">run_soc_models</span>(</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  input_df,           <span class="co"># Time series with AWEN litter inputs + climate</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">site_row =</span> <span class="cn">NULL</span>,    <span class="co"># Static site properties (clay, species composition)</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">models =</span> <span class="fu">c</span>(<span class="st">&quot;yasso07&quot;</span>, <span class="st">&quot;rothc&quot;</span>, <span class="st">&quot;q_model&quot;</span>),</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="cn">NULL</span> <span class="co"># Override default spinup (5000/10000/1500)</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>)</span></code></pre></div>
-<p><strong>Returns:</strong> List with <code>$yasso07</code>,
-<code>$rothc</code>, <code>$q_model</code> results plus
-<code>$summary</code> dataframe comparing annual SOC across models.</p>
-<hr />
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  input_df,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="at">site_row =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="at">models =</span> <span class="fu">c</span>(<span class="st">&quot;yasso07&quot;</span>, <span class="st">&quot;yasso15&quot;</span>, <span class="st">&quot;yasso20&quot;</span>, <span class="st">&quot;rothc&quot;</span>, <span class="st">&quot;q_model&quot;</span>),</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="cn">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="at">rothc_annual_stat =</span> <span class="fu">c</span>(<span class="st">&quot;eoy&quot;</span>,<span class="st">&quot;mean&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>)</span></code></pre></div>
 </div>
-<div id="input-format" class="section level2" number="1.2">
-<h2><span class="header-section-number">1.2</span> Input Format</h2>
-<div id="required-in-input_df" class="section level3" number="1.2.1">
-<h3><span class="header-section-number">1.2.1</span> Required in
-<code>input_df</code>:</h3>
-<p><strong>Temporal:</strong> - <code>year</code>, <code>month</code>
-(month optional for annual)</p>
-<p><strong>Climate:</strong> - <code>temp_mean</code> or
-<code>temp_air</code>: Temperature (°C) - <code>temp_amplitude</code>:
-For Yasso07 seasonal effect - <code>precip</code>: Precipitation (mm) -
-<code>evap</code>: For RothC moisture modifier</p>
-<p><strong>Litter inputs</strong> (Mg C/ha/timestep): - AWEN fractions
-for each cohort: <code>{cohort}_A</code>, <code>{cohort}_W</code>,
-<code>{cohort}_E</code>, <code>{cohort}_N</code> - Cohorts:
-<code>foliage</code>, <code>branches</code>, <code>stems</code>,
-<code>fine_roots</code>, <code>coarse_roots</code>,
-<code>understorey</code></p>
+<div id="model-comparison" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Model comparison</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>model_comp <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="sc">~</span>Model, <span class="sc">~</span>Timestep, <span class="sc">~</span>Pools, <span class="sc">~</span>Climate_forcing, <span class="sc">~</span>Initialization,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="st">&quot;Yasso07&quot;</span>, <span class="st">&quot;Annual&quot;</span>, <span class="st">&quot;AWENH&quot;</span>, <span class="st">&quot;Annual mean + amplitude T, annual P&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="st">&quot;Yasso15&quot;</span>, <span class="st">&quot;Annual&quot;</span>, <span class="st">&quot;AWENH&quot;</span>, <span class="st">&quot;Annual mean + amplitude T, annual P&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="st">&quot;Yasso20&quot;</span>, <span class="st">&quot;Annual&quot;</span>, <span class="st">&quot;AWENH&quot;</span>, <span class="st">&quot;Monthly T, annual P&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="st">&quot;RothC&quot;</span>, <span class="st">&quot;Monthly&quot;</span>, <span class="st">&quot;DPM/RPM/BIO/HUM/IOM&quot;</span>, <span class="st">&quot;Monthly T, P, evap + clay&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="st">&quot;Q-model&quot;</span>, <span class="st">&quot;Annual&quot;</span>, <span class="st">&quot;Quality spectrum&quot;</span>, <span class="st">&quot;Annual climate + species&quot;</span>, <span class="st">&quot;Hybrid analytical + numeric&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>)</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="fu">kable</span>(model_comp) <span class="sc">%&gt;%</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:left;">
+Timestep
+</th>
+<th style="text-align:left;">
+Pools
+</th>
+<th style="text-align:left;">
+Climate_forcing
+</th>
+<th style="text-align:left;">
+Initialization
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Yasso07
+</td>
+<td style="text-align:left;">
+Annual
+</td>
+<td style="text-align:left;">
+AWENH
+</td>
+<td style="text-align:left;">
+Annual mean + amplitude T, annual P
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yasso15
+</td>
+<td style="text-align:left;">
+Annual
+</td>
+<td style="text-align:left;">
+AWENH
+</td>
+<td style="text-align:left;">
+Annual mean + amplitude T, annual P
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yasso20
+</td>
+<td style="text-align:left;">
+Annual
+</td>
+<td style="text-align:left;">
+AWENH
+</td>
+<td style="text-align:left;">
+Monthly T, annual P
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RothC
+</td>
+<td style="text-align:left;">
+Monthly
+</td>
+<td style="text-align:left;">
+DPM/RPM/BIO/HUM/IOM
+</td>
+<td style="text-align:left;">
+Monthly T, P, evap + clay
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Q-model
+</td>
+<td style="text-align:left;">
+Annual
+</td>
+<td style="text-align:left;">
+Quality spectrum
+</td>
+<td style="text-align:left;">
+Annual climate + species
+</td>
+<td style="text-align:left;">
+Hybrid analytical + numeric
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="required-in-site_row" class="section level3" number="1.2.2">
-<h3><span class="header-section-number">1.2.2</span> Required in
-<code>site_row</code>:</h3>
-<ul>
-<li><code>clay</code>: Clay content (%) for RothC</li>
-<li><code>pine_prop</code>, <code>spruce_prop</code>,
-<code>birch_prop</code>: Species composition for Q-model</li>
-</ul>
-<hr />
+<div id="initialization-approach" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> Initialization
+approach</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>init_comp <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="sc">~</span>Model, <span class="sc">~</span>Approach, <span class="sc">~</span>Notes,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="st">&quot;Yasso07&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>, <span class="st">&quot;Solved from A x + b = 0 using mean climate and inputs&quot;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="st">&quot;Yasso15&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>, <span class="st">&quot;Solved per litter type, summed&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="st">&quot;Yasso20&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>, <span class="st">&quot;Monthly temperature response, annual precipitation&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="st">&quot;RothC&quot;</span>, <span class="st">&quot;Analytical steady state&quot;</span>, <span class="st">&quot;Closed-form solution for linear pools&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="st">&quot;Q-model&quot;</span>, <span class="st">&quot;Hybrid&quot;</span>, <span class="st">&quot;Analytical approximation plus short numerical spinup&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="fu">kable</span>(init_comp) <span class="sc">%&gt;%</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:left;">
+Approach
+</th>
+<th style="text-align:left;">
+Notes
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Yasso07
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+<td style="text-align:left;">
+Solved from A x + b = 0 using mean climate and inputs
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yasso15
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+<td style="text-align:left;">
+Solved per litter type, summed
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Yasso20
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+<td style="text-align:left;">
+Monthly temperature response, annual precipitation
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RothC
+</td>
+<td style="text-align:left;">
+Analytical steady state
+</td>
+<td style="text-align:left;">
+Closed-form solution for linear pools
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Q-model
+</td>
+<td style="text-align:left;">
+Hybrid
+</td>
+<td style="text-align:left;">
+Analytical approximation plus short numerical spinup
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-</div>
-<div id="input-mapping-logic" class="section level2" number="1.3">
-<h2><span class="header-section-number">1.3</span> Input Mapping
-Logic</h2>
-<p>Each model needs different input structure. The wrapper calls:</p>
-<div id="map_input_to_yasso07input_df" class="section level3" number="1.3.1">
-<h3><span class="header-section-number">1.3.1</span>
-<code>map_input_to_yasso07(input_df)</code></h3>
+<div id="key-assumptions" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> Key assumptions</h2>
 <ol style="list-style-type: decimal">
-<li><strong>Monthly → Annual:</strong> Sum litter inputs, average
-climate</li>
-<li><strong>6 cohorts → 3 litter types:</strong>
-<ul>
-<li><code>nwl</code>: foliage + fine_roots + understorey</li>
-<li><code>fwl</code>: branches</li>
-<li><code>cwl</code>: stems + coarse_roots</li>
-</ul></li>
-<li><strong>AWEN preserved</strong> for each litter type</li>
+<li>Total carbon inputs preserved across mappings.</li>
+<li>Same underlying monthly climate data used for all models.</li>
+<li>Annual summaries used for comparison (RothC aggregated).</li>
+<li>Structural differences between models intentionally retained.</li>
 </ol>
-<p><strong>Output:</strong> Annual dataframe with
-<code>nwl_A/W/E/N</code>, <code>fwl_A/W/E/N</code>,
-<code>cwl_A/W/E/N</code> + climate</p>
-<hr />
-</div>
-<div id="map_input_to_rothcinput_df-site_row" class="section level3" number="1.3.2">
-<h3><span class="header-section-number">1.3.2</span>
-<code>map_input_to_rothc(input_df, site_row)</code></h3>
-<ol style="list-style-type: decimal">
-<li><strong>Keep monthly</strong> timestep</li>
-<li><strong>AWEN → DPM/RPM:</strong>
-<ul>
-<li><code>DPM_fraction = (A + W) / (A + W + E + N)</code></li>
-<li>Rest goes to RPM</li>
-<li>This maps “decomposability” from chemistry</li>
-</ul></li>
-<li><strong>Sum all cohorts</strong> to total DPM and RPM</li>
-</ol>
-<p><strong>Output:</strong> Monthly dataframe with <code>C_DPM</code>,
-<code>C_RPM</code>, climate, <code>clay</code></p>
-<hr />
-</div>
-<div id="map_input_to_q_modelinput_df" class="section level3" number="1.3.3">
-<h3><span class="header-section-number">1.3.3</span>
-<code>map_input_to_q_model(input_df)</code></h3>
-<ol style="list-style-type: decimal">
-<li><strong>Monthly → Annual:</strong> Sum litter, average
-temperature</li>
-<li><strong>6 cohorts → 5 functional types:</strong>
-<ul>
-<li><code>C_needles</code>: pine/spruce foliage</li>
-<li><code>C_branches</code>: all branches</li>
-<li><code>C_stems</code>: stems + coarse_roots</li>
-<li><code>C_fine_roots</code>: all fine roots</li>
-<li><code>C_understorey</code>: understorey</li>
-</ul></li>
-<li><strong>AWEN → quality:</strong> Species-specific q0 from parameters
-(AWEN validates quality assumptions)</li>
-</ol>
-<p><strong>Output:</strong> Annual dataframe with cohort C inputs +
-temperature</p>
-<hr />
-</div>
-</div>
-<div id="model-execution" class="section level2" number="1.4">
-<h2><span class="header-section-number">1.4</span> Model Execution</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Yasso07</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">yasso07_run</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">params =</span> YASSO07_DEFAULT_PARAMS,</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">C0 =</span> <span class="cn">NULL</span>,  <span class="co"># Spi</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">input_df =</span> yasso_input,</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="dv">5000</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>)</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co"># RothC</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="fu">rothc_run</span>(</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">params =</span> ROTHC_DEFAULT_PARAMS,</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">C0 =</span> <span class="cn">NULL</span>,  <span class="co"># Analytical steady-state</span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">input_df =</span> rothc_input,</span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="dv">10000</span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>)</span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co"># Q-model</span></span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="fu">q_model_run_hybrid</span>(  <span class="co"># Uses analytical + short numerical spinup</span></span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="at">params =</span> Q_MODEL_DEFAULT_PARAMS,</span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="at">C0 =</span> <span class="cn">NULL</span>,</span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="at">input_df =</span> q_input,</span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  <span class="at">site_row =</span> site_row,</span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>  <span class="at">spinup_years =</span> <span class="dv">1500</span></span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>)</span></code></pre></div>
-<hr />
-<div id="initialization-when-c0-null" class="section level3" number="1.4.1">
-<h3><span class="header-section-number">1.4.1</span> Initialization when
-C0 = NULL:</h3>
-<p><strong>Yasso07:</strong> - Numerical spinup (5000 iterations) -
-Should use analytical steady-state (matrix inversion) instead - See
-earlier discussion - this could be ~100× faster</p>
-<p><strong>RothC:</strong> - Analytical steady-state (matrix inversion:
-C_ss = -A^(-1) · I) - Fast and exact</p>
-<p><strong>Q-model:</strong> - Hybrid approach (analytical steady-state
-formula + 50-year numerical spinup) - Balances speed and accuracy</p>
-</div>
-</div>
-<div id="results-aggregation" class="section level2" number="1.5">
-<h2><span class="header-section-number">1.5</span> Results
-Aggregation</h2>
-<p><strong>Challenge:</strong> RothC monthly, others annual</p>
-<p><strong>Solution:</strong> <code>aggregate_monthly_to_annual()</code>
-averages RothC within each year</p>
-<p><strong>Summary table:</strong></p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">year =</span> ...,</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">yasso07 =</span> ...,  <span class="co"># Annual SOC</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">rothc =</span> ...,    <span class="co"># Annual average SOC</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">q_model =</span> ...   <span class="co"># Annual SOC</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>)</span></code></pre></div>
-<hr />
-</div>
-<div id="utility-functions" class="section level2" number="1.6">
-<h2><span class="header-section-number">1.6</span> Utility
-Functions</h2>
-<div id="calculate_model_statsresults" class="section level3" number="1.6.1">
-<h3><span class="header-section-number">1.6.1</span>
-<code>calculate_model_stats(results)</code></h3>
-<p>Returns mean, min, max, SD, CV for each model’s SOC trajectory.</p>
-</div>
-<div id="plot_model_comparisonresults" class="section level3" number="1.6.2">
-<h3><span class="header-section-number">1.6.2</span>
-<code>plot_model_comparison(results)</code></h3>
-<p>Plots annual SOC time series for all models (ggplot2 or base
-graphics).</p>
-</div>
-<div id="export_resultsresults-output_dir" class="section level3" number="1.6.3">
-<h3><span class="header-section-number">1.6.3</span>
-<code>export_results(results, output_dir)</code></h3>
-<p>Writes: - <code>soc_model_summary.csv</code>: Annual comparison -
-<code>yasso07_detailed.csv</code>: Full AWENH pools + respiration -
-<code>rothc_detailed.csv</code>: Full DPM/RPM/BIO/HUM/IOM pools
-(monthly) - <code>q_model_detailed.csv</code>: Full cohort pools +
-respiration</p>
-<hr />
-</div>
-</div>
-<div id="example-usage" class="section level2" number="1.7">
-<h2><span class="header-section-number">1.7</span> Example Usage</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Prepare data</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>input_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;unified_input.csv&quot;</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>site_row <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">clay =</span> <span class="dv">20</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">pine_prop =</span> <span class="fl">0.5</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">spruce_prop =</span> <span class="fl">0.3</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">birch_prop =</span> <span class="fl">0.2</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>)</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co"># Run comparison</span></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">run_soc_models</span>(</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">input_df =</span> input_df,</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="at">site_row =</span> site_row,</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="at">models =</span> <span class="fu">c</span>(<span class="st">&quot;yasso07&quot;</span>, <span class="st">&quot;rothc&quot;</span>, <span class="st">&quot;q_model&quot;</span>)</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>)</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co"># Quick check</span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="fu">plot_model_comparison</span>(results)</span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="fu">calculate_model_stats</span>(results)</span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a></span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co"># Export for analysis</span></span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="fu">export_results</span>(results, <span class="st">&quot;./outputs&quot;</span>)</span></code></pre></div>
-<hr />
-</div>
-<div id="key-assumptions" class="section level2" number="1.8">
-<h2><span class="header-section-number">1.8</span> Key Assumptions</h2>
-<ol style="list-style-type: decimal">
-<li><strong>AWEN → DPM/RPM mapping:</strong> <code>(A+W)/(total)</code>
-approximates decomposability
-<ul>
-<li>Should calibrate this per ecosystem type</li>
-</ul></li>
-<li><strong>Temporal aggregation:</strong> Annual comparison loses RothC
-seasonal dynamics
-<ul>
-<li>Monthly RothC values available in detailed output</li>
-</ul></li>
-<li><strong>Steady-state initialization:</strong> All models start from
-analytical equilibrium
-<ul>
-<li>Assumes constant historical climate</li>
-</ul></li>
-<li><strong>Same total C input:</strong> Input mapping preserves total
-carbon across models</li>
-</ol>
-<hr />
-</div>
-<div id="logic-check" class="section level2" number="1.9">
-<h2><span class="header-section-number">1.9</span> Logic Check</h2>
-<p>The wrapper ensures fair comparison by:</p>
-<ol style="list-style-type: decimal">
-<li>✅ <strong>Same carbon inputs:</strong> Total litter identical after
-mapping</li>
-<li>✅ <strong>Same climate:</strong> All models see same
-temperature/precipitation</li>
-<li>✅ <strong>Consistent initialization:</strong> Analytical
-steady-state where possible</li>
-<li>✅ <strong>Comparable resolution:</strong> Aggregate to annual for
-comparison</li>
-<li>✅ <strong>Separate structure from parameters:</strong> Use default
-params (recalibrate later)</li>
-</ol>
-<p><strong>Structural differences</strong> (what we want to quantify): -
-Pool conceptualization (AWEN vs DPM/RPM vs quality spectrum) -
-Temperature response (quadratic vs sigmoid vs linear) - Time resolution
-(annual vs monthly) - Clay effects (explicit in RothC, implicit in
-others)</p>
-<p><strong>Implementation artifacts</strong> (what we avoid): -
-Different spinup durations - Different input totals - Different climate
-forcing - Numerical instabilities</p>
 </div>
 </div>
 

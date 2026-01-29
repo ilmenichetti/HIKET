@@ -24,233 +24,60 @@ library(kableExtra)
 
 ## Overview
 
-Wrapper function to run multiple SOC models (Yasso07, RothC, Q-model) on the same input data for structural comparison.
+Wrapper function to run multiple SOC models on the same input data for structural comparison.
+
+Supported models:
+- Yasso07
+- Yasso15
+- Yasso20
+- RothC
+- Q-model
+
 ```r
 run_soc_models(
-  input_df,           # Time series with AWEN litter inputs + climate
-  site_row = NULL,    # Static site properties (clay, species composition)
-  models = c("yasso07", "rothc", "q_model"),
-  spinup_years = NULL # Override default spinup (5000/10000/1500)
+  input_df,
+  site_row = NULL,
+  models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
+  spinup_years = NULL,
+  rothc_annual_stat = c("eoy","mean")
 )
 ```
 
-**Returns:** List with `$yasso07`, `$rothc`, `$q_model` results plus `$summary` dataframe comparing annual SOC across models.
+## Model comparison
 
----
-
-## Input Format
-
-### Required in `input_df`:
-
-**Temporal:**
-- `year`, `month` (month optional for annual)
-
-**Climate:**
-- `temp_mean` or `temp_air`: Temperature (°C)
-- `temp_amplitude`: For Yasso07 seasonal effect
-- `precip`: Precipitation (mm)
-- `evap`: For RothC moisture modifier
-
-**Litter inputs** (Mg C/ha/timestep):
-- AWEN fractions for each cohort: `{cohort}_A`, `{cohort}_W`, `{cohort}_E`, `{cohort}_N`
-- Cohorts: `foliage`, `branches`, `stems`, `fine_roots`, `coarse_roots`, `understorey`
-
-### Required in `site_row`:
-
-- `clay`: Clay content (%) for RothC
-- `pine_prop`, `spruce_prop`, `birch_prop`: Species composition for Q-model
-
----
-
-## Input Mapping Logic
-
-Each model needs different input structure. The wrapper calls:
-
-### `map_input_to_yasso07(input_df)`
-
-1. **Monthly → Annual:** Sum litter inputs, average climate
-2. **6 cohorts → 3 litter types:**
-   - `nwl`: foliage + fine_roots + understorey
-   - `fwl`: branches
-   - `cwl`: stems + coarse_roots
-3. **AWEN preserved** for each litter type
-
-**Output:** Annual dataframe with `nwl_A/W/E/N`, `fwl_A/W/E/N`, `cwl_A/W/E/N` + climate
-
----
-
-### `map_input_to_rothc(input_df, site_row)`
-
-1. **Keep monthly** timestep
-2. **AWEN → DPM/RPM:**
-   - `DPM_fraction = (A + W) / (A + W + E + N)`
-   - Rest goes to RPM
-   - This maps "decomposability" from chemistry
-3. **Sum all cohorts** to total DPM and RPM
-
-**Output:** Monthly dataframe with `C_DPM`, `C_RPM`, climate, `clay`
-
----
-
-### `map_input_to_q_model(input_df)`
-
-1. **Monthly → Annual:** Sum litter, average temperature
-2. **6 cohorts → 5 functional types:**
-   - `C_needles`: pine/spruce foliage
-   - `C_branches`: all branches
-   - `C_stems`: stems + coarse_roots
-   - `C_fine_roots`: all fine roots
-   - `C_understorey`: understorey
-3. **AWEN → quality:** Species-specific q0 from parameters (AWEN validates quality assumptions)
-
-**Output:** Annual dataframe with cohort C inputs + temperature
-
----
-
-## Model Execution
-```r
-# Yasso07
-yasso07_run(
-  params = YASSO07_DEFAULT_PARAMS,
-  C0 = NULL,  # Spinup
-  input_df = yasso_input,
-  spinup_years = 5000
+```{r model-comparison-table}
+model_comp <- tibble::tribble(
+  ~Model, ~Timestep, ~Pools, ~Climate_forcing, ~Initialization,
+  "Yasso07", "Annual", "AWENH", "Annual mean + amplitude T, annual P", "Analytical steady state",
+  "Yasso15", "Annual", "AWENH", "Annual mean + amplitude T, annual P", "Analytical steady state",
+  "Yasso20", "Annual", "AWENH", "Monthly T, annual P", "Analytical steady state",
+  "RothC", "Monthly", "DPM/RPM/BIO/HUM/IOM", "Monthly T, P, evap + clay", "Analytical steady state",
+  "Q-model", "Annual", "Quality spectrum", "Annual climate + species", "Hybrid analytical + numeric"
 )
 
-# RothC
-rothc_run(
-  params = ROTHC_DEFAULT_PARAMS,
-  C0 = NULL,  # Analytical steady-state
-  input_df = rothc_input,
-  spinup_years = 10000
-)
-
-# Q-model
-q_model_run_hybrid(  # Uses analytical + short numerical spinup
-  params = Q_MODEL_DEFAULT_PARAMS,
-  C0 = NULL,
-  input_df = q_input,
-  site_row = site_row,
-  spinup_years = 1500
-)
+kable(model_comp) %>%
+  kable_styling(full_width = FALSE)
 ```
 
----
+## Initialization approach
 
-### Initialization when C0 = NULL:
-
-**Yasso07:** 
-- Numerical spinup (5000 iterations)
-- Should use analytical steady-state (matrix inversion) instead
-- See earlier discussion - this could be ~100× faster
-
-**RothC:** 
-- Analytical steady-state (matrix inversion: C_ss = -A^(-1) · I)
-- Fast and exact
-
-**Q-model:** 
-- Hybrid approach (analytical steady-state formula + 50-year numerical spinup)
-- Balances speed and accuracy
-
-## Results Aggregation
-
-**Challenge:** RothC monthly, others annual
-
-**Solution:** `aggregate_monthly_to_annual()` averages RothC within each year
-
-**Summary table:**
-```r
-data.frame(
-  year = ...,
-  yasso07 = ...,  # Annual SOC
-  rothc = ...,    # Annual average SOC
-  q_model = ...   # Annual SOC
+```{r init-comparison-table}
+init_comp <- tibble::tribble(
+  ~Model, ~Approach, ~Notes,
+  "Yasso07", "Analytical steady state", "Solved from A x + b = 0 using mean climate and inputs",
+  "Yasso15", "Analytical steady state", "Solved per litter type, summed",
+  "Yasso20", "Analytical steady state", "Monthly temperature response, annual precipitation",
+  "RothC", "Analytical steady state", "Closed-form solution for linear pools",
+  "Q-model", "Hybrid", "Analytical approximation plus short numerical spinup"
 )
+
+kable(init_comp) %>%
+  kable_styling(full_width = FALSE)
 ```
 
----
+## Key assumptions
 
-## Utility Functions
-
-### `calculate_model_stats(results)`
-
-Returns mean, min, max, SD, CV for each model's SOC trajectory.
-
-### `plot_model_comparison(results)`
-
-Plots annual SOC time series for all models (ggplot2 or base graphics).
-
-### `export_results(results, output_dir)`
-
-Writes:
-- `soc_model_summary.csv`: Annual comparison
-- `yasso07_detailed.csv`: Full AWENH pools + respiration
-- `rothc_detailed.csv`: Full DPM/RPM/BIO/HUM/IOM pools (monthly)
-- `q_model_detailed.csv`: Full cohort pools + respiration
-
----
-
-## Example Usage
-```r
-# Prepare data
-input_df <- read.csv("unified_input.csv")
-site_row <- data.frame(
-  clay = 20,
-  pine_prop = 0.5,
-  spruce_prop = 0.3,
-  birch_prop = 0.2
-)
-
-# Run comparison
-results <- run_soc_models(
-  input_df = input_df,
-  site_row = site_row,
-  models = c("yasso07", "rothc", "q_model")
-)
-
-# Quick check
-plot_model_comparison(results)
-calculate_model_stats(results)
-
-# Export for analysis
-export_results(results, "./outputs")
-```
-
----
-
-## Key Assumptions
-
-1. **AWEN → DPM/RPM mapping:** `(A+W)/(total)` approximates decomposability
-   - Should calibrate this per ecosystem type
-   
-2. **Temporal aggregation:** Annual comparison loses RothC seasonal dynamics
-   - Monthly RothC values available in detailed output
-
-3. **Steady-state initialization:** All models start from analytical equilibrium
-   - Assumes constant historical climate
-
-4. **Same total C input:** Input mapping preserves total carbon across models
-
----
-
-## Logic Check
-
-The wrapper ensures fair comparison by:
-
-1. ✅ **Same carbon inputs:** Total litter identical after mapping
-2. ✅ **Same climate:** All models see same temperature/precipitation
-3. ✅ **Consistent initialization:** Analytical steady-state where possible
-4. ✅ **Comparable resolution:** Aggregate to annual for comparison
-5. ✅ **Separate structure from parameters:** Use default params (recalibrate later)
-
-**Structural differences** (what we want to quantify):
-- Pool conceptualization (AWEN vs DPM/RPM vs quality spectrum)
-- Temperature response (quadratic vs sigmoid vs linear)
-- Time resolution (annual vs monthly)
-- Clay effects (explicit in RothC, implicit in others)
-
-**Implementation artifacts** (what we avoid):
-- Different spinup durations
-- Different input totals
-- Different climate forcing
-- Numerical instabilities
+1. Total carbon inputs preserved across mappings.
+2. Same underlying monthly climate data used for all models.
+3. Annual summaries used for comparison (RothC aggregated).
+4. Structural differences between models intentionally retained.
