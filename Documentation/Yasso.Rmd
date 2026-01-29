@@ -1,0 +1,436 @@
+---
+title: "Yasso"
+author: "Lorenzo Menichetti"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+```
+
+# Yasso07 Model Documentation
+
+## Overview
+
+Yasso07 is a chemical fractionation model for soil organic carbon decomposition based on the AWENH pool structure. It handles multiple litter types with different wood sizes and uses annual time steps.
+
+**Key features:**
+- Chemical fractionation (AWEN + Humus pools)
+- Three litter types: non-woody (nwl), fine woody (fwl), coarse woody (cwl)
+- Wood size effects on decomposition
+- Temperature and precipitation modifiers
+- Matrix exponential solution for accurate integration
+
+**Reference:** Tuomi et al. (2009). *Heterotrophic soil respiration—Comparison of different models describing its temperature dependence.* Ecological Modelling, 220(21), 3362-3371.
+
+---
+
+## Model Structure
+
+### Chemical Pools
+
+Yasso07 tracks five organic matter pools:
+
+1. **A (Acid-soluble)**: Sugars, starches, soluble proteins
+2. **W (Water-soluble)**: Simple compounds (e.g., glucose, amino acids)  
+3. **E (Ethanol-soluble)**: Lipids, waxes, resins
+4. **N (Neither-soluble)**: Recalcitrant compounds (e.g., lignin, suberin)
+5. **H (Humus)**: Stabilized organic matter
+
+### Litter Type Classification
+
+The model differentiates litter by wood diameter, which affects decomposition rates:
+
+| Litter Type | Diameter | Components |
+|-------------|----------|------------|
+| **nwl** (non-woody) | 0 cm | Foliage, fine roots, understorey |
+| **fwl** (fine woody) | 2 cm | Small branches |
+| **cwl** (coarse woody) | 15 cm | Large branches, stems, coarse roots |
+
+### Decomposition Dynamics
+
+**Decomposition rates** for each AWEN pool:
+$$k_i = \alpha_i \cdot f_{temp} \cdot f_{precip}$$
+
+Where:
+- $\alpha_i$: Base decomposition rate for pool $i$
+- $f_{temp}$: Temperature modifier (accounts for mean + amplitude)
+- $f_{precip}$: Precipitation modifier
+
+**Wood size effect** (N pool only):
+$$f_{size} = \min\left(1, \exp\left(-\delta_1 \cdot d^{\delta_2} \cdot |r|\right)\right)$$
+
+Where $d$ is wood diameter (cm).
+
+**Transfer between pools**: Decomposing material from pool $i$ transfers to other pools according to transfer coefficients $p_{ij}$, with the remainder respired as CO₂.
+
+**Humus formation**: A fraction ($p_H$) of decomposed AWEN material forms stabilized humus.
+
+---
+
+## Mathematical Formulation
+
+### Transfer Matrix
+
+The model uses a 5×5 transfer matrix $\mathbf{A}$:
+
+$$\frac{d\mathbf{C}}{dt} = \mathbf{A} \cdot \mathbf{C} + \mathbf{I}$$
+
+Where:
+- $\mathbf{C} = [C_A, C_W, C_E, C_N, C_H]^T$: Carbon in each pool
+- $\mathbf{I} = [I_A, I_W, I_E, I_N, 0]^T$: Annual litter inputs (no direct input to H)
+
+**Diagonal elements** (loss from pool $i$):
+$$A_{ii} = -k_i$$
+
+With $k_N$ modified by size effect: $k_N = \alpha_N \cdot f_{temp} \cdot f_{precip} \cdot f_{size}$
+
+**Off-diagonal elements** (transfer from pool $j$ to pool $i$):
+$$A_{ij} = p_{ij} \cdot |k_j|$$
+
+**Humus row** (bottom row accumulates from all AWEN pools):
+$$A_{5i} = p_H \cdot |k_i| \quad \text{for } i \in \{A,W,E,N\}$$
+
+### Analytical Solution
+
+For annual time step $\Delta t = 1$ year:
+
+$$\mathbf{C}(t+1) = e^{\mathbf{A}} \cdot \mathbf{C}(t) + \left(e^{\mathbf{A}} - \mathbf{I}_5\right) \cdot \mathbf{A}^{-1} \cdot \mathbf{I}$$
+
+Where $e^{\mathbf{A}}$ is the matrix exponential.
+
+**Special case**: When $\max(|A_{ij}|) < 10^{-10}$ (negligible decomposition):
+$$\mathbf{C}(t+1) = \mathbf{C}(t) + \mathbf{I}$$
+
+### Respiration
+
+Heterotrophic respiration in year $t$:
+$$R_h(t) = C_{total}(t) + I_{total}(t) - C_{total}(t+1)$$
+
+By mass balance, this equals carbon lost to CO₂.
+
+---
+
+## Environmental Modifiers
+
+### Temperature Modifier
+
+Yasso07 accounts for both mean temperature and seasonal amplitude using a four-point approximation:
+
+$$f_{temp} = \frac{1}{4} \sum_{i=1}^{4} \exp(\beta_1 T_i + \beta_2 T_i^2)$$
+
+Where the four quarterly temperatures are:
+$$T_1 = \bar{T} + \frac{4A}{\pi}\left(\frac{1}{\sqrt{2}} - 1\right)$$
+$$T_2 = \bar{T} - \frac{4A}{\sqrt{2}\pi}$$
+$$T_3 = \bar{T} + \frac{4A}{\pi}\left(1 - \frac{1}{\sqrt{2}}\right)$$
+$$T_4 = \bar{T} + \frac{4A}{\sqrt{2}\pi}$$
+
+With $\bar{T}$ = annual mean temperature (°C), $A$ = annual temperature amplitude (°C).
+
+**Default parameters:** $\beta_1 = 0.096$, $\beta_2 = -0.0014$
+
+This quadratic formulation captures the reduced decomposition at extreme temperatures.
+
+### Precipitation Modifier
+
+Moisture effects on decomposition:
+
+$$f_{precip} = 1 - \exp\left(\gamma \cdot \frac{P}{1000}\right)$$
+
+Where $P$ is annual precipitation (mm).
+
+**Default parameter:** $\gamma = -1.21$
+
+This saturating function reflects limited moisture effects at high precipitation.
+
+### Wood Size Modifier
+
+Larger wood decomposes more slowly due to:
+- Lower surface area to volume ratio
+- Anaerobic microsites in large pieces
+- Physical protection of inner material
+
+$$f_{size} = \min\left(1, \exp\left(-\delta_1 \cdot d^{\delta_2} \cdot |r|\right)\right)$$
+
+**Default parameters:** $\delta_1 = -1.7$, $\delta_2 = 0.86$, $r = -0.306$
+
+The modifier only affects the **N pool** (lignin-like compounds).
+
+---
+
+## Initialization
+
+### Steady-State Approach
+
+For model spinup, the steady-state is found by iterating until equilibrium:
+```r
+yasso07_steady_state(
+  params = YASSO07_DEFAULT_PARAMS,
+  input_awen = c(mean_A, mean_W, mean_E, mean_N),
+  temp_mean = mean_temp,
+  temp_amp = mean_amplitude,
+  precip = mean_precip,
+  diameter = wood_diameter,
+  n_years = 5000
+)
+```
+
+**Algorithm:**
+1. Initialize pools to small non-zero values
+2. Iterate for `n_years` with average climate and inputs
+3. Pools converge to steady-state (typically <1000 years for fast pools, up to 5000 years for humus)
+
+**Alternative (faster):** Analytical steady-state using matrix inversion:
+$$\mathbf{C}_{ss} = -\mathbf{A}^{-1} \cdot \mathbf{I}$$
+
+However, this requires that $\mathbf{A}$ is non-singular and assumes constant climate.
+
+### Initial Conditions
+
+The model can be initialized three ways:
+
+1. **Steady-state spinup** (recommended for new sites)
+2. **User-provided initial pools** via `C0` parameter
+3. **Separate spinup for each litter type** (accounts for different wood sizes)
+
+---
+
+## Implementation Notes
+
+### Multiple Litter Types
+
+The model runs **separately** for each litter type, then sums results:
+```r
+# Each litter type has independent pools
+for(litter_type in c("nwl", "fwl", "cwl")) {
+  # Run with appropriate wood size
+  pools_lt <- simulate_litter_type(...)
+  
+  # Accumulate to total
+  total_pools <- total_pools + pools_lt
+}
+```
+
+This approach:
+- Correctly applies size modifiers to each litter type
+- Allows different initialization for woody vs non-woody material
+- Maintains computational efficiency
+
+### Input Data Structure
+
+Annual input dataframe must contain:
+
+**Climate variables:**
+- `temp_mean`: Annual mean temperature (°C)
+- `temp_amplitude`: Annual temperature amplitude (°C)
+- `precip`: Annual precipitation (mm)
+
+**Litter inputs for each type** (Mg C/ha/yr):
+- `nwl_A`, `nwl_W`, `nwl_E`, `nwl_N`: Non-woody AWEN fractions
+- `fwl_A`, `fwl_W`, `fwl_E`, `fwl_N`: Fine woody AWEN fractions
+- `cwl_A`, `cwl_W`, `cwl_E`, `cwl_N`: Coarse woody AWEN fractions
+
+### Matrix Exponential Computation
+
+The model uses `Matrix::expm()` for accurate computation of $e^{\mathbf{A}}$. This ensures:
+- Numerical stability for stiff systems
+- Exact solution to the ODE system
+- No time-step artifacts
+
+For very small decomposition rates, a simpler approximation is used to avoid numerical issues.
+
+---
+
+## Default Parameters
+
+### Decomposition Rates (yr⁻¹)
+
+| Pool | Parameter | Value |
+|------|-----------|-------|
+| A | `alpha_A` | 0.66 |
+| W | `alpha_W` | 4.30 |
+| E | `alpha_E` | 0.35 |
+| N | `alpha_N` | 0.22 |
+| H | `alpha_H` | 0.0033 |
+
+**Interpretation:** W pool is fastest (turnover ~3 months), H pool is slowest (turnover ~300 years).
+
+### Transfer Coefficients
+
+Transfer from pool $j$ to pool $i$ (fraction of decomposed material):
+
+|  | to A | to W | to E | to N |
+|--|------|------|------|------|
+| **from A** | - | 0.32 | 0.01 | 0.93 |
+| **from W** | 0.34 | - | 0.00 | 0.00 |
+| **from E** | 0.00 | 0.035 | - | 0.005 |
+| **from N** | 0.01 | 0.0005 | 0.03 | - |
+
+**Humus formation:** `p_H = 0.04` (4% of decomposed AWEN → humus)
+
+**Interpretation:** 
+- N pool receives material from all other pools (recalcitrant endproduct)
+- W and E pools transfer mainly to A pool
+- Most decomposed material is respired (transfer fractions << 1)
+
+### Environmental Response
+
+| Parameter | Value | Effect |
+|-----------|-------|--------|
+| `beta1` | 0.096 | Linear temperature term |
+| `beta2` | -0.0014 | Quadratic temperature term |
+| `gamma` | -1.21 | Precipitation response |
+| `delta1` | -1.7 | Wood size effect (scale) |
+| `delta2` | 0.86 | Wood size effect (exponent) |
+| `r` | -0.306 | Wood size effect (direction) |
+
+---
+
+## Usage Examples
+
+### Basic Simulation
+```r
+# Prepare annual input data
+input_df <- data.frame(
+  temp_mean = c(5.2, 5.5, 5.8),
+  temp_amplitude = c(10, 10, 10),
+  precip = c(600, 650, 620),
+  nwl_A = c(0.5, 0.5, 0.5),
+  nwl_W = c(0.3, 0.3, 0.3),
+  nwl_E = c(0.1, 0.1, 0.1),
+  nwl_N = c(0.2, 0.2, 0.2),
+  fwl_A = c(0.2, 0.2, 0.2),
+  fwl_W = c(0.1, 0.1, 0.1),
+  fwl_E = c(0.05, 0.05, 0.05),
+  fwl_N = c(0.15, 0.15, 0.15)
+)
+
+# Run model with steady-state spinup
+results <- yasso07_run(
+  params = YASSO07_DEFAULT_PARAMS,
+  C0 = NULL,  # Will compute steady-state
+  input_df = input_df,
+  spinup_years = 5000
+)
+
+# Extract results
+total_soc <- results$total_soc  # Total SOC (Mg C/ha)
+pools <- results$pools  # AWENH pools over time
+respiration <- results$respiration  # Annual Rh
+```
+
+### Custom Initial Conditions
+```r
+# Provide initial pools for each litter type
+C0 <- list(
+  nwl = c(A=10, W=5, E=3, N=8, H=50),
+  fwl = c(A=5, W=2, E=2, N=6, H=30),
+  cwl = c(A=3, W=1, E=1, N=15, H=40)
+)
+
+results <- yasso07_run(
+  params = YASSO07_DEFAULT_PARAMS,
+  C0 = C0,
+  input_df = input_df,
+  spinup_years = 0  # Skip spinup
+)
+```
+
+### Parameter Calibration
+```r
+# Test different parameter set
+custom_params <- YASSO07_DEFAULT_PARAMS
+custom_params$alpha_A <- 0.70  # Faster A pool decomposition
+custom_params$beta1 <- 0.10     # Stronger temperature sensitivity
+
+results <- yasso07_run(
+  params = custom_params,
+  input_df = input_df
+)
+```
+
+---
+
+## Model Comparison Considerations
+
+### Structural Features
+
+For model intercomparison studies, key Yasso07 characteristics:
+
+1. **Pool structure:** Discrete (5 pools) based on chemical composition
+2. **Temperature response:** Quadratic (captures extremes)
+3. **Temperature sensitivity:** Uniform across pools (same $\beta_1$, $\beta_2$ for all)
+4. **Spatial resolution:** Single-horizon (no A/B distinction)
+5. **Litter quality:** Implicit in AWEN fractions
+6. **Wood effects:** Explicit size modifier on N pool only
+
+### Comparison with Other Models
+
+**vs. RothC:**
+- Yasso07 uses chemical fractionation; RothC uses decomposability classes
+- Yasso07 has explicit wood size effects; RothC does not
+- Both use environmental modifiers on all pools
+
+**vs. Q-model:**
+- Yasso07: discrete pools; Q-model: continuous quality spectrum
+- Yasso07: fixed pool interactions; Q-model: quality-dependent transformation
+- Yasso07: uniform temperature sensitivity; Q-model: quality-dependent $E_a$
+
+### Fair Comparison Protocol
+
+To compare Yasso07 fairly with other models:
+
+1. **Recalibrate** all models to same dataset
+2. **Use consistent** climate forcing and litter inputs
+3. **Initialize to steady-state** under same historical conditions
+4. **Separate** structural uncertainty from parameter uncertainty
+5. **Test variants** (e.g., linear vs quadratic temperature response)
+
+---
+
+## Computational Performance
+
+**Typical runtimes** (5000-year spinup + 100-year simulation):
+- Single litter type: ~0.1 seconds
+- Three litter types: ~0.3 seconds
+- 1000 Monte Carlo iterations: ~5 minutes
+
+**Memory usage:** Minimal (<10 MB for century-scale simulations)
+
+**Bottlenecks:** Matrix exponential computation (can be optimized for repeated $\mathbf{A}$ matrices)
+
+---
+
+## Limitations and Assumptions
+
+1. **Annual time step:** Cannot resolve seasonal dynamics within years
+2. **Homogeneous mixing:** All pools subject to same climate conditions
+3. **No priming effects:** Litter additions don't affect existing SOC decomposition
+4. **No nutrient constraints:** Decomposition limited only by climate and substrate quality
+5. **Single horizon:** No vertical stratification or leaching to B horizon
+6. **Steady-state climate assumption** during spinup (may not reflect historical variability)
+
+---
+
+## References
+
+**Primary reference:**
+- Tuomi, M., Thum, T., Järvinen, H., Fronzek, S., Berg, B., Harmon, M., ... & Liski, J. (2009). Leaf litter decomposition—Estimates of global variability based on Yasso07 model. *Ecological Modelling*, 220(23), 3362-3371.
+
+**Original development:**
+- Liski, J., Palosuo, T., Peltoniemi, M., & Sievänen, R. (2005). Carbon and decomposition model Yasso for forest soils. *Ecological Modelling*, 189(1-2), 168-182.
+
+**Wood decomposition:**
+- Tuomi, M., Laiho, R., Repo, A., & Liski, J. (2011). Wood decomposition model for boreal forests. *Ecological Modelling*, 222(3), 709-718.

@@ -1,0 +1,489 @@
+---
+title: "Input Data Structure Documentation"
+subtitle: "SOC Model Comparison Framework"
+author: "Multi-Model SOC Framework"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+```
+
+# Overview
+
+This document describes the **unified input data structure** used by the SOC Model Comparison Framework. The framework supports multiple soil carbon models (YASSO07, Q-model, RothC) through a common input format that gets mapped to model-specific requirements.
+
+## Design Philosophy
+
+1. **Tissue origin based**: Litter is tracked by tissue origin (foliage, branches, stems, roots, understorey)
+2. **AWEN fractionation**: Each cohort has chemical quality fractions (Acid, Water, Ethanol, Non-soluble), Yasso-native
+3. **Monthly resolution**: Climate and litter at monthly timestep for maximum flexibility, since some models are working with monthly time step
+
+# Primary Input Format
+
+The whole work is at the plot level, so all models are iterated by plot
+
+## The Cohort-AWEN Structure
+
+The input data frame has **monthly** rows with **cohort × AWEN** litter columns:
+
+```{r structure-overview, echo=FALSE}
+structure_df <- data.frame(
+  Category = c(rep("Identifiers", 3), rep("Foliage", 4), rep("Branches", 4), 
+               rep("Stems", 4), rep("Fine Roots", 4), rep("Coarse Roots", 4),
+               rep("Understorey", 4), rep("Climate", 3)),
+  Column = c("plot_id", "year", "month",
+             "C_foliage_A", "C_foliage_W", "C_foliage_E", "C_foliage_N",
+             "C_branches_A", "C_branches_W", "C_branches_E", "C_branches_N",
+             "C_stems_A", "C_stems_W", "C_stems_E", "C_stems_N",
+             "C_fine_roots_A", "C_fine_roots_W", "C_fine_roots_E", "C_fine_roots_N",
+             "C_coarse_roots_A", "C_coarse_roots_W", "C_coarse_roots_E", "C_coarse_roots_N",
+             "C_understorey_A", "C_understorey_W", "C_understorey_E", "C_understorey_N",
+             "temp_air", "precip", "evap"),
+  Type = c("character", "integer", "integer",
+           rep("numeric", 24),
+           "numeric", "numeric", "numeric"),
+  Units = c("-", "year", "1-12",
+            rep("t C ha⁻¹ month⁻¹", 24),
+            "°C", "mm month⁻¹", "mm month⁻¹")
+)
+
+kable(structure_df, caption = "Complete input data structure") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 11) %>%
+  pack_rows("Identifiers", 1, 3) %>%
+  pack_rows("Foliage Litter", 4, 7) %>%
+  pack_rows("Branch Litter", 8, 11) %>%
+  pack_rows("Stem Litter", 12, 15) %>%
+  pack_rows("Fine Root Litter", 16, 19) %>%
+  pack_rows("Coarse Root Litter", 20, 23) %>%
+  pack_rows("Understorey Litter", 24, 27) %>%
+  pack_rows("Climate", 28, 30)
+```
+
+## Column Naming Convention
+
+Litter columns follow the pattern: `C_{cohort}_{fraction}`
+
+- **C_**: Prefix indicating carbon content
+- **{cohort}**: Tissue type (foliage, branches, stems, fine_roots, coarse_roots, understorey)
+- **{fraction}**: AWEN chemical fraction (A, W, E, N)
+
+## AWEN Fractions Explained
+
+The AWEN system classifies litter chemistry by solubility:
+
+```{r awen-table, echo=FALSE}
+awen_df <- data.frame(
+  Fraction = c("A (Acid-soluble)", "W (Water-soluble)", "E (Ethanol-soluble)", "N (Non-soluble)"),
+  `Chemical Components` = c(
+    "Cellulose, some hemicelluloses",
+    "Sugars, organic acids, some proteins",
+    "Fats, waxes, resins, terpenes",
+    "Lignin, cutin, tannin-protein complexes"
+  ),
+  `Decomposition Rate` = c("Medium", "Fast", "Fast", "Slow"),
+  `Typical Range` = c("30-50%", "5-20%", "2-10%", "20-40%"),
+  check.names = FALSE
+)
+
+kable(awen_df, caption = "AWEN chemical fractions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  column_spec(3, color = c("orange", "green", "green", "red"))
+```
+
+**Note**: The H fraction (Humus) exists in some datasets but is typically 0 for fresh litter inputs.
+
+# Cohort Definitions
+
+## Six Tissue Types
+
+```{r cohort-table, echo=FALSE}
+cohort_df <- data.frame(
+  Cohort = c("foliage", "branches", "stems", "fine_roots", "coarse_roots", "understorey"),
+  Description = c(
+    "Needles, leaves from canopy trees",
+    "Small woody material (typically < 5-10 cm diameter)",
+    "Large woody material (trunks, large branches)",
+    "Roots < 2mm diameter",
+    "Roots ≥ 2mm diameter",
+    "Ground vegetation, herbs, grasses, mosses"
+  ),
+  `Decomposition Character` = c(
+    "Fast, high N content",
+    "Medium, gradual fragmentation",
+    "Slow, decades to fragment",
+    "Fast, high turnover",
+    "Medium-slow, woody structure",
+    "Fast, similar to foliage"
+  ),
+  check.names = FALSE
+)
+
+kable(cohort_df, caption = "Litter cohort definitions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Carbon Conservation Rule
+
+**Critical**: The total carbon input is the sum of all cohort × fraction combinations:
+
+$$C_{total} = \sum_{cohort} \sum_{fraction} C_{cohort,fraction}$$
+
+No carbon should be created or destroyed by the mapping functions. Each model receives exactly the same total carbon, just organized differently.
+
+# Climate Variables
+
+## Required Climate Data
+
+```{r climate-table, echo=FALSE}
+climate_df <- data.frame(
+  Variable = c("temp_air", "precip", "evap"),
+  Description = c(
+    "Mean air temperature",
+    "Total precipitation",
+    "Potential or actual evapotranspiration"
+  ),
+  Units = c("°C", "mm", "mm"),
+  Timestep = c("Monthly mean", "Monthly sum", "Monthly sum"),
+  `Used By` = c("All models", "YASSO, RothC", "RothC")
+)
+
+kable(climate_df, caption = "Climate input variables") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Climate Aggregations by Model
+
+Different models use climate differently:
+
+| Model | Temperature | Precipitation | Evaporation |
+|-------|-------------|---------------|-------------|
+| **YASSO07** | Annual mean + amplitude | Annual sum | Not used |
+| **Q-model** | Annual mean | Not used | Not used |
+| **RothC** | Monthly values | Monthly values | Monthly values |
+
+# Model-Specific Mappings
+
+## Overview of Transformations
+
+```{r mapping-diagram, echo=FALSE, fig.width=8, fig.height=5}
+# Simple text representation
+cat("
+┌─────────────────────────────────────────────────────────────────┐
+│                    UNIFIED INPUT FORMAT                         │
+│  (Monthly, 6 cohorts × 4 AWEN fractions + climate)             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐     ┌───────────────┐     ┌───────────────┐
+│   YASSO07     │     │   Q-MODEL     │     │    RothC      │
+├───────────────┤     ├───────────────┤     ├───────────────┤
+│ • Annual      │     │ • Annual      │     │ • Monthly     │
+│ • 3 litter    │     │ • 5 litter    │     │ • 2 pools     │
+│   types       │     │   types       │     │   (DPM/RPM)   │
+│ • AWEN pools  │     │ • Total C     │     │ • Total C     │
+│ • T, Amp, P   │     │ • T only      │     │ • T, P, E     │
+└───────────────┘     └───────────────┘     └───────────────┘
+")
+```
+
+## YASSO07 Mapping
+
+**Aggregation**: Monthly → Annual, 6 cohorts → 3 litter types
+
+```{r yasso-mapping, echo=FALSE}
+yasso_map <- data.frame(
+  `YASSO Type` = c("nwl (non-woody)", "fwl (fine woody)", "cwl (coarse woody)"),
+  `Source Cohorts` = c(
+    "foliage + fine_roots + understorey",
+    "branches",
+    "stems + coarse_roots"
+  ),
+  `Wood Diameter` = c("0 cm", "~2 cm", "~15 cm"),
+  `Decomposition` = c("Fast (no size effect)", "Medium (size modifier)", "Slow (large size modifier)"),
+  check.names = FALSE
+)
+
+kable(yasso_map, caption = "YASSO07 litter type mapping") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**AWEN preservation**: Each litter type retains its AWEN fractionation:
+- `nwl_A` = sum of foliage_A + fine_roots_A + understorey_A
+- `nwl_W` = sum of foliage_W + fine_roots_W + understorey_W
+- etc.
+
+**Climate**:
+- `temp_mean` = mean of 12 monthly temperatures
+- `temp_amplitude` = (max monthly T - min monthly T) / 2
+- `precip` = sum of 12 monthly precipitation values
+
+## Q-Model Mapping
+
+**Aggregation**: Monthly → Annual, 6 cohorts → 5 tissue types
+
+```{r q-mapping, echo=FALSE}
+q_map <- data.frame(
+  `Q-Model Type` = c("C_needles", "C_branches", "C_stems", "C_fine_roots", "C_understorey"),
+  `Source Cohorts` = c(
+    "foliage",
+    "branches",
+    "stems",
+    "fine_roots + coarse_roots",
+    "understorey"
+  ),
+  `Initial Quality (q0)` = c("q0n (species)", "q0w (species)", "q0w (species)", "q0f (species)", "q0n (species)"),
+  check.names = FALSE
+)
+
+kable(q_map, caption = "Q-model tissue type mapping") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**AWEN handling**: AWEN fractions are **summed** to total C (Q-model doesn't use chemical fractionation):
+- `C_needles` = foliage_A + foliage_W + foliage_E + foliage_N
+
+**Climate**:
+- `temp_mean` = mean of 12 monthly temperatures
+- Precipitation not used (Q-model is temperature-only)
+
+## RothC Mapping
+
+**Aggregation**: Keeps monthly timestep, converts AWEN → DPM/RPM split
+
+```{r rothc-mapping, echo=FALSE}
+rothc_map <- data.frame(
+  `RothC Pool` = c("DPM (Decomposable Plant Material)", "RPM (Resistant Plant Material)"),
+  `Source` = c(
+    "Fraction based on (W + E) / total",
+    "Fraction based on (A + N) / total"
+  ),
+  `Rationale` = c(
+    "Water + Ethanol soluble = labile, fast-decomposing",
+    "Acid + Non-soluble = recalcitrant, slow-decomposing"
+  ),
+  check.names = FALSE
+)
+
+kable(rothc_map, caption = "RothC pool mapping from AWEN") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**DPM fraction calculation**:
+```r
+labile_frac <- (W + E) / (A + W + E + N)
+dpm_frac <- pmax(0.15, pmin(0.5, labile_frac + 0.1))  # Constrained range
+```
+
+**Climate**: Uses monthly values directly (temp_air, precip, evap)
+
+# Site/Auxiliary Data
+
+## Site Information
+
+Some models require additional site characteristics:
+
+```{r site-data, echo=FALSE}
+site_df <- data.frame(
+  Variable = c("clay", "soil_depth", "pine_prop", "spruce_prop", "birch_prop"),
+  `Used By` = c("RothC", "RothC (optional)", "Q-model", "Q-model", "Q-model"),
+  Units = c("%", "cm", "0-1", "0-1", "0-1"),
+  Description = c(
+    "Clay content of mineral soil",
+    "Depth of soil layer being modeled",
+    "Proportion of pine in stand",
+    "Proportion of spruce in stand",
+    "Proportion of birch in stand"
+  ),
+  check.names = FALSE
+)
+
+kable(site_df, caption = "Optional site-level variables") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+# Example Data
+
+## Sample Input Structure
+
+```{r example-data}
+# Example of properly formatted input data
+example_input <- data.frame(
+  plot_id = "PLOT_001",
+  year = 2020,
+  month = 1:12,
+  
+ # Foliage (example: 1.2 t C/ha/yr, distributed monthly)
+  C_foliage_A = 0.052,   # ~52% of foliage C
+  C_foliage_W = 0.010,   # ~10%
+  C_foliage_E = 0.002,   # ~2%
+  C_foliage_N = 0.036,   # ~36%
+  
+  # Branches
+  C_branches_A = 0.017,
+  C_branches_W = 0.002,
+  C_branches_E = 0.001,
+  C_branches_N = 0.014,
+  
+  # Stems (small amount)
+  C_stems_A = 0.004,
+  C_stems_W = 0.0002,
+  C_stems_E = 0.0001,
+  C_stems_N = 0.004,
+  
+  # Fine roots
+  C_fine_roots_A = 0.029,
+  C_fine_roots_W = 0.003,
+  C_fine_roots_E = 0.001,
+  C_fine_roots_N = 0.033,
+  
+  # Coarse roots
+  C_coarse_roots_A = 0.011,
+  C_coarse_roots_W = 0.001,
+  C_coarse_roots_E = 0.0003,
+  C_coarse_roots_N = 0.013,
+  
+  # Understorey
+  C_understorey_A = 0.013,
+  C_understorey_W = 0.004,
+  C_understorey_E = 0.001,
+  C_understorey_N = 0.008,
+  
+  # Climate (Finnish boreal example)
+  temp_air = c(-8, -7, -3, 3, 10, 14, 17, 14, 10, 4, -1, -5),
+  precip = c(40, 35, 35, 40, 45, 60, 75, 80, 70, 55, 50, 45),
+  evap = c(5, 5, 10, 20, 45, 55, 60, 55, 40, 25, 10, 5)
+)
+
+# Show first 3 months
+kable(head(example_input, 3), digits = 4) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 10) %>%
+  scroll_box(width = "100%")
+```
+
+## Verify Carbon Totals
+
+```{r verify-totals}
+# Calculate annual totals by cohort
+annual_totals <- example_input %>%
+  summarise(
+    foliage = sum(C_foliage_A + C_foliage_W + C_foliage_E + C_foliage_N),
+    branches = sum(C_branches_A + C_branches_W + C_branches_E + C_branches_N),
+    stems = sum(C_stems_A + C_stems_W + C_stems_E + C_stems_N),
+    fine_roots = sum(C_fine_roots_A + C_fine_roots_W + C_fine_roots_E + C_fine_roots_N),
+    coarse_roots = sum(C_coarse_roots_A + C_coarse_roots_W + C_coarse_roots_E + C_coarse_roots_N),
+    understorey = sum(C_understorey_A + C_understorey_W + C_understorey_E + C_understorey_N)
+  ) %>%
+  mutate(TOTAL = foliage + branches + stems + fine_roots + coarse_roots + understorey)
+
+kable(annual_totals, digits = 2, caption = "Annual carbon totals by cohort (t C/ha/yr)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+# Validation Functions
+
+## Input Validation
+
+```{r validation-function, eval=FALSE}
+validate_input <- function(input_df) {
+  
+  # Check required climate columns
+  required_climate <- c("year", "temp_air", "precip")
+  missing_climate <- setdiff(required_climate, names(input_df))
+  if (length(missing_climate) > 0) {
+    stop(paste("Missing required climate columns:", paste(missing_climate, collapse = ", ")))
+  }
+  
+  # Check for litter columns
+  c_cols <- grep("^C_.*_[AWEN]$", names(input_df), value = TRUE)
+  if (length(c_cols) == 0) {
+    stop("No litter input columns found (expected C_cohort_A/W/E/N format)")
+  }
+  
+  # Check for negative values
+  litter_values <- input_df[, c_cols]
+  if (any(litter_values < 0, na.rm = TRUE)) {
+    warning("Negative litter values detected - check data!")
+  }
+  
+  # Report found cohorts
+  cohorts_found <- unique(gsub("^C_(.*)_[AWEN]$", "\\1", c_cols))
+  cat("Found cohorts:", paste(cohorts_found, collapse = ", "), "\n")
+  
+  invisible(TRUE)
+}
+```
+
+# Common Issues and Solutions
+
+## Issue: Missing AWEN Fractions
+
+**Symptom**: Only total C available, not AWEN split
+
+**Solution**: Apply default AWEN ratios based on tissue type:
+
+```{r default-awen, echo=FALSE}
+default_awen <- data.frame(
+  Tissue = c("Foliage", "Fine roots", "Branches", "Stems"),
+  A = c(0.50, 0.45, 0.50, 0.45),
+  W = c(0.10, 0.05, 0.05, 0.01),
+  E = c(0.02, 0.01, 0.03, 0.005),
+  N = c(0.38, 0.49, 0.42, 0.535)
+)
+
+kable(default_awen, caption = "Default AWEN fractions by tissue type") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Issue: Annual vs Monthly Data
+
+**Symptom**: Only annual litter data available
+
+**Solution**: Distribute evenly across months or use seasonal patterns:
+
+```{r distribute-annual, eval=FALSE}
+# Simple even distribution
+monthly_litter <- annual_litter / 12
+
+# Seasonal distribution (example for deciduous foliage)
+seasonal_weights <- c(0, 0, 0, 0, 0.05, 0.05, 0.05, 0.1, 0.3, 0.3, 0.1, 0.05)
+monthly_litter <- annual_litter * seasonal_weights
+```
+
+## Issue: Carbon Not Conserved After Mapping
+
+**Symptom**: Model receives different total C than input
+
+**Diagnosis**:
+```{r check-conservation, eval=FALSE}
+# Check raw input total
+raw_total <- sum(rowSums(input_df[, grep("^C_", names(input_df))]))
+
+# Check mapped totals
+yasso_total <- sum(yasso_mapped$C_nwl + yasso_mapped$C_fwl + yasso_mapped$C_cwl)
+q_total <- sum(q_mapped$C_needles + q_mapped$C_branches + q_mapped$C_stems + 
+               q_mapped$C_fine_roots + q_mapped$C_understorey)
+
+cat("Raw input:", raw_total, "\n")
+cat("YASSO mapped:", yasso_total, "\n")
+cat("Q-model mapped:", q_total, "\n")
+```
+
+---
+
+*Document generated: `r Sys.Date()`*
+
+*Framework version: 1.0*

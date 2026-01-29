@@ -1,0 +1,582 @@
+---
+title: "RothC"
+author: "Lorenzo Menichetti"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+```
+
+# RothC Model Documentation
+
+## Overview
+
+RothC-26.3 is a decomposability-based model for soil organic carbon turnover in arable topsoils. It uses five pools with different recalcitrance levels and includes explicit clay effects on stabilization. The model operates on monthly time steps.
+
+**Key features:**
+- Decomposability-based pool structure (DPM, RPM, BIO, HUM, IOM)
+- Monthly timestep for seasonal climate variation
+- Clay content effects on humification and stabilization
+- Separate temperature and moisture modifiers
+- Analytical steady-state solution
+
+**Reference:** Coleman, K., & Jenkinson, D. S. (1996). *RothC-26.3 - A Model for the turnover of carbon in soil*. In D. S. Powlson, P. Smith, & J. U. Smith (Eds.), Evaluation of Soil Organic Matter Models (pp. 237-246). Springer.
+
+---
+
+## Model Structure
+
+### Pool Definitions
+
+RothC tracks five organic matter pools with decreasing decomposability:
+
+1. **DPM (Decomposable Plant Material)**: Sugars, starches, proteins
+   - Fast turnover (~0.1 years)
+   - Fresh, readily decomposable litter
+
+2. **RPM (Resistant Plant Material)**: Cellulose, lignin
+   - Slow turnover (~3.3 years)  
+   - Structural plant components
+
+3. **BIO (Microbial Biomass)**: Living microbial cells
+   - Intermediate turnover (~1.5 years)
+   - Active decomposer community
+
+4. **HUM (Humified Organic Matter)**: Stabilized organic matter
+   - Very slow turnover (~50 years)
+   - Chemically and physically protected
+
+5. **IOM (Inert Organic Matter)**: Chemically inert carbon
+   - No turnover (k = 0)
+   - Calculated from clay content: IOM = 0.049 × clay^1.139
+
+### Conceptual Framework
+
+**Decomposability hierarchy:** DPM > BIO > RPM > HUM >> IOM
+
+**Key processes:**
+- Plant litter enters as DPM or RPM (partitioned by DPM/RPM ratio)
+- DPM, RPM, BIO, and HUM decompose at pool-specific rates
+- Decomposition products partition between CO₂, BIO, and HUM
+- Clay content increases stabilization (more HUM formation)
+- IOM is non-decomposable (measured separately)
+
+---
+
+## Mathematical Formulation
+
+### Decomposition Dynamics
+
+**Pool-specific decomposition rates:**
+$$\frac{dC_i}{dt} = -k_i \cdot r(T,W,V) \cdot C_i + \sum_j f_{ij} \cdot k_j \cdot r(T,W,V) \cdot C_j + I_i$$
+
+Where:
+- $C_i$: Carbon in pool $i$
+- $k_i$: Base decomposition rate (yr⁻¹)
+- $r(T,W,V)$: Combined rate modifier (temperature × moisture × cover)
+- $f_{ij}$: Transfer fraction from pool $j$ to pool $i$
+- $I_i$: External input to pool $i$
+
+**Discrete monthly timestep solution:**
+$$C_i(t + \Delta t) = C_i(t) \cdot \exp(-k_i \cdot r \cdot \Delta t) + \text{inputs} + \text{transfers}$$
+
+Where $\Delta t = 1/12$ year (monthly).
+
+### Transfer Partitioning
+
+Decomposed material from active pools (DPM, RPM, BIO, HUM) is partitioned into:
+
+$$\text{Decomposed}_i = C_i \cdot (1 - \exp(-k_i \cdot r \cdot \Delta t))$$
+
+This is split into:
+- **CO₂ respiration:** $f_{CO_2} \cdot \text{Decomposed}_i$
+- **Microbial biomass:** $f_{BIO} \cdot \text{Decomposed}_i$  
+- **Humification:** $f_{HUM} \cdot \text{Decomposed}_i$
+
+Where partitioning fractions depend on clay content (see below).
+
+### Clay Effects on Partitioning
+
+**Clay modifier:**
+$$x = 1.67 \cdot (1.85 + 1.60 \cdot \exp(-0.0786 \cdot \text{clay}))$$
+
+**Partition fractions:**
+$$f_{CO_2} = \frac{x}{x + 1}$$
+$$f_{BIO} = \frac{0.46}{x + 1}$$
+$$f_{HUM} = \frac{0.54}{x + 1}$$
+
+**Interpretation:**
+- High clay → high $x$ → more CO₂ respiration, less BIO/HUM formation
+- Low clay → low $x$ → less CO₂ respiration, more BIO/HUM formation
+- Total: $f_{CO_2} + f_{BIO} + f_{HUM} = 1$
+
+**Example values:**
+
+| Clay (%) | x | f_CO₂ | f_BIO | f_HUM |
+|----------|---|-------|-------|-------|
+| 10 | 4.43 | 0.816 | 0.085 | 0.099 |
+| 25 | 3.24 | 0.764 | 0.109 | 0.127 |
+| 50 | 2.11 | 0.678 | 0.148 | 0.173 |
+
+---
+
+## Environmental Modifiers
+
+### Temperature Modifier
+
+**Sigmoid response curve:**
+$$f_{temp}(T) = \begin{cases}
+0 & \text{if } T < -5°C \\
+\frac{47.9}{1 + \exp\left(\frac{106}{T + 18.3}\right)} & \text{if } T \geq -5°C
+\end{cases}$$
+
+**Key properties:**
+- Returns ~1.0 at T = 9.25°C (reference temperature)
+- Maximum value: 47.9 at high temperatures
+- Zero decomposition below -5°C (frozen soil)
+- Approximately exponential increase between 0-20°C
+
+**Temperature sensitivity:**
+- Q₁₀ ≈ 2.0 near reference conditions
+- Non-linear: sensitivity decreases at high temperatures
+
+### Moisture Modifier
+
+**Based on topsoil moisture deficit (TSMD):**
+
+1. **Calculate maximum TSMD from soil properties:**
+   $$\text{SMD}_{15bar} = -(20 + 1.3 \cdot \text{clay} - 0.01 \cdot \text{clay}^2)$$
+   $$\text{SMD}_{15bar,adj} = \text{SMD}_{15bar} \cdot \frac{\text{depth}}{23}$$
+   $$\text{TSMD}_{max} = |0.444 \cdot \text{SMD}_{15bar,adj}|$$
+
+2. **Calculate monthly TSMD accumulation:**
+   $$\text{TSMD}_t = \max(0, \min(\text{TSMD}_{max}, \text{Evap}_t - \text{Precip}_t))$$
+
+3. **Moisture modifier:**
+   $$f_{moisture} = \max\left(0.2, 1.0 - 0.8 \cdot \frac{\text{TSMD}_t}{\text{TSMD}_{max}}\right)$$
+
+**Key properties:**
+- Range: 0.2 to 1.0 (minimum 20% of potential decomposition)
+- Depends on clay content (higher clay → higher water holding capacity)
+- Drought reduces decomposition (P < E)
+- Never completely stops decomposition
+
+### Soil Cover Modifier
+
+**Simple binary modifier:**
+$$f_{cover} = \begin{cases}
+0.6 & \text{if covered } (> 50\%) \\
+1.0 & \text{if bare soil}
+\end{cases}$$
+
+Vegetation cover reduces decomposition by 40% due to:
+- Lower soil temperature extremes
+- Higher moisture retention
+- Reduced oxygen availability
+
+### Combined Rate Modifier
+
+$$r(T, W, V) = f_{temp} \cdot f_{moisture} \cdot f_{cover}$$
+
+**Important:** This is **not normalized** to reference conditions. At T = 9.25°C with optimal moisture and bare soil:
+$$r \approx 1.0 \times 1.0 \times 1.0 = 1.0$$
+
+All base decomposition rates ($k_i$) are calibrated relative to these reference conditions.
+
+---
+
+## Initialization
+
+### Analytical Steady-State Solution
+
+RothC uses analytical matrix inversion for steady-state, similar to Yasso07:
+
+**Transfer matrix formulation:**
+$$\mathbf{A} \cdot \mathbf{C}_{ss} = -\mathbf{I}$$
+
+Where $\mathbf{A}$ is a 4×4 matrix (excluding IOM):
+
+$$\mathbf{A} = \begin{bmatrix}
+-k_{DPM} \cdot r & 0 & 0 & 0 \\
+0 & -k_{RPM} \cdot r & 0 & 0 \\
+k_{DPM} \cdot r \cdot f_{BIO} & k_{RPM} \cdot r \cdot f_{BIO} & -k_{BIO} \cdot r \cdot (1-f_{BIO}) & k_{HUM} \cdot r \cdot f_{BIO} \\
+k_{DPM} \cdot r \cdot f_{HUM} & k_{RPM} \cdot r \cdot f_{HUM} & k_{BIO} \cdot r \cdot f_{HUM} & -k_{HUM} \cdot r \cdot (1-f_{HUM})
+\end{bmatrix}$$
+
+**Input vector:**
+$$\mathbf{I} = [I_{DPM}, I_{RPM}, 0, 0]^T$$
+
+**Steady-state solution:**
+$$\mathbf{C}_{ss} = -\mathbf{A}^{-1} \cdot \mathbf{I}$$
+
+**IOM calculated separately:**
+$$\text{IOM} = 0.049 \cdot \text{clay}^{1.139}$$
+
+### Algorithm
+```r
+rothc_steady_state <- function(params, input_dpm, input_rpm, 
+                               temp_mean, precip_mean, evap_mean, clay) {
+  
+  # 1. Calculate average rate modifier
+  r <- rothc_temp_mod(temp_mean) * 
+       rothc_moisture_mod(precip_mean/12, evap_mean/12, clay) * 
+       0.6  # Assume vegetated
+  
+  # 2. Calculate clay-dependent partitioning
+  x <- rothc_clay_mod(clay)
+  f_CO2 <- x / (x + 1)
+  f_BIO <- 0.46 / (x + 1)
+  f_HUM <- 0.54 / (x + 1)
+  
+  # 3. Build transfer matrix A
+  k_DPM <- params$k_DPM * r
+  k_RPM <- params$k_RPM * r
+  k_BIO <- params$k_BIO * r
+  k_HUM <- params$k_HUM * r
+  
+  A <- matrix(c(
+    -k_DPM, 0, 0, 0,
+    0, -k_RPM, 0, 0,
+    k_DPM*f_BIO, k_RPM*f_BIO, -k_BIO*(1-f_BIO), k_HUM*f_BIO,
+    k_DPM*f_HUM, k_RPM*f_HUM, k_BIO*f_HUM, -k_HUM*(1-f_HUM)
+  ), 4, 4, byrow=TRUE)
+  
+  # 4. Solve for steady-state
+  b <- c(input_dpm, input_rpm, 0, 0)
+  C_ss <- solve(A, -b)
+  
+  # 5. Add IOM
+  iom <- 0.049 * clay^1.139
+  c(DPM=C_ss[1], RPM=C_ss[2], BIO=C_ss[3], HUM=C_ss[4], IOM=iom)
+}
+```
+
+**Advantages over iterative spinup:**
+- ~100× faster (single matrix operation)
+- Numerically exact for constant climate
+- No arbitrary choice of spinup length
+- Consistent with Yasso07 and Q-model approaches
+
+---
+
+## Default Parameters
+
+### Base Decomposition Rates
+
+| Pool | Parameter | Value (yr⁻¹) | Turnover Time |
+|------|-----------|--------------|---------------|
+| DPM | `k_DPM` | 10.0 | 1.2 months |
+| RPM | `k_RPM` | 0.3 | 3.3 years |
+| BIO | `k_BIO` | 0.66 | 1.5 years |
+| HUM | `k_HUM` | 0.02 | 50 years |
+| IOM | - | 0 | infinite |
+
+**Calibrated for:** Rothamsted arable soils, temperate climate, reference conditions (T = 9.25°C, optimal moisture).
+
+### DPM/RPM Partitioning
+
+Litter inputs must be split between DPM and RPM pools:
+
+**Agricultural crops:**
+- DPM/RPM = 1.44 (most crops)
+- DPM/RPM = 0.67 (improved grassland)
+
+**Forest litter:**
+- DPM/RPM = 0.25 (woody material)
+- DPM/RPM = 0.67 (foliage, fine roots)
+
+**Default if unknown:** DPM/RPM = 1.0
+
+---
+
+## Implementation Notes
+
+### Monthly Timestep
+
+RothC uses **monthly** time steps to capture:
+- Seasonal temperature variation
+- Moisture dynamics (P - E accumulation)
+- Phenological litter inputs
+
+**Numerical integration:**
+$$C_i(t+1) = C_i(t) \cdot \exp(-k_i \cdot r_t \cdot \frac{1}{12}) + \text{inputs}_t + \text{transfers}_t$$
+
+Using exponential decay ensures mass balance and numerical stability.
+
+### Input Data Requirements
+
+Monthly input dataframe must contain:
+
+**Climate variables:**
+- `temp_air`: Monthly mean air temperature (°C)
+- `precip`: Monthly precipitation (mm)
+- `evap`: Monthly potential evapotranspiration (mm)
+
+**Litter inputs:**
+- `C_DPM`: Monthly DPM input (Mg C/ha)
+- `C_RPM`: Monthly RPM input (Mg C/ha)
+
+**Site properties (constant):**
+- `clay`: Clay content (%), used for:
+  - IOM calculation
+  - Partitioning fractions (clay modifier)
+  - Moisture modifier (water holding capacity)
+
+**Optional:**
+- `soil_cover`: Vegetation cover fraction (0-1)
+
+### Clay Effects - Two Distinct Mechanisms
+
+RothC includes clay in **two separate ways:**
+
+1. **Partitioning modifier** (humification):
+   - High clay → more respiration, less stabilization
+   - Applied during decomposition step
+   - Affects all active pools (DPM, RPM, BIO, HUM)
+
+2. **IOM calculation** (inert fraction):
+   - High clay → more inert organic matter
+   - Fixed at initialization
+   - Based on empirical relationship from Rothamsted data
+
+These can be toggled separately via `params$clay_effect` (partitioning) while IOM is always calculated from clay.
+
+### Temperature Modifier - Not Normalized!
+
+**Critical implementation detail:** Unlike some models, RothC's temperature modifier is **not normalized** to return 1.0 at reference conditions.
+
+At T = 9.25°C (calibration temperature):
+$$f_{temp} = \frac{47.9}{1 + \exp(106/(9.25 + 18.3))} \approx 1.0$$
+
+The base decomposition rates ($k_i$) are calibrated assuming this value. Do not normalize to $f_{temp}(9.25°C)$ or you'll scale all rates incorrectly!
+
+### IOM Handling
+
+IOM is **calculated once** at initialization and **never changes**:
+```r
+iom <- 0.049 * clay^1.139
+
+# During simulation:
+pools[5] <- iom_fixed  # Restore after each step
+```
+
+This ensures IOM remains truly inert throughout the simulation.
+
+---
+
+## Usage Examples
+
+### Basic Simulation
+```r
+# Prepare monthly input data (10 years)
+input_df <- data.frame(
+  temp_air = rep(c(-2, 0, 5, 10, 15, 18, 17, 15, 10, 5, 2, -1), 10),
+  precip = rep(50, 120),
+  evap = rep(40, 120),
+  clay = rep(25, 120),
+  C_DPM = rep(0.08, 120),  # Monthly DPM input
+  C_RPM = rep(0.12, 120)   # Monthly RPM input
+)
+
+# Run with analytical steady-state initialization
+results <- rothc_run(
+  params = ROTHC_DEFAULT_PARAMS,
+  C0 = NULL,  # Will compute steady-state
+  input_df = input_df,
+  spinup_years = 10000  # Not used for analytical method
+)
+
+# Extract results
+total_soc <- results$total_soc  # Total SOC (Mg C/ha) by month
+pools <- results$pools  # Individual pools
+respiration <- results$respiration  # Monthly Rh
+```
+
+### Custom Initial Conditions
+```r
+# Provide measured initial pools
+C0 <- c(DPM = 5, RPM = 15, BIO = 8, HUM = 45, IOM = 12)
+
+results <- rothc_run(
+  params = ROTHC_DEFAULT_PARAMS,
+  C0 = C0,
+  input_df = input_df,
+  spinup_years = 0  # Skip spinup
+)
+```
+
+### Parameter Sensitivity
+```r
+# Test higher temperature sensitivity
+custom_params <- ROTHC_DEFAULT_PARAMS
+custom_params$k_BIO <- 0.80  # Faster microbial turnover
+
+# Test without clay effects
+custom_params$clay_effect <- FALSE
+
+results <- rothc_run(params = custom_params, input_df = input_df)
+```
+
+### Converting Annual to Monthly Inputs
+```r
+# If you have annual litter inputs
+annual_litter_dpm <- 1.2  # Mg C/ha/yr
+annual_litter_rpm <- 1.8  # Mg C/ha/yr
+
+# Distribute evenly across months
+monthly_dpm <- annual_litter_dpm / 12
+monthly_rpm <- annual_litter_rpm / 12
+
+# Or apply seasonally (e.g., autumn litter fall)
+monthly_dpm <- rep(0, 12)
+monthly_rpm <- rep(0, 12)
+monthly_dpm[9:11] <- annual_litter_dpm / 3  # Sep-Nov
+monthly_rpm[9:11] <- annual_litter_rpm / 3
+```
+
+---
+
+## Model Comparison Considerations
+
+### Structural Features
+
+For model intercomparison studies, key RothC characteristics:
+
+1. **Pool structure:** Discrete (5 pools) based on decomposability
+2. **Temperature response:** Sigmoid (captures low-temperature limitation)
+3. **Temperature sensitivity:** Uniform across pools (same Q₁₀ for all)
+4. **Clay effects:** Explicit on partitioning and IOM
+5. **Spatial resolution:** Single-horizon (topsoil, 0-23 cm)
+6. **Temporal resolution:** Monthly (captures seasonal dynamics)
+
+### Comparison with Other Models
+
+**vs. Yasso07:**
+- RothC: decomposability classes; Yasso07: chemical fractions
+- RothC: clay effects explicit; Yasso07: implicitly in transfer coefficients
+- RothC: monthly timestep; Yasso07: annual timestep
+- RothC: sigmoid temperature response; Yasso07: quadratic
+
+**vs. Q-model:**
+- RothC: discrete pools; Q-model: continuous quality spectrum
+- RothC: fixed partitioning; Q-model: quality-dependent transformation
+- RothC: uniform temperature sensitivity; Q-model: quality-dependent (potentially)
+
+### Fair Comparison Protocol
+
+To compare RothC fairly with other models:
+
+1. **Map litter inputs consistently:**
+   - AWEN fractions → DPM/RPM using quality proxies
+   - Use same total carbon input across models
+
+2. **Align temporal resolution:**
+   - Aggregate monthly RothC output to annual if comparing with Yasso07
+   - Or downscale annual models to monthly
+
+3. **Handle clay consistently:**
+   - All models should use same clay data
+   - Document which clay effects each model includes
+
+4. **Initialize to same equilibrium:**
+   - Use analytical steady-state for all models
+   - Same historical climate and litter inputs
+
+5. **Separate structural from parameter uncertainty:**
+   - Recalibrate all models to same dataset
+   - Test structural variants (with/without clay effects)
+
+### Typical Performance
+
+**Mean turnover time** at reference conditions (clay = 25%):
+- Total SOC: ~26 years
+- Active pools (DPM+RPM+BIO): ~2 years
+- HUM: ~50 years
+
+For Finnish boreal forest soils (lower temperatures, higher lignin content):
+- Expect longer turnover times (~30-40 years)
+- Higher RPM/DPM ratio in litter inputs
+- Lower decomposition rates (lower $r$ due to temperature)
+
+---
+
+## Computational Performance
+
+**Typical runtimes** (10,000-year spinup + 100-year simulation, monthly):
+- Analytical steady-state: <0.01 seconds
+- Iterative spinup (10,000 years): ~1 second
+- Full simulation (1200 months): ~0.05 seconds
+
+**Memory usage:** Minimal (<5 MB for century-scale monthly simulations)
+
+**Bottlenecks:** 
+- Matrix inversion for steady-state (negligible for 4×4 matrix)
+- Monthly loop (could be vectorized but unnecessary)
+
+**Speedup from analytical steady-state:** ~100× compared to iterative spinup
+
+---
+
+## Limitations and Assumptions
+
+1. **Topsoil only:** Designed for upper 23 cm (plow layer in arable soils)
+   - No vertical stratification
+   - No leaching to B horizon
+   - May need modification for forest soils with deep organic horizons
+
+2. **No priming effects:** Fresh litter doesn't accelerate old SOC decomposition
+
+3. **No nutrient constraints:** Decomposition driven by C quality and climate only
+
+4. **Fixed DPM/RPM partitioning:** Must be specified a priori
+   - No dynamic allocation based on litter chemistry
+   - Sensitive to this choice for woody vs. herbaceous litter
+
+5. **Simple moisture model:** TSMD approach may not capture:
+   - Waterlogging/anoxic conditions
+   - Complex soil hydraulics
+   - Deep soil moisture
+
+6. **Vegetation cover binary:** Only two states (bare vs. covered)
+
+7. **Developed for arable soils:** Parameters calibrated for:
+   - Temperate climates
+   - Regular tillage
+   - Agricultural management
+   - May need recalibration for forests
+
+---
+
+## References
+
+**Primary references:**
+
+- Coleman, K., & Jenkinson, D. S. (1996). RothC-26.3 - A Model for the turnover of carbon in soil. In D. S. Powlson, P. Smith, & J. U. Smith (Eds.), *Evaluation of Soil Organic Matter Models* (pp. 237-246). Springer.
+
+- Jenkinson, D. S., & Coleman, K. (2008). The turnover of organic carbon in subsoils. Part 2. Modelling carbon turnover. *European Journal of Soil Science*, 59(2), 400-413.
+
+**Original development:**
+
+- Jenkinson, D. S., Hart, P. B. S., Rayner, J. H., & Parry, L. C. (1987). Modelling the turnover of organic matter in long-term experiments at Rothamsted. *INTECOL Bulletin*, 15, 1-8.
+
+**Clay effects:**
+
+- Falloon, P., Smith, P., Coleman, K., & Marshall, S. (1998). Estimating the size of the inert organic matter pool from total soil organic carbon content for use in the Rothamsted Carbon Model. *Soil Biology and Biochemistry*, 30(8-9), 1207-1211.
+
+**Temperature function:**
+
+- Coleman, K., & Jenkinson, D. S. (1999). *RothC-26.3 - A model for the turnover of carbon in soil: Model description and users guide* (Vol. 2008). IACR Rothamsted.
+
