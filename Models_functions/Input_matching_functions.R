@@ -340,17 +340,137 @@ validate_input <- function(input_df) {
 
 
 
-# -----------------------------------------------------------------------------
-# YASSO20 MAPPING (STRICT MONTHLY INPUT REQUIRED)
-# -----------------------------------------------------------------------------
+# # -----------------------------------------------------------------------------
+# # YASSO20 MAPPING (STRICT MONTHLY INPUT REQUIRED)
+# # -----------------------------------------------------------------------------
+# 
+# map_input_to_yasso20 <- function(input_df) {
+#   
+#   # ---- Required monthly forcing columns ----
+#   req_monthly <- c("year", "month", "temp_air", "precip")
+#   
+#   # ---- Required litter columns (monthly inputs; will be summed to annual) ----
+#   req_litter <- c(
+#     "C_foliage_A","C_foliage_W","C_foliage_E","C_foliage_N",
+#     "C_branches_A","C_branches_W","C_branches_E","C_branches_N",
+#     "C_stems_A","C_stems_W","C_stems_E","C_stems_N",
+#     "C_fine_roots_A","C_fine_roots_W","C_fine_roots_E","C_fine_roots_N",
+#     "C_coarse_roots_A","C_coarse_roots_W","C_coarse_roots_E","C_coarse_roots_N",
+#     "C_understorey_A","C_understorey_W","C_understorey_E","C_understorey_N"
+#   )
+#   
+#   # ---- Identify plot/site id column if present (optional but recommended) ----
+#   id_cols <- intersect(names(input_df), c("plot_id", "plot_ID", "site", "site_id"))
+#   
+#   # ---- Validate structure: must be monthly ----
+#   if (!("month" %in% names(input_df))) {
+#     stop("Yasso20 mapping requires MONTHLY input: missing column `month`.", call. = FALSE)
+#   }
+#   
+#   missing_cols <- setdiff(c(req_monthly, req_litter), names(input_df))
+#   if (length(missing_cols) > 0) {
+#     stop(
+#       paste0(
+#         "Yasso20 mapping requires monthly forcing and litter columns.\nMissing columns: ",
+#         paste(missing_cols, collapse = ", ")
+#       ),
+#       call. = FALSE
+#     )
+#   }
+#   
+#   # ---- Validate month range ----
+#   bad_month <- input_df$month[!(input_df$month %in% 1:12)]
+#   if (length(bad_month) > 0) {
+#     stop("`month` must be integers in 1..12 for Yasso20 mapping.", call. = FALSE)
+#   }
+#   
+#   # ---- Validate complete months per plot-year (no approximation allowed) ----
+#   # We require exactly 12 months per (id, year).
+#   key_vars <- c(id_cols, "year")
+#   df_keyed <- input_df
+#   
+#   # helper to count unique months per group
+#   month_counts <- df_keyed |>
+#     dplyr::group_by(dplyr::across(dplyr::all_of(key_vars))) |>
+#     dplyr::summarise(n_months = dplyr::n_distinct(.data$month), .groups = "drop")
+#   
+#   incomplete <- month_counts |> dplyr::filter(.data$n_months != 12)
+#   if (nrow(incomplete) > 0) {
+#     # show up to a few offending groups
+#     preview <- utils::capture.output(utils::head(incomplete, 10))
+#     stop(
+#       paste0(
+#         "Yasso20 mapping requires complete monthly forcing (12 months) for each plot-year.\n",
+#         "Found plot-years with != 12 months. First rows:\n",
+#         paste(preview, collapse = "\n")
+#       ),
+#       call. = FALSE
+#     )
+#   }
+#   
+#   # ---- Annual litter aggregation (sum of monthly inputs) ----
+#   annual_litter <- input_df |>
+#     dplyr::group_by(dplyr::across(dplyr::all_of(key_vars))) |>
+#     dplyr::summarise(
+#       # annual precip total (mm/yr)
+#       precip = sum(.data$precip, na.rm = TRUE),
+#       
+#       # nwl: foliage + understorey + fine_roots
+#       nwl_A = sum(.data$C_foliage_A + .data$C_understorey_A + .data$C_fine_roots_A, na.rm = TRUE),
+#       nwl_W = sum(.data$C_foliage_W + .data$C_understorey_W + .data$C_fine_roots_W, na.rm = TRUE),
+#       nwl_E = sum(.data$C_foliage_E + .data$C_understorey_E + .data$C_fine_roots_E, na.rm = TRUE),
+#       nwl_N = sum(.data$C_foliage_N + .data$C_understorey_N + .data$C_fine_roots_N, na.rm = TRUE),
+#       
+#       # fwl: branches
+#       fwl_A = sum(.data$C_branches_A, na.rm = TRUE),
+#       fwl_W = sum(.data$C_branches_W, na.rm = TRUE),
+#       fwl_E = sum(.data$C_branches_E, na.rm = TRUE),
+#       fwl_N = sum(.data$C_branches_N, na.rm = TRUE),
+#       
+#       # cwl: stems + coarse_roots
+#       cwl_A = sum(.data$C_stems_A + .data$C_coarse_roots_A, na.rm = TRUE),
+#       cwl_W = sum(.data$C_stems_W + .data$C_coarse_roots_W, na.rm = TRUE),
+#       cwl_E = sum(.data$C_stems_E + .data$C_coarse_roots_E, na.rm = TRUE),
+#       cwl_N = sum(.data$C_stems_N + .data$C_coarse_roots_N, na.rm = TRUE),
+#       
+#       .groups = "drop"
+#     )
+#   
+#   # ---- Monthly temperature to wide format T_1..T_12 (must exist) ----
+#   annual_T <- input_df |>
+#     dplyr::select(dplyr::all_of(c(key_vars, "month", "temp_air"))) |>
+#     dplyr::distinct() |>
+#     dplyr::mutate(month = as.integer(.data$month)) |>
+#     tidyr::pivot_wider(names_from = month, values_from = temp_air, names_prefix = "T_")
+#   
+#   # Enforce presence of all months after pivot (should hold due to checks above)
+#   missing_T <- setdiff(paste0("T_", 1:12), names(annual_T))
+#   if (length(missing_T) > 0) {
+#     stop(
+#       paste0("Internal error: missing temperature columns after reshaping: ",
+#              paste(missing_T, collapse = ", ")),
+#       call. = FALSE
+#     )
+#   }
+#   
+#   annual_T <- annual_T |>
+#     dplyr::select(dplyr::all_of(c(key_vars, paste0("T_", 1:12))))
+#   
+#   # ---- Combine ----
+#   out_df <- annual_litter |>
+#     dplyr::left_join(annual_T, by = key_vars) |>
+#     dplyr::arrange(dplyr::across(dplyr::all_of(key_vars)))
+#   
+#   out_df
+# }
 
+# -----------------------------------------------------------------------------
+# YASSO20 MAPPING (BASE R; strict monthly input required)
+# -----------------------------------------------------------------------------
 map_input_to_yasso20 <- function(input_df) {
   
-  # ---- Required monthly forcing columns ----
   req_monthly <- c("year", "month", "temp_air", "precip")
-  
-  # ---- Required litter columns (monthly inputs; will be summed to annual) ----
-  req_litter <- c(
+  req_litter  <- c(
     "C_foliage_A","C_foliage_W","C_foliage_E","C_foliage_N",
     "C_branches_A","C_branches_W","C_branches_E","C_branches_N",
     "C_stems_A","C_stems_W","C_stems_E","C_stems_N",
@@ -359,107 +479,78 @@ map_input_to_yasso20 <- function(input_df) {
     "C_understorey_A","C_understorey_W","C_understorey_E","C_understorey_N"
   )
   
-  # ---- Identify plot/site id column if present (optional but recommended) ----
   id_cols <- intersect(names(input_df), c("plot_id", "plot_ID", "site", "site_id"))
-  
-  # ---- Validate structure: must be monthly ----
-  if (!("month" %in% names(input_df))) {
-    stop("Yasso20 mapping requires MONTHLY input: missing column `month`.", call. = FALSE)
-  }
+  key_vars <- c(id_cols, "year")
   
   missing_cols <- setdiff(c(req_monthly, req_litter), names(input_df))
   if (length(missing_cols) > 0) {
-    stop(
-      paste0(
-        "Yasso20 mapping requires monthly forcing and litter columns.\nMissing columns: ",
-        paste(missing_cols, collapse = ", ")
-      ),
-      call. = FALSE
-    )
+    stop("Missing columns: ", paste(missing_cols, collapse = ", "), call. = FALSE)
   }
   
-  # ---- Validate month range ----
-  bad_month <- input_df$month[!(input_df$month %in% 1:12)]
-  if (length(bad_month) > 0) {
-    stop("`month` must be integers in 1..12 for Yasso20 mapping.", call. = FALSE)
+  input_df$month <- as.integer(input_df$month)
+  if (any(!input_df$month %in% 1:12)) stop("month must be 1..12", call. = FALSE)
+  if (any(!is.finite(input_df$temp_air))) stop("temp_air has NA/Inf", call. = FALSE)
+  
+  # group factor (canonical order via levels)
+  grp <- interaction(input_df[, key_vars, drop = FALSE], drop = TRUE, lex.order = TRUE)
+  grp <- factor(grp)
+  grp_lvls <- levels(grp)
+  
+  # require 12 months per group and no duplicates
+  n_months <- tapply(input_df$month, grp, function(m) length(unique(m)))
+  if (any(n_months != 12)) stop("Some plot-years missing months", call. = FALSE)
+  if (any(duplicated(paste(grp, input_df$month, sep = "|")))) {
+    stop("Duplicate rows for same plot-year-month", call. = FALSE)
   }
   
-  # ---- Validate complete months per plot-year (no approximation allowed) ----
-  # We require exactly 12 months per (id, year).
-  key_vars <- c(id_cols, "year")
-  df_keyed <- input_df
-  
-  # helper to count unique months per group
-  month_counts <- df_keyed |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(key_vars))) |>
-    dplyr::summarise(n_months = dplyr::n_distinct(.data$month), .groups = "drop")
-  
-  incomplete <- month_counts |> dplyr::filter(.data$n_months != 12)
-  if (nrow(incomplete) > 0) {
-    # show up to a few offending groups
-    preview <- utils::capture.output(utils::head(incomplete, 10))
-    stop(
-      paste0(
-        "Yasso20 mapping requires complete monthly forcing (12 months) for each plot-year.\n",
-        "Found plot-years with != 12 months. First rows:\n",
-        paste(preview, collapse = "\n")
-      ),
-      call. = FALSE
-    )
+  # helper: annual sum of rowSums(cols) by group
+  sum_cols_by_grp <- function(cols) {
+    x <- rowSums(input_df[, cols, drop = FALSE], na.rm = TRUE)
+    tapply(x, grp, sum, na.rm = TRUE)
   }
   
-  # ---- Annual litter aggregation (sum of monthly inputs) ----
-  annual_litter <- input_df |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(key_vars))) |>
-    dplyr::summarise(
-      # annual precip total (mm/yr)
-      precip = sum(.data$precip, na.rm = TRUE),
-      
-      # nwl: foliage + understorey + fine_roots
-      nwl_A = sum(.data$C_foliage_A + .data$C_understorey_A + .data$C_fine_roots_A, na.rm = TRUE),
-      nwl_W = sum(.data$C_foliage_W + .data$C_understorey_W + .data$C_fine_roots_W, na.rm = TRUE),
-      nwl_E = sum(.data$C_foliage_E + .data$C_understorey_E + .data$C_fine_roots_E, na.rm = TRUE),
-      nwl_N = sum(.data$C_foliage_N + .data$C_understorey_N + .data$C_fine_roots_N, na.rm = TRUE),
-      
-      # fwl: branches
-      fwl_A = sum(.data$C_branches_A, na.rm = TRUE),
-      fwl_W = sum(.data$C_branches_W, na.rm = TRUE),
-      fwl_E = sum(.data$C_branches_E, na.rm = TRUE),
-      fwl_N = sum(.data$C_branches_N, na.rm = TRUE),
-      
-      # cwl: stems + coarse_roots
-      cwl_A = sum(.data$C_stems_A + .data$C_coarse_roots_A, na.rm = TRUE),
-      cwl_W = sum(.data$C_stems_W + .data$C_coarse_roots_W, na.rm = TRUE),
-      cwl_E = sum(.data$C_stems_E + .data$C_coarse_roots_E, na.rm = TRUE),
-      cwl_N = sum(.data$C_stems_N + .data$C_coarse_roots_N, na.rm = TRUE),
-      
-      .groups = "drop"
-    )
+  precip_ann <- tapply(input_df$precip, grp, sum, na.rm = TRUE)
   
-  # ---- Monthly temperature to wide format T_1..T_12 (must exist) ----
-  annual_T <- input_df |>
-    dplyr::select(dplyr::all_of(c(key_vars, "month", "temp_air"))) |>
-    dplyr::distinct() |>
-    dplyr::mutate(month = as.integer(.data$month)) |>
-    tidyr::pivot_wider(names_from = month, values_from = temp_air, names_prefix = "T_")
+  nwl_A <- sum_cols_by_grp(c("C_foliage_A","C_understorey_A","C_fine_roots_A"))
+  nwl_W <- sum_cols_by_grp(c("C_foliage_W","C_understorey_W","C_fine_roots_W"))
+  nwl_E <- sum_cols_by_grp(c("C_foliage_E","C_understorey_E","C_fine_roots_E"))
+  nwl_N <- sum_cols_by_grp(c("C_foliage_N","C_understorey_N","C_fine_roots_N"))
   
-  # Enforce presence of all months after pivot (should hold due to checks above)
-  missing_T <- setdiff(paste0("T_", 1:12), names(annual_T))
-  if (length(missing_T) > 0) {
-    stop(
-      paste0("Internal error: missing temperature columns after reshaping: ",
-             paste(missing_T, collapse = ", ")),
-      call. = FALSE
-    )
-  }
+  fwl_A <- sum_cols_by_grp("C_branches_A")
+  fwl_W <- sum_cols_by_grp("C_branches_W")
+  fwl_E <- sum_cols_by_grp("C_branches_E")
+  fwl_N <- sum_cols_by_grp("C_branches_N")
   
-  annual_T <- annual_T |>
-    dplyr::select(dplyr::all_of(c(key_vars, paste0("T_", 1:12))))
+  cwl_A <- sum_cols_by_grp(c("C_stems_A","C_coarse_roots_A"))
+  cwl_W <- sum_cols_by_grp(c("C_stems_W","C_coarse_roots_W"))
+  cwl_E <- sum_cols_by_grp(c("C_stems_E","C_coarse_roots_E"))
+  cwl_N <- sum_cols_by_grp(c("C_stems_N","C_coarse_roots_N"))
   
-  # ---- Combine ----
-  out_df <- annual_litter |>
-    dplyr::left_join(annual_T, by = key_vars) |>
-    dplyr::arrange(dplyr::across(dplyr::all_of(key_vars)))
+  # Monthly temperatures wide matrix [group x 12]
+  Tmat <- matrix(NA_real_, nrow = length(grp_lvls), ncol = 12,
+                 dimnames = list(grp_lvls, paste0("T_", 1:12)))
+  Tmat[cbind(as.integer(grp), input_df$month)] <- input_df$temp_air
+  if (anyNA(Tmat)) stop("Missing T_1..T_12 after reshaping", call. = FALSE)
   
+  # Keys (first row per group), then optional stable sort by keys
+  first_idx <- tapply(seq_len(nrow(input_df)), grp, function(ii) ii[1])
+  keys_unique <- input_df[as.integer(first_idx[grp_lvls]), key_vars, drop = FALSE]
+  ord <- do.call(order, keys_unique)
+  keys_unique <- keys_unique[ord, , drop = FALSE]
+  grp_lvls <- grp_lvls[ord]
+  
+  # Assemble output
+  out_df <- data.frame(
+    keys_unique,
+    precip = as.numeric(precip_ann[grp_lvls]),
+    nwl_A = as.numeric(nwl_A[grp_lvls]), nwl_W = as.numeric(nwl_W[grp_lvls]),
+    nwl_E = as.numeric(nwl_E[grp_lvls]), nwl_N = as.numeric(nwl_N[grp_lvls]),
+    fwl_A = as.numeric(fwl_A[grp_lvls]), fwl_W = as.numeric(fwl_W[grp_lvls]),
+    fwl_E = as.numeric(fwl_E[grp_lvls]), fwl_N = as.numeric(fwl_N[grp_lvls]),
+    cwl_A = as.numeric(cwl_A[grp_lvls]), cwl_W = as.numeric(cwl_W[grp_lvls]),
+    cwl_E = as.numeric(cwl_E[grp_lvls]), cwl_N = as.numeric(cwl_N[grp_lvls]),
+    as.data.frame(Tmat[grp_lvls, , drop = FALSE], check.names = FALSE)
+  )
+  rownames(out_df) <- NULL
   out_df
 }

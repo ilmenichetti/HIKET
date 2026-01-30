@@ -38,6 +38,10 @@ run_soc_models <- function(input_df,
   
   results <- list()
   
+  
+  # BENCHMARKING, open object to store execution times
+  timings <- list()
+  
   # ------------------------
   # YASSO07
   # ------------------------
@@ -47,12 +51,16 @@ run_soc_models <- function(input_df,
     yasso_input <- map_input_to_yasso07(input_df)
     yasso_spinup <- if (!is.null(spinup_years)) spinup_years else 5000
     
-    results$yasso07 <- yasso07_run(
-      params = YASSO07_DEFAULT_PARAMS,
-      C0 = NULL,
-      input_df = yasso_input,
-      spinup_years = yasso_spinup
-    )
+    t <- system.time({
+      results$yasso07 <- yasso07_run(
+        params = YASSO07_DEFAULT_PARAMS,
+        C0 = NULL,
+        input_df = yasso_input,
+        spinup_years = yasso_spinup
+      )
+    })
+    timings$yasso07 <- t["elapsed"]
+    
     results$yasso07_input <- yasso_input
   }
   
@@ -65,12 +73,16 @@ run_soc_models <- function(input_df,
     y15_input <- map_input_to_yasso07(input_df) # alias of Yasso07 mapping
     y15_spinup <- if (!is.null(spinup_years)) spinup_years else 5000
     
-    results$yasso15 <- yasso15_run(
-      params = YASSO15_DEFAULT_PARAMS,
-      C0 = NULL,
-      input_df = y15_input,
-      spinup_years = y15_spinup
-    )
+    t <- system.time({
+      results$yasso15 <- yasso15_run(
+        params = YASSO15_DEFAULT_PARAMS,
+        C0 = NULL,
+        input_df = y15_input,
+        spinup_years = y15_spinup
+      )
+    })
+    timings$yasso15 <- t["elapsed"]
+    
     results$yasso15_input <- y15_input
   }
   
@@ -81,12 +93,17 @@ run_soc_models <- function(input_df,
     cat("Running Yasso20...\n")
     
     y20_input <- map_input_to_yasso20(input_df) # strict monthly-only
-    results$yasso20 <- yasso20_run(
-      params = YASSO20_DEFAULT_PARAMS,
-      C0 = NULL,
-      input_df = y20_input,
-      spinup = TRUE
-    )
+
+    t <- system.time({
+      results$yasso20 <- yasso20_run(
+        params = YASSO20_DEFAULT_PARAMS,
+        C0 = NULL,
+        input_df = y20_input,
+        spinup = TRUE
+      )
+    })
+    timings$yasso20 <- t["elapsed"]
+    
     results$yasso20_input <- y20_input
   }
   
@@ -99,12 +116,16 @@ run_soc_models <- function(input_df,
     rothc_input <- map_input_to_rothc(input_df, site_row)
     rothc_spinup <- if (!is.null(spinup_years)) spinup_years else 10000
     
-    results$rothc <- rothc_run(
-      params = ROTHC_DEFAULT_PARAMS,
-      C0 = NULL,
-      input_df = rothc_input,
-      spinup_years = rothc_spinup
-    )
+    t <- system.time({
+      results$rothc <- rothc_run(
+        params = ROTHC_DEFAULT_PARAMS,
+        C0 = NULL,
+        input_df = rothc_input,
+        spinup_years = rothc_spinup
+      )
+    })
+    timings$rothc <- t["elapsed"]
+    
     results$rothc_input <- rothc_input
   }
   
@@ -117,13 +138,17 @@ run_soc_models <- function(input_df,
     q_input <- map_input_to_q_model(input_df)
     q_spinup <- if (!is.null(spinup_years)) spinup_years else 1500
     
-    results$q_model <- q_model_run_hybrid(
-      params = Q_MODEL_DEFAULT_PARAMS,
-      C0 = NULL,
-      input_df = q_input,
-      site_row = site_row,
-      spinup_years = q_spinup
-    )
+    t <- system.time({
+      results$q_model <- q_model_run_hybrid(
+        params = Q_MODEL_DEFAULT_PARAMS,
+        C0 = NULL,
+        input_df = q_input,
+        site_row = site_row,
+        spinup_years = q_spinup
+      )
+    })
+    timings$q_model <- t["elapsed"]
+    
     results$q_model_input <- q_input
   }
   
@@ -159,6 +184,21 @@ run_soc_models <- function(input_df,
     
     results$summary <- summary_df
   }
+  
+  # ------------------------
+  # PRINT BENCHMARK SUMMARY
+  # ------------------------
+  if (length(timings) > 0) {
+    bench_df <- data.frame(
+      model = names(timings),
+      time_sec = round(unlist(timings), 3),
+      row.names = NULL
+    )
+    
+    cat("\nModel execution time (elapsed seconds):\n")
+    print(bench_df, row.names = FALSE)
+  }
+  
   
   results
 }
