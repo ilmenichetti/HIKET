@@ -26,7 +26,7 @@ library(Matrix)
 #' @param rothc_annual_stat How to annualise monthly RothC output for summary:
 #'        "eoy" (December) or "mean" (annual mean of monthly states)
 #' @return List with results from each model + results$summary
-run_soc_models <- function(input_df,
+run_soc_models_oneplot <- function(input_df,
                            site_row = NULL,
                            models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
                            spinup_years = NULL,
@@ -159,7 +159,7 @@ run_soc_models <- function(input_df,
     
     # choose year vector from first annual model present, otherwise from RothC years
     years <- NULL
-    if (!is.null(results$yasso07_input)) years <- results$yasso07_input$year
+    if (!is.null(results$yasso07_input)) years <- years <- sort(unique(years)) #results$yasso07_input$year
     if (is.null(years) && !is.null(results$yasso15_input)) years <- results$yasso15_input$year
     if (is.null(years) && !is.null(results$yasso20_input)) years <- results$yasso20_input$year
     if (is.null(years) && !is.null(results$q_model_input))  years <- results$q_model_input$year
@@ -223,3 +223,65 @@ aggregate_monthly_to_annual_eoy <- function(monthly_soc, years, months) {
   })
 }
 
+
+
+
+
+
+run_soc_models_multipplot <- function(input_df,
+                                      site_df,
+                                      models = c("yasso07","yasso15","yasso20","rothc","q_model"),
+                                      spinup_years = NULL,
+                                      rothc_annual_stat = c("eoy","mean")) {
+  
+  rothc_annual_stat <- match.arg(rothc_annual_stat)
+  
+  # basic checks
+  stopifnot(all(c("plot_id","year") %in% names(input_df)))
+  stopifnot("plot_id" %in% names(site_df))
+  
+  plot_ids <- sort(unique(input_df$plot_id))
+  
+  # run per-plot
+  res_by_plot <- lapply(plot_ids, function(pid) {
+    
+    dfp <- input_df %>%
+      dplyr::filter(plot_id == pid) %>%
+      dplyr::arrange(year, month)
+    
+    site_row <- site_df %>% dplyr::filter(plot_id == pid)
+    
+    if (nrow(site_row) != 1) {
+      stop("site_df must have exactly 1 row per plot_id. plot_id=", pid,
+           " has ", nrow(site_row), " rows.", call. = FALSE)
+    }
+    
+    # IMPORTANT: pass the single-row site_row to Q + RothC mappings
+    r <- run_soc_models_oneplot(
+      input_df = dfp,
+      site_row = site_row,
+      models = models,
+      spinup_years = spinup_years,
+      rothc_annual_stat = rothc_annual_stat
+    )
+    
+    # ensure summary exists and add plot_id (some of your models may drop it)
+    if (!is.null(r$summary)) {
+      r$summary$plot_id <- pid
+      r$summary <- r$summary %>% dplyr::select(plot_id, dplyr::everything())
+    }
+    
+    r
+  })
+  
+  names(res_by_plot) <- plot_ids
+  
+  # bind summaries into one table: plot_id x year
+  summary_all <- dplyr::bind_rows(lapply(res_by_plot, `[[`, "summary")) %>%
+    dplyr::arrange(plot_id, year)
+  
+  list(
+    by_plot = res_by_plot,
+    summary = summary_all
+  )
+}

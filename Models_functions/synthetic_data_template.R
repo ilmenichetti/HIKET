@@ -107,7 +107,7 @@ cat(sprintf("Time span: %d-%d\n", min(input_data$year), max(input_data$year)))
 # =============================================================================
 
 # Run all three models
-results <- run_soc_models(
+results <- run_soc_models_oneplot(
   input_df = input_data,
   site_row = site_data,
   models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
@@ -455,9 +455,9 @@ write.csv(site_data, "synthetic_site_data_template.csv", row.names = FALSE)
 # =============================================================================
 
 # Run all three models
-results <- run_soc_models(
+results <- run_soc_models_multipplot(
   input_df = input_data,
-  site_row = site_data,
+  site_df = site_data,
   models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
   spinup_years = 200  # Shorter spinup for demonstration
 )
@@ -473,6 +473,7 @@ cat("\nModels completed successfully!\n")
 print(head(results$summary, 10))
 cat("\n")
 print(tail(results$summary, 10))
+
 
 
 
