@@ -316,7 +316,7 @@ map_input_to_q_model <- function(input_df) {
 # -----------------------------------------------------------------------------
 
 #' Validate cohort-based input data
-validate_input <- function(input_df) {
+validate_input <- function(input_df, verbose = FALSE) {
   
   # Required climate columns
   required_climate <- c("year", "temp_air", "precip")
@@ -333,7 +333,7 @@ validate_input <- function(input_df) {
   
   # Check cohorts present
   cohorts_found <- unique(gsub("^C_(.*)_[AWEN]$", "\\1", c_cols))
-  cat("Found cohorts:", paste(cohorts_found, collapse = ", "), "\n")
+  if (verbose){cat("Found cohorts:", paste(cohorts_found, collapse = ", "), "\n")}
   
   invisible(TRUE)
 }

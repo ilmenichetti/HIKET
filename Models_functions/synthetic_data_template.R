@@ -107,19 +107,44 @@ cat(sprintf("Time span: %d-%d\n", min(input_data$year), max(input_data$year)))
 # STEP 2: Run Models
 # =============================================================================
 
+
 # Run all three models
-results <- run_soc_models_oneplot(
-  input_df = input_data,
-  site_row = site_data,
-  models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
-  spinup_years = 100  # Shorter spinup for demonstration
+timed<-system.time(
+  results <- run_soc_models_oneplot(
+    input_df = input_data,
+    site_row = site_data,
+    models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
+    spinup_years = 100,# Shorter spinup for demonstration
+    verbose=T,
+    validate=F
+  )
 )
 
 cat("\nModels completed successfully!\n")
 
 
+# Run Q-model only, R vs Rcpp comparison
+#source("./Models_functions/Q_transient_T_hybrid.R") # load Q-model functions and he wrapper with the hybrid initialization approach for Q-model
 
+# Convert input data to Q-model format FIRST
+q_input <- map_input_to_q_model(input_data)
 
+# Then test with converted data
+system.time({
+  result_r <- q_model_run_hybrid(
+    input_df = q_input,  # Use converted data
+    site_row = site_data, 
+    spinup_years = 100
+  )
+})
+
+system.time({
+  result_cpp <- q_model_run_hybrid_rcpp(
+    input_df = q_input,  # Use converted data
+    site_row = site_data,
+    spinup_years = 100
+  )
+})
 
 # =============================================================================
 # STEP 3: Examine Results
@@ -458,15 +483,38 @@ write.csv(site_data, "synthetic_site_data_template.csv", row.names = FALSE)
 # =============================================================================
 
 # Run all three models
-results <- run_soc_models_multipplot(
-  input_df = input_data,
-  site_df = site_data,
-  models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
-  spinup_years = 100  # Shorter spinup for demonstration
+timed_quiet <- system.time(
+  invisible(capture.output(
+    results <- run_soc_models_multipplot(
+    input_df = input_data,
+    site_df = site_data,
+    models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
+    spinup_years = 100,  # Shorter spinup for demonstration
+    verbose=F,
+    validate=F
+      )
+    )
+  )
 )
-
+timed_quiet
 cat("\nModels completed successfully!\n")
 
+
+# Run all three models, fast optimised versionb
+timed_quiet_fast <- system.time(
+  invisible(capture.output(
+    results <- run_soc_models_multipplot_fast(
+      input_df = input_data,
+      site_df = site_data,
+      models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
+      spinup_years = 100  # Shorter spinup for demonstration
+    )
+    )
+  ))
+
+timed_quiet_fast
+#expected execution time, single core, days
+((timed_quiet[3]*(3700/4)*1000)/(60*60))/24
 
 
 # =============================================================================
@@ -480,4 +528,77 @@ print(tail(results$summary, 10))
 
 
 
+# =============================================================================
+# TEST THE WRAPPER FOR CALIBRATION
+# =============================================================================
 
+# First, source the new wrapper
+source("./Models_functions/multi_model_calibration_ready.R")
+
+# Test 1: Run with DEFAULT parameters (should match your original fast wrapper)
+timed_default <- system.time(
+  invisible(capture.output(
+    results_default <- run_soc_models_multipplot_calibration(
+      input_df = input_data,
+      site_df = site_data,
+      models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
+      params_list = NULL,  # NULL means use defaults
+      spinup_years = 100
+    )
+  ))
+)
+
+cat("Default parameters timing:\n")
+print(timed_default)
+cat("\nFirst few rows of summary:\n")
+print(head(results_default$summary))
+
+
+# Test 2: Run with CUSTOM Q-model parameters (to verify parameter passing works)
+custom_q_params <- Q_MODEL_DEFAULT_PARAMS
+custom_q_params$u01 <- 0.020  # Increase temperature sensitivity (default is 0.0157)
+
+timed_custom <- system.time(
+  invisible(capture.output(
+    results_custom <- run_soc_models_multipplot_calibration(
+      input_df = input_data,
+      site_df = site_data,
+      models = "q_model",  # Only run Q-model for speed
+      params_list = list(q_model = custom_q_params),  # Custom params
+      spinup_years = 100
+    )
+  ))
+)
+
+cat("\n\nCustom parameters timing:\n")
+print(timed_custom)
+
+
+# Test 3: Compare results to verify parameter passing is working
+cat("\n\n=== VERIFICATION: Parameter passing is working ===\n")
+cat("Q-model SOC in year 2020 (PLOT_001):\n")
+cat(sprintf("  Default (u01=0.0157): %.2f t C/ha\n", 
+            results_default$summary$q_model[results_default$summary$plot_id == "PLOT_001" & 
+                                              results_default$summary$year == 2020]))
+cat(sprintf("  Custom  (u01=0.020):  %.2f t C/ha\n", 
+            results_custom$summary$q_model[results_custom$summary$plot_id == "PLOT_001" & 
+                                             results_custom$summary$year == 2020]))
+cat("\nIf these numbers are DIFFERENT, parameter passing works! ✓\n")
+
+
+# Test 4: Verify fix for years extraction with edge case
+cat("\n\n=== VERIFICATION: Years extraction fix ===\n")
+tryCatch({
+  # This would fail in old version if running only monthly model
+  results_edge <- run_soc_models_oneplot_calibration(
+    input_df = input_data[input_data$plot_id == "PLOT_001", ],
+    site_row = site_data[site_data$plot_id == "PLOT_001", ],
+    models = "rothc",  # Only monthly model
+    spinup_years = 100
+  )
+  cat("Years extraction: SUCCESS ✓\n")
+  cat("Years found:", paste(head(results_edge$year), collapse=", "), "...\n")
+}, error = function(e) {
+  cat("Years extraction: FAILED ✗\n")
+  cat("Error:", e$message, "\n")
+})
