@@ -11,6 +11,7 @@
 library(dplyr)
 library(tidyr)
 
+
 #load multi-model wrapper functions
 source("./Models_functions/multi_model.R")
 
@@ -111,10 +112,12 @@ results <- run_soc_models_oneplot(
   input_df = input_data,
   site_row = site_data,
   models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
-  spinup_years = 200  # Shorter spinup for demonstration
+  spinup_years = 100  # Shorter spinup for demonstration
 )
 
 cat("\nModels completed successfully!\n")
+
+
 
 
 
@@ -459,7 +462,7 @@ results <- run_soc_models_multipplot(
   input_df = input_data,
   site_df = site_data,
   models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
-  spinup_years = 200  # Shorter spinup for demonstration
+  spinup_years = 100  # Shorter spinup for demonstration
 )
 
 cat("\nModels completed successfully!\n")

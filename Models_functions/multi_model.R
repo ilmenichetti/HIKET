@@ -7,8 +7,10 @@ source("./Models_functions/Yasso07.R") # load Yasso07 model functions
 source("./Models_functions/Yasso15.R") # load Yasso15 model functions
 source("./Models_functions/Yasso20.R") # load Yasso20 model functions
 source("./Models_functions/RothC.R") # load RothC model functions
-source("./Models_functions/Q_transient_T.R") # load Q-model functions
-source("./Models_functions/Q_transient_T_hybrid.R") # load the wrapper with the hybrid initialization approach for Q-model
+#source("./Models_functions/Q_transient_T_hybrid.R") # load Q-model functions and he wrapper with the hybrid initialization approach for Q-model
+source("./Models_functions/Q_transient_T_hybrid_RCPP.R") # same but with compiled bits with rcpp
+
+
 
 if(!require(Matrix)) install.packages("Matrix")
 library(Matrix)
@@ -139,7 +141,8 @@ run_soc_models_oneplot <- function(input_df,
     q_spinup <- if (!is.null(spinup_years)) spinup_years else 1500
     
     t <- system.time({
-      results$q_model <- q_model_run_hybrid(
+      #results$q_model <- q_model_run_hybrid(
+      results$q_model <- q_model_run_hybrid_rcpp(
         params = Q_MODEL_DEFAULT_PARAMS,
         C0 = NULL,
         input_df = q_input,
