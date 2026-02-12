@@ -1,0 +1,966 @@
+---
+title: "Modular SOC Decomposition Framework"
+subtitle: "Architecture Documentation for Multi-Model Intercomparison"
+author: "Lorenzo — HIKET Project"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{amssymb}
+  - \usepackage{booktabs}
+  - \usepackage{float}
+  - \usepackage{tikz}
+  - \usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, shapes.geometric, decorations.pathreplacing}
+  - \definecolor{inputblue}{HTML}{3B82F6}
+  - \definecolor{compatgreen}{HTML}{10B981}
+  - \definecolor{decompred}{HTML}{EF4444}
+  - \definecolor{modifiergold}{HTML}{F59E0B}
+  - \definecolor{outputpurple}{HTML}{8B5CF6}
+  - \definecolor{bglight}{HTML}{F8FAFC}
+  - \definecolor{bordergray}{HTML}{CBD5E1}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+\vspace{1em}
+
+# 1. Overview
+
+This document defines a modular architecture for soil organic carbon (SOC) decomposition modelling within the HIKET multi-model intercomparison framework. The goal is to define all models — Yasso07, Yasso15, Yasso20, RothC, and Q-model — through common functional interfaces that cleanly separates **litter input processing**, **environmental modification of kinetics**, and **decomposition dynamics**.
+
+This separation enables modularity.
+
+\newpage
+
+# 2. General Framework
+
+## 2.1 Core Equation
+
+The simulated soil organic carbon over time is expressed as:
+
+$$
+\mathbf{C}(t, k) = f_{d_k}\!\Big(\, f_{i_k}\!\big(\mathbf{I}(t)\big),\;\boldsymbol{\xi_k}(t) \Big)
+$$
+
+where:
+
+| Symbol | Description | Dimensions |
+|:-------|:-----------|:-----------|
+| $\mathbf{C}(t)$ | SOC pool vector at time $t$ | $[n_{\text{pools}} \times 1]$ |
+| $\mathbf{I}(t)$ | Raw litter input data at time $t$ | model-agnostic format |
+| $f_i(\cdot)$ | **Input compatibility layer** — transforms raw inputs into model-specific pool inputs | $\mathbf{I}(t) \to \mathbf{J}(t)$ |
+| $f_d(\cdot)$ | **Decomposition function** — the structural core of each model | $(\mathbf{J}(t), \boldsymbol{\xi}(t)) \to \mathbf{C}(t)$ |
+| $\boldsymbol{\xi}(t)$ | **Kinetic modifier** — composite environmental scalar(s) | $\in \mathbb{R}^{n_{\xi}}$ |
+
+The $k$ denotes model-specific functions.
+
+The kinetic modifier is itself composed of independent environmental response functions:
+
+$$
+{\xi}(t) = \xi_T\!\big(T(t)\big) \;\cdot\; \xi_M\!\big(M(t)\big) \;\cdot\;  \xi_e
+$$
+
+where $\xi_T$ is the temperature modifier, $\xi_M$ is the moisture/precipitation modifier, and $\xi_e$ represents any additional static or time-varying modifiers, likely edaphic (e.g., clay content, soil cover).
+
+## 2.2 Architecture Schema
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    >=Stealth,
+    node distance=1.2cm and 2.0cm,
+    box/.style={
+        rectangle, rounded corners=4pt, draw=#1, fill=#1!8,
+        line width=1pt, minimum height=1.1cm, minimum width=3.2cm,
+        text centered, font=\small\sffamily
+    },
+    smallbox/.style={
+        rectangle, rounded corners=3pt, draw=#1, fill=#1!8,
+        line width=0.8pt, minimum height=0.8cm, minimum width=2.2cm,
+        text centered, font=\footnotesize\sffamily
+    },
+    tinybox/.style={
+        rectangle, rounded corners=2pt, draw=#1, fill=#1!8,
+        line width=0.6pt, minimum height=0.6cm, minimum width=1.6cm,
+        text centered, font=\scriptsize\sffamily
+    },
+    data/.style={
+        rectangle, rounded corners=2pt, draw=bordergray, fill=bglight,
+        line width=0.6pt, minimum height=0.7cm, minimum width=2.0cm,
+        text centered, font=\footnotesize\ttfamily
+    },
+    arr/.style={->, line width=1pt, color=#1},
+    darr/.style={->, line width=0.8pt, dashed, color=#1},
+    brace/.style={decorate, decoration={brace, amplitude=6pt, raise=2pt}},
+    note/.style={font=\scriptsize\sffamily\itshape, text=black!60}
+]
+
+% =============================================
+% RAW INPUTS (left)
+% =============================================
+\node[data] (I_litter) {Litter masses by component};
+\node[data, below=0.35cm of I_litter] (I_species) {Species composition};
+
+% Brace for inputs
+\draw[brace, bordergray, line width=0.8pt]
+    (I_litter.north east) -- (I_species.south east)
+    node[midway, right=12pt, font=\small\sffamily, inputblue] {$\mathbf{I}(t)$};
+
+% =============================================
+% INPUT COMPATIBILITY LAYER
+% =============================================
+\node[box=compatgreen, right=1.8cm of I_litter, yshift=-0.35cm] (fi) {%
+    \begin{tabular}{c}
+    I compatibility \\  Layer \\ $f_{i_k}\!\big(\mathbf{I}(t)\big)$
+    \end{tabular}};
+
+% =============================================
+% DECOMPOSITION FUNCTION
+% =============================================
+\node[box=decompred, right=2.5cm of fi] (fd) {%
+    \begin{tabular}{c}
+    Decomposition \\ $f_{d_k}\!\big(\mathbf{J}(t),\, \boldsymbol{\xi}(t)\big)$
+    \end{tabular}};
+
+% Hard-coded note inside fd
+\node[note, below=0.15cm of fd] (fd_note) {incl.\ hard-coded size modifiers};
+
+% =============================================
+% OUTPUT
+% =============================================
+\node[box=outputpurple, below=2.2cm of fd] (C) {%
+    \begin{tabular}{c}
+    total SOC \\ $\mathbf{C}(t)$
+    \end{tabular}};
+
+% =============================================
+% ENVIRONMENTAL DRIVERS (top row)
+% =============================================
+\node[data, above=5.2cm of fi, xshift=-0.5cm] (T) {$T_{\text{monthly}}(t)$};
+\node[data, right=1.8cm of T] (M) {$M_{\text{monthly}}(t)$};
+\node[data, right=1.8cm of M] (clay) {clay \%};
+
+% =============================================
+% TEMPERATURE BRANCH
+% =============================================
+% Temporal aggregation
+\node[tinybox=bordergray, below=0.5cm of T] (T_agg) {%
+    \begin{tabular}{c}
+    $\overline{T}$ or $T_m$
+    \end{tabular}};
+\node[note, left=0.1cm of T_agg] {avg/pass};
+
+% Temperature modifier
+\node[smallbox=modifiergold, below=0.5cm of T_agg] (xiT) {$\xi_{T_k}\!\big(T\big)$};
+
+% =============================================
+% MOISTURE BRANCH
+% =============================================
+% Moisture compatibility layer
+\node[tinybox=compatgreen, below=0.5cm of M] (fm) {%
+    \begin{tabular}{c}
+    $f_{m_k}$
+    \end{tabular}};
+\node[note, right=0.1cm of fm, text width=2cm, align=left] {$P$ or TSMD\\or $\emptyset$};
+
+% Moisture modifier
+\node[smallbox=modifiergold, below=0.5cm of fm] (xiM) {$\xi_{M_k}\!\big(f_{m_k}\big)$};
+
+% =============================================
+% EDAPHIC BRANCH
+% =============================================
+\node[smallbox=modifiergold, below=1.55cm of clay] (xiE) {$\xi_e$};
+\node[note, right=0.1cm of xiE] {RothC only};
+
+% =============================================
+% COMPOSITE MODIFIER
+% =============================================
+\node[box=modifiergold, below=0.8cm of xiM] (xi) {%
+    \begin{tabular}{c}
+    Kinetic Modifier \\ $\boldsymbol{\xi}_k(t) = \xi_T \cdot \xi_M \cdot \xi_e$
+    \end{tabular}};
+
+% =============================================
+% ARROWS — Inputs
+% =============================================
+\draw[arr=inputblue] (I_litter.east) -- ++(0.8,0) |- (fi.west);
+\draw[arr=inputblue] (I_species.east) -- ++(0.8,0) |- (fi.west);
+
+% fi to fd
+\draw[arr=compatgreen] (fi.east) -- (fd.west)
+    node[midway, below=2pt, font=\footnotesize\sffamily, compatgreen] {$\mathbf{J}(t)$};
+
+% fd to output
+\draw[arr=decompred] (fd.east) -- ++(1.2,0) |- (C.east);
+
+% =============================================
+% ARROWS — Temperature branch
+% =============================================
+\draw[arr=bordergray] (T.south) -- (T_agg.north);
+\draw[arr=modifiergold] (T_agg.south) -- (xiT.north);
+
+% =============================================
+% ARROWS — Moisture branch
+% =============================================
+\draw[arr=bordergray] (M.south) -- (fm.north);
+\draw[arr=modifiergold] (fm.south) -- (xiM.north);
+
+% =============================================
+% ARROWS — Edaphic branch
+% =============================================
+\draw[arr=modifiergold] (clay.south) -- (xiE.north);
+
+% =============================================
+% ARROWS — Sub-modifiers to composite
+% =============================================
+\draw[arr=modifiergold] (xiT.south) -- ++(0,-0.2) -| ([xshift=-6pt]xi.north);
+\draw[arr=modifiergold] (xiM.south) -- (xi.north);
+\draw[arr=modifiergold] (xiE.south) -- ++(0,-0.2) -| ([xshift=6pt]xi.north);
+
+% =============================================
+% ARROW — Composite modifier to fd
+% =============================================
+\draw[arr=modifiergold] (xi.south) -- ++(0,-0.35) -| (fd.north);
+
+% =============================================
+% BACKGROUND — Modifier group
+% =============================================
+\begin{scope}[on background layer]
+    \node[fit=(T_agg)(xiT)(fm)(xiM)(xiE)(xi),
+          fill=modifiergold!4, draw=modifiergold!25,
+          rounded corners=6pt, inner sep=10pt] {};
+\end{scope}
+
+\end{tikzpicture}
+\caption{Modular architecture of the SOC decomposition framework. Raw inputs $\mathbf{I}(t)$ are transformed by the input compatibility layer $f_i$ into model-specific inputs $\mathbf{J}(t)$. Environmental drivers are combined into the composite kinetic modifier $\boldsymbol{\xi}(t)$. Both feed into the model-specific decomposition function $f_d$.}
+\label{fig:architecture}
+\end{figure}
+
+\newpage
+
+
+# 3. Input requirements
+
+## 3.1 Standardised input format — $\mathbf{I}(t)$
+Dimensions $N_{plots} \times N_{time steps}$
+
+The standard input data for all models $\mathbf{I}(t)$ contains litter mass inputs from six cohorts (foliage, fine roots, branches, coarse roots, stump, stem).
+The species group (pine, spruce, birch) are partitioned based on species composition data, which are assumed constant per plot.
+
+## 3.2 Standised environmental drivers
+
+### 3.2.1 Time-variant drivers
+Dimensions $N_{plots} \times N_{time steps}$
+
+Temperature and moisture inputs are provided as monthly time series.
+Temperature relies only on a compatibility layer to aggregate to annual summaries where needed. 
+Moisture is more complicated since the models rely on different inputs (precipitation vs topsoil moisture deficit), so we need a compatibility layer to convert precipitation to soil moisture deficit for RothC, and to pass precipitation directly to Yasso. The Q-model does not explicitly include a moisture modifier, but implicitly via litter quality.
+
+### 3.2.2 Static edaphic modifiers
+Dimensions $N_{plots} \times 1$
+
+Clay content is provided as a scalar per plot, as well as tree species composition.
+
+# 3. Output structure
+## 3.1 Model-specific output
+
+Dimensions $N_{plots} \times N_{time steps} \times N_{pools}$, replicated for each model (different data frames for each model, with different pool names and numbers).
+
+## 3.1 Total SOC output
+Dimensions $N_{plots} \times N_{time steps} \times N_{models}$$
+
+
+
+# 3. Components requirements
+
+## 3.1 Input Compatibility Layer — $f_i\!\big(\mathbf{I}(t)\big)$
+
+
+The input layer $f_i$ maps this standardised input into the model-specific input vector $\mathbf{J}(t)$:
+
+$$
+f_i: \mathbf{I}(t) \;\longrightarrow\; \mathbf{J}(t) \in \mathbb{R}^{n_{\text{input pools}}}
+$$
+
+The mapping differs across models:
+
+| Model | Input pools $\mathbf{J}(t)$ | Key transformation |
+|:------|:---------------------------|:-------------------|
+| Yasso07/15/20 | AWEN fractions $(A, W, E, N)$ | Total mass to AWEN via component-specific coefficients |
+| RothC | DPM, RPM, BIO, HUM, IOM | Total mass $\to$ DPM/RPM split via component-dependent coefficients |
+| Q-model | Quality-distributed cohorts per tissue type | Separate cohorts retained; quality $q_0$ assigned per species and component |
+
+
+
+
+## 3.2 Kinetic Modifier — $\boldsymbol{\xi}(t)$
+
+The kinetic modifier captures all environmental effects on decomposition rates. It is composed multiplicatively:
+
+$$
+\boldsymbol{\xi}(t) = \xi_T\!\big(T(t)\big) \;\times\; \xi_M\!\big(f_{m_k}(M(t))\big) \;\times\;  \xi_k
+$$
+
+Each sub-modifier is a vector over time (or, for edaphic effects $\xi_k$, a scalar, constant over time) that rescales the baseline decomposition rates.
+
+### 3.2.1 Temperature Modifier — $\xi_T$
+
+All functions accept the same input, with the only compatibility layer being a montlhy to annual averaging.  
+
+The functional form of the temperature response differs across models:
+
+| Model | Form | Expression |
+|:------|:-----|:-----------|
+| Yasso07/15/20 | Gaussian-like | $\xi_T = \exp\!\big(\beta_1 T + \beta_2 T^2\big)$ |
+| RothC | Arrhenius-based | $\xi_T = \dfrac{47.9}{1 + \exp\!\big(\frac{106}{T+18.3}\big)}$ |
+| Q-model | Linear | $\xi_T = \max\!\big(0,\; a_T + b_T \cdot T\big)$ |
+
+### 3.2.2 Moisture/Precipitation Modifier — $\xi_M$
+
+Moisture functions of different models accept different inputs, so we need another compatibility layer, $f_{m_k}$. Yasso uses precipitation, RothC uses topsoil moisture deficit, and Q-model does not explicitly include a moisture modifier (but implicitly via litter quality).
+
+| Model | Driver | Notes |
+|:------|:-------|:------|
+| Yasso07/15/20 | Precipitation $P$ | $\xi_M = 1 - \exp\!\big(\gamma \cdot P\big)$; pool-independent |
+| RothC | Topsoil moisture deficit | Rate-modifying factor from TSMD accumulation |
+| Q-model | — | Not explicitly included (implicitly via litter quality) |
+
+### 3.2.3 Additional Static Modifiers — $\xi_k$
+| Modifier | Applicable models | Description |
+|:---------|:-----------------|:------------|
+| Clay ($\xi_{\text{clay}}$) | RothC | Modifies BIO/HUM partitioning: $x = 1.67 (1.85 + 1.60 \exp(-0.0786\, \%\text{clay}))$ |
+| Soil cover | RothC | Binary modifier on decomposition rate for bare soil, WON'T BE IMPLEMENTED!|
+
+### 3.2.4 Hard-coded Static Modifiers?
+Both Q and Yasso have static modifiers dependent on size that are specific to litter classes. These will be hard-coded in each model function, rather than passed as separate modifiers.
+
+
+
+
+# 4. Decomposition Equations
+
+This section presents the complete decomposition dynamics for each model
+
+## 4.1 Yasso07
+
+### Pool structure
+
+Five pools: $\mathbf{C} = [C_A,\, C_W,\, C_E,\, C_N,\, C_H]^T$, representing Acid-soluble, Water-soluble, Ethanol-soluble, Non-soluble (lignin-like), and Humus.
+
+### Dynamics
+
+$$
+\frac{d\mathbf{C}}{dt} = \mathbf{A}\,\mathbf{C} + \mathbf{I}
+$$
+
+where $\mathbf{I} = [I_A,\, I_W,\, I_E,\, I_N,\, 0]^T$ (no direct input to Humus).
+
+**Diagonal elements** (loss from pool $i$):
+$$A_{ii} = -\alpha_i \cdot \xi_T \cdot \xi_M$$
+
+where $\alpha_i$ is the base decomposition rate. For the N pool, an additional size modifier applies to woody litter:
+$$A_{44} = -\alpha_N \cdot \xi_T \cdot \xi_M \cdot f_{\text{size}}$$
+
+with $f_{\text{size}} = \min\!\big(1,\; \exp(-\delta_1 \cdot d^{\delta_2} \cdot |r|)\big)$, where $d$ is the wood diameter (cm).
+
+**Off-diagonal elements** (transfer from pool $j$ to pool $i$):
+$$A_{ij} = p_{ij} \cdot |\alpha_j \cdot \xi_T \cdot \xi_M|$$
+
+**Humus formation** (row 5, columns 1--4):
+$$A_{5j} = p_H \cdot |\alpha_j \cdot \xi_T \cdot \xi_M| \quad \text{for } j \in \{A, W, E, N\}$$
+
+**Respiration** is the residual: $R_h = \sum_j |A_{jj}| C_j - \sum_{i \neq j} A_{ij} C_j$.
+
+### Environmental modifiers
+
+**Temperature** — four-point approximation of intra-annual variation:
+$$\xi_T = \frac{1}{4} \sum_{i=1}^{4} \exp\!\big(\beta_1 T_i + \beta_2 T_i^2\big)$$
+where the quarterly temperatures are derived from annual mean $\bar{T}$ and amplitude $A_T$:
+\begin{align*}
+T_1 &= \bar{T} + \tfrac{4A_T}{\pi}\!\left(\tfrac{1}{\sqrt{2}} - 1\right), &
+T_2 &= \bar{T} - \tfrac{4A_T}{\sqrt{2}\,\pi} \\
+T_3 &= \bar{T} + \tfrac{4A_T}{\pi}\!\left(1 - \tfrac{1}{\sqrt{2}}\right), &
+T_4 &= \bar{T} + \tfrac{4A_T}{\sqrt{2}\,\pi}
+\end{align*}
+
+**Precipitation:**
+$$\xi_M = 1 - \exp\!\left(\gamma \cdot \frac{P}{1000}\right)$$
+where $P$ is annual precipitation (mm).
+
+### Analytical solution
+
+For annual timestep $\Delta t = 1$\,yr:
+$$\mathbf{C}(t+1) = e^{\mathbf{A}} \cdot \mathbf{C}(t) + \left(e^{\mathbf{A}} - \mathbf{I}_5\right) \mathbf{A}^{-1} \mathbf{I}$$
+where $e^{\mathbf{A}}$ is the matrix exponential.
+
+**Steady state:**
+$$\mathbf{C}^* = -\mathbf{A}^{-1}\,\mathbf{I}$$
+
+### Default parameters
+
+| Parameter | Value | Description |
+|:----------|:------|:------------|
+| $\alpha_A,\, \alpha_W,\, \alpha_E,\, \alpha_N$ | 0.66, 4.30, 0.35, 0.22 | Base decomposition rates (yr$^{-1}$) |
+| $\alpha_H$ | 0.0033 | Humus decomposition rate (yr$^{-1}$) |
+| $p_H$ | 0.04 | Fraction to Humus |
+| $\beta_1,\, \beta_2$ | 0.096, $-$0.0014 | Temperature response parameters |
+| $\gamma$ | $-$1.21 | Precipitation response parameter |
+| $\delta_1,\, \delta_2,\, r$ | $-$1.7, 0.86, $-$0.306 | Size modifier parameters |
+
+\newpage
+
+## 4.2 Yasso15
+
+Yasso15 retains the AWENH pool structure and transfer matrix of Yasso07, but introduces two structural changes.
+
+**Pool-group-specific climate responses.** Where Yasso07 applies a single temperature and precipitation modifier to all pools, Yasso15 separates the climate response into three groups — AWE, N, and H — each with independent parameters:
+
+$$\xi_{T}^{\text{AWE}} = \frac{1}{4}\sum_{i=1}^{4}\exp\!\big(\beta_1 T_i + \beta_2 T_i^2\big), \quad \xi_{T}^{N} = \frac{1}{4}\sum_{i=1}^{4}\exp\!\big(\beta_{N1} T_i + \beta_{N2} T_i^2\big), \quad \xi_{T}^{H} = \frac{1}{4}\sum_{i=1}^{4}\exp\!\big(\beta_{H1} T_i + \beta_{H2} T_i^2\big)$$
+
+Similarly for precipitation:
+
+$$\xi_{M}^{\text{AWE}} = 1 - \exp\!\big(\gamma \cdot P/1000\big), \qquad \xi_{M}^{N} = 1 - \exp\!\big(\gamma_N \cdot P/1000\big), \qquad \xi_{M}^{H} = 1 - \exp\!\big(\gamma_H \cdot P/1000\big)$$
+
+The combined climate modifier is applied per pool group when constructing the diagonal of $\mathbf{A}$:
+
+\begin{align*}
+A_{ii} &= -\alpha_i \cdot \xi_T^{\text{AWE}} \cdot \xi_M^{\text{AWE}} \cdot f_{\text{size}} & \text{for } i \in \{A, W, E\} \\
+A_{44} &= -\alpha_N \cdot \xi_T^{N} \cdot \xi_M^{N} \cdot f_{\text{size}} \\
+A_{55} &= -\alpha_H \cdot \xi_T^{H} \cdot \xi_M^{H} & \text{(no size effect)}
+\end{align*}
+
+Off-diagonal elements and humus formation follow the same structure as Yasso07, with transfers proportional to the source pool's modified rate.
+
+**Leaching.** Yasso15 adds a precipitation-dependent leaching term to the AWEN pools (not H):
+
+$$A_{ii} \mathrel{+}= w \cdot P/1000 \quad \text{for } i \in \{A, W, E, N\}$$
+
+The size modifier, transfer matrix structure, analytical solution (matrix exponential), and steady-state formula ($\mathbf{C}^* = -\mathbf{A}^{-1}\mathbf{b}$) are identical to Yasso07.
+
+\newpage
+
+## 4.3 Yasso20
+
+Yasso20 shares the AWENH pool structure, pool-group-specific climate responses, and leaching of Yasso15. The structural equations are the same. The principal differences are in parameterisation and the size modifier formula.
+
+**Modified size dependence.** Yasso07/15 use an exponential form:
+
+$$f_{\text{size}}^{\text{07/15}} = \min\!\big(1,\; \exp(-\delta_1 \cdot d^{\delta_2} \cdot |r|)\big)$$
+
+Yasso20 uses a quadratic formulation:
+
+$$f_{\text{size}}^{\text{20}} = \big(1 + \theta_1\, d + \theta_2\, d^2\big)^{-|r|}$$
+
+which produces a stronger size-dependent slowdown for coarse woody debris.
+
+**Substantially different parameter values.** The most consequential changes from Yasso07/15 are:
+
+| Parameter | Yasso07 | Yasso20 | Change | Effect |
+|:----------|:--------|:--------|:-------|:-------|
+| $p_H$ | 0.04 | 0.0042 | $-$90\% | Much less humus formation |
+| $\alpha_H$ | 0.0033 | 0.0015 | $-$54\% | Slower humus decomposition |
+| $\alpha_W$ | 4.30 | 5.19 | $+$21\% | Faster W-pool turnover |
+| $\alpha_E$ | 0.35 | 0.13 | $-$63\% | Slower E-pool turnover |
+| $\alpha_N$ | 0.22 | 0.10 | $-$55\% | Slower N-pool turnover |
+
+The dramatically reduced $p_H$ (9.5$\times$ less humus formation) is the primary driver of Yasso20 predicting $\sim$20\% lower total SOC than Yasso07/15 for Finnish forests, despite the compensating effect of slower humus decomposition.
+
+
+## 4.4 RothC
+
+### Pool structure
+
+Five pools: $\mathbf{C} = [C_{\text{DPM}},\, C_{\text{RPM}},\, C_{\text{BIO}},\, C_{\text{HUM}},\, C_{\text{IOM}}]^T$, representing Decomposable Plant Material, Resistant Plant Material, Microbial Biomass, Humified Organic Matter, and Inert Organic Matter.
+
+### Dynamics
+
+RothC operates on a **monthly timestep** $\Delta t = 1/12$\,yr. For each active pool $i \in \{\text{DPM}, \text{RPM}, \text{BIO}, \text{HUM}\}$:
+
+$$C_i(t + \Delta t) = C_i(t) \cdot \exp\!\big(-k_i \cdot r(t) \cdot \Delta t\big) + I_i \cdot \Delta t + \text{transfers}_i$$
+
+where $r(t) = \xi_T(t) \cdot \xi_M(t) \cdot \xi_V$ is the composite rate modifier (normalised so that $\xi_T / 47.9$ gives the fractional effect).
+
+The IOM pool is inert: $C_{\text{IOM}}(t) = 0.049 \cdot (\%\text{clay})^{1.139}$.
+
+**Decomposed material** from each pool:
+$$D_i = C_i \cdot \big(1 - \exp(-k_i \cdot r \cdot \Delta t)\big)$$
+
+This is partitioned into three fluxes governed by the clay-dependent ratio $x$:
+
+$$x = 1.67\big(1.85 + 1.60\,\exp(-0.0786 \cdot \%\text{clay})\big)$$
+
+\begin{align*}
+f_{\text{CO}_2} &= x / (x + 1) \\
+f_{\text{BIO}} &= 0.46 / (x + 1) \\
+f_{\text{HUM}} &= 0.54 / (x + 1)
+\end{align*}
+
+So the transfers are:
+\begin{align*}
+\text{CO}_{2} &= \sum_i D_i \cdot f_{\text{CO}_2} \\
+C_{\text{BIO}} &\mathrel{+}= \sum_i D_i \cdot f_{\text{BIO}} \\
+C_{\text{HUM}} &\mathrel{+}= \sum_i D_i \cdot f_{\text{HUM}}
+\end{align*}
+
+Only DPM and RPM receive external inputs: $I_{\text{DPM}},\, I_{\text{RPM}}$ (partitioned from total litter via the DPM/RPM ratio).
+
+### Environmental modifiers
+
+**Temperature** (monthly):
+$$\xi_T = \frac{47.9}{1 + \exp\!\big(106\,/\,(T + 18.3)\big)}$$
+
+**Moisture** — based on accumulated topsoil moisture deficit (TSMD):
+$$\text{TSMD}_m = \max\!\big(0,\; E_m - P_m\big)$$
+
+The moisture modifier reduces decomposition when soil dries:
+$$\xi_M = \max\!\big(0.2,\; 1 - \text{TSMD} / \text{TSMD}_{\max}\big)$$
+
+where $\text{TSMD}_{\max}$ depends on clay content.
+
+**Vegetation cover:**
+$$\xi_V = \begin{cases} 0.6 & \text{vegetated (all forest plots)} \\ 1.0 & \text{bare soil} \end{cases}$$
+
+### Analytical steady state
+
+The system can be expressed as $\mathbf{A}\,\mathbf{C}^* = -\mathbf{b}$ for the four active pools, where $\mathbf{A}$ is the $4 \times 4$ matrix encoding losses and transfers, and $\mathbf{b} = [I_{\text{DPM}},\, I_{\text{RPM}},\, 0,\, 0]^T$.
+
+$$\mathbf{C}^*_{\text{active}} = -\mathbf{A}^{-1}\,\mathbf{b}$$
+
+The full steady state appends $C_{\text{IOM}}$ calculated from clay content.
+
+### Default parameters
+
+| Parameter | Value | Description |
+|:----------|:------|:------------|
+| $k_{\text{DPM}}$ | 10.0 | DPM decomposition rate (yr$^{-1}$) |
+| $k_{\text{RPM}}$ | 0.3 | RPM decomposition rate (yr$^{-1}$) |
+| $k_{\text{BIO}}$ | 0.66 | BIO decomposition rate (yr$^{-1}$) |
+| $k_{\text{HUM}}$ | 0.02 | HUM decomposition rate (yr$^{-1}$) |
+
+\newpage
+
+## 4.5 Q-model
+
+### Pool structure
+
+Unlike the discrete-pool models above, the Q-model (Bosatta \& Ågren, 1985) describes decomposition along a **continuous quality axis** $q$. Organic matter is characterised by its current quality $q \in (0, q_0]$, where $q_0$ is the initial quality at litter input. As material decomposes, quality declines and decomposition slows — encoding the universal observation that fresh litter decomposes faster than aged organic matter.
+
+In practice, the model is discretised into **cohort tracking**: each annual litter input forms a cohort whose remaining mass is tracked as a function of age and tissue type.
+
+Five tissue classes are tracked separately, distinguished by initial quality and entry dynamics:
+
+| Tissue class | Quality parameter | Entry dynamics |
+|:-------------|:-----------------|:---------------|
+| Foliage (needles) | $q_{0n}$ (species-specific) | Immediate |
+| Fine roots | $q_{0f}$ (species-specific) | Immediate |
+| Understorey | $q_{0n}$ (as foliage) | Immediate |
+| Branches | $q_{0w}$ (species-specific) | Gradual fragmentation ($t_{\max,b}$ = 13 yr) |
+| Stems | $q_{0w}$ (species-specific) | Gradual fragmentation ($t_{\max,s}$ = 60 yr) |
+
+### Core equations
+
+**Microbial uptake rate** as a function of quality:
+$$u(q) = u_0 \cdot q^{\beta}$$
+
+where $u_0$ is the temperature-dependent base rate and $\beta$ is the quality--rate exponent (default $\beta = 7$).
+
+**Temperature dependence** (linear form):
+$$u_0(T) = u_{00} + u_{01} \cdot T$$
+
+where $T$ is the mean annual temperature (°C), $u_{00} = 0.0855$, and $u_{01} = 0.0157$.
+
+An alternative thermodynamic (Arrhenius) formulation (not implemented here) exists (Bosatta \& Ågren 1999):
+$$u(q, T) = u_0^{\text{ref}} \cdot \exp\!\left(\frac{|\Delta G^0|}{R\,q}\left(\frac{1}{T_{\text{ref}}} - \frac{1}{T}\right)\right)$$
+
+where $T$ is in Kelvin, $R = 8.314$\,J\,mol$^{-1}$\,K$^{-1}$, and $\Delta G^0$ is the free energy change per enzymatic step. This formulation implies that low-quality substrates have stronger temperature sensitivity than high-quality substrates — a feature not captured by the linear form.
+
+**Derived parameters.** The quality decline exponent $z$ controls how decomposition slows over time:
+$$z = \frac{1 - e_0}{\beta \cdot \eta_{11} \cdot e_0}$$
+
+where $e_0$ is the initial microbial growth efficiency (0.25) and $\eta_{11}$ is the carbon use efficiency parameter (0.36). With default parameters, $z \approx 1.19$.
+
+The composite decomposition rate $\alpha$ for a given tissue type combines all factors:
+$$\alpha = f_C \cdot \beta \cdot \eta_{11} \cdot u_0 \cdot q_0^{\beta}$$
+
+where $f_C = 0.5$ is the carbon fraction of organic matter.
+
+### Remaining fraction functions
+
+**Simple tissues** (foliage, fine roots, understorey) enter the soil immediately and follow power-law decay:
+$$g(t) = \frac{1}{(1 + \alpha\, t)^z}$$
+
+**Branches** fragment gradually over $t_{\max,b}$ years. The remaining fraction integrates decomposition over the fragmenting material. Defining $i_b = \min(t,\, t_{\max,b})$:
+
+$$g_b(t) = \frac{2\Big[(1 + \alpha t)^{1-z} - (1 + \alpha(t - i_b))^{1-z}(1 - i_b/t_{\max,b})\Big]}{\alpha\,(1-z)\,t_{\max,b}} + \frac{2\Big[(1 + \alpha(t-i_b))^{2-z} - (1+\alpha t)^{2-z}\Big]}{\alpha^2(1-z)(2-z)\,t_{\max,b}^2} + \left(1 - \frac{i_b}{t_{\max,b}}\right)^2$$
+
+**Stems** follow the same structure with $t_{\max,s}$ replacing $t_{\max,b}$.
+
+### Quality evolution
+
+Quality declines with mass loss:
+$$q(t) = q_0 \left(\frac{C(t)}{C(0)}\right)^{1/z}$$
+
+This couples quality and mass: as carbon is lost, the remaining material becomes progressively more recalcitrant.
+
+### Transient temperature implementation
+
+The standard Q-model analytical solution assumes constant $\alpha$ (i.e.\ constant temperature). Under transient climate, we track **cumulative decomposition potential** for each cohort:
+
+$$\tilde{\alpha}(t) = \sum_{\tau=1}^{t} \alpha\big(T(\tau)\big)$$
+
+where $\alpha(T(\tau))$ is recalculated each year from the current temperature. The remaining fraction then becomes:
+
+$$g(t) = \frac{1}{\big(1 + \tilde{\alpha}(t)\big)^z}$$
+
+This ensures all carbon pools respond to current temperature conditions rather than being locked to the temperature at the time of input — a critical requirement for climate change projections. Without this correction, the model underestimates SOC loss under warming by 20--40\%.
+
+### Initialisation: hybrid approach
+
+Rather than running a 1500-year numerical spinup, we use an analytical-hybrid approach:
+
+1. **Analytical steady state.** For simple tissues:
+$$C_{\text{ss}} = L \cdot \sum_{t=1}^{T_{\max}} g(t)$$
+where $L$ is the annual litter input. Branches and stems use numerical integration of their respective $g_b$, $g_s$ functions over 500--1000 years.
+
+2. **Bulk pool initialisation.** The total $C_{\text{ss}}$ is treated as a single bulk pool that decomposes via:
+$$C_{\text{init}}(t) = C_{\text{ss}} \cdot (1 + \alpha_0\, t)^{1-z}$$
+
+3. **Short spinup** (10--20 years) builds up explicit cohort matrices while the bulk pool decays. Total SOC = bulk pool + new cohorts.
+
+This reduces initialisation time from $\sim$1500 years to 10--20 years while maintaining accuracy.
+
+### Default parameters
+
+| Parameter | Value | Description |
+|:----------|:------|:------------|
+| $\beta$ | 7 | Quality--rate exponent |
+| $e_0$ | 0.25 | Initial microbial growth efficiency |
+| $\eta_{11}$ | 0.36 | Carbon use efficiency parameter |
+| $f_C$ | 0.5 | Carbon fraction of organic matter |
+| $u_{00}$ | 0.0855 | Base uptake rate at 0°C |
+| $u_{01}$ | 0.0157 | Temperature sensitivity of uptake |
+| $t_{\max,b}$ | 13 | Branch fragmentation time (yr) |
+| $t_{\max,s}$ | 60 | Stem fragmentation time (yr) |
+| $q_{0n}$ | 1.01 (spruce) | Initial quality, foliage |
+| $q_{0f}$ | 1.036 | Initial quality, fine roots |
+| $q_{0w}$ | 1.00 | Initial quality, woody tissues |
+
+
+
+
+
+## 4.6 Common Interface and Implementation Architecture
+
+All five decomposition models share a common calling interface, enabling the simulation loop and Bayesian calibration framework to treat them interchangeably. The implementation is split across two languages: performance-critical numerical code in **Fortran**, and data handling, calibration logic, and input preparation in **R**.
+
+### Fortran--R boundary
+
+The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead during MCMC sampling. Since the calibration loop evaluates the likelihood millions of times across $\sim$3,700 plots, each evaluation should require a **single Fortran call per plot** that runs the full time-series simulation, rather than hundreds of per-timestep round-trips.
+
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    >=Stealth,
+    node distance=0.8cm and 1.6cm,
+    box/.style={
+        rectangle, rounded corners=4pt, draw=#1, fill=#1!8,
+        line width=1pt, minimum height=1.0cm, minimum width=3.4cm,
+        text centered, font=\small\sffamily
+    },
+    widebox/.style={
+        rectangle, rounded corners=4pt, draw=#1, fill=#1!8,
+        line width=1pt, minimum height=1.0cm, minimum width=5.0cm,
+        text centered, font=\small\sffamily
+    },
+    tallbox/.style={
+        rectangle, rounded corners=4pt, draw=#1, fill=#1!8,
+        line width=1pt, minimum height=1.6cm, minimum width=5.0cm,
+        text centered, font=\small\sffamily
+    },
+    data/.style={
+        rectangle, rounded corners=2pt, draw=bordergray, fill=bglight,
+        line width=0.6pt, minimum height=0.6cm, minimum width=2.0cm,
+        text centered, font=\footnotesize\ttfamily
+    },
+    arr/.style={->, line width=1pt, color=#1},
+    note/.style={font=\scriptsize\sffamily\itshape, text=black!50},
+    layerlabel/.style={font=\small\sffamily\bfseries, text=#1, rotate=90, anchor=south}
+]
+
+% =============================================
+% OUTSIDE-MCMC: Input layer and Env/xi blocks
+% =============================================
+
+% Input layer (once per plot, left side)
+\node[box=compatgreen] (fi) at (-5.5, 1.3) {%
+    \begin{tabular}{c}
+    $f_{i_k}(\mathbf{I}(t))$ \\ Input layer
+    \end{tabular}};
+\node[box=modifiergold] (SS_mean) at (-5.5, -0.3) {%
+    \begin{tabular}{c}
+    Constant input assumptions
+    \end{tabular}};
+\node[note, below=0cm of SS_mean, text width=2.8cm, align=center]
+    {once per plot};
+
+% SOC measurement
+\node[box=compatgreen, right=2cm of fi] (SOC) {%
+  \begin{tabular}{c}
+    SOC measurements
+    \end{tabular}};
+
+
+% Env data layer (once per plot, right side)
+\node[box=compatgreen] (envdata) at (6, 0) {%
+    \begin{tabular}{c}
+    $g_{i_k}(T(t),\,M(t),\ldots)$ \\ Env.\ data layer
+    \end{tabular}};
+\node[note, below=0.1cm of envdata, text width=2.8cm, align=center]
+    {once per plot};
+
+% xi computation (outside MCMC, right side)
+\node[box=modifiergold] (fxi) at (6, -2.8) {%
+    \begin{tabular}{c}
+    \texttt{compute\_xi()} \\ $\boldsymbol{\xi}(T, M, \ldots)$
+    \end{tabular}};
+\node[note, below=0.1cm of fxi, text width=2.8cm, align=center]
+    {once per plot};
+
+% =============================================
+% INSIDE-MCMC: Likelihood (top centre)
+% =============================================
+
+\node[widebox=outputpurple] (likelihood) at (0, -2.4) {%
+    \begin{tabular}{c}
+    Likelihood function \\ $\mathcal{L}(\boldsymbol{\theta} \,|\, \text{SOC}_{\text{obs}})$
+    \end{tabular}};
+
+% =============================================
+% INSIDE-MCMC: Steady-state (left, Fortran red)
+% =============================================
+
+\node[box=decompred] (steadyblock) at (-5.5, -5.2) {%
+    \begin{tabular}{c}
+    \texttt{steady\_state()} \\
+    $\mathbf{C}^* = -\mathbf{A}^{-1}\mathbf{b}(\bar{\mathbf{J}})$
+    \end{tabular}};
+
+% =============================================
+% INSIDE-MCMC: model_run wrapper + model_step inside
+% =============================================
+
+% Outer model_run box (compiled wrapper, iterates cohorts)
+\node[
+    rectangle, rounded corners=4pt,
+    draw=decompred, fill=decompred!8,
+    line width=1pt,
+    minimum height=3.2cm, minimum width=5.4cm,
+    text centered, font=\small\sffamily
+] (frun) at (0, -6.6) {};
+
+% model_run label at top of box
+\node[font=\small\sffamily, text=decompred, anchor=north]
+    at (frun.north) [yshift=-6pt] {%
+    \begin{tabular}{c}
+    \texttt{model\_run()} \\ loop over components $c = 1,\ldots,n_c$
+    \end{tabular}};
+    
+% model_step inner box
+\node[box=decompred, anchor=center] (fstep) at (0, -7.0) {%
+    \begin{tabular}{c}
+    \texttt{model\_step()} \\ single $\Delta t$ update
+    \end{tabular}};
+
+% Output
+\node[data] (output) at (0, -9.2) {SOC(t) vector};
+
+% =============================================
+% MCMC GROUPING BOX (behind all nodes)
+% =============================================
+\begin{scope}[on background layer]
+\node[
+    rectangle, rounded corners=8pt,
+    draw=outputpurple, fill=outputpurple!4,
+    line width=1.5pt, dashed,
+    fit=(likelihood)(steadyblock)(output),
+    inner sep=18pt
+] (mcmcbox) {};
+\end{scope}
+
+% MCMC box label
+\node[font=\small\sffamily\bfseries, text=outputpurple,
+    below=0.55cm of mcmcbox.south, anchor=south]
+    {MCMC sampler};
+\node[note, below=0.05cm of mcmcbox.north, anchor=north,
+    text width=5cm, align=center]
+    {re-evaluated each proposal $\boldsymbol{\theta}$};
+
+% =============================================
+% ARROWS — outside to inside
+% =============================================
+
+% SOC -> likelihood (evaluating cost)
+\draw[arr=compatgreen] (SOC.south) -- (likelihood.north)
+    node[near end, right=3pt, note] {$\text{SOC}_{\text{obs}}$};
+
+% Input layer -> SS_mean 
+\draw[arr=compatgreen] (fi.south) -- (SS_mean.north)
+    node[near end, right=3pt, note] {$\mathbf{J}_c(t)$};
+
+% SS_mean -> steady-state 
+\draw[arr=modifiergold] (SS_mean.south) -- (steadyblock.north)
+    node[midway, right=3pt, note] {$\bar{\mathbf{J}}$};
+
+% Input layer -> model_run (full cohort arrays, going centre-down)
+\draw[arr=compatgreen] (fi.east) -- ++(0.6,0) -- ++(0,-7.4) -- (frun.west)
+    node[midway, above=3pt, note] {$\mathbf{J}_c(t)$};.
+
+% Env data -> xi
+\draw[arr=compatgreen] (envdata.south) -- (fxi.north)
+    node[midway, right=3pt, note] {$T(t),\,M(t)$};
+
+% xi -> model_run (from right)
+\draw[arr=modifiergold] (fxi.west) -- ++(-0.8,0) |- (frun.east)
+    node[near end, above=3pt, note] {$\boldsymbol{\xi}(t)$};
+
+% =============================================
+% ARROWS — inside MCMC
+% =============================================
+
+% Likelihood -> steady-state (params, going left)
+\draw[arr=outputpurple] (likelihood.south) -- (steadyblock.north east)
+    node[near end, right=3pt, note] {$\boldsymbol{\theta}$};
+
+% Likelihood -> model_run (params, going right then down)
+\draw[arr=outputpurple] (likelihood.south) -- (frun.north)
+    node[near end, right=3pt, note] {$\boldsymbol{\theta}$};
+
+% steady-state -> model_run (initial state C*, horizontal)
+\draw[arr=decompred] (steadyblock.south) -- ++(0,-0.6)
+    -| (frun.west)
+    node[near end, above=3pt, note] {$\mathbf{C}^*$};
+
+% model_run -> output
+\draw[arr=decompred] (frun.south) -- (output.north);
+
+% output -> likelihood (return SOC predictions)
+\draw[arr=decompred, line width=1.5pt]
+    (output.west) -- ++(-6.3,0) |- (likelihood.west)
+    node[near start, above=-12pt, note] {SOC predictions};
+
+\end{tikzpicture}
+\caption{%
+Revised implementation architecture.
+Two preparation blocks run once per plot outside the MCMC loop:
+the input layer $f_{i_k}$ produces per-cohort litter arrays $\mathbf{J}_c(t)$ and the
+plot-mean input $\bar{\mathbf{J}}$; the env.\ data layer $g_{i_k}$ feeds climate time series
+into \texttt{compute\_xi()}, assembling the modifier array $\boldsymbol{\xi}(t)$.
+At each MCMC proposal $\boldsymbol{\theta}$, the Fortran \texttt{steady\_state()} routine
+(left) initialises the carbon state $\mathbf{C}^*$ from $\bar{\mathbf{J}}$ and
+$\boldsymbol{\theta}$.
+The compiled \texttt{model\_run()} wrapper receives $\mathbf{C}^*$, $\boldsymbol{\theta}$,
+$\mathbf{J}_c(t)$, and $\boldsymbol{\xi}(t)$, and iterates the core
+\texttt{model\_step()} function over all $n_c$ input cohorts and timesteps.
+The aggregated SOC vector returns to the likelihood for evaluation against observations.}
+\label{fig:implementation}
+\end{figure}
+
+
+### Fortran module structure
+
+Each model is implemented as a Fortran module exposing three subroutines. All share the same calling conventions.
+
+**\texttt{model\_run()}** — the top-level entry point called from R via \texttt{.Fortran()}. It receives the full pre-processed input arrays, parameter vector, and climate time series for a single plot, and returns the complete SOC trajectory.
+
+```{r, eval=FALSE}
+# R side: single call per plot
+result <- .Fortran("yasso15_run",
+  n_years    = as.integer(n_years),
+  params     = as.double(param_vector),    # calibrated parameters
+  J_t        = as.double(input_matrix),    # [n_years x n_input_pools]
+  T_monthly  = as.double(temp_matrix),     # [n_years x 12]
+  P_monthly  = as.double(precip_matrix),   # [n_years x 12]
+  diameter   = as.double(wood_diameters),  # [n_litter_types]
+  C_out      = double(n_years * n_pools),  # output: [n_years x n_pools]
+  resp_out   = double(n_years)             # output: annual respiration
+)
+```
+
+Internally, \texttt{model\_run()} performs:
+
+1. Call \texttt{model\_steady\_state()} to compute $\mathbf{C}^*$ from mean climate and inputs.
+2. Initialise pools from $\mathbf{C}^*$ (or from the hybrid approach for Q-model).
+3. Loop over years (and months for RothC), calling \texttt{compute\_xi()} and \texttt{model\_step()} at each timestep.
+4. Write annual pool states and respiration to output arrays.
+
+**\texttt{model\_steady\_state()}** — computes the analytical equilibrium. For Yasso and RothC, this is a matrix inversion $\mathbf{C}^* = -\mathbf{A}^{-1}\mathbf{b}$. For the Q-model, it performs the numerical summation of remaining fractions over a truncated age series.
+
+**\texttt{model\_step()}** — advances the pool state by one timestep $\Delta t$:
+
+| Model | $\Delta t$ | Core operation |
+|:------|:-----------|:---------------|
+| Yasso07/15/20 | 1 yr | Build $\mathbf{A}$, compute matrix exponential $e^{\mathbf{A}}$, update $\mathbf{C}$ |
+| RothC | 1/12 yr | Exponential decay per pool, partition decomposed C via clay ratio $x$ |
+| Q-model | 1 yr | Update cumulative $\tilde{\alpha}$ per cohort, compute remaining fraction, prune old cohorts |
+
+**\texttt{compute\_xi()}** — evaluates the environmental modifiers from climate data and static site properties. Called internally by \texttt{model\_step()} (or once per year for annual models, 12 times for RothC).
+
+
+### R wrapper layer
+
+The R wrapper for each model handles:
+
+- **Input preparation**: calls $f_{i_k}(\mathbf{I}(t))$ to transform raw HIKET data into model-specific input arrays. This is done once per plot before calibration begins.
+- **Parameter mapping**: translates the named BayesianTools parameter vector into the positional double-precision vector expected by Fortran.
+- **Output formatting**: reshapes the flat Fortran output arrays into named R structures for likelihood evaluation and diagnostics.
+
+```{r, eval=FALSE}
+#' R wrapper for a single model
+#'
+#' @param params   Named list from BayesianTools
+#' @param J_arrays Pre-computed input arrays from f_i (computed once)
+#' @param climate  Pre-formatted climate arrays (computed once)
+#' @param site     Static site properties (clay, diameter, etc.)
+#'
+#' @return Numeric vector of predicted total SOC per year
+run_model_k <- function(params, J_arrays, climate, site) {
+
+  # Map named parameters to Fortran vector
+  param_vec <- map_params_to_fortran(params, model = k)
+
+  # Single Fortran call — full simulation
+  result <- .Fortran(paste0(k, "_run"),
+    n_years   = climate$n_years,
+    params    = param_vec,
+    J_t       = J_arrays$input_matrix,
+    T_monthly = climate$temp,
+    P_monthly = climate$precip,
+    diameter  = site$diameters,
+    C_out     = double(climate$n_years * n_pools_k),
+    resp_out  = double(climate$n_years)
+  )
+
+  # Return total SOC trajectory
+  matrix(result$C_out, ncol = n_pools_k) |> rowSums()
+}
+```
+
+
+### What stays in R vs.\ Fortran
+
+| Component | Language | Rationale |
+|:----------|:---------|:----------|
+| $f_{i_k}$ — input compatibility | R | Called once per plot; benefits from R data wrangling |
+| $\xi_k$ — modifier computation | Fortran | Called millions of times inside MCMC loop |
+| $f_{d_k}$ — decomposition step | Fortran | Innermost loop; matrix operations |
+| Steady-state solver | Fortran | Matrix inversion, numerical integration |
+| Full simulation loop | Fortran | Avoids per-timestep R$\leftrightarrow$Fortran overhead |
+| Parameter mapping | R | String/name handling; negligible cost |
+| Likelihood evaluation | R | Interface with BayesianTools; simple arithmetic |
+| I/O, aggregation, diagnostics | R | Flexibility; not performance-critical |

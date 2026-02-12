@@ -1,0 +1,404 @@
+---
+title: "Soil Organic Carbon Model Intercomparison"
+subtitle: "Bayesian Calibration Framework for Finnish Forests"
+author: "Lorenzo"
+date: "`r Sys.Date()`"
+output: 
+  beamer_presentation:
+    theme: "Madrid"
+    colortheme: "default"
+    fig_caption: false
+    includes:
+      in_header: preamble.tex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+# rmarkdown::render("soc_intercomparison_slides.Rmd")
+```
+
+# Current State: Multi-Model Framework
+
+The models are so far **implemented in R** for faster prototyping. The code seems fast enough to run it in R via Bayesiantools, but multi-threading on Roihu needs still to be tested. Re-coding possible but prefer to avoid.  
+
+**Five SOC Models Implemented & Debugged:**
+
+- **Yasso family**: Yasso07, Yasso15, Yasso20 (chemical fractionation)
+- **RothC**: Decomposability-based pools
+- **Q-model**: Continuous quality theory
+
+\vspace{0.3cm}
+
+**Implementation:**
+
+- One layer of model-specific input rerouting for compatibility
+- Analytical steady-state solutions for Yasso07, Yasso15, Yasso20 and RothC
+- Optimized Q-model (Swedish hybrid init + Rcpp)
+
+---
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.7cm,
+    box/.style={rectangle, draw, minimum width=2.2cm, minimum height=0.7cm, align=center, font=\small},
+    bigbox/.style={rectangle, draw, thick, minimum width=2.2cm, minimum height=0.8cm, align=center, font=\small},
+    arrow/.style={->, >=stealth, thick}
+]
+% Input data - using normal boxes
+\node[box, fill=blue!10] (climate) at (0,0) {Climate\\ T, precip};
+\node[box, fill=blue!10] (litter) at (3,0) {Litter\\ AWEN};
+\node[box, fill=blue!10] (soil) at (6,0) {Initial\\ SOC};
+
+% Input matching layer
+\node[bigbox, fill=green!10, minimum width=6cm] (matching) at (3,-1.2) {Input Matching Functions layer};
+
+% Model wrappers - expanded Yasso versions
+\node[bigbox, fill=yellow!15] (yasso07) at (-1.5,-2.5) {Yasso07};
+\node[bigbox, fill=yellow!15] (yasso15) at (1,-2.5) {Yasso15};
+\node[bigbox, fill=yellow!15] (yasso20) at (3.5,-2.5) {Yasso20};
+\node[bigbox, fill=yellow!15] (rothc) at (6,-2.5) {RothC};
+\node[bigbox, fill=yellow!15] (qmodel) at (8.5,-2.5) {Q-model};
+
+% Key components
+\node[bigbox, fill=orange!20, minimum width=4cm] (steady) at (0,-3.8) {Steady State};
+\node[bigbox, fill=orange!20, minimum width=4cm] (forward) at (6,-3.8) {Forward\\ Simulation};
+
+% Output
+\node[box, fill=purple!10] (output) at (3.5,-5) {SOC\\ predictions};
+
+% Arrows from inputs to matching
+\draw[arrow] (climate) -- (matching);
+\draw[arrow] (litter) -- (matching);
+\draw[arrow] (soil) -- (matching);
+
+% Arrows from matching to models
+\draw[arrow] (matching) -- (yasso07);
+\draw[arrow] (matching) -- (yasso15);
+\draw[arrow] (matching) -- (yasso20);
+\draw[arrow] (matching) -- (rothc);
+\draw[arrow] (matching) -- (qmodel);
+
+% Arrows from models to components
+\draw[arrow] (yasso07) -- (steady);
+\draw[arrow] (yasso15) -- (steady);
+\draw[arrow] (yasso20) -- (steady);
+\draw[arrow] (rothc) -- (steady);
+\draw[arrow] (qmodel) -- (steady);
+
+\draw[arrow] (yasso07) -- (forward);
+\draw[arrow] (yasso15) -- (forward);
+\draw[arrow] (yasso20) -- (forward);
+\draw[arrow] (rothc) -- (forward);
+\draw[arrow] (qmodel) -- (forward);
+
+% Arrows from components to output
+\draw[arrow] (steady) -- (output);
+\draw[arrow] (forward) -- (output);
+\end{tikzpicture}
+\end{center}
+\vspace{0.3cm}
+---
+
+
+# Key Optimizations: Q-Model
+
+**Challenge:** Q-model steady state is a coarse approximation and causes differences in the first decade or two C balance. The initial cohort matrix needs to be initialized with numerical spin up, but this is computationally intensive.  
+
+\vspace{0.5cm}
+
+**Solution 1: Swedish Hybrid Initialization**
+
+- Combines analytical steady-state with numerical adjustment
+- Avoids full numerical spinup from zero
+- \textbf{Result:} 10--20x speedup while maintaining accuracy
+
+\vspace{0.5cm}
+
+**Solution 2: Rcpp Compilation**
+
+- Performance-critical components compiled to C++
+- Maintains R interface for integration
+- Essential for feasibility of full-scale calibration
+
+
+---
+
+
+# Example: Running the Multi-Model Wrapper
+\footnotesize
+```r
+    results_default <- run_soc_models_multipplot_calibration(
+      input_df = input_data,
+      site_df = site_data,
+      models = c("yasso07", "yasso15", "yasso20", "rothc", "q_model"),
+      params_list = NULL,  # NULL means use defaults
+      spinup_years = 100
+    )
+```
+\normalsize
+Parameter values can be passed to the wrapper:  
+
+\footnotesize
+```r
+    results_custom <- run_soc_models_multipplot_calibration(
+      input_df = input_data,
+      site_df = site_data,
+      models = "q_model",  # Only run Q-model
+      params_list = list(q_model = custom_q_params),  # Custom params
+      spinup_years = 100
+    )
+```
+
+
+# Bayesian Calibration Framework
+
+**Successful Pilot Runs:**
+
+- BayesianTools package (DEzs sampler as default)
+- Good convergence on small datasets
+- Proper parameter passing validated
+- Tested locally on Mac
+
+\vspace{0.5cm}
+
+**Calibration Strategy:**
+
+- Models run in \textbf{independent batches}, not joint distribution
+- Batches will be independent executions
+- Per-plot calibration across full dataset
+
+\vspace{0.5cm}
+
+**Scaling Path:**
+- Local testing → \textbf{Directly to Roihu cluster}
+- Parallel processing across forest plots
+
+---
+
+# Future Sampler Implementation
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.7cm,
+    box/.style={rectangle, draw, minimum width=2.5cm, minimum height=0.7cm, align=center, font=\small},
+    bigbox/.style={rectangle, draw, thick, minimum width=3cm, minimum height=0.9cm, align=center, font=\small},
+    arrow/.style={->, >=stealth, thick}
+]
+
+% Top: Data layer
+\node[box, fill=blue!10] (obs) at (0,0) {Observed SOC};
+\node[box, fill=blue!10] (drivers) at (3.5,0) {Environmental\\ Drivers};
+
+% MCMC Sampler
+\node[bigbox, fill=red!15] (sampler) at (1.75,-1.5) {\textbf{MCMC Sampler}\\ (DEzs - BayesianTools)};
+
+% Stratification testing
+\node[bigbox, fill=green!15] (strat) at (1.75,-3) {\textbf{Stratification Testing}};
+
+\node[box, fill=orange!10] (nostrat) at (-0.5,-4.5) {No strata\\ (whole profile)};
+\node[box, fill=orange!10] (onestrat) at (4,-4.5) {Best single\\ stratification};
+
+% Model results
+\node[bigbox, fill=purple!15] (results) at (1.75,-6) {\textbf{Model Comparison}\\ per Stratification};
+
+% Arrows
+\draw[arrow] (obs) -- (sampler);
+\draw[arrow] (drivers) -- (sampler);
+
+\draw[arrow] (sampler) -- (strat);
+
+\draw[arrow] (strat) -- (nostrat);
+\draw[arrow] (strat) -- (onestrat);
+
+\draw[arrow] (nostrat) -- (results);
+\draw[arrow] (onestrat) -- (results);
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+\footnotesize
+\textbf{Strategy:} Test models as-is with different stratification approaches
+
+\textbf{Goal:} Identify best stratification level (likely whole profile vs single horizon split)
+
+---
+
+# Planned Analysis Approach
+Test each model (Yasso07, Yasso15, Yasso20, RothC, Q-model) with:
+
+\begin{itemize}
+\item \textbf{No stratification}: Whole soil profile integration
+\item \textbf{Single stratification}: Best horizon split to test
+\end{itemize}
+
+\vspace{0.3cm}
+
+**Models tested as-is**
+
+Models are kept as much as possible close to original formulations, and differences between them are therefore many and impossible to disentangle.
+
+\vspace{0.3cm}
+
+**Goals:** 
+
+1. Identify whether stratification improves model fit across models
+2. Ensemble uncertainty predictions
+3. Compare different modeling approaches (although not very rigorously)
+
+---
+
+# Computational Strategy & Challenges
+
+**Scaling Approach:**
+
+- Local testing (Mac M-series) for validation on 3-4 plots
+- Then deployment to Roihu cluster
+- Parallel processing across all plots in independent model batches for risk mitigation
+
+\vspace{0.5cm}
+
+**Expected Challenges:**
+
+\begin{itemize}
+\item \textbf{Runtime:} Full calibration across all plots × 5 models = at least \textbf{one day} of execution \textbf{per batch}
+\item This with 2000 steps chains. Convergence might be off.
+\item \textbf{Factorial design might be computationally unfeasible!!}
+\end{itemize}
+
+
+---
+
+
+# Data requirements at plot level
+
+**Forest time series (MONTHLY!):**
+
+- AWEN chemical fractions 
+- Distinct AWEN fractions for: Foliage, Branches, Fine Roots, Coarse Roots, Understorey
+- Repeated SOC measurements across Finnish forests
+
+\vspace{0.3cm}
+
+**Forest time series (CONSTANT):**
+
+- Species composition: Pine, Spruce, Birch (for Q)
+- Clay (for RothC)
+
+**Environmental Drivers  (MONTHLY!):**
+
+- Monthly temperature and precipitation
+
+
+---
+
+# Data requirements
+
+\begin{center}
+\begin{tikzpicture}[
+    grow=right,
+    level 1/.style={sibling distance=0.7cm, level distance=2cm},
+    level 2/.style={sibling distance=0.28cm, level distance=1.6cm, font=\scriptsize},
+    every node/.style={font=\tiny, align=center},
+    edge from parent/.style={draw, -latex}
+]
+
+% Root node
+\node[rectangle, draw, thick, fill=blue!10, minimum width=1.2cm, minimum height=0.6cm] {HIKET\\Input}
+    child {node[rectangle, draw, fill=green!10, minimum width=1cm, minimum height=0.4cm] {Foliage}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.05cm] {A}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.05cm ] {W}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.05cm ] {E}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.05cm ] {N}}
+    }
+    child {node[rectangle, draw, fill=green!10, minimum width=1cm, minimum height=0.4cm] {Branches}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {A}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {W}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {E}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {N}}
+    }
+    child {node[rectangle, draw, fill=green!10, minimum width=1cm, minimum height=0.4cm] {Stems}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {A}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {W}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {E}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {N}}
+    }
+    child {node[rectangle, draw, fill=green!10, minimum width=1cm, minimum height=0.4cm] {Fine\\roots}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.2cm] {A}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.2cm] {W}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.2cm] {E}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.2cm] {N}}
+    }
+    child {node[rectangle, draw, fill=green!10, minimum width=1cm, minimum height=0.4cm] {Coarse\\roots}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {A}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {W}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {E}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {N}}
+    }
+    child {node[rectangle, draw, fill=green!10, minimum width=1cm, minimum height=0.4cm] {Under-\\storey}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {A}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {W}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {E}}
+        child {node[rectangle, draw, fill=orange!20, minimum width=0.5cm, minimum height=0.25cm] {N}}
+    }
+    child {node[rectangle, draw, fill=cyan!10, minimum width=1cm, minimum height=0.4cm] {Temp}}
+    child {node[rectangle, draw, fill=cyan!10, minimum width=1cm, minimum height=0.4cm] {Precip}}
+    child {node[rectangle, draw, fill=purple!10, minimum width=1cm, minimum height=0.4cm] {SOC\\obs}};
+
+\end{tikzpicture}
+\end{center}
+
+---
+
+# Climate Scaling Implementation Across Models
+
+| Model | Time scale | Temperature Response | Moisture Response |
+|-------|-------|---------------------|-------------------|
+| Yasso07 | Annual |  Gaussian (mean, range) | Precipitation-based annual modifier |
+| Yasso15 | Annual, pool specific |  Gaussian (mean, range) | Precipitation-based annual modifier |
+| Yasso20 | Monthly, pool specific|  Gaussian (mean, range) | Precipitation-based annual modifier |
+| RothC   | Montly |  Arrhenius  | Moisture deficit model (rain, evap, SMC) |
+| Q-model | Annual |  Linear | Absent |
+
+For Q a quality dependent scaled Arrhenius is available, but not implemented yet.
+
+
+# Difficulties comparing the models
+
+The models all rely on very different:
+
+* Structures  
+* Response functions  
+* Input assumptions  
+* Calibration assumptions  
+
+Ideally we would test these **factorially** (as originally discussed), but I don't think HIKET scope allows for that...
+
+
+# Open questions
+
+* Stratification levels?  
+* Is it fine to skip factorial model structure comparison?
+* Discuss initialization and input unification approaches
+* Validation? Crossvalidation or leaving a set out? I am more for the latter...
+
+
+
+# Status & Next steps
+
+**Status:**
+
+- The model wrapper is ready for forward runs
+
+
+\vspace{0.3cm}
+
+**Next steps:**
+
+1. Forward runs without calibration, comparison with measurements 
+2. Base model comparison results for policy (mid-project deliverable)
+3. Full-scale calibration against measured SOC run on cluster across all plots
+4. Calibrated model comparison results for policy (final deliverable)
+
+There might be hiccups on the way.
+
