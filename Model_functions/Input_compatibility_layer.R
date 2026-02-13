@@ -7,6 +7,8 @@
 #   map_inputs_<model>()   -- litter carbon inputs at model-native resolution
 #
 # Yasso20 and RothC share map_climate_monthly() for climate.
+# RothC additionally needs clay, depth and soil_cover in the climate data frame;
+# these come from site_df and are ignored by Yasso20.
 #
 # All output data frames carry plot_id as the first column.
 #
@@ -15,8 +17,8 @@
 #                annual litter (nwl/fwl/cwl AWEN)
 #   Yasso20:     monthly climate via map_climate_monthly()
 #                annual litter (nwl/fwl/cwl AWEN)
-#   RothC:       monthly climate via map_climate_monthly()
-#                monthly litter (DPM, RPM)
+#   RothC:       monthly climate via map_climate_monthly(site_df=)
+#                monthly litter (C_DPM, C_RPM only)
 #   Q-model:     annual climate (mean T)
 #                annual litter (5 cohorts, total C)
 #
@@ -46,17 +48,41 @@ sum_awen <- function(df, cohort) {
   .rn(result)
 }
 
+# Look up a per-plot scalar from site_df; returns default if not found
+.site_val <- function(pid, site_df, col, default, warn_msg = NULL) {
+  if (!is.null(site_df) && col %in% names(site_df)) {
+    id_site <- get_id_cols(site_df)
+    if (length(id_site) > 0) {
+      row <- site_df[site_df[[id_site[1]]] == pid, ]
+      if (nrow(row) > 0) return(as.numeric(row[[col]][1]))
+    }
+  }
+  if (!is.null(warn_msg)) warning(warn_msg)
+  default
+}
+
 
 # =============================================================================
 # MONTHLY CLIMATE  (shared by Yasso20 and RothC)
 # =============================================================================
 
-#' Monthly climate: plot_id, year, month, temp_air, precip, evap
-map_climate_monthly <- function(input_df) {
+#' Monthly climate data frame.
+#'
+#' Columns always present: plot_id, year, month, temp_air, precip, evap
+#' Columns added when site_df is supplied (used by RothC, ignored by Yasso20):
+#'   clay       -- clay content [%]
+#'   depth      -- soil depth [cm]  (from site_df$soil_depth)
+#'   soil_cover -- plant cover (1 = vegetated, 0 = bare); always 1 for forest
+#'
+#' @param input_df  Monthly data frame with temp_air, precip, evap columns.
+#' @param site_df   Optional site data frame with plot_id, clay, soil_depth.
+map_climate_monthly <- function(input_df, site_df = NULL) {
   if (!"month" %in% names(input_df))
     stop("map_climate_monthly requires monthly input data", call. = FALSE)
+  
   id_cols <- get_id_cols(input_df)
-  .rn(cbind(
+  
+  base <- .rn(cbind(
     input_df[, id_cols, drop = FALSE],
     data.frame(
       year     = input_df$year,
@@ -67,6 +93,26 @@ map_climate_monthly <- function(input_df) {
       else input_df$precip * 0.5
     )
   ))
+  
+  # Add site properties for RothC if site_df supplied
+  if (!is.null(site_df)) {
+    pid_col <- id_cols[1]
+    base$clay  <- vapply(base[[pid_col]], function(pid)
+      .site_val(pid, site_df, "clay",       default = 20,
+                warn_msg = paste("No clay for plot", pid, "-- using 20%")),
+      numeric(1))
+    base$depth <- vapply(base[[pid_col]], function(pid)
+      .site_val(pid, site_df, "soil_depth", default = 23,
+                warn_msg = paste("No soil_depth for plot", pid, "-- using 23 cm")),
+      numeric(1))
+    # soil_cover: always 1 for forest (no fallow); override per-row if column exists
+    base$soil_cover <- if ("soil_cover" %in% names(input_df))
+      as.integer(input_df$soil_cover)
+    else
+      1L
+  }
+  
+  base
 }
 
 
@@ -94,7 +140,8 @@ map_climate_monthly <- function(input_df) {
       data.frame(
         year           = plot_df$year,
         temp_mean      = plot_df$temp_air,
-        temp_amplitude = if ("temp_amplitude" %in% names(plot_df)) plot_df$temp_amplitude else 12,
+        temp_amplitude = if ("temp_amplitude" %in% names(plot_df))
+          plot_df$temp_amplitude else 12,
         precip         = plot_df$precip
       )
     ))
@@ -204,10 +251,10 @@ map_inputs_yasso20 <- function(input_df) {
 
 
 # =============================================================================
-# ROTHC  (climate: map_climate_monthly)
+# ROTHC  (climate: map_climate_monthly(site_df=))
 # =============================================================================
 
-.inputs_rothc_single <- function(plot_df, id_cols, clay) {
+.inputs_rothc_single <- function(plot_df, id_cols) {
   cohorts  <- c("foliage","branches","stems","fine_roots","coarse_roots","understorey")
   C_labile <- rep(0, nrow(plot_df))
   C_recalc <- rep(0, nrow(plot_df))
@@ -227,50 +274,26 @@ map_inputs_yasso20 <- function(input_df) {
   .rn(cbind(
     plot_df[, id_cols, drop = FALSE],
     data.frame(
-      year       = plot_df$year,
-      month      = plot_df$month,
-      C_DPM      = C_total * dpm_frac,
-      C_RPM      = C_total * (1 - dpm_frac),
-      clay       = clay,
-      soil_cover = if ("soil_cover" %in% names(plot_df)) plot_df$soil_cover else 1
+      year  = plot_df$year,
+      month = plot_df$month,
+      C_DPM = C_total * dpm_frac,
+      C_RPM = C_total * (1 - dpm_frac)
     )
   ))
 }
 
-#' Monthly litter inputs for RothC: plot_id, year, month, C_DPM, C_RPM, clay, soil_cover
-#' Climate: use map_climate_monthly()
+#' Monthly litter inputs for RothC: plot_id, year, month, C_DPM, C_RPM
 #'
-#' @param input_df Monthly data frame.
-#' @param site_df  Optional data frame with plot_id and clay columns.
-map_inputs_rothc <- function(input_df, site_df = NULL) {
+#' Clay, depth and soil_cover are NOT included here -- they belong in the
+#' climate data frame produced by map_climate_monthly(site_df=).
+#'
+#' @param input_df  Monthly data frame with AWEN cohort columns.
+map_inputs_rothc <- function(input_df) {
   if (!"month" %in% names(input_df))
     stop("RothC requires monthly input data", call. = FALSE)
-  
   id_cols <- get_id_cols(input_df)
-  
-  get_clay <- function(pid) {
-    if (!is.null(site_df) && "clay" %in% names(site_df)) {
-      id_site <- get_id_cols(site_df)
-      if (length(id_site) > 0) {
-        row <- site_df[site_df[[id_site[1]]] == pid, ]
-        if (nrow(row) > 0) return(as.numeric(row$clay[1]))
-      }
-    }
-    warning("No clay value for plot ", pid, ", using default 20%")
-    20
-  }
-  
-  if (length(id_cols) == 0) {
-    clay <- if (!is.null(site_df) && "clay" %in% names(site_df)) {
-      as.numeric(site_df$clay[1])
-    } else { warning("No clay, using 20%"); 20 }
-    return(.inputs_rothc_single(input_df, id_cols, clay))
-  }
-  
-  plots <- split(input_df, input_df[[id_cols[1]]], drop = TRUE)
-  .rn(do.call(rbind, lapply(names(plots), function(pid) {
-    .inputs_rothc_single(plots[[pid]], id_cols, get_clay(pid))
-  })))
+  if (length(id_cols) == 0) return(.inputs_rothc_single(input_df, id_cols))
+  .by_plot(input_df, id_cols, .inputs_rothc_single)
 }
 
 

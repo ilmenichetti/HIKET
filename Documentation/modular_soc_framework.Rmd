@@ -316,7 +316,8 @@ The functional form of the temperature response differs across models:
 
 | Model | Form | Expression |
 |:------|:-----|:-----------|
-| Yasso07/15/20 | Gaussian-like | $\xi_T = \exp\!\big(\beta_1 T + \beta_2 T^2\big)$ |
+| Yasso07/15 | Gaussian-like, 4-point annual | $\xi_T = \frac{1}{4}\sum_{i=1}^{4}\exp\!\big(\beta_1 T_i + \beta_2 T_i^2\big)$, $T_i$ from annual mean + amplitude |
+| Yasso20 | Gaussian-like, exact monthly | $\xi_T = \frac{1}{12}\sum_{m=1}^{12}\exp\!\big(\beta_1 T_m + \beta_2 T_m^2\big)$, $T_m$ are observed monthly values |
 | RothC | Arrhenius-based | $\xi_T = \dfrac{47.9}{1 + \exp\!\big(\frac{106}{T+18.3}\big)}$ |
 | Q-model | Linear | $\xi_T = \max\!\big(0,\; a_T + b_T \cdot T\big)$ |
 
@@ -326,7 +327,8 @@ Moisture functions of different models accept different inputs, so we need anoth
 
 | Model | Driver | Notes |
 |:------|:-------|:------|
-| Yasso07/15/20 | Precipitation $P$ | $\xi_M = 1 - \exp\!\big(\gamma \cdot P\big)$; pool-independent |
+| Yasso07/15 | Annual precipitation $P$ | $\xi_M = 1 - \exp\!\big(\gamma \cdot P/1000\big)$; pool-group-specific for Yasso15 |
+| Yasso20 | Monthly precipitation (summed annually) | Same formula; $P$ derived internally as annual sum of monthly values |
 | RothC | Topsoil moisture deficit | Rate-modifying factor from TSMD accumulation |
 | Q-model | — | Not explicitly included (implicitly via litter quality) |
 
@@ -336,8 +338,10 @@ Moisture functions of different models accept different inputs, so we need anoth
 | Clay ($\xi_{\text{clay}}$) | RothC | Modifies BIO/HUM partitioning: $x = 1.67 (1.85 + 1.60 \exp(-0.0786\, \%\text{clay}))$ |
 | Soil cover | RothC | Binary modifier on decomposition rate for bare soil, WON'T BE IMPLEMENTED!|
 
-### 3.2.4 Hard-coded Static Modifiers?
-Both Q and Yasso have static modifiers dependent on size that are specific to litter classes. These will be hard-coded in each model function, rather than passed as separate modifiers.
+### 3.2.4 Hard-coded Static Modifiers
+Both Q and Yasso have static modifiers dependent on size that are specific to litter classes. These are be hard-coded in each model function, rather than passed as separate modifiers.  
+
+For the Yasso family of models, all size modifiers are hard-coded in the R wrappers
 
 
 
@@ -662,7 +666,6 @@ All five decomposition models share a common calling interface, enabling the sim
 
 The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead during MCMC sampling. Since the calibration loop evaluates the likelihood millions of times across $\sim$3,700 plots, each evaluation should require a **single Fortran call per plot** that runs the full time-series simulation, rather than hundreds of per-timestep round-trips.
 
-
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
@@ -678,11 +681,6 @@ The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead dur
         line width=1pt, minimum height=1.0cm, minimum width=5.0cm,
         text centered, font=\small\sffamily
     },
-    tallbox/.style={
-        rectangle, rounded corners=4pt, draw=#1, fill=#1!8,
-        line width=1pt, minimum height=1.6cm, minimum width=5.0cm,
-        text centered, font=\small\sffamily
-    },
     data/.style={
         rectangle, rounded corners=2pt, draw=bordergray, fill=bglight,
         line width=0.6pt, minimum height=0.6cm, minimum width=2.0cm,
@@ -694,108 +692,108 @@ The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead dur
 ]
 
 % =============================================
-% OUTSIDE-MCMC: Input layer and Env/xi blocks
+% OUTSIDE-MCMC
 % =============================================
 
-% Input layer (once per plot, left side)
-\node[box=compatgreen] (fi) at (-5.5, 1.3) {%
+\node[box=compatgreen] (fi) at (-4.0, 2.5) {%
     \begin{tabular}{c}
     $f_{i_k}(\mathbf{I}(t))$ \\ Input layer
     \end{tabular}};
-\node[box=modifiergold] (SS_mean) at (-5.5, -0.3) {%
-    \begin{tabular}{c}
-    Constant input assumptions
-    \end{tabular}};
-\node[note, below=0cm of SS_mean, text width=2.8cm, align=center]
+\node[note, below=0.05cm of fi, text width=2.8cm, align=center]
     {once per plot};
 
-% SOC measurement
-\node[box=compatgreen, right=2cm of fi] (SOC) {%
-  \begin{tabular}{c}
+\node[box=compatgreen] (SOC) at (3.0, 2.5) {%
+    \begin{tabular}{c}
     SOC measurements
     \end{tabular}};
-
-
-% Env data layer (once per plot, right side)
-\node[box=compatgreen] (envdata) at (6, 0) {%
-    \begin{tabular}{c}
-    $g_{i_k}(T(t),\,M(t),\ldots)$ \\ Env.\ data layer
-    \end{tabular}};
-\node[note, below=0.1cm of envdata, text width=2.8cm, align=center]
+\node[note, below=0.05cm of SOC, text width=2.8cm, align=center]
     {once per plot};
 
-% xi computation (outside MCMC, right side)
-\node[box=modifiergold] (fxi) at (6, -2.8) {%
+\node[box=compatgreen] (envdata) at (6.5, 2.5) {%
     \begin{tabular}{c}
-    \texttt{compute\_xi()} \\ $\boldsymbol{\xi}(T, M, \ldots)$
+    $g_{i_k}(T(t),\,M(t))$ \\ Climate layer
     \end{tabular}};
-\node[note, below=0.1cm of fxi, text width=2.8cm, align=center]
+\node[note, below=0.05cm of envdata, text width=2.8cm, align=center]
     {once per plot};
 
 % =============================================
-% INSIDE-MCMC: Likelihood (top centre)
+% INSIDE-MCMC: Likelihood
 % =============================================
 
-\node[widebox=outputpurple] (likelihood) at (0, -2.4) {%
+\node[widebox=outputpurple] (likelihood) at (3, 0.0) {%
     \begin{tabular}{c}
-    Likelihood function \\ $\mathcal{L}(\boldsymbol{\theta} \,|\, \text{SOC}_{\text{obs}})$
+    Likelihood \\ $\mathcal{L}(\boldsymbol{\theta} \,|\, \text{SOC}_{\text{obs}})$
     \end{tabular}};
 
 % =============================================
-% INSIDE-MCMC: Steady-state (left, Fortran red)
+% INSIDE-MCMC: R wrapper components
 % =============================================
 
-\node[box=decompred] (steadyblock) at (-5.5, -5.2) {%
+% steady_state (Fortran, red) — leftmost
+\node[box=decompred] (steadyblock) at (-4.0, -3.0) {%
     \begin{tabular}{c}
     \texttt{steady\_state()} \\
-    $\mathbf{C}^* = -\mathbf{A}^{-1}\mathbf{b}(\bar{\mathbf{J}})$
+    $\mathbf{C}^* = -\mathbf{A}^{-1}\mathbf{b}$
     \end{tabular}};
 
-% =============================================
-% INSIDE-MCMC: model_run wrapper + model_step inside
-% =============================================
-
-% Outer model_run box (compiled wrapper, iterates cohorts)
+% model_run (Fortran, red) — middle
 \node[
     rectangle, rounded corners=4pt,
     draw=decompred, fill=decompred!8,
     line width=1pt,
-    minimum height=3.2cm, minimum width=5.4cm,
+    minimum height=3.0cm, minimum width=4.2cm,
     text centered, font=\small\sffamily
-] (frun) at (0, -6.6) {};
+] (frun) at (1.0, -3.0) {};
 
-% model_run label at top of box
 \node[font=\small\sffamily, text=decompred, anchor=north]
     at (frun.north) [yshift=-6pt] {%
     \begin{tabular}{c}
-    \texttt{model\_run()} \\ loop over components $c = 1,\ldots,n_c$
+    \texttt{model\_run()} \\ loop over $c = 1,\ldots,n_c$
     \end{tabular}};
-    
-% model_step inner box
-\node[box=decompred, anchor=center] (fstep) at (0, -7.0) {%
+
+\node[box=decompred, anchor=center] (fstep) at (1.0, -3.6) {%
     \begin{tabular}{c}
-    \texttt{model\_step()} \\ single $\Delta t$ update
+    \texttt{model\_step()} \\ single $\Delta t$
+    \end{tabular}};
+
+% compute_xi (R, gold) — right of model_run
+\node[box=modifiergold] (fxi) at (6.5, -3.0) {%
+    \begin{tabular}{c}
+    \texttt{compute\_xi()} \\ $\boldsymbol{\xi}(T, M, \boldsymbol{\theta})$
     \end{tabular}};
 
 % Output
-\node[data] (output) at (0, -9.2) {SOC(t) vector};
+\node[data] (output) at (-1.5, -6.5) {SOC$(t)$ vector};
 
 % =============================================
-% MCMC GROUPING BOX (behind all nodes)
+% GROUPING BOXES (background layer)
 % =============================================
 \begin{scope}[on background layer]
+
 \node[
     rectangle, rounded corners=8pt,
     draw=outputpurple, fill=outputpurple!4,
     line width=1.5pt, dashed,
-    fit=(likelihood)(steadyblock)(output),
-    inner sep=18pt
+    fit=(likelihood)(steadyblock)(frun)(fxi)(output),
+    inner sep=24pt
 ] (mcmcbox) {};
+
+\node[
+    rectangle, rounded corners=6pt,
+    draw=compatgreen, fill=compatgreen!4,
+    line width=1.2pt, dashed,
+    fit=(steadyblock)(frun)(fxi)(output),
+    inner sep=14pt
+] (rwrapbox) {};
+
 \end{scope}
 
-% MCMC box label
+% Labels
+\node[font=\small\sffamily\bfseries, text=compatgreen,
+    anchor=south west] at (rwrapbox.north west)
+    {R wrapper};
 \node[font=\small\sffamily\bfseries, text=outputpurple,
-    below=0.55cm of mcmcbox.south, anchor=south]
+    below=0.4cm of mcmcbox.south, anchor=south]
     {MCMC sampler};
 \node[note, below=0.05cm of mcmcbox.north, anchor=north,
     text width=5cm, align=center]
@@ -805,69 +803,70 @@ The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead dur
 % ARROWS — outside to inside
 % =============================================
 
-% SOC -> likelihood (evaluating cost)
+% SOC -> likelihood
 \draw[arr=compatgreen] (SOC.south) -- (likelihood.north)
-    node[near end, right=3pt, note] {$\text{SOC}_{\text{obs}}$};
+    node[midway, right=3pt, note] {$\text{SOC}_{\text{obs}}$};
 
-% Input layer -> SS_mean 
-\draw[arr=compatgreen] (fi.south) -- (SS_mean.north)
+% Input layer -> steady_state
+\draw[arr=compatgreen] (fi.south) -- (steadyblock.north)
+    node[midway, left=3pt, note] {$\mathbf{J}_c(t),\,\bar{\mathbf{J}}$};
+
+% Input layer -> model_run
+\draw[arr=compatgreen] (fi.south) -- ++(0,-1.0) -| (frun.north)
     node[near end, right=3pt, note] {$\mathbf{J}_c(t)$};
 
-% SS_mean -> steady-state 
-\draw[arr=modifiergold] (SS_mean.south) -- (steadyblock.north)
-    node[midway, right=3pt, note] {$\bar{\mathbf{J}}$};
-
-% Input layer -> model_run (full cohort arrays, going centre-down)
-\draw[arr=compatgreen] (fi.east) -- ++(0.6,0) -- ++(0,-7.4) -- (frun.west)
-    node[midway, above=3pt, note] {$\mathbf{J}_c(t)$};.
-
-% Env data -> xi
+% Climate layer -> compute_xi only
 \draw[arr=compatgreen] (envdata.south) -- (fxi.north)
     node[midway, right=3pt, note] {$T(t),\,M(t)$};
-
-% xi -> model_run (from right)
-\draw[arr=modifiergold] (fxi.west) -- ++(-0.8,0) |- (frun.east)
-    node[near end, above=3pt, note] {$\boldsymbol{\xi}(t)$};
 
 % =============================================
 % ARROWS — inside MCMC
 % =============================================
 
-% Likelihood -> steady-state (params, going left)
-\draw[arr=outputpurple] (likelihood.south) -- (steadyblock.north east)
-    node[near end, right=3pt, note] {$\boldsymbol{\theta}$};
+% Likelihood -> steady_state
+\draw[arr=outputpurple] (likelihood.south) -- ++(0,-0.3) -| (steadyblock.110)
+    node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
 
-% Likelihood -> model_run (params, going right then down)
-\draw[arr=outputpurple] (likelihood.south) -- (frun.north)
-    node[near end, right=3pt, note] {$\boldsymbol{\theta}$};
+% Likelihood -> model_run
+\draw[arr=outputpurple] (likelihood.south) -- ++(0,-0.3) -| (frun.110)
+    node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
 
-% steady-state -> model_run (initial state C*, horizontal)
-\draw[arr=decompred] (steadyblock.south) -- ++(0,-0.6)
-    -| (frun.west)
-    node[near end, above=3pt, note] {$\mathbf{C}^*$};
+% Likelihood -> compute_xi
+\draw[arr=outputpurple] (likelihood.east) -- ++(0.7,0) -- (fxi.119)
+    node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
+
+% compute_xi -> model_run
+\draw[arr=modifiergold] (fxi.west) -- (frun.east)
+    node[midway, above=2pt, note] {$\boldsymbol{\xi}(t)$};
+
+% steady_state -> model_run
+\draw[arr=decompred] (steadyblock.east) -- (frun.west)
+    node[midway, above=2pt, note] {$\mathbf{C}^*$};
 
 % model_run -> output
-\draw[arr=decompred] (frun.south) -- (output.north);
+\draw[arr=outputpurple] (frun.south) -- ++(0,-0.5) |- (output.east);
 
-% output -> likelihood (return SOC predictions)
-\draw[arr=decompred, line width=1.5pt]
-    (output.west) -- ++(-6.3,0) |- (likelihood.west)
-    node[near start, above=-12pt, note] {SOC predictions};
+% output -> likelihood
+\draw[arr=outputpurple, line width=1.5pt]
+    (output.west) -- ++(-3.8,0) |- (likelihood.west)
+    node[near start, above=-30pt, note] {SOC predictions};
 
 \end{tikzpicture}
 \caption{%
 Revised implementation architecture.
-Two preparation blocks run once per plot outside the MCMC loop:
-the input layer $f_{i_k}$ produces per-cohort litter arrays $\mathbf{J}_c(t)$ and the
-plot-mean input $\bar{\mathbf{J}}$; the env.\ data layer $g_{i_k}$ feeds climate time series
-into \texttt{compute\_xi()}, assembling the modifier array $\boldsymbol{\xi}(t)$.
-At each MCMC proposal $\boldsymbol{\theta}$, the Fortran \texttt{steady\_state()} routine
-(left) initialises the carbon state $\mathbf{C}^*$ from $\bar{\mathbf{J}}$ and
-$\boldsymbol{\theta}$.
-The compiled \texttt{model\_run()} wrapper receives $\mathbf{C}^*$, $\boldsymbol{\theta}$,
-$\mathbf{J}_c(t)$, and $\boldsymbol{\xi}(t)$, and iterates the core
-\texttt{model\_step()} function over all $n_c$ input cohorts and timesteps.
-The aggregated SOC vector returns to the likelihood for evaluation against observations.}
+Three blocks outside the MCMC loop are computed once per plot:
+the input layer $f_{i_k}$ maps raw litter data to model-specific arrays $\mathbf{J}_c(t)$
+and mean inputs $\bar{\mathbf{J}}$; the climate layer $g_{i_k}$ aggregates raw climate
+to the resolution required by each model; and SOC observations feed the likelihood.
+At each MCMC proposal $\boldsymbol{\theta}$, the likelihood dispatches parameters
+to the \textbf{R wrapper}, which runs three components:
+\texttt{steady\_state()} (Fortran, red) receives $\boldsymbol{\theta}$ and $\bar{\mathbf{J}}$
+and initialises pools $\mathbf{C}^*$;
+\texttt{compute\_xi()} (R, gold) receives $\boldsymbol{\theta}$ and the pre-computed
+climate series to produce $\boldsymbol{\xi}(t)$;
+and \texttt{model\_run()} (Fortran, red) receives $\mathbf{C}^*$, $\boldsymbol{\xi}(t)$,
+$\boldsymbol{\theta}$, and $\mathbf{J}_c(t)$, iterates \texttt{model\_step()} over all
+cohorts and timesteps, and returns the SOC trajectory for likelihood evaluation.}
 \label{fig:implementation}
 \end{figure}
 
@@ -916,39 +915,44 @@ Internally, \texttt{model\_run()} performs:
 
 The R wrapper for each model handles:
 
-- **Input preparation**: calls $f_{i_k}(\mathbf{I}(t))$ to transform raw HIKET data into model-specific input arrays. This is done once per plot before calibration begins.
+- **Climate mapping**: calls `map_climate_<model>()` once per plot to produce the climate data frame expected by that model. Yasso07/15 use `map_climate_yasso07()` (annual mean + amplitude); Yasso20 and RothC share `map_climate_monthly()` (full monthly series).
+- **Input mapping**: calls `map_inputs_<model>()` once per plot to aggregate the six raw cohorts into model-specific litter arrays. Yasso07, Yasso15 and Yasso20 share the same input structure via `map_inputs_yasso07()`.
 - **Parameter mapping**: translates the named BayesianTools parameter vector into the positional double-precision vector expected by Fortran.
 - **Output formatting**: reshapes the flat Fortran output arrays into named R structures for likelihood evaluation and diagnostics.
 
+All models are run plot-by-plot with a consistent `lapply` → `rbind` pattern. Climate and input mapping are performed once per plot, outside the MCMC loop:
+
 ```{r, eval=FALSE}
-#' R wrapper for a single model
-#'
-#' @param params   Named list from BayesianTools
-#' @param J_arrays Pre-computed input arrays from f_i (computed once)
-#' @param climate  Pre-formatted climate arrays (computed once)
-#' @param site     Static site properties (clay, diameter, etc.)
-#'
-#' @return Numeric vector of predicted total SOC per year
-run_model_k <- function(params, J_arrays, climate, site) {
+# --- Once, before calibration ---
+plots          <- unique(input_raw$plot_id)
+Yasso07_climate <- map_climate_yasso07(input_raw)   # annual: mean, amplitude, precip
+monthly_climate <- map_climate_monthly(input_raw)   # monthly: shared by Yasso20 + RothC
+Yasso07_inputs  <- map_inputs_yasso07(input_raw)    # shared by Yasso07, Yasso15, Yasso20
+RothC_inputs    <- map_inputs_rothc(input_raw, site_raw)
 
-  # Map named parameters to Fortran vector
-  param_vec <- map_params_to_fortran(params, model = k)
+# --- Per-plot simulation (inside likelihood, called each MCMC proposal) ---
+result <- do.call(rbind, lapply(plots, function(pid) {
 
-  # Single Fortran call — full simulation
-  result <- .Fortran(paste0(k, "_run"),
-    n_years   = climate$n_years,
-    params    = param_vec,
-    J_t       = J_arrays$input_matrix,
-    T_monthly = climate$temp,
-    P_monthly = climate$precip,
-    diameter  = site$diameters,
-    C_out     = double(climate$n_years * n_pools_k),
-    resp_out  = double(climate$n_years)
+  clim   <- Yasso07_climate[Yasso07_climate$plot_id == pid, ]
+  inputs <- Yasso07_inputs[Yasso07_inputs$plot_id   == pid, ]
+
+  # Stage 1: Xi time series from plot-specific climate
+  xi <- compute_xi_yasso07(clim, params)
+
+  # Stage 2: Steady-state initialisation from plot-specific means
+  C_init <- yasso07_steady_state(
+    params   = params,
+    nwl_mean = colMeans(inputs[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_mean = colMeans(inputs[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_mean = colMeans(inputs[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+    xi_mean  = mean(xi)
   )
 
-  # Return total SOC trajectory
-  matrix(result$C_out, ncol = n_pools_k) |> rowSums()
-}
+  # Stage 3: Transient simulation — single Fortran call per plot
+  out <- yasso07_run(inputs, params, C_init, xi)
+
+  cbind(plot_id = pid, out)
+}))
 ```
 
 
@@ -956,7 +960,8 @@ run_model_k <- function(params, J_arrays, climate, site) {
 
 | Component | Language | Rationale |
 |:----------|:---------|:----------|
-| $f_{i_k}$ — input compatibility | R | Called once per plot; benefits from R data wrangling |
+| Climate mapping (`map_climate_*`) | R | Called once per plot; benefits from R data wrangling |
+| Input mapping (`map_inputs_*`) | R | Called once per plot; benefits from R data wrangling |
 | $\xi_k$ — modifier computation | Fortran | Called millions of times inside MCMC loop |
 | $f_{d_k}$ — decomposition step | Fortran | Innermost loop; matrix operations |
 | Steady-state solver | Fortran | Matrix inversion, numerical integration |
@@ -964,3 +969,67 @@ run_model_k <- function(params, J_arrays, climate, site) {
 | Parameter mapping | R | String/name handling; negligible cost |
 | Likelihood evaluation | R | Interface with BayesianTools; simple arithmetic |
 | I/O, aggregation, diagnostics | R | Flexibility; not performance-critical |
+
+\newpage
+
+## 4.7 Yasso Family: Three-Stage Call Pattern
+
+All three Yasso versions (07, 15, 20) follow the same three-stage execution pattern in R. The differences are confined to Stage 1 (Xi computation) and the climate object passed to each stage.
+
+### Climate and input mapping functions
+
+| Model | Climate function | Input function |
+|:------|:----------------|:---------------|
+| Yasso07 | `map_climate_yasso07()` → annual mean, amplitude, precip | `map_inputs_yasso07()` |
+| Yasso15 | `map_climate_yasso07()` (reused) | `map_inputs_yasso07()` (reused) |
+| Yasso20 | `map_climate_monthly()` (shared with RothC) | `map_inputs_yasso07()` (reused) |
+
+All three versions share the same litter input structure: six raw cohorts aggregated to three litter types (nwl, fwl, cwl) with AWEN fractions preserved.
+
+### Stage 1 — Xi: climate modifier time series
+
+The key structural difference among the three versions is in how $\xi$ is computed:
+
+| Model | Function | Climate resolution | Pool-group specificity |
+|:------|:---------|:-------------------|:-----------------------|
+| Yasso07 | `compute_xi_yasso07()` | Annual (mean + amplitude → 4-point Gaussian) | Single $\xi$ for all pools |
+| Yasso15 | `compute_xi_yasso15()` | Annual (mean + amplitude → 4-point Gaussian) | Three $\xi$: AWE, N, H |
+| Yasso20 | `compute_xi_yasso20()` | Monthly (exact 12-month average) | Three $\xi$: AWE, N, H |
+
+### Stage 2 — Steady state: initial pool conditions $\mathbf{C}^*$
+
+Steady state is computed from plot-specific mean climate and mean litter inputs. For Yasso20, a synthetic 12-row `mean_clim` data frame is constructed from the plot's monthly climatology:
+
+```{r, eval=FALSE}
+# Yasso07 / Yasso15
+C_init <- yassoXX_steady_state(
+  params   = params,
+  nwl_mean = colMeans(inputs[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+  fwl_mean = colMeans(inputs[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+  cwl_mean = colMeans(inputs[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+  xi_mean  = mean(xi)   # or list(xi_awe, xi_n, xi_h) for Yasso15
+)
+
+# Yasso20 — requires a synthetic single-year mean climate data frame
+# precip must be monthly mean (NOT divided by 12); the function sums
+# internally over 12 months to recover the annual total
+mean_clim <- data.frame(
+  year     = 9999L,
+  month    = 1:12,
+  temp_air = tapply(clim$temp_air, clim$month, mean, na.rm = TRUE),
+  precip   = mean(clim$precip)   # monthly mean ~50 mm; sums to ~600 mm/yr internally
+)
+C_init <- yasso20_steady_state(mean_clim, params, nwl_mean, fwl_mean, cwl_mean)
+```
+
+### Stage 3 — Transient simulation
+
+All three versions return a flat data frame with columns `year | A | W | E | N | H | total_soc | respiration`.
+
+```{r, eval=FALSE}
+out_07 <- yasso07_run(inputs_df,    params, C_init, xi_array)
+out_15 <- yasso15_run(inputs_df,    params, C_init, xi_arrays, precip, leac)
+out_20 <- yasso20_run(climate_df,   inputs_df, params, C_init, leac)
+#                     ^^^^^^^^^^
+#                     monthly_climate — xi_arrays and precip derived internally
+```

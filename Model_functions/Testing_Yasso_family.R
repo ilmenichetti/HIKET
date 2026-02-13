@@ -416,11 +416,11 @@ result_Yasso15_ref <- do.call(rbind, lapply(plots, function(pid) {
 
 # Combine results from all three models into a single long data frame
 comparison <- rbind(
-  result_Yasso07[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso07 (Fortran)"),
+  result_Yasso07[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso07 (Wrapper)"),
   result_Yasso07_ref[,  c("plot_id","year","total_soc")] |> cbind(model = "Yasso07 (ref R)"),
-  result_Yasso15[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso15 (Fortran)"),
+  result_Yasso15[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso15 (Wrapper)"),
   result_Yasso15_ref[,  c("plot_id","year","total_soc")] |> cbind(model = "Yasso15 (ref F90)"),
-  result_Yasso20[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso20")
+  result_Yasso20[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso20 (Wrapper)")
 )
 
 model_colors <- c(
