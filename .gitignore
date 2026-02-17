@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 .DS_Store
+
+
+# Calibration outputs
+Calibration/progress_logs/
+Calibration/diagnostics/
+Calibration/runs/
