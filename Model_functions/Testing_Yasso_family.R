@@ -82,51 +82,36 @@ leac   <- 0.0
 
 result_Yasso15 <- do.call(rbind, lapply(plots, function(pid) {
   
-  # Subset climate and litter inputs to this plot
-  # Yasso15 uses the same annual climate/inputs format as Yasso07
   clim   <- Yasso07_climate[Yasso07_climate$plot_id == pid, ]
   inputs <- Yasso07_inputs[Yasso07_inputs$plot_id   == pid, ]
   
-  # Stage 1: Annual climate modifier, separately for AWE, N and H pool groups
+  # Stage 1: Annual climate modifier for transient simulation
   xi_arrays <- compute_xi_yasso15(
     temp_mean = clim$temp_mean,
     temp_amp  = clim$temp_amplitude,
     precip    = clim$precip,
     params    = params
   )
-  cat("precip_mean:", mean(clim$precip), "\n")
   
-  # Stage 2: Steady-state initial pools using plot-specific mean climate and inputs
+  # Stage 2: Steady-state — pass mean climate scalars, not mean of xi
   C_init <- yasso15_steady_state(
-    params      = params,
-    nwl_mean    = colMeans(inputs[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
-    fwl_mean    = colMeans(inputs[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
-    cwl_mean    = colMeans(inputs[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
-    xi_means    = list(
-      xi_awe = mean(xi_arrays$xi_awe),
-      xi_n   = mean(xi_arrays$xi_n),
-      xi_h   = mean(xi_arrays$xi_h)
-    ),
-    leac        = leac,
-    precip_mean = mean(clim$precip)   # mean annual precip for leaching term
+    params        = params,
+    nwl_mean      = colMeans(inputs[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_mean      = colMeans(inputs[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_mean      = colMeans(inputs[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+    mean_temp     = mean(clim$temp_mean),
+    mean_temp_amp = mean(clim$temp_amplitude),
+    mean_precip   = mean(clim$precip),
+    leac          = leac
   )
   
-  cat("plot:", pid, "\n")
-  cat("xi_means awe/n/h:", 
-      mean(xi_arrays$xi_awe), 
-      mean(xi_arrays$xi_n), 
-      mean(xi_arrays$xi_h), "\n")
-  cat("C_init sum:", sum(C_init), "\n")
-  
-  cat("nwl_mean:", colMeans(inputs[, c("nwl_A","nwl_W","nwl_E","nwl_N")]), "\n")
-  cat("nrow(inputs):", nrow(inputs), "\n")
-  # Stage 3: Forward transient simulation year by year
+  # Stage 3: Transient simulation
   out <- yasso15_run(
     input_df  = inputs,
     params    = params,
     C_init    = C_init,
     xi_arrays = xi_arrays,
-    precip    = clim$precip,   # annual precip vector for leaching
+    precip    = clim$precip,
     leac      = leac
   )
   
@@ -423,6 +408,27 @@ comparison <- rbind(
   result_Yasso20[,      c("plot_id","year","total_soc")] |> cbind(model = "Yasso20 (Wrapper)")
 )
 
+
+comparison_wide <- data.frame(
+  plot_id        = result_Yasso07$plot_id,
+  year           = result_Yasso07$year,
+  Yasso07_wrapper = result_Yasso07$total_soc,
+  Yasso07_ref_R   = result_Yasso07_ref$total_soc,
+  Yasso15_wrapper = result_Yasso15$total_soc,
+  Yasso15_ref_F90 = result_Yasso15_ref$total_soc,
+  Yasso20         = result_Yasso20$total_soc
+)
+
+print(comparison_wide)
+
+comparison <- rbind(
+  result_Yasso07[,     c("plot_id","year","total_soc")] |> cbind(model = "Yasso07 (Fortran)"),
+  result_Yasso07_ref[, c("plot_id","year","total_soc")] |> cbind(model = "Yasso07 (ref R)"),
+  result_Yasso15[,     c("plot_id","year","total_soc")] |> cbind(model = "Yasso15 (Fortran)"),
+  result_Yasso15_ref[, c("plot_id","year","total_soc")] |> cbind(model = "Yasso15 (ref F90)"),
+  result_Yasso20[,     c("plot_id","year","total_soc")] |> cbind(model = "Yasso20")
+)
+
 model_colors <- c(
   "Yasso07 (Fortran)"  = "#2166ac",
   "Yasso07 (ref R)"    = "#6baed6",
@@ -431,24 +437,18 @@ model_colors <- c(
   "Yasso20"            = "#1a9641"
 )
 
-scale_linetype_manual(values = c(
-  "Yasso07"  = "solid",
+model_linetypes <- c(
+  "Yasso07 (Fortran)"  = "solid",
   "Yasso07 (ref R)"    = "dashed",
-  "Yasso15"  = "solid",
+  "Yasso15 (Fortran)"  = "solid",
   "Yasso15 (ref F90)"  = "dashed",
   "Yasso20"            = "solid"
-))
+)
 
-p <- ggplot(comparison, aes(x = year, y = total_soc, color = model)) +
-  geom_line(aes(linetype = model), linewidth = 0.8) +
+p <- ggplot(comparison, aes(x = year, y = total_soc, color = model, linetype = model)) +
+  geom_line(linewidth = 0.8) +
   scale_color_manual(values = model_colors) +
-  scale_linetype_manual(values = c(
-    "Yasso07 (Fortran)"  = "solid",
-    "Yasso07 (ref R)"    = "dashed",
-    "Yasso15 (Fortran)"  = "solid",
-    "Yasso15 (ref F90)"  = "dashed",
-    "Yasso20"            = "solid"
-  )) +
+  scale_linetype_manual(values = model_linetypes) +
   facet_wrap(~ plot_id, ncol = 2, scales = "free_y") +
   labs(
     title    = "Yasso model comparison — total SOC over time",
@@ -464,7 +464,13 @@ p <- ggplot(comparison, aes(x = year, y = total_soc, color = model)) +
     legend.position  = "bottom",
     panel.grid.minor = element_blank()
   )
+
 print(p)
 
-
 ggsave("./Testing/yasso_comparison_and_validation.png", plot = p, width = 10, height = 8, dpi = 300)
+
+
+
+data.frame(comparison_wide$plot_id, comparison_wide$Yasso15_wrapper - comparison_wide$Yasso15_ref_F90)
+
+

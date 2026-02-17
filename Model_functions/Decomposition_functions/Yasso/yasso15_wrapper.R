@@ -2,7 +2,7 @@
 # Yasso15 R Wrapper for Fortran Implementation
 # =============================================================================
 #
-# Compile:  R CMD SHLIB yasso15.f90
+# Compile:  system("R CMD SHLIB yasso15.f90")
 # Load:     dyn.load("yasso15.so")
 #
 # Three-stage call pattern:
@@ -13,6 +13,20 @@
 # Key difference from Yasso07: pool-group-specific climate responses.
 # AWE, N, and H pools each have their own beta1/beta2/gamma parameters,
 # producing three separate xi arrays passed to Fortran.
+#
+# Precision note:
+#   All inputs to .Fortran() are cast to single precision (as.single) to
+#   match the original Järvenpää reference implementation, which uses
+#   as.single() at the R-Fortran boundary. Outputs are cast back to double
+#   for R-side use. The xi computation in R stays in double precision,
+#   again matching the reference (xi is computed in R in both cases).
+#
+# Steady-state xi note:
+#   The reference (mod5c with steady=TRUE) computes xi internally from the
+#   mean climate vector c(mean_T, mean_precip, mean_Tamp). This is NOT the
+#   same as mean(xi_annual) because xi is nonlinear in temperature and
+#   precipitation. yasso15_steady_state() therefore accepts raw mean climate
+#   scalars and computes xi internally, matching the reference behaviour.
 #
 # =============================================================================
 
@@ -66,12 +80,15 @@ names(YASSO15_DEFAULT_PARAMS) <- YASSO15_PARAM_NAMES
 #'
 #' Returns three xi vectors (AWE, N, H), one per pool group, using
 #' pool-group-specific beta and gamma parameters.
+#' Computed in double precision in R -- matches reference behaviour.
+#'
+#' Can be called with vectors (one value per year) or scalars (mean climate).
 #'
 #' @param temp_mean   Numeric vector. Mean annual temperature (°C).
 #' @param temp_amp    Numeric vector. Annual temperature amplitude (°C).
 #' @param precip      Numeric vector. Annual precipitation (mm).
 #' @param params      Numeric vector (length 35).
-#' @return List with elements xi_awe, xi_n, xi_h (each length n_years).
+#' @return List with elements xi_awe, xi_n, xi_h (each same length as inputs).
 compute_xi_yasso15 <- function(temp_mean, temp_amp, precip, params) {
   
   .xi_one_group <- function(temp_mean, temp_amp, precip, beta1, beta2, gamma) {
@@ -106,39 +123,55 @@ compute_xi_yasso15 <- function(temp_mean, temp_amp, precip, params) {
 
 #' Compute steady-state initial carbon pools for Yasso15
 #'
-#' @param params       Numeric vector (length 35).
-#' @param nwl_mean     Numeric vector (length 4). Mean AWEN inputs, non-woody.
-#' @param fwl_mean     Numeric vector (length 4). Mean AWEN inputs, fine woody.
-#' @param cwl_mean     Numeric vector (length 4). Mean AWEN inputs, coarse woody.
-#' @param xi_means     List with xi_awe, xi_n, xi_h scalars (from compute_xi_yasso15).
-#' @param leac         Scalar. Leaching parameter (site-level).
-#' @param precip_mean  Scalar. Mean annual precipitation (mm).
-#' @param diam_fwl     Fine woody litter diameter (cm).
-#' @param diam_cwl     Coarse woody litter diameter (cm).
-#' @return Numeric vector of length 15 (initial pool states).
+#' Xi is computed internally from mean climate scalars, matching the reference
+#' mod5c(steady=TRUE) behaviour. xi(mean_climate) != mean(xi_annual) due to
+#' nonlinearity of the climate response function.
+#'
+#' All inputs to Fortran are cast to single precision to match the original
+#' Järvenpää reference implementation. Output is cast back to double.
+#'
+#' @param params        Numeric vector (length 35).
+#' @param nwl_mean      Numeric vector (length 4). Mean AWEN inputs, non-woody.
+#' @param fwl_mean      Numeric vector (length 4). Mean AWEN inputs, fine woody.
+#' @param cwl_mean      Numeric vector (length 4). Mean AWEN inputs, coarse woody.
+#' @param mean_temp     Scalar. Mean annual temperature (°C).
+#' @param mean_temp_amp Scalar. Mean annual temperature amplitude (°C).
+#' @param mean_precip   Scalar. Mean annual precipitation (mm).
+#' @param leac          Scalar. Leaching parameter (site-level).
+#' @param diam_fwl      Fine woody litter diameter (cm).
+#' @param diam_cwl      Coarse woody litter diameter (cm).
+#' @return Numeric vector of length 15 (initial pool states, double precision).
 yasso15_steady_state <- function(params,
                                  nwl_mean, fwl_mean, cwl_mean,
-                                 xi_means,
+                                 mean_temp, mean_temp_amp, mean_precip,
                                  leac = 0.0,
-                                 precip_mean,
                                  diam_fwl = 2.0, diam_cwl = 15.0) {
   
-  result <- .Fortran("yasso15_steady_state_r",
-                     params      = as.double(params),
-                     nwl_mean    = as.double(nwl_mean),
-                     fwl_mean    = as.double(fwl_mean),
-                     cwl_mean    = as.double(cwl_mean),
-                     xi_awe_mean = as.double(xi_means$xi_awe),
-                     xi_n_mean   = as.double(xi_means$xi_n),
-                     xi_h_mean   = as.double(xi_means$xi_h),
-                     leac        = as.double(leac),
-                     precip_mean = as.double(precip_mean),
-                     diam_fwl    = as.double(diam_fwl),
-                     diam_cwl    = as.double(diam_cwl),
-                     C_init      = double(15)
+  # Compute xi from mean climate scalars -- matches reference mod5c(steady=TRUE).
+  # xi(mean_climate) != mean(xi_annual) due to nonlinearity.
+  xi_ss <- compute_xi_yasso15(
+    temp_mean = mean_temp,
+    temp_amp  = mean_temp_amp,
+    precip    = mean_precip,
+    params    = params
   )
   
-  result$C_init
+  result <- .Fortran("yasso15_steady_state_r",
+                     params      = as.single(params),
+                     nwl_mean    = as.single(nwl_mean),
+                     fwl_mean    = as.single(fwl_mean),
+                     cwl_mean    = as.single(cwl_mean),
+                     xi_awe_mean = as.single(xi_ss$xi_awe),
+                     xi_n_mean   = as.single(xi_ss$xi_n),
+                     xi_h_mean   = as.single(xi_ss$xi_h),
+                     leac        = as.single(leac),
+                     precip_mean = as.single(mean_precip),
+                     diam_fwl    = as.single(diam_fwl),
+                     diam_cwl    = as.single(diam_cwl),
+                     C_init      = single(15)
+  )
+  
+  as.double(result$C_init)
 }
 
 
@@ -148,11 +181,16 @@ yasso15_steady_state <- function(params,
 
 #' Run Yasso15 transient forward simulation via Fortran
 #'
-#' @param input_df   Data frame with columns: year, precip,
-#'                   nwl_A/W/E/N, fwl_A/W/E/N, cwl_A/W/E/N.
+#' All inputs are cast to single precision before the Fortran call to match
+#' the original Järvenpää reference implementation. Output is cast back to
+#' double for R-side use.
+#'
+#' @param input_df   Data frame with columns: year, nwl_A/W/E/N,
+#'                   fwl_A/W/E/N, cwl_A/W/E/N.
 #' @param params     Numeric vector (length 35).
 #' @param C_init     Numeric vector (length 15) from yasso15_steady_state().
 #' @param xi_arrays  List with xi_awe, xi_n, xi_h vectors (from compute_xi_yasso15).
+#' @param precip     Numeric vector. Annual precipitation (mm).
 #' @param leac       Scalar. Leaching parameter (site-level).
 #' @param diam_fwl   Fine woody litter diameter (cm).
 #' @param diam_cwl   Coarse woody litter diameter (cm).
@@ -170,29 +208,29 @@ yasso15_run <- function(input_df, params, C_init, xi_arrays,
   
   result <- .Fortran("yasso15_run_r",
                      n_years       = as.integer(n_years),
-                     params        = as.double(params),
-                     nwl_awen      = as.double(nwl_awen),
-                     fwl_awen      = as.double(fwl_awen),
-                     cwl_awen      = as.double(cwl_awen),
-                     xi_awe_array  = as.double(xi_arrays$xi_awe),
-                     xi_n_array    = as.double(xi_arrays$xi_n),
-                     xi_h_array    = as.double(xi_arrays$xi_h),
-                     leac          = as.double(leac),
-                     precip_array  = as.double(precip_array),
-                     diam_fwl      = as.double(diam_fwl),
-                     diam_cwl      = as.double(diam_cwl),
-                     C_init        = as.double(C_init),
-                     C_out         = double(n_years * 5),
-                     resp_out      = double(n_years)
+                     params        = as.single(params),
+                     nwl_awen      = as.single(nwl_awen),
+                     fwl_awen      = as.single(fwl_awen),
+                     cwl_awen      = as.single(cwl_awen),
+                     xi_awe_array  = as.single(xi_arrays$xi_awe),
+                     xi_n_array    = as.single(xi_arrays$xi_n),
+                     xi_h_array    = as.single(xi_arrays$xi_h),
+                     leac          = as.single(leac),
+                     precip_array  = as.single(precip_array),
+                     diam_fwl      = as.single(diam_fwl),
+                     diam_cwl      = as.single(diam_cwl),
+                     C_init        = as.single(C_init),
+                     C_out         = single(n_years * 5),
+                     resp_out      = single(n_years)
   )
   
-  C_mat <- matrix(result$C_out, nrow = n_years, ncol = 5)
+  C_mat <- matrix(as.double(result$C_out), nrow = n_years, ncol = 5)
   colnames(C_mat) <- c("A", "W", "E", "N", "H")
   
   data.frame(
     year        = input_df$year,
     C_mat,
     total_soc   = rowSums(C_mat),
-    respiration = result$resp_out
+    respiration = as.double(result$resp_out)
   )
 }
