@@ -26,7 +26,8 @@ plots <- unique(monthly_climate$plot_id)
 
 dyn.load("./Model_functions/Decomposition_functions/RothC/rothc_step_f.so")
 
-params <- list(PL_DPM_f = 0.20)
+params <- ROTHC_DEFAULT_PARAMS  # named vector of 10 parameters
+
 result_RothC <- do.call(rbind, lapply(plots, function(pid) {
   
   clim <- monthly_climate[monthly_climate$plot_id == pid, ]
@@ -35,7 +36,13 @@ result_RothC <- do.call(rbind, lapply(plots, function(pid) {
   clay  <- clim$clay[1]
   depth <- clim$depth[1]
   
-  xi <- compute_xi_rothc(climate_monthly = clim)
+  xi <- compute_xi_rothc(
+    climate_monthly = clim,
+    a_T   = params[["a_T"]],
+    b_T   = params[["b_T"]],
+    c_T   = params[["c_T"]],
+    r_SMD = params[["r_SMD"]]
+  )
   
   litter_ss <- c(
     DPM = mean(inp$C_DPM) * 12,
@@ -44,6 +51,7 @@ result_RothC <- do.call(rbind, lapply(plots, function(pid) {
   xi_mean <- mean(xi[seq_len(min(12L, length(xi)))])
   
   C_init <- rothc_steady_state(
+    params       = params,
     xi_mean      = xi_mean,
     litter_input = litter_ss,
     clay         = clay
@@ -66,6 +74,7 @@ result_RothC <- do.call(rbind, lapply(plots, function(pid) {
         data.frame(year = unique(inp$year)),
         rothc_run(
           pools0         = C_init,
+          params         = params,
           xi             = xi,
           litter_monthly = litter_monthly,
           clay           = clay,
@@ -74,8 +83,6 @@ result_RothC <- do.call(rbind, lapply(plots, function(pid) {
 }))
 
 print(result_RothC)
-
-
 
 
 
@@ -298,8 +305,8 @@ result_RothC_ref <- do.call(rbind, lapply(plots, function(pid) {
   # so both runs start from identical initial conditions -- which is why
   # the comparison reflects only structural/numerical differences, not
   # initialization differences.
-  C_init <- rothc_steady_state(xi_mean, litter_ss, clay)
-  
+  C_init <- rothc_steady_state(params = ROTHC_DEFAULT_PARAMS, xi_mean = xi_mean, litter_input = litter_ss, clay = clay)
+   
   cat("plot:", pid, " (ref)\n")
   
   # --- SIMULATION: run original Fortran from C_init ---

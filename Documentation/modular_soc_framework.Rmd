@@ -13,6 +13,7 @@ header-includes:
   - \usepackage{booktabs}
   - \usepackage{float}
   - \usepackage{tikz}
+  - \usepackage{colortbl}
   - \usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, shapes.geometric, decorations.pathreplacing}
   - \definecolor{inputblue}{HTML}{3B82F6}
   - \definecolor{compatgreen}{HTML}{10B981}
@@ -823,6 +824,14 @@ The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead dur
 % ARROWS — inside MCMC
 % =============================================
 
+% compute_xi -> Likelihood
+\draw[arr=outputpurple] (likelihood.east) -- ++(0.7,0) -- (fxi.119)
+    node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
+
+% compute_xi -> steady_state
+\draw[arr=modifiergold] (fxi.south) -- ++(0,-1.8) -| (steadyblock.south)
+    node[midway, below=2pt, note] {$\bar{\xi}$};
+    
 % Likelihood -> steady_state
 \draw[arr=outputpurple] (likelihood.south) -- ++(0,-0.3) -| (steadyblock.110)
     node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
@@ -831,9 +840,6 @@ The guiding principle is to minimise R$\leftrightarrow$Fortran call overhead dur
 \draw[arr=outputpurple] (likelihood.south) -- ++(0,-0.3) -| (frun.110)
     node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
 
-% Likelihood -> compute_xi
-\draw[arr=outputpurple] (likelihood.east) -- ++(0.7,0) -- (fxi.119)
-    node[near end, left=2pt, note] {$\boldsymbol{\theta}$};
 
 % compute_xi -> model_run
 \draw[arr=modifiergold] (fxi.west) -- (frun.east)
@@ -1033,3 +1039,707 @@ out_20 <- yasso20_run(climate_df,   inputs_df, params, C_init, leac)
 #                     ^^^^^^^^^^
 #                     monthly_climate — xi_arrays and precip derived internally
 ```
+
+
+
+\newpage
+
+# 5. Calibration Parameter Comparison
+
+This section documents the calibration parameter vectors for all four models,
+their grouping by functional role, and the structural equivalences and differences
+across models.
+
+## 5.1 Cross-model parameter map
+
+The table below classifies calibration parameters by functional group. Each cell
+lists the parameter symbol(s) and count. Dashes indicate that the corresponding
+process is absent or hardcoded in that model.
+
+\definecolor{y07col}{HTML}{DBEAFE}
+\definecolor{y15col}{HTML}{D1FAE5}
+\definecolor{y20col}{HTML}{FEF3C7}
+\definecolor{allcol}{HTML}{F1F5F9}
+
+\begingroup
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{table}[H]
+\centering
+\caption{Calibration parameters by functional group across all four models.
+Numbers in parentheses give the count of free parameters in that group.}
+\label{tab:param_map}
+\begin{tabular}{lp{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}}
+\toprule
+\textbf{Group} & \textbf{Yasso07} & \textbf{Yasso15} & \textbf{Yasso20} & \textbf{RothC} \\
+\midrule
+Decomposition rates
+  & $\alpha_{A,W,E,N,H}$ (5)
+  & $\alpha_{A,W,E,N,H}$ (5)
+  & $\alpha_{A,W,E,N,H}$ (5)
+  & $k_{\text{DPM,RPM,Bio,Hum}}$ (4) \\
+\addlinespace
+Temperature response
+  & $\beta_1, \beta_2$ (2)
+  & $\beta_1,\beta_2$;\newline $\beta_{N1},\beta_{N2}$;\newline $\beta_{H1},\beta_{H2}$ (6)
+  & same as Y15 (6)
+  & $a_T, b_T, c_T$ (3) \\
+\addlinespace
+Moisture / precipitation response
+  & $\gamma$ (1)
+  & $\gamma,\,\gamma_N,\,\gamma_H$ (3)
+  & $\gamma,\,\gamma_N,\,\gamma_H$ (3)
+  & $r_{\text{SMD}}$ (1) \\
+\addlinespace
+Inter-pool transfers
+  & $p_{ij}$ (12)
+  & $p_{ij}$ (12)
+  & $p_{ij}$ (12)
+  & $f_{\text{bio}},\, f_{\text{hum}}$ (2) \\
+\addlinespace
+Humification
+  & $p_H$ (1)
+  & $p_H$ (1)
+  & $p_H$ (1)
+  & via $f_{\text{bio}}, f_{\text{hum}}$ \\
+\addlinespace
+Size / physical modifier
+  & $\delta_1, \delta_2, r$ (3)
+  & $\delta_1, \delta_2, r$ (3)
+  & $\theta_1, \theta_2, r$ (3)
+  & --- (absent) \\
+\addlinespace
+Leaching
+  & --- (absent)
+  & $w$ (1)
+  & $w$ (1)
+  & --- (absent) \\
+\midrule
+\textbf{Total}
+  & \textbf{24}
+  & \textbf{31}
+  & \textbf{31}
+  & \textbf{10} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\endgroup
+
+\medskip
+\noindent\textbf{Structural notes.}
+The Yasso family has no edaphic modifiers (clay, depth) as free parameters;
+these enter only through fixed litter-size correction terms.
+
+Regarding inter-pool transfers and humification, RothC and Yasso follow quite
+different philosophies. In RothC, all four active pools (DPM, RPM, Bio, Hum)
+decompose and their products are routed to the same two destinations ---
+microbial biomass (Bio) and humus (Hum) --- in fixed proportions governed by
+$f_{\text{bio}}$ and $f_{\text{hum}}$. The source pool identity is irrelevant:
+a unit of carbon leaving DPM and a unit leaving Hum are partitioned identically.
+This makes the transfer structure simple and symmetric.
+
+In Yasso, the four litter-chemistry pools (A, W, E, N) exchange carbon
+\emph{with each other} before anything reaches the humus pool H. Each pool $j$
+has its own set of transfer fractions $p_{ij}$ controlling what fraction of its
+decomposed material flows into each other pool $i$. For example, decomposed
+W-pool carbon might partially re-enter the A pool, partially enter E, and so
+on. These 12 fractions ($p_{WA}, p_{EA}, \ldots, p_{EN}$) together define the
+full AWEN transfer matrix, and they are all free calibration parameters. On top
+of this lateral exchange, a separate parameter $p_H$ controls the fraction of
+decomposed carbon from \emph{any} AWEN pool that is additionally routed to the
+humus pool H --- analogous in spirit to RothC's $f_{\text{hum}}$, but applied
+uniformly across all source pools. The net effect is that Yasso's pool dynamics
+are governed by a full $5 \times 5$ matrix, whereas RothC's are governed by a
+simpler one-directional cascade with a shared partitioning step at the end.
+RothC's $f_{\text{bio}}$ and $f_{\text{hum}}$ therefore simultaneously play the
+role of both the inter-pool transfer coefficients \emph{and} the humification
+fraction, compressed into just two parameters.
+
+
+## 5.2 Yasso family parameter table
+
+The three Yasso versions share the same pool structure and transfer matrix.
+Differences are confined to the climate response parameterisation (Yasso15/20
+add pool-group-specific modifiers) and the size modifier functional form
+(Yasso20 uses a quadratic rather than exponential formulation).
+
+\begingroup
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{table}[H]
+\centering
+\caption{Yasso family calibration parameters.
+\colorbox{allcol}{\strut Gray}: shared by Y07, Y15, Y20.
+\colorbox{y15col}{\strut Green}: introduced in Y15, retained in Y20.
+\colorbox{y20col}{\strut Amber}: Y20-specific (replaces Y07/Y15 formulation).
+All $\alpha$ rates are positive; the Fortran negates them internally on the diagonal.}
+\label{tab:yasso_params}
+\begin{tabular}{llllp{5.5cm}}
+\toprule
+\textbf{Group} & \textbf{Symbol} & \textbf{Default} & \textbf{Units} & \textbf{Description} \\
+\midrule
+\multicolumn{5}{l}{\textit{Decomposition rates — shared by Y07, Y15, Y20}} \\
+\rowcolor{allcol}
+& $\alpha_A$ & 0.66 & yr$^{-1}$ & Base decomp.\ rate, acid-soluble (A) pool \\
+\rowcolor{allcol}
+& $\alpha_W$ & 4.30 & yr$^{-1}$ & Base decomp.\ rate, water-soluble (W) pool \\
+\rowcolor{allcol}
+& $\alpha_E$ & 0.35 & yr$^{-1}$ & Base decomp.\ rate, ethanol-soluble (E) pool \\
+\rowcolor{allcol}
+& $\alpha_N$ & 0.22 & yr$^{-1}$ & Base decomp.\ rate, non-soluble/lignin (N) pool \\
+\rowcolor{allcol}
+& $\alpha_H$ & 0.0033 & yr$^{-1}$ & Base decomp.\ rate, humus (H) pool \\
+\midrule
+\multicolumn{5}{l}{\textit{Inter-pool transfers — shared by Y07, Y15, Y20}} \\
+\rowcolor{allcol}
+& $p_{WA},\, p_{EA},\, p_{NA}$ & & — & Fractions of W, E, N decomposition entering A \\
+\rowcolor{allcol}
+& $p_{AW},\, p_{EW},\, p_{NW}$ & & — & Fractions of A, E, N decomposition entering W \\
+\rowcolor{allcol}
+& $p_{AE},\, p_{WE},\, p_{NE}$ & & — & Fractions of A, W, N decomposition entering E \\
+\rowcolor{allcol}
+& $p_{AN},\, p_{WN},\, p_{EN}$ & & — & Fractions of A, W, E decomposition entering N \\
+\rowcolor{allcol}
+& $p_H$ & 0.04 / 0.0042$^*$ & — & Fraction of AWEN decomposition entering H \\
+\midrule
+\multicolumn{5}{l}{\textit{Temperature response (AWE pools) — shared by Y07, Y15, Y20}} \\
+\rowcolor{allcol}
+& $\beta_1$ & 0.096 & °C$^{-1}$ & Linear temperature coefficient \\
+\rowcolor{allcol}
+& $\beta_2$ & $-$0.0014 & °C$^{-2}$ & Quadratic temperature coefficient \\
+\multicolumn{5}{l}{\textit{Temperature response (N pool) — Y15 and Y20 only}} \\
+\rowcolor{y15col}
+& $\beta_{N1}$ & & °C$^{-1}$ & Linear temperature coefficient, N pool \\
+\rowcolor{y15col}
+& $\beta_{N2}$ & & °C$^{-2}$ & Quadratic temperature coefficient, N pool \\
+\multicolumn{5}{l}{\textit{Temperature response (H pool) — Y15 and Y20 only}} \\
+\rowcolor{y15col}
+& $\beta_{H1}$ & & °C$^{-1}$ & Linear temperature coefficient, H pool \\
+\rowcolor{y15col}
+& $\beta_{H2}$ & & °C$^{-2}$ & Quadratic temperature coefficient, H pool \\
+\midrule
+\multicolumn{5}{l}{\textit{Precipitation response (AWE pools) — shared by Y07, Y15, Y20}} \\
+\rowcolor{allcol}
+& $\gamma$ & $-$1.21 & m$^{-1}$ & Shape of precipitation response, $1-e^{\gamma P/1000}$ \\
+\multicolumn{5}{l}{\textit{Precipitation response (N, H pools) — Y15 and Y20 only}} \\
+\rowcolor{y15col}
+& $\gamma_N$ & & m$^{-1}$ & Precipitation response shape, N pool \\
+\rowcolor{y15col}
+& $\gamma_H$ & & m$^{-1}$ & Precipitation response shape, H pool \\
+\midrule
+\multicolumn{5}{l}{\textit{Leaching — Y15 and Y20 only}} \\
+\rowcolor{y15col}
+& $w$ & & mm$^{-1}$ & Precipitation-driven leaching rate for AWEN pools \\
+\midrule
+\multicolumn{5}{l}{\textit{Size modifier — Y07 and Y15}} \\
+\rowcolor{allcol}
+& $\delta_1,\,\delta_2$ & $-$1.7, 0.86 & — & Exponent parameters, $\exp(-\delta_1 d^{\delta_2}|r|)$ \\
+\rowcolor{allcol}
+& $r$ & $-$0.306 & — & Scaling parameter (shared with Y20) \\
+\multicolumn{5}{l}{\textit{Size modifier — Y20 only (replaces $\delta_1, \delta_2$)}} \\
+\rowcolor{y20col}
+& $\theta_1,\,\theta_2$ & & cm$^{-1}$, cm$^{-2}$ & Quadratic size modifier, $(1+\theta_1 d+\theta_2 d^2)^{-|r|}$ \\
+\bottomrule
+\multicolumn{5}{l}{$^*$ $p_H = 0.04$ for Y07/Y15; $p_H = 0.0042$ for Y20 — a 10-fold reduction.} \\
+\end{tabular}
+\end{table}
+\endgroup
+
+
+## 5.3 RothC parameter table
+
+RothC's parameter vector is deliberately leaner than the Yasso family, reflecting
+its simpler pool structure (no lateral AWEN transfers, no woody litter size effect).
+The 10 proposed calibration parameters are listed below, with their functional
+analog in the Yasso family where one exists.
+
+\begin{table}[H]
+\centering
+\caption{RothC calibration parameters. The rightmost column identifies the
+closest functional analog in the Yasso family where applicable.}
+\label{tab:rothc_params}
+\begin{tabular}{lllp{4.2cm}p{3.5cm}}
+\toprule
+\textbf{Group} & \textbf{Symbol} & \textbf{Default} & \textbf{Description} & \textbf{Yasso analog} \\
+\midrule
+\multicolumn{5}{l}{\textit{Decomposition rates}} \\
+& $k_{\text{DPM}}$ & 10.0 & DPM decomp.\ rate (yr$^{-1}$) & $\alpha_A$ or $\alpha_W$ \\
+& $k_{\text{RPM}}$ & 0.30 & RPM decomp.\ rate (yr$^{-1}$) & $\alpha_N$ \\
+& $k_{\text{Bio}}$ & 0.66 & BIO decomp.\ rate (yr$^{-1}$) & $\alpha_E$ \\
+& $k_{\text{Hum}}$ & 0.02 & HUM decomp.\ rate (yr$^{-1}$) & $\alpha_H$ \\
+\midrule
+\multicolumn{5}{l}{\textit{Temperature response}} \\
+& $a_T$ & 47.91 & Numerator of Arrhenius modifier & $\beta_1, \beta_2$ (different form) \\
+& $b_T$ & 106.06 & Activation energy proxy & $\beta_1, \beta_2$ (different form) \\
+& $c_T$ & 18.27 & Temperature offset (°C) & $\beta_1, \beta_2$ (different form) \\
+\midrule
+\multicolumn{5}{l}{\textit{Moisture response}} \\
+& $r_{\text{SMD}}$ & 0.444 & Breakpoint of piecewise linear TSMD response, as fraction of TSMD$_{\max}$ & $\gamma$ (different driver) \\
+\midrule
+\multicolumn{5}{l}{\textit{Inter-pool transfers and humification}} \\
+& $f_{\text{bio}}$ & 0.46 & Fraction of decomposed C entering BIO & $p_H$, $p_{ij}$ (combined role) \\
+& $f_{\text{hum}}$ & 0.54 & Fraction of decomposed C entering HUM & $p_H$, $p_{ij}$ (combined role) \\
+\midrule
+\multicolumn{5}{l}{\textit{Hardcoded — not calibrated}} \\
+& evap fraction & 0.75 & Coefficient on open-pan evaporation in TSMD accumulation & --- \\
+& $r_{\text{bare}}$ & 0.556 & Bare soil TSMD limit as fraction of TSMD$_{\max}$ & --- \\
+& $\xi_{\text{min}}$ & 0.20 & Floor on moisture modifier under dry conditions & --- \\
+& clay coefficients & & Pedotransfer function for TSMD capacity & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Note on $f_{\text{bio}}$ and $f_{\text{hum}}$.}
+In the standard RothC formulation these fractions are derived from clay content
+via $x = 1.67(1.85 + 1.60\,e^{-0.0786\,\%\text{clay}})$, with
+$f_{\text{bio}} = 0.46/(x+1)$ and $f_{\text{hum}} = 0.54/(x+1)$.
+By freeing the numerators $0.46$ and $0.54$ as direct calibration parameters
+(while retaining the clay-dependent denominator), we preserve the soil-texture
+sensitivity of the original formulation while giving the Bayesian sampler
+a handle on the bio--hum split. This is the closest structural analog to Yasso's
+$p_H$ combined with the inter-pool transfer fractions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+# 6. Calibration Engine Architecture
+
+## 6.1 Design Principle
+
+The Bayesian calibration framework is split into two layers: a **model-agnostic engine** shared by all models, and a thin **model-specific interface** that each model script implements. The engine handles everything that does not depend on soil carbon dynamics; the interface provides only the three functions that do.
+
+This design means that changes to convergence diagnostics, output management, logging, or MCMC settings are made once and propagate to all five model calibrations automatically. It also guarantees that all models are evaluated under identical statistical assumptions, which is a prerequisite for valid structural uncertainty quantification.
+
+## 6.2 Engine Components
+
+The following components are fully model-agnostic and implemented once in \texttt{calibration\_engine.R}:
+
+\medskip
+\noindent\textbf{Transform builder.} Constructs \texttt{to\_original()}, \texttt{to\_unconstrained()}, and the log-Jacobian function automatically from the model's \texttt{param\_spec} declaration. See Section 6.4 for details.
+
+\medskip
+\noindent\textbf{Prior predictive matching.} The procedure for choosing the prior width $\sigma_{\text{ppm}}$ is identical across models: draw samples from a Gaussian centred on \texttt{best\_x}, transform to physical space, run one plot forward, compute the coefficient of variation of predicted SOC, and find the smallest $\sigma$ whose prior predictive CV meets or exceeds the observed CV. The engine requires only a single-plot forward run function from the model interface. On synthetic data with few unique plots the matching may not converge; the engine warns and defaults to $\sigma_{\text{ppm}} = 1.0$.
+
+\medskip
+\noindent\textbf{Likelihood factory (\texttt{make\_likelihood()}).} Returns a byte-compiled likelihood function with all model callables and pre-computed data structures captured in its closure. Receives the three model interface functions, the pre-split data structures, and the transform functions. The returned function is passed to \texttt{run\_mcmc\_chains()}.
+
+\medskip
+\noindent\textbf{MCMC orchestration (\texttt{run\_mcmc\_chains()}).} Chain initialisation, the DEzs sampler loop, per-chain log files, the evaluation counter, and elapsed-time tracking. Receives the likelihood function, prior object, and both \texttt{mcmc\_settings} and \texttt{run\_config}. The outer chain loop (\texttt{lapply} on Mac, \texttt{mclapply} on Roihu) and the inner parallel plot loop (\texttt{mclapply} with \texttt{CORES\_PER\_CHAIN}) are both managed here.
+
+\medskip
+\noindent\textbf{Convergence diagnostics (\texttt{run\_diagnostics()}).} Gelman--Rubin $\hat{R}$ via \texttt{gelman.diag}, effective sample size via \texttt{effectiveSize}, posterior quantile tables, trace PDFs, and prior-vs-posterior marginal PDFs. Receives \texttt{mcmc\_settings} as a separate argument (not via \texttt{run\_config}) to access iteration counts. All diagnostics operate on raw MCMC samples and parameter names; they have no knowledge of what model produced them.
+
+\medskip
+\noindent\textbf{Output management (\texttt{save\_results()}).} Serialises three files to \texttt{DIR\_RUNS}: the raw BayesianTools chain objects (\texttt{MODEL\_chains\_RUNID.rds}), the physical-space posterior samples matrix \texttt{all\_phys} received from \texttt{run\_diagnostics()} (\texttt{MODEL\_posterior\_RUNID.rds}), and run metadata including convergence summaries (\texttt{MODEL\_metadata\_RUNID.rds}). Receives \texttt{mcmc\_settings} for iteration counts.
+
+\medskip
+\noindent\textbf{Input serialisation (\texttt{save\_inputs()}).} Serialises all pre-processed data structures that entered the likelihood to \texttt{DIR\_INPUTS} as \texttt{MODEL\_inputs\_RUNID.rds}. Called after prior predictive matching so that $\sigma_{\text{ppm}}$ is included in the saved object alongside \texttt{climate\_by\_plot}, \texttt{inputs\_by\_plot}, \texttt{litter\_means}, \texttt{obs\_meta}, \texttt{plots}, \texttt{plots\_real}, \texttt{free\_defaults}, and \texttt{best\_x}. Serves two purposes: enabling post-hoc analysis (posterior predictive checks, residual diagnostics) without re-sourcing the calibration script; and providing a validation record that the input pipeline produced the expected structures, independently verifiable against the raw data.
+
+\medskip
+\noindent\textbf{Startup checks.} Mandatory round-trip validation (physical $\to$ unconstrained $\to$ physical to machine precision) and likelihood finiteness check at default parameters, executed before sampling begins.
+
+\medskip
+\noindent\textbf{Configuration structure.} \texttt{run\_config} (output directories, model name, run ID, cores) and \texttt{mcmc\_settings} (chain count, iteration counts, burn-in, log interval) are both assembled in Section~0 of each model script at startup, before any data loading or computation. The only field added later is \texttt{run\_config\$n\_plots}, appended at the end of Section~3 once the plots vector is known. Both objects are passed explicitly to every engine function that needs them.
+
+## 6.3 Model Interface
+
+Each model script passes three functions to the engine as arguments to \texttt{make\_likelihood()}. These are not new functions written for calibration --- they are the same R wrapper functions already implemented for forward model runs, validated against the reference Fortran implementations, and used independently for testing and simulation.
+
+\begin{table}[H]
+\centering
+\caption{The three functions constituting the model--engine interface.}
+\label{tab:interface}
+\begin{tabular}{p{3.5cm}p{5cm}p{5cm}}
+\toprule
+\textbf{Function} & \textbf{Signature} & \textbf{Role} \\
+\midrule
+\texttt{compute\_xi(clim, params)} &
+  Climate data frame + parameter vector &
+  Returns environmental modifier time series $\boldsymbol{\xi}(t)$; called once per plot per likelihood evaluation. Must live inside the sampler because climate sensitivity parameters ($\beta_1, \beta_2, \gamma$) are free calibration parameters. \\
+\addlinespace
+\texttt{steady\_state(params, litter\_means, xi\_mean)} &
+  Parameter vector + mean litter inputs + mean $\xi$ &
+  Returns initial pool vector $\mathbf{C}^*$; called once per plot per likelihood evaluation. \\
+\addlinespace
+\texttt{run\_model(inputs, params, C\_init, xi)} &
+  Input data frame + parameters + $\mathbf{C}^*$ + $\boldsymbol{\xi}(t)$ &
+  Runs full transient simulation; returns SOC trajectory; single Fortran call per plot. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For example, the Yasso07 model script passes \texttt{compute\_xi\_yasso07},
+\texttt{yasso07\_steady\_state}, and \texttt{yasso07\_run} to \texttt{make\_likelihood()},
+which captures them in the likelihood closure. The same functions are used for
+standalone forward runs and validation against the reference implementation.
+
+```r
+# Forward run -- direct function call, fixed parameters
+out <- yasso07_run(inputs_df,
+                   params   = YASSO07_DEFAULT_PARAMS,
+                   C_init   = C_init,
+                   xi_array = xi_array)
+
+# Calibration -- same functions injected into likelihood factory,
+# which is then passed to the MCMC engine
+ll_fn <- make_likelihood(
+  compute_xi      = compute_xi_yasso07,   # same function as forward run
+  steady_state    = yasso07_steady_state, # same function as forward run
+  run_model       = yasso07_run,          # same function as forward run
+  to_original     = to_original,
+  log_jacobian    = log_jacobian,
+  assemble_params = assemble_model_params,
+  plots           = plots,
+  climate_by_plot = climate_by_plot,
+  inputs_by_plot  = inputs_by_plot,
+  litter_means    = litter_means,
+  obs_meta        = obs_meta,
+  n_cores         = CORES_PER_CHAIN
+)
+
+chain_results <- run_mcmc_chains(
+  ll_fn         = ll_fn,
+  prior         = prior,
+  best_x        = best_x,
+  param_names   = FREE_NAMES,
+  mcmc_settings = mcmc_settings,
+  run_config    = run_config
+)
+```
+
+The only requirement the engine imposes on the three interface functions is
+that they respect the calling conventions listed in the table above. Any
+function that runs correctly in forward mode already satisfies this requirement.
+There is no translation layer, no reformatting of inputs or outputs, and no
+risk of the calibration exercising a different code path than the validated
+forward run.
+
+## 6.4 Parameter Transformation Framework
+
+Transformations between constrained physical space and unconstrained sampling
+space are generated automatically from a \textbf{parameter specification table}
+defined in each model script. Rather than writing model-specific
+\texttt{to\_original} and \texttt{to\_unconstrained} functions, the engine
+constructs these from a list of typed parameter groups.
+
+Three primitive transform types cover all parameters across all four models:
+
+\begin{table}[H]
+\centering
+\caption{Primitive transformation types and their application across models.}
+\label{tab:transforms}
+\begin{tabular}{llp{4cm}p{5cm}}
+\toprule
+\textbf{Type} & \textbf{Constraint} & \textbf{Transform} & \textbf{Applied to} \\
+\midrule
+\texttt{stick\_break} & $\sum p_i \leq B$, $p_i \geq 0$ & Sequential logit fractions of remaining budget & Yasso AWEN inter-pool transfer fractions ($p_{ij}$, 12 per model) \\
+\addlinespace
+\texttt{log} & $\theta > 0$ & $x = \log\theta$ & Variance and scaling terms ($\sigma_{\text{obs}}$, $\sigma_{\text{init}}$, $\sigma_{\text{input}}$) \\
+\addlinespace
+\texttt{unconstrained} & $\theta \in \mathbb{R}$ & Identity & Temperature and precipitation response parameters ($\beta_i$, $\gamma$); size modifier parameters ($\delta_i$, $r$) \\
+\addlinespace
+\texttt{logit} & $\theta \in (0,1)$ & $x = \log\frac{\theta}{1-\theta}$ & Single proportions; RothC $f_{\text{bio}}$, $f_{\text{hum}}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Fixed vs.\ free parameters.}
+Decomposition rate constants ($\alpha_{A,W,E,N,H}$ for Yasso; $k_{\text{DPM,RPM,Bio,Hum}}$ for RothC) and the humification fraction $p_H$ are held fixed at published values throughout MCMC. These encode each model's pool chemical identity and are independently constrained by experimental data; calibrating them jointly with transfer fractions is not identifiable and would blur the structural differences the intercomparison is designed to measure. The free parameters --- transfer fractions, climate sensitivity, size modifiers, and variance and scaling terms --- govern climate response, partitioning, and input uncertainty, the quantities most relevant to Finnish climate projections.
+
+\noindent The Yasso07 parameter specification takes the form:
+
+```r
+# Budget for stick-breaking: fraction not going to humus
+B <- 1.0 - fixed_rates["p_H"]
+
+param_spec <- list(
+  # Inter-pool transfer fractions -- one stick-breaking group per source pool
+  list(names = c("p_AW","p_AE","p_AN"), type = "stick_break", budget = B),
+  list(names = c("p_WA","p_WE","p_WN"), type = "stick_break", budget = B),
+  list(names = c("p_EA","p_EW","p_EN"), type = "stick_break", budget = B),
+  list(names = c("p_NA","p_NW","p_NE"), type = "stick_break", budget = B),
+  # Climate sensitivity -- unconstrained (can be negative)
+  list(names = c("beta1","beta2","gamma"),              type = "unconstrained"),
+  # Size modifiers -- unconstrained
+  list(names = c("delta1","delta2","r"),                type = "unconstrained"),
+  # Variance and scaling terms -- strictly positive
+  list(names = c("sigma_obs","sigma_init","sigma_input"), type = "log")
+)
+```
+
+The engine builds \texttt{to\_original}, \texttt{to\_unconstrained}, and the Jacobian
+from this spec. The Jacobian is assembled by summing contributions per group:
+stick-breaking groups contribute the sequential logit volume correction;
+log-transformed parameters contribute $\log\theta$ each; unconstrained parameters
+contribute zero.
+
+\noindent\textbf{Test mode replication.}
+The \texttt{N\_PLOTS\_TEST} parameter replicates plot IDs in the \texttt{plots} vector
+to simulate production wallclock cost without requiring the full dataset:
+
+```r
+# plots is a vector of plot IDs passed to the likelihood -- either the full
+# production set or N_PLOTS_TEST replications of plots_real for timing tests.
+plots <- if (!is.na(N_PLOTS_TEST)) {
+  rep(plots_real, length.out = N_PLOTS_TEST)
+} else {
+  plots_real
+}
+```
+
+The replication is a lightweight index trick: \texttt{climate\_by\_plot} and
+\texttt{inputs\_by\_plot} retain only the unique real plots; the likelihood
+evaluates the same plots repeatedly. This gives a realistic wallclock estimate
+for production scaling but provides no new statistical information.
+\textbf{Convergence diagnostics from replicated test runs are meaningless and should be ignored} --- the sampler sees repeated identical data and cannot distinguish structural from sampling uncertainty.
+
+## 6.5 Known Validation Items
+
+The following issues were identified during implementation and should be verified before the production run on real data:
+
+\medskip
+\noindent\textbf{$\xi_{\text{mean}}$ timing.}
+The analytical steady-state uses \texttt{mean(xi\_array)} computed over the full simulation time series, including years after the last observation. For a plot measured in 1997--2006, this includes post-2006 climate. Strictly, the steady-state should use pre-measurement climate only. This inconsistency is absorbed into \texttt{sigma\_init} and may not be detectable, but introduces a systematic bias in plots with strong climate trends.
+
+\medskip
+\noindent\textbf{Jacobian passthrough in BayesianTools.}
+The log Jacobian is added inside the likelihood rather than the prior, which keeps the BayesianTools prior object clean. This assumes \texttt{createPrior()} passes the custom density function through unchanged and does not apply additional normalisation. This assumption should be verified against the BayesianTools source for the version in use.
+
+\medskip
+\noindent\textbf{Year alignment between Fortran output and \texttt{obs\_meta\$idx}.}
+The observation year indices are computed as \texttt{match(obs\_plot\$year, clim\$year)}, which assumes the Fortran model returns one row per year in the same order as the climate input data frame. If the Fortran wrapper reorders or drops years, \texttt{meta\$idx} points to wrong rows without triggering any guard. This should be validated by running a forward model call and checking that \texttt{run\_out\$total\_soc[meta\$idx]} corresponds to the correct years.
+
+## 6.6 Prior Specification
+
+All free parameters share a common Gaussian prior in unconstrained sampling space:
+
+$$x_i \sim \mathcal{N}\!\big(\texttt{best\_x}_i,\; \sigma_{\text{ppm}}^2\big) \qquad \forall\, i$$
+
+where $\texttt{best\_x}_i$ is the published default value of parameter $i$ transformed to unconstrained space, and $\sigma_{\text{ppm}}$ is a single scalar width shared across all parameters. The value of $\sigma_{\text{ppm}}$ is chosen separately for each model by prior predictive matching: it is set to the smallest value such that the coefficient of variation of SOC predictions drawn from the prior matches the observed CV across plots. This normalises prior coverage in prediction space rather than parameter space, ensuring that structural differences in posterior predictions reflect model structure rather than differences in prior informativeness. A model requiring a wider $\sigma_{\text{ppm}}$ to reach the observed CV is collectively less sensitive to its free parameters in SOC space --- itself a structural finding. Fixed parameters --- decomposition rate constants and humification fraction $p_H$ --- are held at published values and do not enter the prior.
+
+\begin{table}[H]
+\centering
+\caption{Prior specification for all calibrated parameters. All parameters share
+the same Gaussian prior form in unconstrained space; the transform determines the
+implied prior shape in physical space. $\sigma_{\text{ppm}}$ is set by prior
+predictive matching and differs across models.}
+\label{tab:priors}
+\begin{tabular}{p{3.8cm}p{4.2cm}lp{3.8cm}}
+\toprule
+\textbf{Parameter class} & \textbf{Parameters} & \textbf{Transform} & \textbf{Prior (unconstrained)} \\
+\midrule
+Inter-pool transfer fractions
+  & $p_{ij}$ (12, Yasso); $f_{\text{bio}},\,f_{\text{hum}}$ (RothC)
+  & stick-breaking / logit
+  & $\mathcal{N}(\texttt{best\_x},\,\sigma_{\text{ppm}}^2)$ \\
+\addlinespace
+Climate sensitivity
+  & $\beta_1,\,\beta_2,\,\gamma$ (Yasso); $a_T,\,b_T,\,c_T,\,r_{\text{SMD}}$ (RothC)
+  & unconstrained
+  & $\mathcal{N}(\texttt{best\_x},\,\sigma_{\text{ppm}}^2)$ \\
+\addlinespace
+Size modifiers
+  & $\delta_1,\,\delta_2,\,r$ (Yasso only)
+  & unconstrained
+  & $\mathcal{N}(\texttt{best\_x},\,\sigma_{\text{ppm}}^2)$ \\
+\addlinespace
+Variance \& scaling terms
+  & $\sigma_{\text{obs}},\,\sigma_{\text{init}},\,\sigma_{\text{input}}$
+  & log
+  & $\mathcal{N}(\texttt{best\_x},\,\sigma_{\text{ppm}}^2)$ \\
+\midrule
+\textit{Fixed — not calibrated}
+  & $\alpha_{A,W,E,N,H}$;\; $k_{\text{DPM,RPM,Bio,Hum}}$;\; $p_H$
+  & —
+  & fixed at published values \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Variance and scaling terms.}
+Three nuisance parameters are jointly calibrated with the structural parameters.
+$\sigma_{\text{obs}}$ is the standard deviation of residuals between predicted and
+observed SOC at measurement time, capturing measurement error, within-plot spatial
+heterogeneity, and any model structural error that presents as noise.
+$\sigma_{\text{init}}$ captures uncertainty in the analytical steady-state
+initialisation: real plots are not at equilibrium, and the mean climate used in
+$\mathbf{C}^* = -\mathbf{A}^{-1}\mathbf{b}$ is itself an estimate.
+$\sigma_{\text{input}}$ is a global multiplicative scaling factor on all litter inputs,
+$\mathbf{J}_{\text{scaled}}(t) = \sigma_{\text{input}} \cdot \mathbf{J}(t)$, which
+accounts for systematic bias in the allometric-equation-derived litter estimates.
+A posterior value below 1 indicates the allometric equations overestimate inputs for
+Finnish forests; above 1 indicates underestimation. Because decomposition rates are
+fixed, $\sigma_{\text{input}}$ is not strongly confounded with rates and is expected
+to be identifiable from the SOC data.
+
+## 6.7 Architecture Overview
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    >=Stealth,
+    node distance=0.9cm and 1.8cm,
+    engine/.style={
+        rectangle, rounded corners=4pt, draw=outputpurple, fill=outputpurple!8,
+        line width=1pt, minimum height=0.9cm, minimum width=4.2cm,
+        text centered, align=center, font=\small\sffamily
+    },
+    model/.style={
+        rectangle, rounded corners=4pt, draw=decompred, fill=decompred!8,
+        line width=1pt, minimum height=0.9cm, minimum width=3.6cm,
+        text centered, align=center, font=\small\sffamily
+    },
+    data/.style={
+        rectangle, rounded corners=2pt, draw=bordergray, fill=bglight,
+        line width=0.6pt, minimum height=0.7cm, minimum width=2.8cm,
+        text centered, font=\footnotesize\ttfamily
+    },
+    arr/.style={->, line width=1pt, color=#1},
+    note/.style={font=\scriptsize\sffamily\itshape, text=black!55, align=center},
+    hdr/.style={font=\small\sffamily\bfseries, text=#1}
+]
+
+% =============================================
+% MODEL SCRIPT (left column)
+% =============================================
+\node[hdr=decompred] (ms_hdr) at (-4.5, 5.2)
+    {Model script (one per model)};
+
+\node[model] (pspec)    at (-4.5,  4.2)  {\texttt{param\_spec}};
+\node[model] (defaults) at (-4.5,  3.0)  {Default parameters};
+\node[model] (cxi)      at (-4.5,  1.8)  {\texttt{compute\_xi()}};
+\node[model] (css)      at (-4.5,  0.6)  {\texttt{steady\_state()}};
+\node[model] (crun)     at (-4.5, -0.6)  {\texttt{run\_model()}};
+\node[model] (dataprep) at (-4.5, -2.0)
+    {Data preparation \\
+     \texttt{map\_climate\_*()}, \texttt{map\_inputs\_*()} \\
+     \texttt{climate\_by\_plot}, \texttt{obs\_meta}};
+
+% =============================================
+% SECTION 0 CONFIG (inside model script region)
+% =============================================
+\node[data] (runcfg) at (-2.0,  4.6)  {\texttt{run\_config}};
+\node[data] (mset)   at (-2.0,  3.6)  {\texttt{mcmc\_settings}};
+
+% =============================================
+% ENGINE (right column)
+% =============================================
+\node[hdr=outputpurple] (eng_hdr) at (3.0, 5.2)
+    {calibration\_engine.R};
+
+\node[engine] (trans) at (3.0, 4.2)
+    {Transform builder \\
+     \texttt{to\_original()}, \texttt{to\_unconstrained()} \\ Jacobian};
+
+\node[engine] (ppm) at (3.0, 2.4)
+    {Prior predictive \\ matching};
+
+\node[engine] (ll) at (3.0, 1.0)
+    {Likelihood factory \\ \texttt{make\_likelihood()}};
+
+\node[engine] (mcmc) at (3.0, -0.4)
+    {MCMC orchestration \\ \texttt{run\_mcmc\_chains()}};
+
+\node[engine] (diag) at (3.0, -1.7)
+    {Diagnostics \\ \texttt{run\_diagnostics()}};
+
+\node[engine] (save) at (3.0, -3.0)
+    {Output \\ \texttt{save\_results()}, \texttt{save\_inputs()}};
+
+% =============================================
+% ARROWS — param_spec and defaults to engine
+% =============================================
+\draw[arr=decompred] (pspec.east) -- (trans.west)
+    node[midway, above=2pt, note] {type, budget};
+
+\draw[arr=decompred] (defaults.east) -| (0.2, 2.4) -- (ppm.west)
+    node[near end, above=2pt, note] {\texttt{best\_x}};
+
+% =============================================
+% ARROWS — three interface functions to likelihood
+% =============================================
+\draw[arr=decompred] (cxi.east)  -- (ll.west);
+\draw[arr=decompred] (css.east)  -- (ll.west);
+\draw[arr=decompred] (crun.east) -- (ll.west);
+\node[note] at (-1.2, 0.9) {interface\\functions};
+
+% =============================================
+% ARROWS — data prep to likelihood, ppm, save
+% =============================================
+\draw[arr=decompred] (dataprep.east) -- ++(1.8, 0) |- (ll.south west)
+    node[near start, above=2pt, note] {pre-split data};
+\draw[arr=decompred] (dataprep.east) -- ++(1.8, 0) |- (ppm.south west);
+\draw[arr=decompred] (dataprep.east) -- ++(1.8, 0) |- (save.south west)
+    node[near start, below=2pt, note] {inputs snapshot};
+
+% =============================================
+% ARROWS — Section 0 config to engine functions
+% =============================================
+\draw[arr=bordergray] (runcfg.east) -- ++(0.4, 0) |- (mcmc.west);
+\draw[arr=bordergray] (runcfg.east) -- ++(0.4, 0) |- (diag.west);
+\draw[arr=bordergray] (runcfg.east) -- ++(0.4, 0) |- (save.west);
+\draw[arr=bordergray] (mset.east)   -- ++(0.4, 0) |- (mcmc.west);
+\draw[arr=bordergray] (mset.east)   -- ++(0.4, 0) |- (diag.west);
+
+% =============================================
+% ARROWS — within engine (top to bottom)
+% =============================================
+\draw[arr=outputpurple] (trans.south) -- (ppm.north);
+\draw[arr=outputpurple] (ppm.south) -- (ll.north)
+    node[midway, right=3pt, note] {$\sigma_{\text{ppm}}$};
+\draw[arr=outputpurple] (ll.south) -- (mcmc.north)
+    node[midway, right=3pt, note] {likelihood fn};
+\draw[arr=outputpurple] (mcmc.south) -- (diag.north)
+    node[midway, right=3pt, note] {chain results};
+\draw[arr=outputpurple] (diag.south) -- (save.north)
+    node[midway, right=3pt, note] {\texttt{all\_phys}};
+
+% =============================================
+% BACKGROUND BOXES — two regions only
+% =============================================
+\begin{scope}[on background layer]
+    \node[
+        rectangle, rounded corners=8pt,
+        draw=decompred!40, fill=decompred!3,
+        line width=1.2pt, dashed,
+        fit=(pspec)(defaults)(cxi)(css)(crun)(dataprep)(runcfg)(mset),
+        inner sep=12pt] {};
+    \node[
+        rectangle, rounded corners=8pt,
+        draw=outputpurple!40, fill=outputpurple!3,
+        line width=1.2pt, dashed,
+        fit=(trans)(ppm)(ll)(mcmc)(diag)(save),
+        inner sep=12pt] {};
+\end{scope}
+
+\end{tikzpicture}
+\caption{%
+High-level structure of the calibration framework.
+The \textbf{model script} (red) contains everything model-specific:
+a typed parameter specification, published default parameters,
+the three interface functions (\texttt{compute\_xi}, \texttt{steady\_state},
+\texttt{run\_model}), model-specific data preparation
+(input mapping functions, pre-splitting into per-plot lookup structures),
+and Section~0 configuration (\texttt{run\_config}, \texttt{mcmc\_settings}).
+The \textbf{engine} (\texttt{calibration\_engine.R}, purple) is fully
+model-agnostic: it constructs transformation functions and the Jacobian
+from the parameter specification, runs prior predictive matching to set
+$\sigma_{\text{ppm}}$, assembles the generic likelihood, orchestrates
+MCMC sampling, computes diagnostics, and serialises outputs.
+All data structures produced by the model script's preparation step
+(\texttt{climate\_by\_plot}, \texttt{obs\_meta}, etc.) are passed into
+the engine via \texttt{make\_likelihood()}'s closure arguments ---
+they are not a separate architectural layer.}
+\label{fig:engine}
+\end{figure}

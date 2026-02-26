@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Much Carbon Do Finnish Forests Really Store?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Lorenzo | HIKET Project" />
+    <script src="libs/header-attrs-2.24/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Much Carbon Do Finnish Forests Really Store?
+]
+.subtitle[
+## A Multi-Model Approach to Reducing Uncertainty in Climate Projections
+]
+.author[
+### Lorenzo | HIKET Project
+]
+.date[
+### February 2026
+]
+
+---
+
+exclude: true
+
+
+
+&lt;style type="text/css"&gt;
+/* Custom styles */
+.remark-slide-content {
+  font-size: 20px;
+  padding: 1em 2em;
+}
+.remark-slide-content h1 {
+  font-size: 1.8em;
+  color: #2d6a4f;
+}
+.remark-slide-content h2 {
+  font-size: 1.4em;
+  color: #2d6a4f;
+  border-bottom: 2px solid #2d6a4f;
+  padding-bottom: 4px;
+}
+.highlight-box {
+  background: #d8f3dc;
+  border-left: 5px solid #2d6a4f;
+  padding: 12px 18px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+.warning-box {
+  background: #fff3cd;
+  border-left: 5px solid #e6a817;
+  padding: 12px 18px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+.key-number {
+  font-size: 2.2em;
+  font-weight: bold;
+  color: #2d6a4f;
+  display: block;
+  text-align: center;
+}
+.columns-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2em;
+  align-items: start;
+}
+.columns-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5em;
+  align-items: start;
+}
+.model-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.88em;
+}
+.model-card h3 {
+  color: #2d6a4f;
+  margin: 0 0 6px 0;
+  font-size: 1em;
+}
+.footnote {
+  font-size: 0.75em;
+  color: #888;
+}
+.inverse h1, .inverse h2 { color: white; border-color: rgba(255,255,255,0.4); }
+
+/* Title slide override */
+.title-slide {
+  background-color: #1b4332 !important;
+  color: white !important;
+}
+.title-slide h1, .title-slide h2, .title-slide h3,
+.title-slide .author, .title-slide .date, .title-slide .subtitle {
+  color: white !important;
+  text-shadow: none !important;
+}
+.title-slide h1 { font-size: 2em; border-bottom: 2px solid rgba(255,255,255,0.4); padding-bottom: 0.3em; }
+.title-slide h2 { font-size: 1.2em; font-weight: 400; border: none; }
+.title-slide .author { margin-top: 1.5em; font-size: 1em; opacity: 0.9; }
+.title-slide .date { font-size: 0.85em; opacity: 0.7; }
+&lt;/style&gt;
+
+---
+class: inverse, center, middle
+
+# Setting the Scene
+
+---
+
+## Why Finland? Why Now?
+
+Finland is **74% forested** and must report its forest carbon balance annually as part of its climate commitments.
+But recent model projections are raising an alarm:
+
+.columns-2[
+
+.highlight-box[
+**Finnish forest soils appear to be approaching carbon sink saturation** — absorbing less and less CO₂ each decade, and potentially becoming a net *source* in the near future.
+]
+
+&lt;br&gt;
+
+This is currently **model-based** — and different models tell different stories about *when* and *how fast* this happens.
+
+&lt;br&gt;
+
+Before this finding can inform national policy, we need to ask:
+
+&gt; *Is sink saturation real physics — or a modelling artefact?*
+
+That is exactly what this project sets out to answer.
+&lt;/div&gt;
+]
+
+---
+class: inverse, center, middle
+
+# Part 1
+## How Do We Model Soil Carbon?
+
+---
+
+## The Basic Idea: First-Order Kinetics
+
+Soil organic carbon (SOC) models all share one foundational assumption — carbon pools decay at a **rate proportional to their size**.
+
+Think of it like radioactive decay, or how a population of bacteria might decline when conditions worsen.
+
+`$$\frac{dC}{dt} = \text{Inputs} - k \cdot C$$`
+
+.columns-3[
+&lt;div class="model-card"&gt;
+&lt;h3&gt;C — Carbon pool&lt;/h3&gt;
+How much carbon is currently stored in a particular type of organic matter
+&lt;/div&gt;
+
+&lt;div class="model-card"&gt;
+&lt;h3&gt;k — Decomposition rate&lt;/h3&gt;
+How fast that material breaks down — different for leaves, roots, woody debris...
+&lt;/div&gt;
+
+&lt;div class="model-card"&gt;
+&lt;h3&gt;Inputs&lt;/h3&gt;
+Fresh litter arriving from tree roots, fallen leaves, dead branches
+&lt;/div&gt;
+]
+
+&lt;br&gt;
+
+---
+
+## Multi-Pool Models: Matrix Notation
+
+A model with `\(n\)` pools can be written compactly as:
+
+`$$\frac{d\mathbf{C}}{dt} = \xi(T, W) \cdot \mathbf{A} \cdot \mathbf{K} \cdot \mathbf{C}(t) + \mathbf{I}(t)$$`
+
+.columns-3[
+&lt;div class="model-card"&gt;
+&lt;h3&gt;&lt;b&gt;K&lt;/b&gt; — rate matrix&lt;/h3&gt;
+Diagonal matrix of pool-specific decomposition rates `\(k_i\)`
+&lt;/div&gt;
+&lt;div class="model-card"&gt;
+&lt;h3&gt;&lt;b&gt;A&lt;/b&gt; — transfer matrix&lt;/h3&gt;
+Controls how carbon flows from one pool to the next. Diagonal = losses, off-diagonal = transfers
+&lt;/div&gt;
+&lt;div class="model-card"&gt;
+&lt;h3&gt;$\xi(T,W)$ — modifier&lt;/h3&gt;
+Scalar that rescales all rates simultaneously as a function of temperature and moisture
+&lt;/div&gt;
+]
+
+
+---
+
+## Multi-Pool Models: Explicit 3-Pool Cascade
+
+With three pools in a **cascade** (no back-transfers), the system expands to:
+
+`$$\frac{d}{dt}\begin{pmatrix} C_1 \\ C_2 \\ C_3 \end{pmatrix} = \xi(T,W) \cdot \underbrace{\begin{pmatrix} -1 &amp; 0 &amp; 0 \\ a_{21} &amp; -1 &amp; 0 \\ 0 &amp; a_{32} &amp; -1 \end{pmatrix}}_{\mathbf{A}} \cdot \underbrace{\begin{pmatrix} k_1 &amp; 0 &amp; 0 \\ 0 &amp; k_2 &amp; 0 \\ 0 &amp; 0 &amp; k_3 \end{pmatrix}}_{\mathbf{K}} \cdot \begin{pmatrix} C_1 \\ C_2 \\ C_3 \end{pmatrix} + \begin{pmatrix} I_1 \\ 0 \\ 0 \end{pmatrix}$$`
+
+&lt;div style="display: grid; grid-template-columns: 1fr 1fr 0.6fr; gap: 1.5em; align-items: start; margin-top: 0.8em;"&gt;
+
+
+&lt;div&gt;
+&lt;b&gt;At steady state&lt;/b&gt; `\(\left(\frac{d\mathbf{C}}{dt} = 0\right)\)`:
+`$$\mathbf{C}^* = -\xi \cdot (\mathbf{A}\mathbf{K})^{-1} \cdot \mathbf{I}$$`
+&lt;p&gt;This is how we &lt;b&gt;initialise&lt;/b&gt; all models — solving analytically for equilibrium carbon stocks, avoiding costly 1000-year spin-ups.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div style="text-align: center;"&gt;
+&lt;svg width="260" height="300" viewBox="0 0 220 260" font-family="sans-serif" font-size="12"&gt;
+
+  &lt;!-- Inputs arrow --&gt;
+  &lt;text x="110" y="18" text-anchor="middle" fill="#555" font-size="11"&gt;Inputs `\(I_1\)`&lt;/text&gt;
+  &lt;line x1="110" y1="22" x2="110" y2="44" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/&gt;
+
+  &lt;!-- Pool 1 --&gt;
+  &lt;rect x="60" y="45" width="100" height="40" rx="6" fill="#d8f3dc" stroke="#2d6a4f" stroke-width="1.5"/&gt;
+  &lt;text x="110" y="61" text-anchor="middle" fill="#1b4332" font-weight="bold"&gt;Pool 1&lt;/text&gt;
+  &lt;text x="110" y="76" text-anchor="middle" fill="#1b4332" font-size="10"&gt;Fast — `\(k_1\)`&lt;/text&gt;
+
+  &lt;!-- CO2 loss 1 --&gt;
+  &lt;line x1="160" y1="65" x2="200" y2="65" stroke="#e76f51" stroke-width="1.5" marker-end="url(#arrRed)" stroke-dasharray="4,2"/&gt;
+  &lt;text x="202" y="69" fill="#e76f51" font-size="10"&gt;CO₂&lt;/text&gt;
+
+  &lt;!-- Transfer 1→2 --&gt;
+  &lt;line x1="110" y1="85" x2="110" y2="114" stroke="#2d6a4f" stroke-width="1.5" marker-end="url(#arrGreen)"/&gt;
+  &lt;text x="116" y="103" fill="#2d6a4f" font-size="10"&gt;$a_{21}$&lt;/text&gt;
+
+  &lt;!-- Pool 2 --&gt;
+  &lt;rect x="60" y="115" width="100" height="40" rx="6" fill="#b7e4c7" stroke="#2d6a4f" stroke-width="1.5"/&gt;
+  &lt;text x="110" y="131" text-anchor="middle" fill="#1b4332" font-weight="bold"&gt;Pool 2&lt;/text&gt;
+  &lt;text x="110" y="146" text-anchor="middle" fill="#1b4332" font-size="10"&gt;Medium — `\(k_2\)`&lt;/text&gt;
+
+  &lt;!-- CO2 loss 2 --&gt;
+  &lt;line x1="160" y1="135" x2="200" y2="135" stroke="#e76f51" stroke-width="1.5" marker-end="url(#arrRed)" stroke-dasharray="4,2"/&gt;
+  &lt;text x="202" y="139" fill="#e76f51" font-size="10"&gt;CO₂&lt;/text&gt;
+
+  &lt;!-- Transfer 2→3 --&gt;
+  &lt;line x1="110" y1="155" x2="110" y2="184" stroke="#2d6a4f" stroke-width="1.5" marker-end="url(#arrGreen)"/&gt;
+  &lt;text x="116" y="173" fill="#2d6a4f" font-size="10"&gt;$a_{32}$&lt;/text&gt;
+
+  &lt;!-- Pool 3 --&gt;
+  &lt;rect x="60" y="185" width="100" height="40" rx="6" fill="#74c69d" stroke="#2d6a4f" stroke-width="1.5"/&gt;
+  &lt;text x="110" y="201" text-anchor="middle" fill="#1b4332" font-weight="bold"&gt;Pool 3&lt;/text&gt;
+  &lt;text x="110" y="216" text-anchor="middle" fill="#1b4332" font-size="10"&gt;Slow — `\(k_3\)`&lt;/text&gt;
+
+  &lt;!-- CO2 loss 3 --&gt;
+  &lt;line x1="160" y1="205" x2="200" y2="205" stroke="#e76f51" stroke-width="1.5" marker-end="url(#arrRed)" stroke-dasharray="4,2"/&gt;
+  &lt;text x="202" y="209" fill="#e76f51" font-size="10"&gt;CO₂&lt;/text&gt;
+
+  &lt;defs&gt;
+    &lt;marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"&gt;
+      &lt;path d="M0,0 L0,6 L6,3 z" fill="#555"/&gt;
+    &lt;/marker&gt;
+    &lt;marker id="arrGreen" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"&gt;
+      &lt;path d="M0,0 L0,6 L6,3 z" fill="#2d6a4f"/&gt;
+    &lt;/marker&gt;
+    &lt;marker id="arrRed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"&gt;
+      &lt;path d="M0,0 L0,6 L6,3 z" fill="#e76f51"/&gt;
+    &lt;/marker&gt;
+  &lt;/defs&gt;
+
+&lt;/svg&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+
+---
+
+## Temperature and Moisture Change Everything
+
+The decomposition rate `\(k\)` is not fixed — it responds to the environment.
+
+.columns-2[
+&lt;div&gt;
+**Temperature sensitivity**
+
+Warmer soils decompose organic matter faster.
+Different models express this relationship differently (Arrhenius functions, Q10 factors, Gaussian curves) — and this turns out to **matter a lot** for long-term projections.
+&lt;/div&gt;
+
+&lt;img src="hiket_soc_presentation_files/figure-html/temp-response-1.png" width="360" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## What Defines a SOC Model?
+
+All models share the first-order kinetics framework, but they differ in **how they organise carbon into pools**. The fundamental question is :*"What makes one piece of organic matter decompose faster than another?"*
+
+.columns-2[
+&lt;div&gt;
+.highlight-box[
+The general theory is that carbon exists on a **quality spectrum** — some compounds are easier for microbes to break down (sugars, starch) while others are more resistant (lignin, waxes). This inherits from last centuries paradigms of humus fractionation.
+Is being recently questioned by a novel interpretation, seeing carbon quality as an emergent ecosystem property. First order models still work, though, just their interpretation is changing!
+]
+&lt;/div&gt;
+]
+
+Some examples:
+
+| Approach | Philosophy | Example |
+|----------|-----------|---------|
+| **Chemical fractionation** | Decomposability is determined by molecular structure (sugars vs. lignin) | Yasso models |
+| **Decomposability continuum** | Carbon exists on a continuous quality spectrum — no sharp categories | Q-model |
+| **Fixed functional pools** | Carbon sorted into pools by turnover time (fast/slow/resistant) | RothC |
+
+---
+
+## A Key Insight: Discrete vs. Continuous Pools
+
+&lt;img src="hiket_soc_presentation_files/figure-html/pool-concept-1.png" width="792" style="display: block; margin: auto;" /&gt;
+
+.footnote[Both approaches use first-order kinetics — the difference is in **how many pools** and **how they're defined**.]
+
+---
+class: inverse, center, middle
+
+# Part 2
+## The Problem We're Trying to Solve
+
+---
+
+## The HIKET Challenge
+
+Finland's greenhouse gas inventory relies on **soil carbon models** to project how forests will behave under climate change. Different models give different answers.
+
+&lt;div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2em; align-items: center;"&gt;
+
+&lt;div&gt;
+&lt;img src="soil_C_sink_5models_baseline.png" style="width:100%; max-height:320px; object-fit:contain;" /&gt;
+&lt;/div&gt;
+
+&lt;div&gt;
+.warning-box[
+**The problem:**
+
+Each model was originally calibrated against different datasets, in different countries, using different methods.
+
+When they disagree, we can't tell if it's because:
+1. The models have genuinely different physics
+2. They were calibrated differently
+3. Both
+]
+&lt;/div&gt;
+
+&lt;/div&gt;
+
+---
+
+## Why This Matters for Policy
+
+.columns-2[
+&lt;div&gt;
+Finland reports its forest carbon balance annually to the UNFCCC as part of its climate commitments.
+
+.highlight-box[
+A 20–40% spread in soil carbon projections translates directly into **uncertainty in national climate commitments** — with real consequences for policy.
+]
+&lt;/div&gt;
+
+&lt;div&gt;
+
+**What we need to know:**
+&lt;br&gt;
+ *If all models were calibrated the same way, against the same data — would they still disagree?*
+
+&lt;br&gt;
+
+If yes → the disagreement reflects genuine **structural differences** in how models represent soil processes.
+
+If no → disagreement was just a calibration artefact, and models are more consistent than we thought.
+&lt;/div&gt;
+]
+
+---
+class: inverse, center, middle
+
+# Part 3
+## How We Tackle This: Bayesian Calibration
+
+---
+
+## What Is Bayesian Calibration?
+
+Most models have **parameters** — numbers that control how fast carbon decomposes, how moisture affects rates, and so on.
+
+These parameters are usually estimated from lab experiments or previous studies. But they carry **uncertainty**.
+
+.columns-2[
+&lt;div&gt;
+**The classical approach:**
+
+Find the single "best" set of parameters and use it. Uncertainty is often ignored or reported as a brief footnote.
+
+&lt;br&gt;
+
+**The Bayesian approach:**
+
+Instead of one "best" answer, we work with a **distribution of plausible parameter values** — reflecting our genuine uncertainty.
+&lt;/div&gt;
+
+&lt;img src="hiket_soc_presentation_files/figure-html/bayes-concept-1.png" width="360" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Why Bayesian Methods for This Problem?
+
+.columns-3[
+&lt;div class="model-card"&gt;
+&lt;h3&gt;🔍 Full uncertainty&lt;/h3&gt;
+We get a complete picture of parameter uncertainty — not just a best guess, but a range of plausible values with probabilities attached.
+&lt;/div&gt;
+
+&lt;div class="model-card"&gt;
+&lt;h3&gt;📊 Learning from data&lt;/h3&gt;
+We can combine prior scientific knowledge (lab experiments) with field observations from Finland's ~3,700 forest plots.
+&lt;/div&gt;
+
+&lt;div class="model-card"&gt;
+&lt;h3&gt;⚖️ Fair comparison&lt;/h3&gt;
+By calibrating all five models against exactly the same dataset using exactly the same method, we can make a truly fair structural comparison.
+&lt;/div&gt;
+]
+
+&lt;br&gt;
+
+.highlight-box[
+**The key insight:** We're not just fitting models to data — we're using the data to *update our beliefs* about each model's parameters, starting from the same prior information. Any remaining differences between models then reflect their **structure**, not their calibration history.
+]
+
+---
+class: inverse, center, middle
+
+# Part 4
+## The Study Design
+
+---
+
+## Five Models, One Dataset
+
+We selected five widely-used SOC models that represent the main modelling philosophies:
+
+.columns-3[
+&lt;div class="model-card"&gt;
+&lt;h3&gt;Yasso07 / Yasso15 / Yasso20&lt;/h3&gt;
+Finnish-developed models using chemical fractionation (AWEN system). Three generations, each with different treatments of moisture, temperature, and pool interactions.
+&lt;/div&gt;
+
+&lt;div class="model-card"&gt;
+&lt;h3&gt;RothC&lt;/h3&gt;
+UK-developed model with functional pools (decomposable / resistant plant material, microbial biomass, humified carbon). Widely used in European inventories.
+&lt;/div&gt;
+
+]
+
+&lt;br&gt;
+
+**The dataset:** ~3,700 Finnish National Forest Inventory plots with measured soil carbon, monthly climate data, and detailed litter inputs — spanning the full range of Finnish forest conditions.
+
+---
+
+## What We're Comparing
+&lt;img src="hiket_soc_presentation_files/figure-html/comparison-design-1.png" width="792" style="display: block; margin: auto;" /&gt;
+&lt;table style="width:100%; font-size:0.76em; margin-top:0.3em;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Model &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Origin &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Pools &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Pool structure &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Temp. response &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Time step &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Yasso07 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Finland &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 5 (AWEN + humus) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Chemical &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Gaussian — single scalar ξ, same for all pools &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Annual &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Yasso15 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Finland &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 5 (AWEN + humus) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Chemical &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Gaussian — pool-specific ξ (α, β per pool) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Annual &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Yasso20 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Finland &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 5 (AWEN + humus) &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Chemical &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Gaussian — pool-specific ξ and monthly calculation &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Annual &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; RothC &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; UK &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 5 functional &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Functional &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Q10 — single scalar ξ, fixed Q10 = 1.44 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Monthly &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
+## What We Expect to Find
+
+.columns-2[
+&lt;div&gt;
+**Scenario A: Models converge after calibration**
+
+The three Yasso generations agree with each other and with RothC/Q-model. 
+
+→ Previous disagreements were calibration artefacts.  
+→ We can confidently use any model for Finnish projections.
+&lt;/div&gt;
+
+&lt;div&gt;
+**Scenario B: Structural differences persist**
+
+Even with identical calibration, models diverge under warming.
+
+→ The conceptual choices (pool structure, temperature function) **genuinely matter**.  
+→ Ensemble projections and model uncertainty must be reported.
+&lt;/div&gt;
+]
+
+&lt;br&gt;
+
+.highlight-box[
+**Either outcome is valuable.** If models agree, we reduce uncertainty. If they disagree, we quantify *how much* structural choices matter — and can target future model development where it counts most.
+]
+
+
+---
+
+## Next Steps
+&lt;img src="hiket_soc_presentation_files/figure-html/timeline-1.png" width="792" style="display: block; margin: auto;" /&gt;
+All five models are calibrated against the same ~3,700 Finnish forest plots on the **Roihu supercomputer** (384 cores), completing in days rather than the months a serial approach would require.
+
+
+---
+class: inverse, center, middle
+
+# Thank You
+
+### Questions?
+
+&lt;br&gt;
+
+*This work is part of the HIKET project, supported by...*
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "slideNumberFormat": "%current% / %total%",
+  "ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
