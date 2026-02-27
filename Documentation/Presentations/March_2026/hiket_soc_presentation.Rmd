@@ -277,46 +277,6 @@ $$\mathbf{C}^* = -\xi \cdot (\mathbf{A}\mathbf{K})^{-1} \cdot \mathbf{I}$$
 
 ---
 
-## Temperature and Moisture Change Everything
-
-The decomposition rate $k$ is not fixed — it responds to the environment.
-
-.columns-2[
-<div>
-**Temperature sensitivity**
-
-Warmer soils decompose organic matter faster.
-Different models express this relationship differently (Arrhenius functions, Q10 factors, Gaussian curves) — and this turns out to **matter a lot** for long-term projections.
-</div>
-
-```{r temp-response, fig.height=4, fig.width=5}
-temp <- seq(0, 30, 0.1)
-
-# Three different temperature response functions
-q10_response <- exp(log(2) * temp / 10)        # Q10 = 2
-arrhenius <- exp(0.065 * (temp - 10))           # Arrhenius-like
-gaussian   <- exp(-0.5 * ((temp - 30) / 18)^2) * 2.5 # Gaussian (Yasso)
-gaussian <- gaussian / gaussian[which.min(abs(temp - 10))]
-
-df_temp <- data.frame(
-  Temperature = rep(temp, 3),
-  Response = c(q10_response, arrhenius, gaussian),
-  Model = rep(c("Q10 factor", "Arrhenius", "Gaussian (Yasso)"), each = length(temp))
-)
-
-ggplot(df_temp, aes(x = Temperature, y = Response, colour = Model, linetype = Model)) +
-  geom_line(size = 1.1) +
-  scale_colour_manual(values = c("#e76f51", "#2d6a4f", "#457b9d")) +
-  scale_linetype_manual(values = c("solid", "dashed", "dotdash")) +
-  labs(x = "Temperature (°C)", y = "Decomposition rate\n(relative to 10°C)",
-       colour = NULL, linetype = NULL) +
-  theme_minimal(base_size = 13) +
-  theme(legend.position = "bottom")
-```
-]
-
----
-
 ## What Defines a SOC Model?
 
 All models share the first-order kinetics framework, but they differ in **how they organise carbon into pools**. The fundamental question is :*"What makes one piece of organic matter decompose faster than another?"*
@@ -391,6 +351,58 @@ gridExtra::grid.arrange(p2, p1, ncol = 2)
 .footnote[Both approaches use first-order kinetics — the difference is in **how many pools** and **how they're defined**.]
 
 ---
+
+## Temperature and Moisture Change Everything
+
+The decomposition rate $k$ is not fixed — it responds to the environment.
+
+.columns-2[
+<div>
+**Temperature sensitivity**
+
+Warmer soils decompose organic matter faster.
+Different models express this relationship differently (Arrhenius functions, Q10 factors, Gaussian curves) — and this turns out to **matter a lot** for long-term projections.
+</div>
+
+```{r temp-response, fig.height=4, fig.width=5}
+temp <- seq(0, 30, 0.1)
+
+# Three different temperature response functions
+q10_response <- exp(log(2) * temp / 10)        # Q10 = 2
+arrhenius <- exp(0.065 * (temp - 10))           # Arrhenius-like
+gaussian   <- exp(-0.5 * ((temp - 30) / 18)^2) * 2.5 # Gaussian (Yasso)
+gaussian <- gaussian / gaussian[which.min(abs(temp - 10))]
+
+df_temp <- data.frame(
+  Temperature = rep(temp, 3),
+  Response = c(q10_response, arrhenius, gaussian),
+  Model = rep(c("Q10 factor", "Arrhenius", "Gaussian (Yasso)"), each = length(temp))
+)
+
+ggplot(df_temp, aes(x = Temperature, y = Response, colour = Model, linetype = Model)) +
+  geom_line(size = 1.1) +
+  scale_colour_manual(values = c("#e76f51", "#2d6a4f", "#457b9d")) +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash")) +
+  labs(x = "Temperature (°C)", y = "Decomposition rate\n(relative to 10°C)",
+       colour = NULL, linetype = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+```
+]
+
+
+---
+
+## But also the rate of change of the rate of change might not be constant
+
+The decomposition rate $k$ is not fixed and scales with temperature according to a function, with a certain slope (temperature sensitivity).
+
+But **different organic materials respond differently to temperature changes**. Thermodynamic theory predicts the more stable the material, the more it responds to temperature.
+
+Organic matter is a chemical blob of many molecules, and since the composition of this blob changes with decomposition, also **its temperature sensitivity is likely changing while decomposition proceeds**. Yasso15 and 20 represnts this with different temperature response functions by pool, but there are also other approaches.
+
+
+---
 class: inverse, center, middle
 
 # Part 2
@@ -454,7 +466,7 @@ If no → disagreement was just a calibration artefact, and models are more cons
 class: inverse, center, middle
 
 # Part 3
-## How We Tackle This: Bayesian Calibration
+## How We Tackle This
 
 ---
 
@@ -513,40 +525,6 @@ ggplot(df_bayes, aes(x = x * 1000, y = y, colour = Component, linetype = Compone
 ```
 ]
 
----
-
-## Why Bayesian Methods for This Problem?
-
-.columns-3[
-<div class="model-card">
-<h3>🔍 Full uncertainty</h3>
-We get a complete picture of parameter uncertainty — not just a best guess, but a range of plausible values with probabilities attached.
-</div>
-
-<div class="model-card">
-<h3>📊 Learning from data</h3>
-We can combine prior scientific knowledge (lab experiments) with field observations from Finland's ~3,700 forest plots.
-</div>
-
-<div class="model-card">
-<h3>⚖️ Fair comparison</h3>
-By calibrating all five models against exactly the same dataset using exactly the same method, we can make a truly fair structural comparison.
-</div>
-]
-
-<br>
-
-.highlight-box[
-**The key insight:** We're not just fitting models to data — we're using the data to *update our beliefs* about each model's parameters, starting from the same prior information. Any remaining differences between models then reflect their **structure**, not their calibration history.
-]
-
----
-class: inverse, center, middle
-
-# Part 4
-## The Study Design
-
----
 
 ## Five Models, One Dataset
 
@@ -620,37 +598,6 @@ df <- data.frame(
 kable(df, format = "html", align = "llllll",
       table.attr = 'style="width:100%; font-size:0.76em; margin-top:0.3em;"')
 ```
-
----
-
-## What We Expect to Find
-
-.columns-2[
-<div>
-**Scenario A: Models converge after calibration**
-
-The three Yasso generations agree with each other and with RothC/Q-model. 
-
-→ Previous disagreements were calibration artefacts.  
-→ We can confidently use any model for Finnish projections.
-</div>
-
-<div>
-**Scenario B: Structural differences persist**
-
-Even with identical calibration, models diverge under warming.
-
-→ The conceptual choices (pool structure, temperature function) **genuinely matter**.  
-→ Ensemble projections and model uncertainty must be reported.
-</div>
-]
-
-<br>
-
-.highlight-box[
-**Either outcome is valuable.** If models agree, we reduce uncertainty. If they disagree, we quantify *how much* structural choices matter — and can target future model development where it counts most.
-]
-
 
 ---
 
