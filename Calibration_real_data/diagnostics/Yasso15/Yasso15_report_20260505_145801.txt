@@ -63,3 +63,20 @@
     Bias (median):          +17.24 tC/ha
     95% CI coverage:        0.225   [target ~0.95]
 
+
+[6] Residual analysis
+    Observations used:        122
+    Covariates considered:    55
+    RF Out-Of-Bag R²:         0.440
+    Top covariates by permutation importance:
+        stand_age_2006_est         0.0387
+        stand_age_85               0.0346
+        woody_share                0.0336
+        mean_height_85_dm          0.0320
+        basal_area_85              0.0305
+        ofh_weight_kgm2            0.0258
+        EstimatedBulkDensity       0.0192
+        P_seasonality              0.0172
+        SandContent                0.0165
+        ExchangeableFe             0.0155
+
