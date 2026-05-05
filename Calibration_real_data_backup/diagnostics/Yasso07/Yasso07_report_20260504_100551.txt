@@ -1,0 +1,60 @@
+=========================================================
+  Yasso07 Calibration Report
+  Run ID:    20260504_100551
+  Started:   2026-05-04 10:48:39
+  Wallclock: 42.3 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:          -520.845   [PASS]
+    Plots in calibration:                  40
+    SOC observations:                     732
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4511
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1    -520.845    -524.972     10002   12.28%      11.7    -4.127
+      2    -520.845    -495.577     10002    8.03%       9.7   +25.268
+      3    -520.845    -506.161     10002    8.80%      10.3   +14.684
+      4    -520.845    -512.535     10002    7.13%      10.5    +8.310
+    Final-ll spread across chains: 29.394   [WARN]
+    Max -Inf rate across chains:   12.28%   [WARN]
+
+[3] Convergence
+    Univariate R-hat:    1.0281 -- 1.6126   [WARN]
+    Worst-converged parameters:
+        gamma            1.6126
+        sigma_input      1.5264
+        beta2            1.4878
+        beta1            1.4415
+        p_NW             1.3779
+    Multivariate R-hat:  2.0187             [WARN]
+    ESS:                   23 -- 183   (20 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  13 / 20
+        p_AE, p_AN, p_WA, p_EW, p_NW, p_NE, beta1, beta2, gamma, delta1, delta2, r, sigma_init
+    Top correlated pairs (|rho| > 0.7):
+        p_EN         <-> p_EA          -0.946
+        beta2        <-> beta1         -0.913
+        p_NE         <-> p_NA          -0.856
+        p_AN         <-> p_AW          -0.799
+        p_NW         <-> p_NA          -0.703
+
+=========================================================
+  Status: PASS with 34 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           762
+    R²:                     0.005
+    RMSE (mean predictor):  66.12 tC/ha
+    Bias (mean):            +24.00 tC/ha
+    RMSE (median):          65.58 tC/ha
+    Bias (median):          +23.14 tC/ha
+    95% CI coverage:        0.159   [target ~0.95]
+

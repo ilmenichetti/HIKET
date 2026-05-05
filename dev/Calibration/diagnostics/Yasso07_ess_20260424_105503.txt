@@ -1,0 +1,29 @@
+Yasso07 -- Effective Sample Size
+Run: 20260424_105503  |  Date: 2026-04-24 12:19:04.15237
+
+Total post-burnin samples: 24021
+ESS range: 4 -- 252
+Below 200:  17 / 20
+
+Parameter        ESS       
+---------------------------- 
+p_AW             98        
+p_AE             36        
+p_AN             243       
+p_WA             105       
+p_WE             73        
+p_WN             234       
+p_EA             47        
+p_EW             33        
+p_EN             61        
+p_NA             252       
+p_NW             187       
+p_NE             131       
+beta1            4         
+beta2            5         
+gamma            146       
+delta1           156       
+delta2           90        
+r                196       
+sigma_init       55        
+sigma_input      45        

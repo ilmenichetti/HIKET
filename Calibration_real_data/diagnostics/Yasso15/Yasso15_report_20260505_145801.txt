@@ -1,0 +1,65 @@
+=========================================================
+  Yasso15 Calibration Report
+  Run ID:    20260505_145801
+  Started:   2026-05-05 15:30:22
+  Wallclock: 31.8 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:          -574.761   [PASS]
+    Plots in calibration:                  40
+    SOC observations:                     730
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4503
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1    -574.761   -1448.675     10002   11.91%       8.8  -873.914
+      2    -574.761    -484.602     10002    8.89%       7.7   +90.159
+      3    -574.761    -497.446     10002   24.10%       7.7   +77.314
+      4    -574.761    -505.100     10002   12.86%       7.5   +69.661
+    Final-ll spread across chains: 964.073   [WARN]
+    Max -Inf rate across chains:   24.10%   [WARN]
+
+[3] Convergence
+    Univariate R-hat:    1.0208 -- 5.9006   [WARN]
+    Worst-converged parameters:
+        betaH2           5.9006
+        beta2            2.9599
+        sigma_input      2.8601
+        p_AW             1.9787
+        p_WA             1.8012
+    Multivariate R-hat:  10.2130             [WARN]
+    ESS:                    4 -- 185   (26 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  17 / 26
+        p_AE, p_AN, p_WN, p_EA, p_EW, p_NW, p_NE, beta2, gamma, betaN1, betaN2, gammaH, delta1, delta2, r, sigma_init, sigma_input
+    Top correlated pairs (|rho| > 0.7):
+        p_NE         <-> p_NA          -0.916
+        p_AE         <-> p_AW          -0.913
+        p_AN         <-> p_AW          -0.866
+        sigma_input  <-> betaH2        +0.847
+        betaH2       <-> beta2         -0.845
+        p_EN         <-> p_EA          -0.825
+        p_NW         <-> p_NA          -0.771
+        p_AN         <-> p_AE          +0.716
+        betaN2       <-> betaN1        -0.714
+        sigma_input  <-> beta2         -0.712
+
+=========================================================
+  Status: PASS with 51 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           730
+    R²:                     0.008
+    RMSE (mean predictor):  61.90 tC/ha
+    Bias (mean):            +17.11 tC/ha
+    RMSE (median):          62.08 tC/ha
+    Bias (median):          +17.24 tC/ha
+    95% CI coverage:        0.225   [target ~0.95]
+

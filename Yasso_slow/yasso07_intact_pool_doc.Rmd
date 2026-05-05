@@ -1,0 +1,516 @@
+---
+title: "Fragmentation Delay in YASSO07: An Intact Wood Pool Modification"
+author: "L. Menichetti"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: true
+    extra_dependencies:
+      - amsmath
+      - tikz
+      - pgfplots
+header-includes:
+  - \usetikzlibrary{arrows.meta, positioning, calc, decorations.pathreplacing}
+  - \pgfplotsset{compat=1.18}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
+library(Matrix)
+```
+
+# Introduction
+
+The YASSO model family (Tuomi et al. 2009, 2011) represents soil organic carbon dynamics through five chemical fractionation pools: acid-soluble (A), water-soluble (W), ethanol-soluble (E), non-soluble (N), and humus (H). The effect of woody litter size on decomposition is modelled as a continuous, instantaneous rate modifier applied to the decomposition kinetics. This means that even large woody pieces — stumps, coarse roots — begin decomposing immediately upon entering the model, albeit at a reduced rate.
+
+In reality, coarse woody debris undergoes a prolonged fragmentation phase before the bulk of its carbon becomes accessible to microbial decomposition. A freshly cut stump may remain structurally intact for years or decades, with decomposition confined to the colonised surface layer. This lag between physical input and biochemical availability is well captured by the Q-model's $t_{\max}$ parameter (Bosatta \& Ågren 2003), but has no analogue in YASSO's mathematical framework.
+
+Here we document a minimal structural modification to YASSO07 that introduces a **fragmentation delay** for coarse woody debris through a sixth pool ("intact wood"), and compare its behaviour against the standard model in a synthetic clearcut scenario.
+
+# Standard YASSO07
+
+## Model structure
+
+YASSO07 tracks five carbon pools $\mathbf{x} = (A, W, E, N, H)^T$ governed by a linear ODE:
+
+$$\frac{d\mathbf{x}}{dt} = \mathbf{A}\,\mathbf{x} + \mathbf{b}$$
+
+where $\mathbf{b}$ is the vector of external litter inputs (in AWENH fractions) and $\mathbf{A} = \mathbf{P} \cdot \text{diag}(\mathbf{k})$ is the system matrix, composed of:
+
+- $\mathbf{k}$: a vector of pool-specific decomposition rates, modified by climate and size
+- $\mathbf{P}$: a $5 \times 5$ transfer matrix encoding the fractional flows between pools
+
+The decomposition rates are:
+
+$$k_i = |\alpha_i| \cdot f_{\text{clim}}(T, P) \cdot f_{\text{size}}(d) \quad \text{for } i \in \{A, W, E, N\}$$
+$$k_H = |\alpha_H| \cdot f_{\text{clim}}(T, P) \quad \text{(no size effect on humus)}$$
+
+The climate modifier follows a Gaussian temperature response averaged over four seasonal sub-steps:
+
+$$f_{\text{clim}}(T, P) = \frac{1}{4}\sum_{j=1}^{4} \exp\!\left(\beta_1 T_j + \beta_2 T_j^2\right) \cdot \left(1 - \exp(\gamma \cdot P)\right)$$
+
+## Size dependence
+
+The effect of woody litter diameter $d$ on decomposition rate is:
+
+$$f_{\text{size}}(d) = \left(1 + \delta_1 d + \delta_2 d^2\right)^{r}$$
+
+where $\delta_1$, $\delta_2$, and $r$ are fitted parameters. With typical parameter values ($r < 0$), this is a monotonically decreasing function of $d$: larger pieces decompose more slowly. Crucially, $f_{\text{size}}(0) = 1$ (no effect for non-woody litter) and $f_{\text{size}}(d) > 0$ for all $d$, meaning decomposition always begins immediately.
+
+## Analytical solution
+
+At constant forcing within a time step $\Delta t$, the system has the analytical solution:
+
+$$\mathbf{x}(t + \Delta t) = \mathbf{A}^{-1}\left[e^{\mathbf{A}\Delta t}\left(\mathbf{A}\,\mathbf{x}(t) + \mathbf{b}\right) - \mathbf{b}\right]$$
+
+implemented via matrix exponential (`expm` in R).
+
+
+# Modified YASSO07: Intact Wood Pool
+
+## Rationale
+
+The standard size dependence $f_{\text{size}}(d)$ captures the reduced surface-area-to-volume ratio of large pieces, but does not represent the physical process of fragmentation — the structural breakdown that must occur before the interior of a large piece becomes accessible. For a stump of diameter 35 cm, microbial colonisation proceeds from the surface inward over many years. The result is a sigmoid-like mass loss curve: negligible loss initially, accelerating as fragmentation exposes more substrate, then decelerating as quality declines.
+
+This behaviour is qualitatively different from the monotonic exponential decay produced by YASSO's constant-rate framework. The Q-model (Bosatta \& Ågren 2003) addresses this through $t_{\max}$, a parameter representing the time required for complete fragmentation. Material that has not yet fragmented is effectively inert.
+
+## Structural modification
+
+We introduce a sixth pool $I$ (intact wood) that acts as a physical reservoir. For woody litter of diameter $d > 0$, a fraction $f_I(d)$ of the AWEN input is routed to pool $I$ instead of entering AWEN directly. The intact pool drains into AWEN at a first-order rate $\lambda$, preserving the original chemical composition (AWEN fractions):
+
+$$\frac{dI}{dt} = -\lambda\, I$$
+
+$$\text{Release to pool } i = \lambda \cdot I \cdot \phi_i \quad \text{where } \phi_i = \frac{b_i}{\sum_{j \in \text{AWEN}} b_j}$$
+
+The fraction routed to the intact pool is defined as the complement of the size modifier:
+
+$$f_I(d) = 1 - f_{\text{size}}(d)$$
+
+This has the desirable properties:
+
+- $f_I(0) = 0$: non-woody litter bypasses the intact pool entirely
+- $f_I(d) \to 1$ as $d$ increases: nearly all material from large stumps is delayed
+- Uses the existing fitted size parameters ($\delta_1$, $\delta_2$, $r$) — no new shape parameters
+
+The intact pool introduces **one new parameter**: $\lambda$, the fragmentation rate. With $\lambda = \ln(2)/3 \approx 0.231$ yr$^{-1}$ (half-life = 3 years), approximately 95\% of the material has fragmented and entered AWEN within 13 years.
+
+Importantly, the standard size dependence $f_{\text{size}}(d)$ is **retained** on the AWEN decomposition rates. The intact pool adds a delay on top of the rate reduction, reflecting two distinct physical mechanisms: (1) large pieces have less surface area per unit mass (rate effect), and (2) the interior is physically inaccessible until fragmentation occurs (availability effect).
+
+## Expanded system
+
+The modified model has state vector $\mathbf{x}' = (A, W, E, N, H, I)^T$ and a $6 \times 6$ system matrix:
+
+$$\mathbf{A}' = \begin{pmatrix} \mathbf{A}_{5\times5} & \lambda\,\boldsymbol{\phi} \\ \mathbf{0}^T & -\lambda \end{pmatrix}$$
+
+where $\boldsymbol{\phi} = (\phi_A, \phi_W, \phi_E, \phi_N, 0)^T$ is the AWEN release composition. The litter input vector becomes:
+
+$$\mathbf{b}' = \left((1 - f_I)\,b_A,\; (1 - f_I)\,b_W,\; (1 - f_I)\,b_E,\; (1 - f_I)\,b_N,\; b_H,\; f_I \sum_{j \in \text{AWEN}} b_j\right)^T$$
+
+The system remains linear, the analytical solution via matrix exponential still applies, and computational cost is negligible (6×6 instead of 5×5).
+
+
+\newpage
+
+# Model Diagrams
+
+```{r tikz-standard, engine='tikz', fig.cap="Standard YASSO07 pool structure. All litter enters AWEN pools directly, with decomposition rates scaled by the size modifier $f_{\\text{size}}(d)$. Arrows between AWEN pools represent transfers governed by the matrix $\\mathbf{P}$. All AWEN pools contribute to humus (H). The dashed frame groups the chemically active pools.", fig.ext='pdf', fig.width=5.5, fig.height=3.5}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds}
+\begin{tikzpicture}[
+  pool/.style={draw, rounded corners=3pt, minimum width=1.2cm, minimum height=0.9cm,
+               font=\small\bfseries, fill=#1!15, draw=#1!60},
+  pool/.default=black,
+  arr/.style={-{Stealth[length=2.5mm]}, thick, #1},
+  arr/.default=black!60,
+  lbl/.style={font=\scriptsize, midway},
+  input/.style={font=\scriptsize, text=black!70},
+]
+
+% AWEN pools
+\node[pool=blue]   (A) at (0, 0)    {A};
+\node[pool=cyan]   (W) at (2, 0)    {W};
+\node[pool=orange] (E) at (4, 0)    {E};
+\node[pool=red]    (N) at (6, 0)    {N};
+
+% Humus
+\node[pool=black]  (H) at (3, -2.2) {H};
+
+% Litter input
+\node[input] (lin) at (3, 1.8) {Litter input (AWEN fractions)};
+
+% Input arrows
+\draw[arr=blue!50]   (lin.south) -- ++(0,-0.3) -| (A.north);
+\draw[arr=cyan!50]   (lin.south) -- ++(0,-0.3) -| (W.north);
+\draw[arr=orange!50] (lin.south) -- ++(0,-0.3) -| (E.north);
+\draw[arr=red!50]    (lin.south) -- ++(0,-0.3) -| (N.north);
+
+% Inter-pool transfers (curved, above/below)
+\draw[arr, bend left=25]  (A) to (W);
+\draw[arr, bend left=25]  (W) to (A);
+\draw[arr, bend left=25]  (W) to (E);
+\draw[arr, bend left=25]  (E) to (W);
+\draw[arr, bend left=25]  (E) to (N);
+\draw[arr, bend left=25]  (N) to (E);
+\draw[arr, bend left=40]  (A) to (E);
+\draw[arr, bend right=40] (A.south east) to (N.south west);
+
+% To humus
+\draw[arr=black!40] (A.south) -- (H);
+\draw[arr=black!40] (W.south) -- (H);
+\draw[arr=black!40] (E.south) -- (H);
+\draw[arr=black!40] (N.south) -- (H);
+
+% CO2 losses (downward from H, sideways from AWEN)
+\draw[arr=black!30, dashed] (H.south) -- ++(0, -0.6) node[below, font=\scriptsize] {CO$_2$};
+\draw[arr=black!30, dashed] (A.west)  -- ++(-0.5, 0) node[left, font=\scriptsize]  {CO$_2$};
+\draw[arr=black!30, dashed] (N.east)  -- ++(0.5, 0)  node[right, font=\scriptsize] {CO$_2$};
+
+% Rate label
+\node[font=\scriptsize, text=black!60] at (3, -3.2) {$k_i = |\alpha_i| \cdot f_{\text{clim}} \cdot f_{\text{size}}(d)$};
+
+% Dashed frame around AWEN
+\begin{pgfonlayer}{background}
+  \node[draw=black!30, dashed, rounded corners=6pt, inner sep=8pt,
+        fit=(A)(W)(E)(N)] {};
+\end{pgfonlayer}
+
+\end{tikzpicture}
+```
+
+
+```{r tikz-intact, engine='tikz', fig.cap="Modified YASSO07 with intact wood pool. For woody litter ($d > 0$), a fraction $f_I(d) = 1 - f_{\\text{size}}(d)$ of the AWEN input is routed to pool $I$ (intact wood), which drains to AWEN at first-order rate $\\lambda$. The original size dependence on AWEN rates is retained. For non-woody litter ($d = 0$), $f_I = 0$ and the model reduces to standard YASSO07.", fig.ext='pdf', fig.width=6, fig.height=4.2}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds}
+\begin{tikzpicture}[
+  pool/.style={draw, rounded corners=3pt, minimum width=1.2cm, minimum height=0.9cm,
+               font=\small\bfseries, fill=#1!15, draw=#1!60},
+  pool/.default=black,
+  arr/.style={-{Stealth[length=2.5mm]}, thick, #1},
+  arr/.default=black!60,
+  lbl/.style={font=\scriptsize, midway},
+  input/.style={font=\scriptsize, text=black!70},
+]
+
+% AWEN pools
+\node[pool=blue]   (A) at (0, 0)    {A};
+\node[pool=cyan]   (W) at (2, 0)    {W};
+\node[pool=orange] (E) at (4, 0)    {E};
+\node[pool=red]    (N) at (6, 0)    {N};
+
+% Humus
+\node[pool=black]  (H) at (3, -2.2) {H};
+
+% Intact wood pool
+\node[pool=teal, minimum width=2cm] (I) at (7.5, 2) {$I$ (intact)};
+
+% Litter input
+\node[input] (lin) at (2, 2) {Litter input};
+
+% Split label
+\node[font=\scriptsize, text=black!50] at (4.5, 2.5) {$f_I(d)$};
+\node[font=\scriptsize, text=black!50] at (1.2, 2.5) {$1 - f_I(d)$};
+
+% Input arrows: direct to AWEN
+\draw[arr=blue!50]   (lin.south) -- ++(0,-0.3) -| (A.north);
+\draw[arr=cyan!50]   (lin.south) -- ++(0,-0.3) -| (W.north);
+\draw[arr=orange!50] (lin.south) -- ++(0,-0.3) -| (E.north);
+\draw[arr=red!50]    (lin.south) -- ++(0,-0.3) -| (N.north);
+
+% Input arrow: to intact pool
+\draw[arr=teal!70, very thick] (lin.east) -- (I.west)
+  node[lbl, above, font=\scriptsize, text=teal!70] {};
+
+% Fragmentation: I -> AWEN
+\draw[arr=teal!50] (I.south) -- ++(0, -0.5) -| (A.north east)
+  node[pos=0.15, right, font=\scriptsize, text=teal!60] {$\lambda \cdot \phi_i$};
+\draw[arr=teal!50] (I.south) -- ++(0, -0.5) -| (W.north east);
+\draw[arr=teal!50] (I.south) -- ++(0, -0.5) -| (E.north east);
+\draw[arr=teal!50] (I.south) -- ++(0, -0.5) -| (N.north east);
+
+% Inter-pool transfers
+\draw[arr, bend left=25]  (A) to (W);
+\draw[arr, bend left=25]  (W) to (A);
+\draw[arr, bend left=25]  (W) to (E);
+\draw[arr, bend left=25]  (E) to (W);
+\draw[arr, bend left=25]  (E) to (N);
+\draw[arr, bend left=25]  (N) to (E);
+\draw[arr, bend left=40]  (A) to (E);
+\draw[arr, bend right=40] (A.south east) to (N.south west);
+
+% To humus
+\draw[arr=black!40] (A.south) -- (H);
+\draw[arr=black!40] (W.south) -- (H);
+\draw[arr=black!40] (E.south) -- (H);
+\draw[arr=black!40] (N.south) -- (H);
+
+% CO2
+\draw[arr=black!30, dashed] (H.south) -- ++(0, -0.6) node[below, font=\scriptsize] {CO$_2$};
+\draw[arr=black!30, dashed] (A.west)  -- ++(-0.5, 0) node[left, font=\scriptsize]  {CO$_2$};
+\draw[arr=black!30, dashed] (N.east)  -- ++(0.3, 0);
+
+% Rate labels
+\node[font=\scriptsize, text=black!60, align=center] at (3, -3.4) {
+  AWEN: $k_i = |\alpha_i| \cdot f_{\text{clim}} \cdot f_{\text{size}}(d)$ \quad
+  Intact: $\frac{dI}{dt} = -\lambda I$
+};
+
+% Dashed frame around AWEN
+\begin{pgfonlayer}{background}
+  \node[draw=black!30, dashed, rounded corners=6pt, inner sep=8pt,
+        fit=(A)(W)(E)(N)] {};
+\end{pgfonlayer}
+
+\end{tikzpicture}
+```
+
+\newpage
+
+# Synthetic Experiment
+
+## Design
+
+We generate an 80-year synthetic dataset representing a managed boreal forest site in southern Finland:
+
+- **Years 1--50**: Mature forest near equilibrium. Litter inputs from four diameter classes (Table 1). SOC observations every 5 years with 8\% measurement CV.
+- **Year 51**: Clear cut. Slash, branches, tops, and stumps deposited as a single-year pulse.
+- **Years 52--80**: Post-clearcut recovery. Litter inputs increase from near-zero following a saturating exponential $f(t) = 0.05 + 0.95 \cdot (1 - e^{-t/10})$. No SOC observations.
+
+The fragmentation rate is fixed at $\lambda = \ln(2)/3 \approx 0.231$ yr$^{-1}$ (half-life = 3 years). Both models calibrate the same two parameters ($k_{\text{mult}}$, $h_{\text{mult}}$) against the equilibrium-phase observations. The post-clearcut trajectory is a pure prediction.
+
+\begin{table}[h]
+\centering
+\caption{Litter input classes used in the synthetic experiment.}
+\begin{tabular}{lcccc}
+\hline
+Class & $d$ (cm) & Equilibrium rate & Clearcut pulse & AWEN fractions \\
+      &          & (Mg C ha$^{-1}$ yr$^{-1}$) & (Mg C ha$^{-1}$) & (A / W / E / N) \\
+\hline
+Non-woody   & 0  & 2.0 & 3.0  & 0.48 / 0.17 / 0.05 / 0.30 \\
+Fine woody  & 2  & 0.8 & 3.2  & 0.10 / 0.12 / 0.03 / 0.75 \\
+Coarse woody & 15 & 0.5 & 1.5  & 0.05 / 0.10 / 0.02 / 0.83 \\
+Stumps      & 35 & 0.1 & 5.0  & 0.03 / 0.08 / 0.02 / 0.87 \\
+\hline
+Total       &    & 3.4 & 12.7 & \\
+\hline
+\end{tabular}
+\end{table}
+
+
+## Calibration
+
+Both models are initialised via a 3000-year spinup at mean pre-cut climate to obtain equilibrium AWENH pools consistent with the calibrated rates. The objective function is a weighted sum of squares:
+
+$$\mathcal{L}(\theta) = \sum_{i=1}^{n_{\text{obs}}} \left(\frac{C_{\text{model}}(t_i; \theta) - C_{\text{obs}}(t_i)}{\sigma_i}\right)^2$$
+
+minimised with L-BFGS-B. Both models calibrate $k_{\text{mult}}$ (scaling AWEN rates) and $h_{\text{mult}}$ (scaling H rate), bounded in $[0.1, 5.0]$.
+
+
+```{r run-models, include=FALSE, cache=TRUE}
+# Source model and data, run comparison
+source("yasso07_intact.R")
+dat = readRDS("yasso07_synthetic_data.rds")
+
+climate    = dat$climate
+litter_nw  = dat$litter_nw
+litter_fw  = dat$litter_fw
+litter_cw  = dat$litter_cw
+litter_st  = dat$litter_st
+obs        = dat$observations
+PA_base    = dat$parameters
+awen_nw    = dat$awen_fractions$nonwoody
+awen_fw    = dat$awen_fractions$fine_woody
+awen_cw    = dat$awen_fractions$coarse_woody
+awen_st    = dat$awen_fractions$stumps
+d_nw       = dat$diameters["nonwoody"]
+d_fw       = dat$diameters["fine_woody"]
+d_cw       = dat$diameters["coarse_woody"]
+d_st       = dat$diameters["stumps"]
+n_total    = nrow(climate)
+n_equil    = dat$scenario$n_equil
+FRAG_RATE  = log(2) / 3
+
+run_yasso = function(par_vec, PA, use_intact = FALSE) {
+  k_mult = par_vec[1]; h_mult = par_vec[2]
+  PA_mod = PA
+  PA_mod[1:4] = PA[1:4] * k_mult
+  PA_mod[35]  = PA[35]  * h_mult
+  mean_MAT = mean(climate$MAT[1:n_equil])
+  mean_TA  = mean(climate$TA[1:n_equil])
+  mean_PR  = mean(climate$PR[1:n_equil])
+  rate_nw_eq = mean(rowSums(litter_nw[1:n_equil, ]))
+  rate_fw_eq = mean(rowSums(litter_fw[1:n_equil, ]))
+  rate_cw_eq = mean(rowSums(litter_cw[1:n_equil, ]))
+  rate_st_eq = mean(rowSums(litter_st[1:n_equil, ]))
+  n_state = if (use_intact) 6 else 5
+  init = rep(0, n_state)
+  p_nw = as.numeric(yasso07.intact(mean_MAT, mean_TA, mean_PR, init,
+    c(rate_nw_eq / sum(awen_nw) * awen_nw, 0), d_nw, PA_mod, 3000,
+    UseIntactPool = use_intact, FragRate = FRAG_RATE))
+  p_fw = as.numeric(yasso07.intact(mean_MAT, mean_TA, mean_PR, init,
+    c(rate_fw_eq / sum(awen_fw) * awen_fw, 0), d_fw, PA_mod, 3000,
+    UseIntactPool = use_intact, FragRate = FRAG_RATE))
+  p_cw = as.numeric(yasso07.intact(mean_MAT, mean_TA, mean_PR, init,
+    c(rate_cw_eq / sum(awen_cw) * awen_cw, 0), d_cw, PA_mod, 3000,
+    UseIntactPool = use_intact, FragRate = FRAG_RATE))
+  p_st = as.numeric(yasso07.intact(mean_MAT, mean_TA, mean_PR, init,
+    c(rate_st_eq / sum(awen_st) * awen_st, 0), d_st, PA_mod, 3000,
+    UseIntactPool = use_intact, FragRate = FRAG_RATE))
+  soc = numeric(n_total + 1)
+  soc[1] = sum(p_nw) + sum(p_fw) + sum(p_cw) + sum(p_st)
+  for (y in 1:n_total) {
+    p_nw = as.numeric(yasso07.intact(climate$MAT[y], climate$TA[y], climate$PR[y],
+      p_nw, litter_nw[y, ], d_nw, PA_mod, 1,
+      UseIntactPool = use_intact, FragRate = FRAG_RATE))
+    p_fw = as.numeric(yasso07.intact(climate$MAT[y], climate$TA[y], climate$PR[y],
+      p_fw, litter_fw[y, ], d_fw, PA_mod, 1,
+      UseIntactPool = use_intact, FragRate = FRAG_RATE))
+    p_cw = as.numeric(yasso07.intact(climate$MAT[y], climate$TA[y], climate$PR[y],
+      p_cw, litter_cw[y, ], d_cw, PA_mod, 1,
+      UseIntactPool = use_intact, FragRate = FRAG_RATE))
+    p_st = as.numeric(yasso07.intact(climate$MAT[y], climate$TA[y], climate$PR[y],
+      p_st, litter_st[y, ], d_st, PA_mod, 1,
+      UseIntactPool = use_intact, FragRate = FRAG_RATE))
+    soc[y + 1] = sum(p_nw) + sum(p_fw) + sum(p_cw) + sum(p_st)
+  }
+  soc
+}
+
+obj_fun = function(par_vec, PA, use_intact, obs) {
+  soc = tryCatch(run_yasso(par_vec, PA, use_intact),
+                 error = function(e) rep(NA, n_total + 1))
+  if (any(is.na(soc)) || any(soc < 0)) return(1e10)
+  model_at_obs = soc[obs$year + 1]
+  sum(((model_at_obs - obs$SOC_obs) / obs$SOC_obs_sd)^2)
+}
+
+fit_std = optim(par = c(1.0, 1.0), fn = obj_fun,
+  PA = PA_base, use_intact = FALSE, obs = obs,
+  method = "L-BFGS-B", lower = c(0.1, 0.1), upper = c(5.0, 5.0))
+
+fit_int = optim(par = c(1.0, 1.0), fn = obj_fun,
+  PA = PA_base, use_intact = TRUE, obs = obs,
+  method = "L-BFGS-B", lower = c(0.1, 0.1), upper = c(5.0, 5.0))
+
+soc_std = run_yasso(fit_std$par, PA_base, use_intact = FALSE)
+soc_int = run_yasso(fit_int$par, PA_base, use_intact = TRUE)
+soc_ref = dat$reference_soc$total
+years   = 0:n_total
+```
+
+## Results
+
+```{r calibration-table, results='asis'}
+cat(sprintf("\\begin{table}[h]\n\\centering\n\\caption{Calibrated parameter values.}\n"))
+cat("\\begin{tabular}{lccc}\n\\hline\n")
+cat("Model & $k_{\\text{mult}}$ & $h_{\\text{mult}}$ & Objective \\\\\n\\hline\n")
+cat(sprintf("Standard & %.4f & %.4f & %.2f \\\\\n", fit_std$par[1], fit_std$par[2], fit_std$value))
+cat(sprintf("Intact pool & %.4f & %.4f & %.2f \\\\\n", fit_int$par[1], fit_int$par[2], fit_int$value))
+cat("\\hline\n\\end{tabular}\n\\end{table}\n")
+```
+
+```{r fig-comparison, fig.width=6.5, fig.height=7, fig.cap="Model comparison. Top: calibrated SOC trajectories for standard (blue) and intact-pool (red) YASSO07, with observations (points with error bars) and the reference trajectory (dashed grey). The vertical line marks the clearcut. Middle: difference between intact-pool and standard model. Bottom: litter inputs by diameter class."}
+par(mfrow = c(3, 1), mar = c(4, 4.5, 2, 1), cex.lab = 0.9, cex.axis = 0.8)
+
+# Panel 1: SOC
+ylim = range(c(soc_std, soc_int, obs$SOC_obs + obs$SOC_obs_sd,
+               obs$SOC_obs - obs$SOC_obs_sd), na.rm = TRUE)
+plot(years, soc_std, type = "l", lwd = 2, col = "steelblue",
+     ylim = ylim, xlab = "Year", ylab = expression("SOC [Mg C ha"^{-1}*"]"),
+     main = "")
+lines(years, soc_int, lwd = 2, col = "firebrick")
+lines(years, soc_ref, lwd = 1, lty = 3, col = "gray50")
+points(obs$year, obs$SOC_obs, pch = 16, cex = 0.8)
+arrows(obs$year, obs$SOC_obs - obs$SOC_obs_sd,
+       obs$year, obs$SOC_obs + obs$SOC_obs_sd,
+       angle = 90, code = 3, length = 0.02)
+abline(v = n_equil, lty = 2, col = "gray60")
+legend("bottomleft", c("Standard", "Intact pool", "Reference", "Obs."),
+       col = c("steelblue", "firebrick", "gray50", "black"),
+       lty = c(1, 1, 3, NA), lwd = c(2, 2, 1, NA),
+       pch = c(NA, NA, NA, 16), bty = "n", cex = 0.7)
+
+# Panel 2: Difference
+diff_soc = soc_int - soc_std
+plot(years, diff_soc, type = "l", lwd = 2, col = "darkorange",
+     xlab = "Year", ylab = expression(Delta*"SOC [Mg C ha"^{-1}*"]"))
+abline(h = 0, col = "gray70"); abline(v = n_equil, lty = 2, col = "gray60")
+
+# Panel 3: Litter inputs
+cols = c("forestgreen", "steelblue", "darkorange", "firebrick")
+matplot(dat$litter_total$year,
+  cbind(dat$litter_total$rate_nw, dat$litter_total$rate_fw,
+        dat$litter_total$rate_cw, dat$litter_total$rate_st),
+  type = "l", lty = 1, lwd = 1.5, col = cols,
+  xlab = "Year", ylab = expression("Litter [Mg C ha"^{-1}*" yr"^{-1}*"]"))
+abline(v = n_equil, lty = 2, col = "gray60")
+legend("topright",
+  paste0(c("Non-woody", "Fine woody", "Coarse woody", "Stumps"),
+         " (d=", c(d_nw, d_fw, d_cw, d_st), ")"),
+  col = cols, lty = 1, lwd = 1.5, bty = "n", cex = 0.65)
+```
+
+
+```{r single-pulse, fig.width=5.5, fig.height=3.5, fig.cap="Decomposition of a single 1 Mg C ha$^{-1}$ stump pulse ($d = 35$ cm) at constant climate, using identical (uncalibrated) parameters for both models. The dashed line shows the fraction remaining in the intact wood pool."}
+pulse_years = 60
+mean_MAT = mean(climate$MAT[1:n_equil])
+mean_TA  = mean(climate$TA[1:n_equil])
+mean_PR  = mean(climate$PR[1:n_equil])
+pulse_awenh = c(awen_st, 0)
+zero_input  = c(0, 0, 0, 0, 0)
+
+# Standard
+p_std = pulse_awenh
+pulse_std = numeric(pulse_years + 1); pulse_std[1] = sum(p_std)
+for (y in 1:pulse_years) {
+  p_std = as.numeric(yasso07.intact(mean_MAT, mean_TA, mean_PR,
+    p_std, zero_input, d_st, PA_base, 1, UseIntactPool = FALSE))
+  pulse_std[y + 1] = sum(p_std)
+}
+
+# Intact
+delta1 = PA_base[39]; delta2 = PA_base[40]; r = PA_base[41]
+size_dep = (1 + delta1 * d_st + delta2 * d_st^2)^r
+f_intact = 1 - size_dep
+p_int = c(pulse_awenh * (1 - f_intact), sum(pulse_awenh[1:4]) * f_intact)
+pulse_int = numeric(pulse_years + 1); pulse_unfrag = numeric(pulse_years + 1)
+pulse_int[1] = sum(p_int); pulse_unfrag[1] = p_int[6]
+for (y in 1:pulse_years) {
+  p_int = as.numeric(yasso07.intact(mean_MAT, mean_TA, mean_PR,
+    p_int, zero_input, d_st, PA_base, 1, UseIntactPool = TRUE, FragRate = FRAG_RATE))
+  pulse_int[y + 1] = sum(p_int); pulse_unfrag[y + 1] = p_int[6]
+}
+
+par(mar = c(4, 4.5, 1, 1), cex.lab = 0.9, cex.axis = 0.8)
+plot(0:pulse_years, pulse_std, type = "l", lwd = 2.5, col = "steelblue",
+     ylim = c(0, 1.05), xlab = "Years since pulse",
+     ylab = expression("C remaining [Mg C ha"^{-1}*"]"))
+lines(0:pulse_years, pulse_int, lwd = 2.5, col = "firebrick")
+lines(0:pulse_years, pulse_unfrag, lwd = 1.5, col = "firebrick", lty = 2)
+legend("topright", c("Standard", "Intact pool (total)", "Unfragmented wood"),
+  col = c("steelblue", "firebrick", "firebrick"),
+  lty = c(1, 1, 2), lwd = c(2.5, 2.5, 1.5), bty = "n", cex = 0.7)
+```
+
+
+# Discussion
+
+The intact pool modification introduces a structurally minimal change to YASSO07 — one additional pool and one new parameter — while preserving the model's computational elegance (linear ODE, analytical solution). The modification addresses a well-known limitation: YASSO's inability to represent the fragmentation bottleneck that governs early-stage decomposition of coarse woody debris.
+
+The key conceptual distinction is between two mechanisms that the standard model conflates:
+
+1. **Rate reduction**: large pieces have less surface area per unit mass, reducing the decomposition rate. This is captured by $f_{\text{size}}(d)$.
+2. **Availability delay**: the interior of large pieces is physically inaccessible until fragmentation occurs. This is captured by the intact pool.
+
+In the standard model, both effects are absorbed into $f_{\text{size}}(d)$, producing a smooth, monotonically decreasing mass loss curve from $t = 0$. The intact pool separates them, producing an initial lag followed by accelerating mass loss — qualitatively matching observed stump decomposition trajectories and the theoretical predictions of the Q-model.
+
+The practical relevance depends on the proportion of coarse woody debris in total litter inputs. In undisturbed forests with modest natural mortality, the effect is small. After clearcuts, windthrow events, or other disturbances that generate large quantities of stumps and coarse roots, the fragmentation delay can buffer several Mg C ha$^{-1}$ over decades — a non-negligible fraction of the post-disturbance SOC trajectory.
+
+A limitation of the current implementation is the use of a first-order drain from the intact pool, which produces an exponential release pattern. The Q-model's quadratic release schedule $(1 - t/t_{\max})^2$ may be more realistic, but would break the linear ODE structure and require numerical integration. A cascade of two first-order pools could approximate the sigmoid release shape while maintaining analytical tractability.
+
+
+# References
+
+Bosatta, E. \& Ågren, G.I. (2003). Exact solutions to the continuous-quality equation for soil organic matter turnover. *Journal of Theoretical Biology*, 224, 97--105.
+
+Tuomi, M., Thum, T., Järvinen, H., Fronzek, S., Berg, B., Harmon, M., Trofymow, J.A., Sevanto, S. \& Liski, J. (2009). Leaf litter decomposition — Estimates of global variability based on Yasso07 model. *Ecological Modelling*, 220, 3362--3371.
+
+Tuomi, M., Laiho, R., Repo, A. \& Liski, J. (2011). Wood decomposition model for boreal forests. *Ecological Modelling*, 222, 709--718.

@@ -1,0 +1,29 @@
+Yasso07 Calibration -- Gelman-Rubin R-hat
+Run ID: 20260217_143230
+Date:   2026-02-17 15:02:47.752833
+Plots:  100 | Chains: 3 | Iterations: 10000 | Burnin: 2000
+
+Summary: 0 good (<1.05) | 1 ok (1.05-1.10) | 19 warning (>1.10)
+
+Parameter     Point est.  Upper C.I.  Status    
+------------------------------------------------ 
+p_AW          1.7923      3.3008      Warning   
+p_AE          1.3622      1.9508      Warning   
+p_AN          2.1756      4.3270      Warning   
+p_WA          1.8340      3.0300      Warning   
+p_WE          1.3149      2.0421      Warning   
+p_WN          1.2242      1.6289      Warning   
+p_EA          1.3023      1.8243      Warning   
+p_EW          1.1945      1.6630      Warning   
+p_EN          1.5872      2.5747      Warning   
+p_NA          1.2548      1.8097      Warning   
+p_NW          1.4366      2.2219      Warning   
+p_NE          1.4101      2.0938      Warning   
+beta1         2.6299      5.5178      Warning   
+beta2         3.3341      6.2341      Warning   
+gamma         2.0471      3.7784      Warning   
+delta1        1.1050      1.3190      Warning   
+delta2        1.5850      2.8388      Warning   
+r             4.0395      8.4142      Warning   
+sigma_obs     1.0733      1.2218      OK        
+sigma_init    1.7556      2.8131      Warning   

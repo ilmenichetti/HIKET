@@ -1,6 +1,6 @@
 ---
 title: "How Much Carbon Do Finnish Forests Really Store?"
-subtitle: "A Multi-Model Approach to Reducing Uncertainty in Climate Projections"
+subtitle: "Introduction to SOC modeling challenges"
 author: "Lorenzo | HIKET Project"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
@@ -150,28 +150,19 @@ class: inverse, center, middle
 
 ## The Basic Idea: First-Order Kinetics
 
-Soil organic carbon (SOC) models all share one foundational assumption — carbon pools decay at a **rate proportional to their size**.
-
-Think of it like radioactive decay, or how a population of bacteria might decline when conditions worsen.
+Soil organic carbon (SOC) models all share one foundational assumption: carbon pools decay at a **rate proportional to their size**. Think of it like radioactive decay, or how a population of bacteria might decline while exhausting their substrate (which is exactly the case).
 
 $$\frac{dC}{dt} = \text{Inputs} - k \cdot C$$
 
-.columns-3[
-<div class="model-card">
 <h3>C — Carbon pool</h3>
 How much carbon is currently stored in a particular type of organic matter
-</div>
 
-<div class="model-card">
 <h3>k — Decomposition rate</h3>
 How fast that material breaks down — different for leaves, roots, woody debris...
-</div>
 
-<div class="model-card">
 <h3>Inputs</h3>
 Fresh litter arriving from tree roots, fallen leaves, dead branches
-</div>
-]
+
 
 <br>
 
@@ -186,15 +177,15 @@ $$\frac{d\mathbf{C}}{dt} = \xi(T, W) \cdot \mathbf{A} \cdot \mathbf{K} \cdot \ma
 .columns-3[
 <div class="model-card">
 <h3><b>K</b> — rate matrix</h3>
-Diagonal matrix of pool-specific decomposition rates $k_i$
+Diagonal matrix of pool-specific decomposition rates \(k_i\)
 </div>
 <div class="model-card">
 <h3><b>A</b> — transfer matrix</h3>
-Controls how carbon flows from one pool to the next. Diagonal = losses, off-diagonal = transfers
+Controls how carbon flows from one pool to the next. Diagonal = total \(k_j C_j\) outflow from each pool (-1); off-diagonal = transfer fractions between pools. 
 </div>
 <div class="model-card">
-<h3>$\xi(T,W)$ — modifier</h3>
-Scalar that rescales all rates simultaneously as a function of temperature and moisture
+<h3>\(\xi(T,W)\), climate/edaphic modifier</h3>
+Scalar, rescales all rates simultaneously as a function of temperature and moisture
 </div>
 ]
 
@@ -203,7 +194,7 @@ Scalar that rescales all rates simultaneously as a function of temperature and m
 
 ## Multi-Pool Models: Explicit 3-Pool Cascade
 
-With three pools in a **cascade** (no back-transfers), the system expands to:
+An example with three pools in a **cascade** (no back-transfers), the system expands to:
 
 $$\frac{d}{dt}\begin{pmatrix} C_1 \\ C_2 \\ C_3 \end{pmatrix} = \xi(T,W) \cdot \underbrace{\begin{pmatrix} -1 & 0 & 0 \\ a_{21} & -1 & 0 \\ 0 & a_{32} & -1 \end{pmatrix}}_{\mathbf{A}} \cdot \underbrace{\begin{pmatrix} k_1 & 0 & 0 \\ 0 & k_2 & 0 \\ 0 & 0 & k_3 \end{pmatrix}}_{\mathbf{K}} \cdot \begin{pmatrix} C_1 \\ C_2 \\ C_3 \end{pmatrix} + \begin{pmatrix} I_1 \\ 0 \\ 0 \end{pmatrix}$$
 
@@ -211,9 +202,9 @@ $$\frac{d}{dt}\begin{pmatrix} C_1 \\ C_2 \\ C_3 \end{pmatrix} = \xi(T,W) \cdot \
 
 
 <div>
-<b>At steady state</b> $\left(\frac{d\mathbf{C}}{dt} = 0\right)$:
-$$\mathbf{C}^* = -\xi \cdot (\mathbf{A}\mathbf{K})^{-1} \cdot \mathbf{I}$$
-<p>This is how we <b>initialise</b> all models — solving analytically for equilibrium carbon stocks, avoiding costly 1000-year spin-ups.</p>
+<b>At steady state</b> \(\left(\frac{d\mathbf{C}}{dt} = 0\right)\):
+\[\mathbf{C}^* = -\xi \cdot (\mathbf{A}\mathbf{K})^{-1} \cdot \mathbf{I}\]
+This is how we <b>initialise</b> all models — solving analytically for equilibrium carbon stocks, avoiding costly 1000-year spin-ups.
 </div>
 
 <div style="text-align: center;">
@@ -284,8 +275,8 @@ All models share the first-order kinetics framework, but they differ in **how th
 .columns-2[
 <div>
 .highlight-box[
-The general theory is that carbon exists on a **quality spectrum** — some compounds are easier for microbes to break down (sugars, starch) while others are more resistant (lignin, waxes). This inherits from last centuries paradigms of humus fractionation.
-Is being recently questioned by a novel interpretation, seeing carbon quality as an emergent ecosystem property. First order models still work, though, just their interpretation is changing!
+The general theory is that carbon exists on a **quality spectrum**, which last centuries paradigms of humus fractionation interpreted as purely chemical: some compounds are easier for microbes to break down (sugars, starch) while others are more resistant (lignin, waxes). 
+It is being recently questioned by a novel interpretation, seeing carbon quality as an emergent ecosystem property. First order models still work, though, just their interpretation is changing!
 ]
 </div>
 ]
@@ -295,8 +286,8 @@ Some examples:
 | Approach | Philosophy | Example |
 |----------|-----------|---------|
 | **Chemical fractionation** | Decomposability is determined by molecular structure (sugars vs. lignin) | Yasso models |
-| **Decomposability continuum** | Carbon exists on a continuous quality spectrum — no sharp categories | Q-model |
 | **Fixed functional pools** | Carbon sorted into pools by turnover time (fast/slow/resistant) | RothC |
+| **Decomposability continuum** | Carbon exists on a continuous quality spectrum — no sharp categories | Q-model |
 
 ---
 
@@ -348,7 +339,7 @@ p2 <- ggplot(pool_df, aes(x = Pool, y = Amount, fill = Pool)) +
 gridExtra::grid.arrange(p2, p1, ncol = 2)
 ```
 
-.footnote[Both approaches use first-order kinetics — the difference is in **how many pools** and **how they're defined**.]
+.footnote[Both approaches use first-order kinetics and are almost equivalent in the shape they describe, the main difference is in **how many pools**, which means how much approximation. **On a decades to century time scale, this just does not matter**]
 
 ---
 
@@ -358,17 +349,17 @@ The decomposition rate $k$ is not fixed — it responds to the environment.
 
 .columns-2[
 <div>
-**Temperature sensitivity**
+<b>Temperature sensitivity</b>
 
 Warmer soils decompose organic matter faster.
-Different models express this relationship differently (Arrhenius functions, Q10 factors, Gaussian curves) — and this turns out to **matter a lot** for long-term projections.
+Different models express this relationship differently (Arrhenius functions, Q10 factors, Gaussian curves) — and this turns out to <b>matter a lot</b> for long-term projections.
 </div>
 
 ```{r temp-response, fig.height=4, fig.width=5}
-temp <- seq(0, 30, 0.1)
+temp <- seq(-10, 30, 0.1)
 
 # Three different temperature response functions
-q10_response <- exp(log(2) * temp / 10)        # Q10 = 2
+q10_response <- exp(log(1.522536) * temp / 10)        # Q10 = 2
 arrhenius <- exp(0.065 * (temp - 10))           # Arrhenius-like
 gaussian   <- exp(-0.5 * ((temp - 30) / 18)^2) * 2.5 # Gaussian (Yasso)
 gaussian <- gaussian / gaussian[which.min(abs(temp - 10))]
@@ -397,9 +388,9 @@ ggplot(df_temp, aes(x = Temperature, y = Response, colour = Model, linetype = Mo
 
 The decomposition rate $k$ is not fixed and scales with temperature according to a function, with a certain slope (temperature sensitivity).
 
-But **different organic materials respond differently to temperature changes**. Thermodynamic theory predicts the more stable the material, the more it responds to temperature.
+But <b>different organic materials respond differently to temperature changes</b>. Thermodynamic theory predicts the more stable the material, the more it responds to temperature.
 
-Organic matter is a chemical blob of many molecules, and since the composition of this blob changes with decomposition, also **its temperature sensitivity is likely changing while decomposition proceeds**. Yasso15 and 20 represnts this with different temperature response functions by pool, but there are also other approaches.
+Organic matter is a chemical blob of many molecules, and since the composition of this blob changes with decomposition, also <b>its temperature sensitivity is likely changing while decomposition proceeds</b>. Yasso15 and 20 represents this with different temperature response functions by pool, but there are also other approaches.
 
 
 ---
@@ -444,19 +435,19 @@ When they disagree, we can't tell if it's because:
 Finland reports its forest carbon balance annually to the UNFCCC as part of its climate commitments.
 
 .highlight-box[
-A 20–40% spread in soil carbon projections translates directly into **uncertainty in national climate commitments** — with real consequences for policy.
+A 20–40% spread in soil carbon projections translates directly into <b>uncertainty in national climate commitments</b> — with real consequences for policy.
 ]
 </div>
 
 <div>
 
-**What we need to know:**
+<b>What we need to know:</b>
 <br>
- *If all models were calibrated the same way, against the same data — would they still disagree?*
+<b>If all models were calibrated the same way, against the same data — would they still disagree?</b>
 
 <br>
 
-If yes → the disagreement reflects genuine **structural differences** in how models represent soil processes.
+If yes → the disagreement reflects genuine <b>structural differences</b> in how models represent soil processes.
 
 If no → disagreement was just a calibration artefact, and models are more consistent than we thought.
 </div>
@@ -472,21 +463,20 @@ class: inverse, center, middle
 
 ## What Is Bayesian Calibration?
 
-Most models have **parameters** — numbers that control how fast carbon decomposes, how moisture affects rates, and so on.
+Most models have <b>parameters</b> — numbers that control how fast carbon decomposes, how moisture affects rates, and so on.
 
-These parameters are usually estimated from lab experiments or previous studies. But they carry **uncertainty**.
+These parameters are usually estimated from lab experiments or previous studies. But they carry <b>uncertainty</b>.
 
 .columns-2[
 <div>
-**The classical approach:**
-
+<b>The classical approach:</b><br>
 Find the single "best" set of parameters and use it. Uncertainty is often ignored or reported as a brief footnote.
 
 <br>
 
-**The Bayesian approach:**
+<b>The Bayesian approach:</b>
 
-Instead of one "best" answer, we work with a **distribution of plausible parameter values** — reflecting our genuine uncertainty.
+Instead of one "best" answer, we work with a <b>distribution of plausible parameter values</b> — reflecting our genuine uncertainty.
 </div>
 
 ```{r bayes-concept, fig.height=4, fig.width=5}
@@ -545,7 +535,7 @@ UK-developed model with functional pools (decomposable / resistant plant materia
 
 <br>
 
-**The dataset:** ~3,700 Finnish National Forest Inventory plots with measured soil carbon, monthly climate data, and detailed litter inputs — spanning the full range of Finnish forest conditions.
+<b>The dataset:</b> ~3,700 Finnish National Forest Inventory plots with measured soil carbon, monthly climate data, and detailed litter inputs — spanning the full range of Finnish forest conditions.
 
 ---
 
@@ -686,7 +676,15 @@ ggplot() +
   theme_void() +
   theme(legend.position = "none")
 ```
-All five models are calibrated against the same ~3,700 Finnish forest plots on the **Roihu supercomputer** (384 cores), completing in days rather than the months a serial approach would require.
+All five models are calibrated against the same ~3,700 Finnish forest plots on the <b>Roihu supercomputer</b> (384 cores).
+<br>
+<br>
+
+At the moment we are: 
+<br>
+<b> - Getting together the data with satellite interpolation </b> <br>
+<b> - Waiting for Roihu to come online</b>
+
 
 
 ---
@@ -698,5 +696,5 @@ class: inverse, center, middle
 
 <br>
 
-*This work is part of the HIKET project, supported by...*
+*This work is part of the HIKET project*
 

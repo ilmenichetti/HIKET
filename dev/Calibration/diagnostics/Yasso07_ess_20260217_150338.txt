@@ -1,0 +1,30 @@
+Yasso07 Calibration -- Effective Sample Size
+Run ID: 20260217_150338
+Date:   2026-02-17 16:12:10.474617
+
+Total post-burnin samples: 32028
+ESS range: 16 -- 226
+Parameters with ESS < 200: 19 / 20
+
+Parameter     ESS       
+------------------------- 
+p_AW          97        
+p_AE          22        
+p_AN          31        
+p_WA          42        
+p_WE          59        
+p_WN          21        
+p_EA          82        
+p_EW          45        
+p_EN          40        
+p_NA          107       
+p_NW          16        
+p_NE          95        
+beta1         72        
+beta2         66        
+gamma         34        
+delta1        25        
+delta2        72        
+r             62        
+sigma_obs     226       
+sigma_init    76        
