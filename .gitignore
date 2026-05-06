@@ -14,3 +14,8 @@ Calibration/tests/
 #Data
 Data/
 .positai
+
+# Compiled Fortran binaries (platform-specific, recompile on each system)
+*.so
+*.o
+*.mod
