@@ -1,0 +1,52 @@
+=========================================================
+  Yasso07 Calibration Report
+  Run ID:    20260506_110657
+  Started:   2026-05-06 11:09:43
+  Wallclock: 2.0 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:          -137.416   [PASS]
+    Plots in calibration:                   5
+    SOC observations:                     730
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4503
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1    -137.416    -127.042      1002   12.67%       0.5   +10.375
+      2    -137.416    -133.986      1002    4.99%       0.5    +3.430
+      3    -137.416    -126.449      1002    2.69%       0.5   +10.968
+      4    -137.416    -113.876      1002    3.29%       0.5   +23.541
+    Final-ll spread across chains: 20.110   [WARN]
+    Max -Inf rate across chains:   12.67%   [WARN]
+
+[3] Convergence
+    Univariate R-hat:    1.1154 -- 3.0287   [WARN]
+    Worst-converged parameters:
+        p_EW             3.0287
+        p_NA             2.2037
+        p_AW             2.0303
+        p_WA             1.8838
+        delta1           1.8529
+    Multivariate R-hat:  6.3535             [WARN]
+    ESS:                    5 -- 50   (20 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  19 / 20
+        p_AE, p_AN, p_WA, p_WE, p_WN, p_EA, p_EW, p_EN, p_NA, p_NW, p_NE, beta1, beta2, gamma, delta1, delta2, r, sigma_init, sigma_input
+    Top correlated pairs (|rho| > 0.7):
+        p_EN         <-> p_EA          -0.995
+        p_NE         <-> p_NA          -0.952
+        p_AN         <-> p_AW          -0.884
+        p_AN         <-> p_AE          +0.760
+        p_AE         <-> p_AW          -0.734
+        p_NA         <-> p_AN          -0.733
+        p_NE         <-> p_AE          +0.727
+        p_NA         <-> p_AE          -0.700
+
+=========================================================
+  Status: PASS with 41 warning(s) -- inspect above
+=========================================================
