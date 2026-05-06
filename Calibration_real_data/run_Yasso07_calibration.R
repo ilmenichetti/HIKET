@@ -137,10 +137,10 @@ RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 # 20 plots subsampled from the ~400 calib-ready plots. 10000 iterations is
 # enough for convergence on this small dataset. Burn-in 2000 = 20%.
 # N_LOG = 200: log progress every 200 likelihood evaluations.
-N_PLOTS_TEST <- 40L
+N_PLOTS_TEST <- 5L
 N_CHAINS     <- 4L
-N_ITER       <- 10000L
-N_BURNIN     <- 2000L
+N_ITER       <- 1000L
+N_BURNIN     <- 200L
 N_LOG        <- 200L
 
 # --- Production (Roihu) settings: uncomment to switch ---
