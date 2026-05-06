@@ -155,7 +155,7 @@ N_LOG        <- 200L
 # the per-plot loop. On Mac, "detectCores() - 1" leaves one core free for the
 # OS so the laptop stays responsive. On Roihu with hybrid parallelism (chains
 # AND plots in parallel), use 90 to keep total cores at 4*90 = 360 of 384.
-CORES_PER_CHAIN <- parallel::detectCores() - 1L
+CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()["nodename"])) parallelly::availableCores() else parallel::detectCores() - 1L
 # CORES_PER_CHAIN <- 90L   # Roihu
 
 # Steady-state climate window: number of years from the start of the

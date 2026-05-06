@@ -89,7 +89,7 @@ N_LOG        <- 200L
 # N_BURNIN     <- 10000L
 # N_LOG        <- 1000L
 
-CORES_PER_CHAIN <- parallel::detectCores() - 1L
+CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()["nodename"])) parallelly::availableCores() else parallel::detectCores() - 1L
 # CORES_PER_CHAIN <- 90L   # Roihu
 
 # Steady-state climate window in YEARS. Converted to monthly rows below
