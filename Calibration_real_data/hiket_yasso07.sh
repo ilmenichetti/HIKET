@@ -9,7 +9,7 @@ cat > /scratch/project_2019134/HIKET/Calibration_real_data/hiket_yasso07.sh << '
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=4000
+#SBATCH --mem-per-cpu=2000
 
 module load r-env
 
