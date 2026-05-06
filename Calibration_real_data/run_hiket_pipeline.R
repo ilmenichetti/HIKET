@@ -19,17 +19,72 @@
 #   expensive calibration. RUN_IDs are auto-detected from the filesystem
 #   after each calibration completes.
 #
-#   On Roihu, calibration jobs should be submitted to the scheduler
-#   independently (one job per model) and this orchestrator used only for
-#   the downstream stages. See the Roihu notes below.
+# =============================================================================
+# PUHTI WORKFLOW  (command by command)
+# =============================================================================
 #
-# ROIHU NOTES:
-#   1. Submit calibration scripts as separate SLURM jobs.
-#   2. Once all three have finished, run:
-#        Rscript run_hiket_pipeline.R --skip-calibration
-#      from a login node to generate predictions, residuals, and comparison.
-#   3. The predictive and residual scripts are fast enough to run interactively
-#      or as short SLURM jobs (<30 min each).
+# --- ONE-TIME SETUP (only needed after first clone or after git pull) --------
+#
+#   [on Puhti, from /scratch/project_2019134/HIKET/]
+#
+#   # Recompile Fortran .so files (Mac binaries won't run on Linux)
+#   cd Model_functions_real_data/Decomposition_functions/Yasso/
+#   rm -f yasso07.so yasso07.o yasso07_mod.mod yasso15.so yasso15.o yasso15_mod.mod
+#   apptainer_wrapper exec R CMD SHLIB yasso07.f90 yasso15.f90
+#
+#   cd ../RothC/
+#   rm -f rothc_step_f.so rothc_step_f.o
+#   apptainer_wrapper exec R CMD SHLIB rothc_step_f.f90
+#
+#   cd /scratch/project_2019134/HIKET/
+#
+# --- STAGE 1: CALIBRATION (one SLURM job per model) -------------------------
+#
+#   [on Puhti, from /scratch/project_2019134/HIKET/]
+#
+#   # Submit all three calibration jobs simultaneously
+#   sbatch Calibration_real_data/hiket_yasso07.sh
+#   sbatch Calibration_real_data/hiket_yasso15.sh
+#   sbatch Calibration_real_data/hiket_yasso20.sh
+#
+#   # Monitor job queue
+#   squeue -u menichet
+#
+#   # Monitor chain progress (replace RUNID with the timestamp from the .out log)
+#   tail -f Calibration_real_data/progress_logs/Yasso07_chain_01_<RUNID>.log
+#
+#   # Check output and error logs (replace JOBID with the SLURM job number)
+#   cat Calibration_real_data/progress_logs/yasso07_<JOBID>.out
+#   cat Calibration_real_data/progress_logs/yasso07_<JOBID>.err
+#
+# --- STAGE 2-4: PREDICTIVE + RESIDUALS + COMPARISON -------------------------
+#
+#   [on Puhti, from /scratch/project_2019134/HIKET/, after all calibrations done]
+#
+#   # Run downstream pipeline (fast enough for a login node, ~10-30 min total)
+#   module load r-env
+#   apptainer_wrapper exec Rscript --no-save \
+#     Calibration_real_data/run_hiket_pipeline.R --skip-calibration
+#
+# --- SYNC RESULTS BACK TO MAC -----------------------------------------------
+#
+#   [on Mac, from your local HIKET folder]
+#
+#   # Pull posterior RDS files
+#   rsync -av menichet@puhti.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data/runs/ \
+#     ./Calibration_real_data/runs/
+#
+#   # Pull diagnostic PNGs and CSVs
+#   rsync -av menichet@puhti.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data/diagnostics/ \
+#     ./Calibration_real_data/diagnostics/
+#
+# --- SYNC CODE UPDATES TO PUHTI ---------------------------------------------
+#
+#   [on Mac]   git add ... && git commit -m "..." && git push
+#   [on Puhti] cd /scratch/project_2019134/HIKET/ && git pull
+#              # Then recompile .so if any .f90 files changed (see above)
+#
+# =============================================================================
 #
 # OUTPUTS:
 #   All outputs are written to the same directories as if the scripts were
@@ -86,7 +141,7 @@ if (!SKIP_CALIBRATION) {
   message("NOTE: Running all three models sequentially. On Mac this will")
   message("  take ~1.5-3 hours. On Roihu, use --skip-calibration and")
   message("  submit calibration scripts as separate SLURM jobs instead.")
-
+  
   for (m in MODELS) {
     run_stage(sprintf("run_%s_calibration.R", m),
               label = sprintf("%s calibration", m))
