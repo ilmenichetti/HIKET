@@ -1,4 +1,3 @@
-cat > /scratch/project_2019134/HIKET/Calibration_real_data/hiket_yasso07.sh << 'EOF'
 #!/bin/bash -l
 #SBATCH --job-name=hiket_yasso07
 #SBATCH --account=project_2019134
