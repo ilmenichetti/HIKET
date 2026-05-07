@@ -1,0 +1,82 @@
+=========================================================
+  Yasso20 Calibration Report
+  Run ID:    20260507_100220
+  Started:   2026-05-07 14:01:18
+  Wallclock: 237.6 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:         -4708.556   [PASS]
+    Plots in calibration:                 350
+    SOC observations:                     700
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4534
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1   -4708.556   -4599.943     10002   10.85%      58.3  +108.612
+      2   -4708.556   -3776.587     10002    6.75%      60.0  +931.969
+      3   -4708.556   -3956.841     10002   11.33%      60.4  +751.715
+      4   -4708.556   -3866.419     10002   27.54%      58.9  +842.136
+    Final-ll spread across chains: 823.356   [WARN]
+    Max -Inf rate across chains:   27.54%   [WARN]
+
+[3] Convergence
+    Univariate R-hat:    1.1604 -- 12.0796   [WARN]
+    Worst-converged parameters:
+        betaH1           12.0796
+        betaH2           9.0447
+        p_AW             6.4611
+        gammaN           5.1169
+        p_EA             4.3793
+    Multivariate R-hat:  28.1572             [WARN]
+    ESS:                    2 -- 12   (26 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  12 / 26
+        p_AN, p_WE, p_WN, p_EA, p_EW, p_NA, p_NW, p_NE, beta2, betaH1, betaH2, r
+    Top correlated pairs (|rho| > 0.7):
+        p_AN         <-> p_AW          -0.927
+        betaH1       <-> gammaN        -0.915
+        betaH2       <-> gammaN        -0.899
+        p_NE         <-> p_NA          -0.882
+        betaH2       <-> betaH1        +0.880
+        p_AE         <-> p_AW          -0.844
+        p_EW         <-> p_AW          -0.830
+        p_WA         <-> p_AW          -0.813
+        p_NW         <-> p_NA          -0.799
+        p_AN         <-> p_AE          +0.788
+
+=========================================================
+  Status: PASS with 53 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           700
+    R²:                     0.072
+    RMSE (mean predictor):  55.64 tC/ha
+    Bias (mean):            +19.31 tC/ha
+    RMSE (median):          55.42 tC/ha
+    Bias (median):          +18.73 tC/ha
+    95% CI coverage:        0.149   [target ~0.95]
+
+
+[6] Residual analysis
+    Observations used:        120
+    Covariates considered:    55
+    RF Out-Of-Bag R²:         0.597
+    Top covariates by permutation importance:
+        woody_share                0.0419
+        ofh_weight_kgm2            0.0351
+        basal_area_85              0.0280
+        mean_height_85_dm          0.0268
+        SandContent                0.0252
+        stand_age_85               0.0248
+        stand_age_2006_est         0.0244
+        CoarseFragments            0.0199
+        ExchangeableFe             0.0150
+        SiltContent                0.0142
+

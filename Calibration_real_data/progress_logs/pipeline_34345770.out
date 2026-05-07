@@ -1,0 +1,44 @@
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+    Model         R2 RMSE_median Bias_median Coverage_95
+1 Yasso07 0.09406619    52.09940    16.18201   0.1471429
+2 Yasso15 0.05263773    58.70152    22.55101   0.1600000
+3 Yasso20 0.07198779    55.42324    18.73351   0.1485714
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+   Model         R2 RMSE_median Bias_median Coverage_95 N_obs
+ Yasso07 0.09406619    52.09940    16.18201   0.1471429   700
+ Yasso15 0.05263773    58.70152    22.55101   0.1600000   700
+ Yasso20 0.07198779    55.42324    18.73351   0.1485714   700

@@ -1,0 +1,10 @@
+------------------------------
+r-env 4.5.2
+https://docs.csc.fi/apps/r-env
+------------------------------
+Error in dyn.load("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so") : 
+  unable to load shared object '/scratch/project_2019134/HIKET/./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so':
+  /scratch/project_2019134/HIKET/./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so: cannot open shared object file: No such file or directory
+Execution halted
+srun: error: r02c16: task 0: Exited with exit code 1
+srun: Terminating StepId=34338732.0

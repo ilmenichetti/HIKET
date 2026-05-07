@@ -1,0 +1,6 @@
+ERROR: The SING_IMAGE environment variable must be set and pointing to an 
+existing Apptainer container file, either by loading an appropriate module, or 
+manually, for example:
+
+export SING_IMAGE=/path/to/my_container.sif
+

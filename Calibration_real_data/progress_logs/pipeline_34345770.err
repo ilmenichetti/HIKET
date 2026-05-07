@@ -1,0 +1,326 @@
+------------------------------
+r-env 4.5.2
+https://docs.csc.fi/apps/r-env
+------------------------------
+
+[Calibration skipped -- using existing posteriors]
+
+
+=============================================================
+  Detecting RUN_IDs from filesystem...
+=============================================================
+  Yasso07   20260506_134253
+  Yasso15   20260507_094151
+  Yasso20   20260507_100220
+
+=============================================================
+  STAGE 2: Posterior predictive
+=============================================================
+
+>>> Yasso07 predictive
+    Rscript ./Calibration_real_data/run_Yasso07_predictive.R 20260506_134253
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  Yasso07 Posterior Predictive  |  Run: 20260506_134253
+=============================================================
+
+Loaded posterior:   32028 samples x 20 params
+Loaded plots:       350
+Steady-state years: 20
+
+Generating 100 posterior predictive draws across 350 plots...
+  Draw 10 / 100
+  Draw 20 / 100
+  Draw 30 / 100
+  Draw 40 / 100
+  Draw 50 / 100
+  Draw 60 / 100
+  Draw 70 / 100
+  Draw 80 / 100
+  Draw 90 / 100
+  Draw 100 / 100
+Posterior predictive complete: 0.9 min  (1365000 rows)
+Residuals: [./Calibration_real_data/diagnostics/Yasso07/Yasso07_residuals_20260506_134253.csv]  (700 rows)
+
+Predictive metrics:
+  R²:            0.094
+  RMSE (mean):   52.37 tC/ha
+  Bias (mean):   +16.46 tC/ha
+  RMSE (median): 52.10 tC/ha
+  Bias (median): +16.18 tC/ha
+  95% coverage:  0.147  (target ~0.95)
+Plot saved: ./Calibration_real_data/diagnostics/Yasso07/Yasso07_obs_vs_pred_20260506_134253.png
+Plot saved: ./Calibration_real_data/diagnostics/Yasso07/Yasso07_delta_soc_trajectory_20260506_134253.png
+Posterior predictive saved: ./Calibration_real_data/runs//Yasso07_posterior_predictive_20260506_134253.rds
+
+Done. Next: run_residual_analysis.R Yasso07 20260506_134253
+    OK  (1.4 min)
+
+>>> Yasso15 predictive
+    Rscript ./Calibration_real_data/run_Yasso15_predictive.R 20260507_094151
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  Yasso15 Posterior Predictive  |  Run: 20260507_094151
+=============================================================
+
+Loaded posterior:   32028 samples x 26 params
+Loaded plots:       350
+
+Generating 100 posterior predictive draws across 350 plots...
+  Draw 10 / 100
+  Draw 20 / 100
+  Draw 30 / 100
+  Draw 40 / 100
+  Draw 50 / 100
+  Draw 60 / 100
+  Draw 70 / 100
+  Draw 80 / 100
+  Draw 90 / 100
+  Draw 100 / 100
+Posterior predictive complete: 1.0 min  (1365000 rows)
+Residuals: [./Calibration_real_data/diagnostics/Yasso15/Yasso15_residuals_20260507_094151.csv]  (700 rows)
+
+Predictive metrics:
+  R²:            0.053
+  RMSE (mean):   59.69 tC/ha
+  Bias (mean):   +23.84 tC/ha
+  RMSE (median): 58.70 tC/ha
+  Bias (median): +22.55 tC/ha
+  95% coverage:  0.160
+Plot saved: ./Calibration_real_data/diagnostics/Yasso15/Yasso15_obs_vs_pred_20260507_094151.png
+Plot saved: ./Calibration_real_data/diagnostics/Yasso15/Yasso15_delta_soc_trajectory_20260507_094151.png
+Posterior predictive saved: ./Calibration_real_data/runs//Yasso15_posterior_predictive_20260507_094151.rds
+
+Done. Next: run_residual_analysis.R Yasso15 20260507_094151
+    OK  (1.2 min)
+
+>>> Yasso20 predictive
+    Rscript ./Calibration_real_data/run_Yasso20_predictive.R 20260507_100220
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  Yasso20 Posterior Predictive  |  Run: 20260507_100220
+=============================================================
+
+Loaded posterior:   32028 samples x 26 params
+Loaded plots:       350
+
+Generating 100 posterior predictive draws across 350 plots...
+  Draw 10 / 100
+  Draw 20 / 100
+  Draw 30 / 100
+  Draw 40 / 100
+  Draw 50 / 100
+  Draw 60 / 100
+  Draw 70 / 100
+  Draw 80 / 100
+  Draw 90 / 100
+  Draw 100 / 100
+Posterior predictive complete: 1.5 min  (1365000 rows)
+Residuals: [./Calibration_real_data/diagnostics/Yasso20/Yasso20_residuals_20260507_100220.csv]  (700 rows)
+
+Predictive metrics:
+  R²:            0.072
+  RMSE (mean):   55.64 tC/ha
+  Bias (mean):   +19.31 tC/ha
+  RMSE (median): 55.42 tC/ha
+  Bias (median): +18.73 tC/ha
+  95% coverage:  0.149
+Plot saved: ./Calibration_real_data/diagnostics/Yasso20/Yasso20_obs_vs_pred_20260507_100220.png
+Plot saved: ./Calibration_real_data/diagnostics/Yasso20/Yasso20_delta_soc_trajectory_20260507_100220.png
+Posterior predictive saved: ./Calibration_real_data/runs//Yasso20_posterior_predictive_20260507_100220.rds
+
+Done. Next: run_residual_analysis.R Yasso20 20260507_100220
+    OK  (1.8 min)
+
+=============================================================
+  STAGE 3: Per-model residual analysis
+=============================================================
+
+>>> Yasso07 residual analysis
+    Rscript ./Calibration_real_data/run_residual_analysis.R Yasso07 20260506_134253
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  Yasso07 Residual Analysis  |  Run: 20260506_134253
+=============================================================
+
+Loaded residuals: 700 rows
+RF data: 120 rows × 55 covariates (dropped 580 incomplete/non-finite)
+
+Random Forest OOB R²: 0.574
+(fraction of residual log-SOC variance explained by site covariates)
+RF importance plot: ./Calibration_real_data/diagnostics/Yasso07/Yasso07_rf_importance_20260506_134253.png
+Residual diagnostic: ./Calibration_real_data/diagnostics/Yasso07/Yasso07_residuals_diagnostic_20260506_134253.png
+
+Residual analysis complete.
+Residual histogram: [./Calibration_real_data/diagnostics/Yasso07/Yasso07_residuals_histogram_20260506_134253.png]
+    Residual mean (log):    -0.180
+    Residual median (log):  -0.175
+    Residual SD (log):      0.514
+
+    OK  (0.1 min)
+
+>>> Yasso15 residual analysis
+    Rscript ./Calibration_real_data/run_residual_analysis.R Yasso15 20260507_094151
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  Yasso15 Residual Analysis  |  Run: 20260507_094151
+=============================================================
+
+Loaded residuals: 700 rows
+RF data: 120 rows × 55 covariates (dropped 580 incomplete/non-finite)
+
+Random Forest OOB R²: 0.608
+(fraction of residual log-SOC variance explained by site covariates)
+RF importance plot: ./Calibration_real_data/diagnostics/Yasso15/Yasso15_rf_importance_20260507_094151.png
+Residual diagnostic: ./Calibration_real_data/diagnostics/Yasso15/Yasso15_residuals_diagnostic_20260507_094151.png
+
+Residual analysis complete.
+Residual histogram: [./Calibration_real_data/diagnostics/Yasso15/Yasso15_residuals_histogram_20260507_094151.png]
+    Residual mean (log):    -0.246
+    Residual median (log):  -0.265
+    Residual SD (log):      0.548
+
+    OK  (0.0 min)
+
+>>> Yasso20 residual analysis
+    Rscript ./Calibration_real_data/run_residual_analysis.R Yasso20 20260507_100220
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  Yasso20 Residual Analysis  |  Run: 20260507_100220
+=============================================================
+
+Loaded residuals: 700 rows
+RF data: 120 rows × 55 covariates (dropped 580 incomplete/non-finite)
+
+Random Forest OOB R²: 0.597
+(fraction of residual log-SOC variance explained by site covariates)
+RF importance plot: ./Calibration_real_data/diagnostics/Yasso20/Yasso20_rf_importance_20260507_100220.png
+Residual diagnostic: ./Calibration_real_data/diagnostics/Yasso20/Yasso20_residuals_diagnostic_20260507_100220.png
+
+Residual analysis complete.
+Residual histogram: [./Calibration_real_data/diagnostics/Yasso20/Yasso20_residuals_histogram_20260507_100220.png]
+    Residual mean (log):    -0.205
+    Residual median (log):  -0.218
+    Residual SD (log):      0.529
+
+    OK  (0.0 min)
+
+=============================================================
+  STAGE 4: Multi-model comparison
+=============================================================
+
+>>> Multi-model comparison
+    Rscript ./Calibration_real_data/run_multimodel_comparison.R Yasso07:20260506_134253 Yasso15:20260507_094151 Yasso20:20260507_100220
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+=============================================================
+  HIKET Multi-Model Comparison
+    Yasso07   20260506_134253
+    Yasso15   20260507_094151
+    Yasso20   20260507_100220
+  COMP_ID: 20260506_134253_20260507_094151_20260507_100220
+=============================================================
+
+Loading ./Calibration_real_data/runs//Yasso07_posterior_predictive_20260506_134253.rds ...
+Loading ./Calibration_real_data/runs//Yasso15_posterior_predictive_20260507_094151.rds ...
+Loading ./Calibration_real_data/runs//Yasso20_posterior_predictive_20260507_100220.rds ...
+All bundles loaded and validated.
+
+Metrics table: ./Calibration_real_data/diagnostics/multimodel/multimodel_metrics_20260506_134253_20260507_094151_20260507_100220.txt
+Obs vs pred: ./Calibration_real_data/diagnostics/multimodel/multimodel_obs_vs_pred_20260506_134253_20260507_094151_20260507_100220.png
+ΔSOC trajectory: ./Calibration_real_data/diagnostics/multimodel/multimodel_delta_soc_20260506_134253_20260507_094151_20260507_100220.png
+Residual comparison: ./Calibration_real_data/diagnostics/multimodel/multimodel_residuals_20260506_134253_20260507_094151_20260507_100220.png
+
+Summary saved: ./Calibration_real_data/diagnostics/multimodel/multimodel_summary_20260506_134253_20260507_094151_20260507_100220.rds
+
+=============================================================
+  Multi-Model Comparison Complete
+  COMP_ID: 20260506_134253_20260507_094151_20260507_100220
+=============================================================
+
+Metrics summary:
+    OK  (0.1 min)
+
+=============================================================
+  HIKET Pipeline Complete
+=============================================================
+  Yasso07   20260506_134253
+  Yasso15   20260507_094151
+  Yasso20   20260507_100220
+
+  Outputs: ./Calibration_real_data/diagnostics/
+  Multi-model: ./Calibration_real_data/diagnostics/multimodel/
+
+Next steps:
+  1. Inspect multimodel_metrics_*.txt for headline results.
+  2. Inspect per-model residuals for structure to motivate extensions.
+  3. Scale to full ~400 plots on Roihu with N_PLOTS_TEST = NA.

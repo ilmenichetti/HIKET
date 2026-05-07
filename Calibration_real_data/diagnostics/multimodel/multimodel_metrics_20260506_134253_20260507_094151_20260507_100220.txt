@@ -1,0 +1,13 @@
+HIKET Multi-Model Comparison — Predictive Metrics
+Generated: 2026-05-07 14:44:41
+
+  Yasso07   RUN_ID: 20260506_134253
+  Yasso15   RUN_ID: 20260507_094151
+  Yasso20   RUN_ID: 20260507_100220
+
+Model          R²  RMSE (med)  Bias (med)     95% cov
+------------------------------------------------------ 
+Yasso07      0.094       52.10      +16.18       0.147
+Yasso15      0.053       58.70      +22.55       0.160
+Yasso20      0.072       55.42      +18.73       0.149
+

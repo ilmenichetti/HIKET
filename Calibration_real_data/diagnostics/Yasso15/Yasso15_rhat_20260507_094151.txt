@@ -1,0 +1,36 @@
+Yasso15 -- Gelman-Rubin R-hat
+Run: 20260507_094151  |  Date: 2026-05-07 12:54:35.819825
+Plots: 350 | Chains: 4 | Iter: 10000 | Burnin: 2000
+
+Good (<1.05): 0 | OK (1.05-1.10): 0 | Warn (>1.10): 26
+
+Parameter        Point est.  Upper C.I.  Status  
+------------------------------------------------ 
+p_AW             6.6017      14.5259     Warning 
+p_AE             2.5957      5.5413      Warning 
+p_AN             3.6540      7.9624      Warning 
+p_WA             2.7538      5.5509      Warning 
+p_WE             2.3189      4.5254      Warning 
+p_WN             3.0139      6.5322      Warning 
+p_EA             3.4653      7.2003      Warning 
+p_EW             2.0382      5.2408      Warning 
+p_EN             3.6276      6.9338      Warning 
+p_NA             2.1631      3.5667      Warning 
+p_NW             2.0893      5.0897      Warning 
+p_NE             4.9259      11.2041     Warning 
+beta1            2.0609      4.0271      Warning 
+beta2            1.8095      4.2791      Warning 
+gamma            3.3213      6.1500      Warning 
+betaN1           1.5130      2.2629      Warning 
+betaN2           2.3137      4.1848      Warning 
+gammaN           1.3526      1.9134      Warning 
+betaH1           3.5204      15.1957     Warning 
+betaH2           1.6945      4.2096      Warning 
+gammaH           4.5827      8.3876      Warning 
+delta1           6.2671      12.3035     Warning 
+delta2           7.1731      16.9516     Warning 
+r                4.7550      9.6790      Warning 
+sigma_init       4.2137      8.1618      Warning 
+sigma_input      1.6849      3.5439      Warning 
+
+Multivariate psrf: 22.4453

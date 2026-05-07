@@ -1,0 +1,76 @@
+=========================================================
+  Yasso07 Calibration Report
+  Run ID:    20260506_134253
+  Started:   2026-05-06 16:53:07
+  Wallclock: 189.2 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:         -4321.247   [PASS]
+    Plots in calibration:                 350
+    SOC observations:                     700
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4534
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1   -4321.247   -3780.591     10002    7.98%      43.7  +540.656
+      2   -4321.247   -4116.822     10002    7.22%      47.2  +204.425
+      3   -4321.247   -3798.649     10002   13.25%      49.0  +522.598
+      4   -4321.247   -3854.628     10002   10.54%      49.3  +466.619
+    Final-ll spread across chains: 336.231   [WARN]
+    Max -Inf rate across chains:   13.25%   [WARN]
+
+[3] Convergence
+    Univariate R-hat:    1.2277 -- 7.6039   [WARN]
+    Worst-converged parameters:
+        p_AN             7.6039
+        p_EA             5.1492
+        p_WE             4.3628
+        delta2           4.1685
+        p_AE             4.1399
+    Multivariate R-hat:  12.0611             [WARN]
+    ESS:                    2 -- 45   (20 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  8 / 20
+        p_AE, p_WA, p_WE, p_WN, p_EN, p_NE, beta2, delta2
+    Top correlated pairs (|rho| > 0.7):
+        p_EN         <-> p_EA          -0.986
+        beta2        <-> beta1         -0.926
+        delta2       <-> delta1        -0.896
+        p_NE         <-> p_NA          -0.824
+
+=========================================================
+  Status: PASS with 41 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           700
+    R²:                     0.094
+    RMSE (mean predictor):  52.37 tC/ha
+    Bias (mean):            +16.46 tC/ha
+    RMSE (median):          52.10 tC/ha
+    Bias (median):          +16.18 tC/ha
+    95% CI coverage:        0.147   [target ~0.95]
+
+
+[6] Residual analysis
+    Observations used:        120
+    Covariates considered:    55
+    RF Out-Of-Bag R²:         0.574
+    Top covariates by permutation importance:
+        basal_area_85              0.0329
+        woody_share                0.0319
+        ofh_weight_kgm2            0.0268
+        mean_height_85_dm          0.0251
+        stand_age_2006_est         0.0236
+        stand_age_85               0.0224
+        SandContent                0.0202
+        CoarseFragments            0.0196
+        SiltContent                0.0166
+        EstimatedBulkDensity       0.0151
+
