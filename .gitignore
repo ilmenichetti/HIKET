@@ -6,8 +6,8 @@
 
 
 # Calibration outputs
-Calibration/progress_logs/
-Calibration/diagnostics/
+#Calibration/progress_logs/
+#Calibration/diagnostics/
 Calibration/runs/
 Calibration/tests/
 
