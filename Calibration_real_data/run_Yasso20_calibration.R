@@ -76,7 +76,7 @@ MODEL_NAME <- "Yasso20"
 RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # --- Test (Mac) settings ---
-N_PLOTS_TEST <- 40L
+N_PLOTS_TEST <- NA
 N_CHAINS     <- 4L
 N_ITER       <- 10000L
 N_BURNIN     <- 2000L
