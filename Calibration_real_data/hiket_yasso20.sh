@@ -1,8 +1,8 @@
 #!/bin/bash -l
 #SBATCH --job-name=hiket_yasso20
 #SBATCH --account=project_2019134
-#SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso07_%j.out
-#SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso07_%j.err
+#SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso20_%j.out
+#SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso020_%j.err
 #SBATCH --partition=small
 #SBATCH --time=36:00:00
 #SBATCH --ntasks=1
