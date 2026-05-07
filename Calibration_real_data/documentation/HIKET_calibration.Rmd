@@ -1,0 +1,468 @@
+---
+title: "HIKET --- Bayesian Calibration"
+subtitle: "Methods and pipeline documentation"
+author: "Lorenzo Menichetti"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    latex_engine: xelatex
+    extra_dependencies: ["booktabs", "amsmath"]
+geometry: margin=2.5cm
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+# Overview
+
+This document describes the Bayesian calibration pipeline for the HIKET
+multi-model SOC intercomparison study. The calibration is implemented in a
+model-agnostic engine (`calibration_engine.R`) and four model-specific
+orchestration scripts (`run_{Model}_calibration.R`).
+
+**Models in the intercomparison:** Yasso07, Yasso15, Yasso20, RothC (pending).
+
+**Core research question:** Do divergent model projections of Finnish forest
+carbon sink saturation reflect genuine structural differences between models,
+or calibration artefacts? All models are calibrated against the same data
+with the same statistical framework; structural differences are designed to
+appear in residuals rather than being absorbed into error terms.
+
+**Pipeline split:**
+
+| Script | Purpose |
+|---|---|
+| `Data_work.R` | Data preparation |
+| `run_{Model}_calibration.R` | MCMC calibration, posterior samples |
+| `run_{Model}_predictive.R` | Posterior predictive trajectories, obs vs pred |
+| `run_residual_analysis.R` | Random forest residual analysis (model-agnostic) |
+
+---
+
+# Models
+
+## Yasso07
+
+The Yasso07 model (Tuomi et al. 2009, 2011) describes SOC decomposition as
+first-order kinetics in five pools: A (acid-soluble), W (water-soluble),
+E (ethanol-soluble), N (non-soluble/lignin), and H (humus). Litter enters
+the A, W, E, N pools proportionally to AWEN fractions; material flows between
+AWEN pools (controlled by transfer fractions $p_{ij}$) and to H; H decomposes
+irreversibly.
+
+The climate modifier is applied multiplicatively to all decomposition rates:
+
+$$\xi(T, T_{\mathrm{amp}}, P) = \exp\bigl(\beta_1(T - T_r) + \beta_2(T^2 - T_r^2)\bigr)
+  \times \bigl(1 - \exp(\gamma \, P)\bigr)$$
+
+where $T$ is annual mean temperature, $T_{\mathrm{amp}}$ is amplitude
+(internally decomposed into a sinusoidal within-year cycle), $P$ is annual
+precipitation, $T_r = 15\,^{\circ}$C is the reference temperature, and
+$\beta_1$, $\beta_2$, $\gamma$ are free parameters. A woody decomposition
+modifier is applied as an additional factor for FWL/CWL size classes
+($\delta_1$, $\delta_2$, $r$). Model core implemented in Fortran; called via
+`.Fortran()`.
+
+## Yasso15 / Yasso20
+
+Structurally similar to Yasso07 with pool-group-specific climate responses
+(separate $(\beta, \gamma)$ sets for A/W/E pools, N pool, and H pool). Yasso20
+additionally modifies the temperature response shape. Calibration follows the
+same architecture as Yasso07 with an expanded parameter vector.
+
+---
+
+# Parameter Specification --- Yasso07
+
+## Fixed Parameters
+
+Six parameters are fixed at published values (Tuomi et al. 2009, 2011) and
+are not calibrated:
+
+| Parameter | Physical meaning |
+|---|---|
+| $\alpha_A,\; \alpha_W,\; \alpha_E,\; \alpha_N$ | Decomposition rate constants for the four litter pools (yr$^{-1}$) |
+| $p_H$ | Fraction of decomposed material entering the humus pool |
+| $\alpha_H$ | Humus decomposition rate (yr$^{-1}$) |
+
+**Rationale for fixing:** Rate constants are well-constrained in the
+international Yasso literature. Calibrating them risks overfitting to Finnish
+climate and litter inputs. Structural differences between models are encoded in
+flow fractions and climate response, the scientifically interesting quantities
+for this intercomparison.
+
+## Free Parameters
+
+20 parameters are jointly calibrated (18 Yasso07 physical + 2 nuisance):
+
+**Inter-pool flow fractions (12):** $p_{AW},\; p_{AE},\; p_{AN},\; p_{WA},\;
+p_{WE},\; p_{WN},\; p_{EA},\; p_{EW},\; p_{EN},\; p_{NA},\; p_{NW},\; p_{NE}$.
+Each donor pool $i$ must satisfy $\sum_j p_{ij} \leq B = 1 - p_H$ (mass
+balance with humus formation).
+
+**Climate and woody response (6):**
+$\beta_1,\; \beta_2$ (temperature, linear and quadratic),
+$\gamma$ (precipitation),
+$\delta_1,\; \delta_2,\; r$ (woody litter decomposition adjustment).
+
+**Nuisance parameters (2):**
+
+- $\sigma_{\mathrm{init}}$: multiplicative initial-condition uncertainty.
+  Added in quadrature to $\sigma_{\mathrm{obs}}$ at the first observation per
+  plot. Captures error from assuming the 1985 SOC equals the analytical steady
+  state.
+
+- $\sigma_{\mathrm{input}}$: global litter scaling multiplier. Applied to all
+  litter inputs before model evaluation (steady state and transient run
+  consistently). Captures allometric uncertainty in NFI litter estimates
+  (~20--50% intrinsic uncertainty). Currently global (same multiplier for all
+  plots, species, and years).
+
+---
+
+# Parameter Transformations
+
+The DEzs sampler operates in unconstrained $\mathbb{R}^{20}$. Physical
+parameters are recovered by applying `to_original()` to the sampler's
+proposals. Three primitive transform types are used.
+
+## Stick-Breaking (flow fractions)
+
+Each of the four donor columns (A, W, E, N) has three outflows satisfying:
+
+$$p_{ij} \geq 0 \quad \forall j, \qquad \sum_j p_{ij} \leq B$$
+
+The stick-breaking transform converts a vector $\boldsymbol{v} \in \mathbb{R}^3$
+to a valid fraction vector $\boldsymbol{p}$:
+
+$$p_i = \sigma(v_i) \times r_i, \qquad r_{i+1} = r_i - p_i, \quad r_1 = B$$
+
+where $\sigma(v) = (1 + e^{-v})^{-1}$ is the logistic sigmoid. The remaining
+stick $r_i$ shrinks at each step, guaranteeing $\sum_j p_{ij} \leq B$. The
+inverse (physical $\to$ unconstrained) follows by sequential logit
+transformation of the normalised remainder fractions.
+
+## Log Transform ($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$)
+
+$$v = \log(\theta), \qquad \theta = e^v$$
+
+Ensures strict positivity. $\sigma_{\mathrm{input}}$ is centred at 1 in
+physical space ($v = 0$) by default.
+
+## Unconstrained ($\beta_1, \beta_2, \gamma, \delta_1, \delta_2, r$)
+
+No transformation. These parameters enter the climate modifier through an
+exponential expression; any real value is physically admissible.
+
+## Jacobian Correction
+
+The log-Jacobian $\log|\partial \boldsymbol{\theta}/\partial \boldsymbol{v}|$ is added to the
+log-likelihood at every evaluation to correct for the volume distortion:
+
+$$\log p(\boldsymbol{\theta} \mid \boldsymbol{y}) \propto
+  \log p(\boldsymbol{y} \mid \boldsymbol{\theta}) + \log p(\boldsymbol{\theta})
+  + \log \left|\frac{\partial \boldsymbol{\theta}}{\partial \boldsymbol{v}}\right|$$
+
+For the stick-breaking transform the Jacobian factor per element is
+$\sigma(v_i)(1-\sigma(v_i)) \times r_i$. For the log transform it is
+$e^v = \theta$. The Jacobian is added to the likelihood (not the prior) so
+that the BayesianTools prior object remains a standard Gaussian.
+
+---
+
+# Prior Distribution
+
+The prior is a multivariate normal in unconstrained space, independent across
+parameters:
+
+$$p(\boldsymbol{v}) = \prod_{k=1}^{20} \mathcal{N}(v_k;\; v_{k}^{*},\; \sigma_k^2)$$
+
+**Prior centre** $\boldsymbol{v}^{*}$: published Yasso07 defaults (Tuomi et al.
+2009, 2011) transformed to unconstrained space. Nuisance parameters centred
+at $\sigma_{\mathrm{init}} = 0.10$ and $\sigma_{\mathrm{input}} = 1.00$.
+A round-trip check verifies `to_original(to_unconstrained(theta)) == theta` to machine
+precision at startup.
+
+**Prior widths** $\sigma_k$ (unconstrained space):
+
+| Parameter group | $\sigma_k$ | Rationale |
+|---|---|---|
+| Flow fractions (stick-break) | 1.0 | Weakly informative; physical range is $[0, B]$ |
+| $\beta_1$ | 0.2 | $\exp(\beta_1 T)$ at $T \approx 10\,^{\circ}$C: 95\% CI spans $\approx 0.4\times$--$7\times$ modifier |
+| $\beta_2$ | 0.05 | Quadratic amplification; tight prior prevents unphysical curvature |
+| $\gamma,\; \delta_1,\; \delta_2,\; r$ | 1.0 | Weakly informative |
+| $\sigma_{\mathrm{init}}$ (log scale) | 0.5 | Physical 95\% CI $\approx [0.04,\, 0.27]$: 4\%--27\% SOC init uncertainty |
+| $\sigma_{\mathrm{input}}$ (log scale) | 0.5 | Physical 95\% CI $\approx [0.37,\, 2.72]$: $\approx 2.7\times$ range either way |
+
+---
+
+# Likelihood
+
+## Observation Model
+
+A multiplicative-normal (proportional-error) model is used:
+
+$$\mathrm{SOC}_{\mathrm{obs},t} \sim \mathcal{N}\bigl(\hat{C}_t,\; s_t^2\bigr)$$
+
+where the standard deviation scales with the predicted SOC:
+
+$$s_t = \begin{cases}
+  \hat{C}_t \, \sqrt{\sigma_{\mathrm{obs}}^2 + \sigma_{\mathrm{init}}^2}
+    & \text{first observation per plot (1985)} \\[4pt]
+  \hat{C}_t \, \sigma_{\mathrm{obs}}
+    & \text{subsequent observations (2006)}
+\end{cases}$$
+
+**Rationale for multiplicative-normal:** A log-normal error model was used
+during a period when the data contained a $\times10$ litter overestimate (since
+corrected). With litter inputs in the correct boreal range, a
+multiplicative-normal model is appropriate.
+
+## Fixed Observation Error
+
+$\sigma_{\mathrm{obs}}$ is **fixed** at the observed coefficient of variation
+of SOC across all calibration plots:
+
+$$\sigma_{\mathrm{obs}} = \frac{\mathrm{sd}(\mathrm{SOC}_{\mathrm{obs}})}
+  {\mathrm{mean}(\mathrm{SOC}_{\mathrm{obs}})} \approx 0.45$$
+
+This value is **identical across all four models**. Fixing $\sigma_{\mathrm{obs}}$
+ensures structural differences appear in residuals rather than being absorbed
+into the error term.
+
+## Log-Likelihood
+
+For each plot $i$ with $n_i$ observations:
+
+$$\ell_i(\boldsymbol{\theta}) = \sum_{k=1}^{n_i}
+  \log \mathcal{N}\bigl(\mathrm{SOC}_{i,k};\; \hat{C}_{i,t_{ik}},\; s_{i,k}^2\bigr)$$
+
+Total log-posterior in unconstrained space:
+
+$$\mathcal{L}(\boldsymbol{v}) = \sum_i \ell_i\bigl(\mathrm{to\_original}(\boldsymbol{v})\bigr)
+  + \log \left|\frac{\partial \boldsymbol{\theta}}{\partial \boldsymbol{v}}\right|$$
+
+If any plot returns $-\infty$, the entire proposal is rejected. The inner
+per-plot function is byte-compiled with `cmpfun()` for a ~10--20\% speedup
+at the R level.
+
+---
+
+# Per-Plot Likelihood Evaluation
+
+Each likelihood evaluation executes three stages per plot in parallel via
+`mclapply`.
+
+## Stage 1: Environmental Modifier Time Series
+
+For each year $t$ in 1985--2023, `compute_xi()` computes the scalar modifier
+$\xi_t$ from annual climate summaries (mean temperature, temperature amplitude,
+annual precipitation). The modifier is applied multiplicatively to all
+decomposition rates.
+
+## Stage 2: Steady-State Initialisation
+
+The initial SOC pool distribution $\boldsymbol{C}^{\ast}$ (5-element vector) is
+computed analytically:
+
+$$\boldsymbol{C}^{\ast} = -A(\boldsymbol{\theta},\; \xi_{\mathrm{ss}})^{-1} \, \boldsymbol{b}(\boldsymbol{\theta})$$
+
+where $A$ is the transfer matrix, $\boldsymbol{b}$ is the mean litter input vector,
+and $\xi_{\mathrm{ss}}$ is the climate modifier evaluated at mean climate over
+the **20-year steady-state window** (1985--2004).
+
+**Jensen's inequality correction.** Because $\xi$ is nonlinear in $T$ and $P$:
+
+$$\xi(\bar{T}, \bar{P}) \neq \overline{\xi(T_t, P_t)}$$
+
+Using the average of annual modifiers instead of the modifier at average
+climate introduces a 5--15\% systematic bias in boreal conditions. The correct
+approach is enforced through the `compute_xi_mean()` interface: it averages
+$T$, $T_{\mathrm{amp}}$, and $P$ over the steady-state window and calls
+`compute_xi()` once.
+
+**Litter scaling.** $\sigma_{\mathrm{input}}$ is applied to litter inputs in
+both the steady-state initialisation and the transient run, so the calibrated
+multiplier affects the initial condition and the trajectory consistently.
+
+## Stage 3: Transient Simulation
+
+Starting from $\boldsymbol{C}^{\ast}$, the model runs forward 1985--2023 using
+the annual $\xi_t$ time series and actual annual litter inputs. A single
+Fortran call per plot returns the full pool trajectory; predicted SOC at
+observation years (1985, 2006) is extracted and compared to observations.
+
+---
+
+# MCMC Sampling
+
+## Sampler
+
+DEzs (Differential Evolution with snooker updates; ter Braak \& Vrugt 2008),
+implemented in `BayesianTools` (Hartig et al. 2023). Selected for:
+
+- No gradient requirements (black-box Fortran model).
+- Robust performance on correlated, moderately high-dimensional posteriors
+  (20 free parameters).
+- Population-based proposals that efficiently explore posterior ridges from
+  compositional constraints.
+
+## Settings
+
+| Setting | Test (Mac) | Production (Puhti) |
+|---|---|---|
+| Chains | 4 | 4 |
+| Iterations | 10,000 | 50,000 |
+| Burn-in | 2,000 | 10,000 |
+| DEzs jitter $\varepsilon$ | 0.001 | 0.001 |
+| Random seed | 2025 | 2025 |
+
+Burn-in fraction: 20\%. Four chains give meaningfully tighter Gelman--Rubin
+bounds than three chains for negligible extra cost.
+
+## Parallelisation
+
+**Sequential-chains (current):** chains run one after another (`lapply`),
+each using all available cores for the `mclapply` per-plot loop. On Puhti:
+39 cores per chain (`parallelly::availableCores()`). On Mac:
+`detectCores() - 1`.
+
+**Hybrid (future Puhti production):** outer `lapply` replaced by
+`mclapply(mc.cores = 4)` with `CORES_PER_CHAIN = 90`, giving
+$4 \times 90 = 360$ of 384 cores. Nested forking is supported on Linux but
+not macOS, so sequential is mandatory for Mac development.
+
+`parallel = FALSE` is passed to `createBayesianSetup()` so BayesianTools'
+built-in parallelism is suppressed.
+
+## Starting Point
+
+All chains start from `best_x = to_unconstrained(published_defaults)`. DEzs
+initialises its population from small random perturbations around `best_x`
+and rapidly disperses via differential-evolution proposals.
+
+---
+
+# Pre-MCMC Sanity Check
+
+Before launching MCMC, a forward simulation at the prior centre (published
+defaults) is run for 4 randomly selected plots:
+
+1. **Numerical stability:** all predicted SOC finite and positive.
+2. **Order-of-magnitude check:** predicted / observed $\in [0.1, 10]$
+   at both observation years.
+3. **Likelihood check:** `ll_fn(best_x)` finite across all 350 plots.
+
+Output: `{Model}_forward_at_defaults_{RUN_ID}.png` (2$\times$2 panel). If
+the sanity check fails, MCMC is not launched.
+
+---
+
+# Convergence Diagnostics
+
+All diagnostics computed on post-burnin samples. $\hat{R}$ and ESS computed
+in unconstrained space; posterior summaries reported in physical space via
+`to_original()`.
+
+## Gelman--Rubin $\hat{R}$
+
+| $\hat{R}$ | Interpretation |
+|---|---|
+| $< 1.05$ | Good convergence |
+| $1.05$--$1.10$ | Marginal; extend chains |
+| $> 1.10$ | Poor convergence; run not usable |
+
+Computed both per-parameter (univariate, `coda::gelman.diag()`) and jointly
+(multivariate $\hat{R}$).
+
+## Effective Sample Size
+
+`coda::effectiveSize()`. Values $< 200$ indicate poor mixing.
+
+## Diagnostic Outputs
+
+All files written to `Calibration_real_data/diagnostics/{Model}/`:
+
+| File | Content |
+|---|---|
+| `*_traces_*.png` | Trace plots per parameter, one line per chain |
+| `*_marginals_fractions_*.png` | Prior vs posterior KDE for the 12 flow fractions |
+| `*_marginals_climate_nuisance_*.png` | Prior vs posterior KDE for climate and nuisance parameters |
+| `*_rhat_barplot_*.png` | $\hat{R}$ per parameter, coloured by convergence zone |
+| `*_kl_divergence_*.png` | KL(posterior $\|$ prior) per parameter |
+| `*_report_*.txt` | $\hat{R}$, ESS, posterior quantile table, chain health |
+
+Prior and posterior KDEs are evaluated on the same x-grid derived from the
+prior's support, not the posterior's range, to avoid misleading compression.
+
+---
+
+# Output Files
+
+Written to `Calibration_real_data/runs/`:
+
+| File | Content | Used by |
+|---|---|---|
+| `{Model}_chains_{RUN_ID}.rds` | Raw BayesianTools chain objects (unconstrained) | Chain extension, re-diagnostics |
+| `{Model}_posterior_{RUN_ID}.rds` | Post-burnin samples in **physical space** | Predictive script, downstream analysis |
+| `{Model}_metadata_{RUN_ID}.rds` | Run config, R version, wallclock, summary stats | Reproducibility |
+| `{Model}_inputs_{RUN_ID}.rds` | Per-plot structures: `climate_by_plot`, `inputs_by_plot`, `litter_means`, `obs_meta`, `plot_info` | Predictive script |
+
+The inputs RDS ensures exact provenance: the predictive script reads the same
+per-plot structures the calibration used, even if `Data_work.R` is
+subsequently updated.
+
+---
+
+# Key Design Decisions
+
+Architectural decisions locked in after discussion (April 2026):
+
+1. **Multiplicative-normal likelihood.** Reverted from a log-normal workaround
+   added when litter inputs had a $\times10$ overestimate. With correct litter
+   magnitudes, multiplicative-normal is the appropriate model.
+
+2. **Fixed $\sigma_{\mathrm{obs}}$ across all models.** Ensures structural
+   differences appear in residuals. A poorly fitting model cannot mask its
+   inadequacy by calibrating a larger error variance.
+
+3. **$\xi(\bar{T}, \bar{P})$, not $\overline{\xi(T_t, P_t)}$, for steady
+   state.** Jensen's inequality correction; 5--15\% bias in boreal conditions.
+   Fixed at the `compute_xi_mean` interface level in `calibration_engine.R`.
+
+4. **STEADY\_STATE\_YEARS = 20.** Uses 1985--2004 climate for the steady-state
+   scalar, pre-dating accelerated boreal warming. Sensitivity to this choice
+   is a planned post-paper analysis.
+
+5. **Fixed decomposition rates.** $\alpha_A, \alpha_W, \alpha_E, \alpha_N,
+   p_H, \alpha_H$ fixed at published values. Structural intercomparison should
+   be driven by flow fractions and climate response.
+
+6. **Sequential chains.** Mandatory on macOS. Hybrid strategy
+   ($4 \times 39$ cores) available on Puhti.
+
+7. **Global $\sigma_{\mathrm{input}}$.** Single litter scaling multiplier.
+   Per-species stratification is a possible extension but would introduce
+   identifiability questions that distract from the intercomparison.
+
+---
+
+# Software
+
+| Component | Details |
+|---|---|
+| R | $\geq$ 4.3; Puhti: 4.5.2 (`r-env` Apptainer) |
+| `BayesianTools` | Hartig et al. (2023); DEzs sampler |
+| `coda` | Gelman--Rubin $\hat{R}$, ESS |
+| `compiler` | `cmpfun()` byte-compilation |
+| `parallel` | `mclapply()` per-plot parallelism |
+| Fortran model cores | `R CMD SHLIB`; `.Fortran()` interface |
+| HPC | CSC Puhti; `small` partition; 1 node, 40 cores, 2 GB/core |
+
+Random seed: `set.seed(2025)` before chain initialisation (consistent across
+all model scripts). Mac test plot subsampling: `set.seed(42)`.

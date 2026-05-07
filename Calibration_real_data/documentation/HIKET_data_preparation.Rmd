@@ -1,0 +1,391 @@
+---
+title: "HIKET — Data Preparation"
+subtitle: "Methods and pipeline documentation"
+author: "Lorenzo Menichetti"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    latex_engine: xelatex
+geometry: margin=2.5cm
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+# Overview
+
+This document describes the data preparation pipeline for the HIKET Bayesian
+SOC model calibration study. The pipeline is implemented in `Data_work.R` and
+produces three output files in `Data/model_inputs/`:
+
+| File | Content | Resolution |
+|---|---|---|
+| `input_raw_monthly.csv` | Litter inputs + climate | plot × year × month |
+| `climate_monthly.csv` | Climate normals | plot × year × month |
+| `site_raw.csv` | Site attributes + `calib_ready` flag | plot |
+
+The models calibrated are Yasso07, Yasso15, and Yasso20 (RothC forthcoming).
+All use the same calibration plot set, defined by the `calib_ready` filter
+described in Section 5.
+
+---
+
+# Data Sources
+
+## SOC Observations
+
+The SOC data (`Data/SOC/soilC1985_2006.csv`) compiles measurements from two
+national soil C campaigns conducted on the Finnish NFI permanent plot network
+(3,009 plots established in 1985--86 as part of VMI, the Finnish National
+Forest Inventory):
+
+**Campaign 1 --- VMI8, 1985--86.**
+The first Finnish national forest inventory permanent plot network, including
+soil C measurements. Mineral layer protocol: 0--5 cm and 5--20 cm measured
+separately, plus 20--40 cm. 414 plots with soil data.
+
+**Campaign 2 --- Biosoil, 2006.**
+European-wide Level I soil monitoring campaign coordinated by ICP Forests /
+EU. The Finnish contribution measured soil properties including SOC stocks at
+the same NFI permanent plots (linked via `bio_soil_id` in the NFI plot
+records). Mineral layer protocol: 0--10 cm and 10--20 cm (different
+aggregation from 1985), plus 20--40 cm. Same 414 plots as the 1985 campaign.
+
+**Campaign 3 --- Komeetta (pending).**
+A new Finnish national soil C campaign on the same permanent plot network.
+Data not yet received; when available, it will extend the calibration to a
+third observation year and increase the power of the temporal
+model--observation comparison.
+
+**File structure:** `soilC1985_2006.csv` contains 414 unique plots × 2
+years × multiple layers. Each plot appears in both years (perfectly
+symmetric: 1,695 rows per year). The layer name difference between campaigns
+(0--5/5--20 cm in 1985 vs 0--10/10--20 cm in 2006) is handled in
+`Data_work.R` by accepting both aggregation conventions.
+
+- **Layers accepted:** organic (OFH), 0--5 cm, 5--20 cm, 0--10 cm,
+  10--20 cm, 20--40 cm.
+- **Coverage after matching with litter data:** 412 plots.
+
+Observations are placed in June of the respective measurement year in the
+monthly input table, consistent with the summer measurement period of the
+Finnish NFI.
+
+## Litter Inputs
+
+Annual tree litter carbon inputs from Tupek et al. (2026), Zenodo DOI
+[10.5281/zenodo.19736499](https://doi.org/10.5281/zenodo.19736499).
+
+The dataset integrates NFI permanent plot data from 2805 Finnish sites
+(inventory rounds 1985, 1990, 1995, 2023) with satellite-derived basal area
+observations (2005–2023) to produce continuous annual time series 1985–2023.
+Litter inputs from living biomass turnover and harvest residues are summed to
+total litter, then distributed across three size classes and four AWEN
+chemical fractions.
+
+**Size classes:**
+
+| Code | Description |
+|---|---|
+| `nwl` | Non-woody litter (foliage + fine roots) |
+| `fwl` | Fine woody litter (branches + coarse roots + stem bark) |
+| `cwl` | Coarse woody litter (stumps) |
+
+**AWEN fractions:** acid-soluble (a), water-soluble (w), ethanol-soluble (e),
+non-soluble/lignin (n). Fraction proportions are species- and
+component-specific. Carbon content assumed 50% of dry mass throughout
+(i.e., Cha = 0.5 × litter dry mass × AWEN fraction).
+
+- **Files used:**
+  - `Data/LitterData/tree_litter_per_site_year_awen_29.04.26.csv` — aggregated
+    across components, resolved by site × year × species × size × AWEN
+  - `Data/LitterData/tree_litter_per_site_year_by_component_29.04.26.csv` —
+    component-level detail (used for diagnostics)
+- **Coverage after plot-key matching:** 2794 plots; 412 have both litter and
+  SOC data.
+- **Units:** t C ha⁻¹ yr⁻¹.
+
+Plot-key linkage between the three identifier systems (MUSTIKKA, VANHA, BIOSOIL)
+is performed via `Data/soil_litter_site_key.csv`.
+
+## Climate
+
+Daily gridded meteorological data for all Finnish NFI permanent plots.
+
+- **File:** `Data/Climate/nfi_plot_weather_data_1961_2025.nc`
+- **Variables extracted:** mean, min, and max air temperature (°C);
+  precipitation (mm d⁻¹); global radiation (W m⁻²).
+- **Period:** 1961–2025.
+- **Aggregation:** daily values aggregated to monthly means (temperature) and
+  sums (precipitation, PET).
+
+Potential evapotranspiration (PET) is computed via the Hargreaves–Samani
+equation:
+
+$$\text{PET} = 0.0023 \times \frac{R_g}{1000} \times \sqrt{T_{\max} - T_{\min}} \times (T_{\text{avg}} + 17.8)$$
+
+where $R_g$ is global radiation (W m⁻² d⁻¹) and temperatures are in °C.
+
+## Soil Properties — Biosoil
+
+2006 European soil monitoring campaign, Finnish subset.
+
+- **Files:** `../../Datasets/BioSoil_maaperäaineisto_2006/soil_data_main.csv`
+  and `plot_index.csv`.
+- **Mineral topsoil:** layers M01 (0–10 cm) and M12 (10–20 cm) averaged.
+  Variables include texture (clay, silt, sand), bulk density (measured and
+  estimated), pH, exchangeable cations, organic C, total N, organic matter.
+- **Organic layer (OFH):** depth and weight.
+- **Cajander fertility class (KA):** 1–4 for mineral sites; 11–13 for
+  peatland types (excluded from calibration, see Section 5).
+- **Biogeographic zones:** SYKE administrative zones (`kasvyo_syke`, 5 levels
+  south to north) and Ahti (1968) floristic zones (`kasvyo_ahti`).
+- **Coverage:** 99.8% of SOC plots matched to Biosoil records.
+
+Derived soil chemistry variables computed in the pipeline:
+
+- `CN_ratio` = OrganicCarbon / TotalNitrogen
+- `CEC` = sum of exchangeable cations + free H acidity
+- `base_saturation` = (Ca + Mg + K + Na) / CEC
+
+## GTK Soil Classification
+
+Geological Survey of Finland (GTK) 1:1M soil map, queried via ArcGIS REST
+API (MapServer layer 3, endpoint:
+`gtkdata.gtk.fi/.../Hasu/maapera/MapServer/3`). Soil codes include mineral
+classes (Mr, HM, Sa, …) and non-mineral classes (Tu = peat, Ve = water,
+Ka = bedrock).
+
+Used for: (1) descriptive soil type field in `site_raw`; (2) per-class pooled
+λ estimation in the SOC depth extrapolation. **Not used as a calibration
+filter** (see Section 5.3).
+
+## NFI Stand Attributes — Kuvio
+
+Stand-level attributes from the Finnish NFI permanent plot records
+(`PysyvätKoealat`), three measurement waves.
+
+- **Files:** `Data/PysyvätKoealat/{1985,1990,1995}/kuvio.csv`
+- **Key variables extracted:** stand age, basal area, mean height, development
+  class, site fertility type (`kasvup_tyyppi`, 8 classes), main site type
+  (`alaryhma`), drainage status (`ojitustilanne`), cutting events
+  (`hakk_laatu`), stand treatments (`mets_h_toim`), soil preparation
+  (`aiempi_toim`), temperature sum (`lamposumma`), elevation.
+- **Temporal coverage of management indicators:** 1985 wave covers cuttings
+  ≤10 years back and soil preparation ≤30 years back; 1990 records new events
+  since 1985; 1995 covers 1990–1995. Combined: approximately 1955–1995.
+- **Note on `kasvup_tyyppi`:** this 8-class NFI site fertility system (1 =
+  herb-rich *lehdot* → 8 = fell/subalpine) is more informative than the
+  Cajander class KA (4 mineral classes) for characterising the climate–
+  productivity relationship across the calibration set.
+
+---
+
+# SOC Depth Extrapolation to 1 m
+
+Yasso is parametrised for a 1 m soil profile. Measured data cover OFH +
+mineral 0–40 cm only. The 40–100 cm tail is estimated by an exponential depth
+model:
+
+$$C(z) = C_0 \cdot e^{-\lambda z}$$
+
+fitted in two stages to balance shape stability with per-profile amplitude
+flexibility.
+
+**Stage 1 — Pooled λ per GTK soil class.**
+All profiles within a soil class are pooled. $C_0$ is concentrated out
+analytically at each candidate λ via no-intercept OLS (closed-form solution),
+reducing the optimisation to a 1-D search over λ alone. A global fallback λ
+(all classes pooled, λ ≈ 0.026 cm⁻¹) is computed for codes with too few
+profiles.
+
+**Stage 2 — Per-profile $C_0$ rescaling.**
+Holding the class λ fixed, $C_0$ is solved analytically per profile via
+no-intercept OLS against the observed layer stocks. This anchors the depth
+shape to the class while allowing each profile its own amplitude.
+
+**Layer integral form** (fitted directly to observed layer stocks, no midpoint
+approximation):
+
+$$\text{Stock}(z_1, z_2) = \frac{C_0}{\lambda} \left(e^{-\lambda z_1} - e^{-\lambda z_2}\right)$$
+
+**Total 1 m SOC** = OFH stock (measured, added directly) + mineral 0–40 cm
+(measured, summed) + mineral 40–100 cm (extrapolated). The raw 0–40 cm + OFH
+sum is retained as `soc_obs_tCha_sum` for diagnostic purposes. Of 824
+plot-year combinations attempted, 822 were successfully extrapolated (2 lacked
+sufficient mineral layer data and fall back to the raw sum).
+
+---
+
+# Organic Layer Quality Filters
+
+Two organic layer flags are computed from the SOC data and propagate into the
+`calib_ready` filter.
+
+- **`organic_missing`:** OFH layer never recorded in any measurement year.
+  Indicates a structural data gap; the 1 m extrapolation cannot be performed
+  without an OFH stock. Affects 12 plots.
+- **`organic_zero`:** OFH recorded but C_kgha = 0 in at least one year.
+  Likely a measurement issue rather than genuine absence; excluded out of
+  caution. Verified non-overlapping with `organic_missing`. Affects 28 plots.
+
+---
+
+# Calibration-Ready Plot Filtering
+
+The `calib_ready` flag in `site_raw` defines the calibration set. A plot is
+included if and only if all of the following hold:
+
+| # | Criterion | Rationale |
+|---|---|---|
+| 1 | `has_climate` | Plot present in climate netCDF with non-NA temperature |
+| 2 | `has_soc` | At least one SOC observation in `SOC_agg` |
+| 3 | `!peatland` | Cajander KA ∉ {11, 12, 13}; peatland C dynamics not represented by Yasso |
+| 4 | `!organic_missing` | OFH never recorded; extrapolation impossible |
+| 5 | `!organic_zero` | OFH recorded as zero in any year; excluded as data quality issue |
+| 6 | `!high_mrt` | Implied MRT ≤ 100 years (see below) |
+
+**Implied MRT filter (criterion 6).** Implied MRT = mean(1 m SOC) /
+mean(annual litter input). Plots with MRT > 100 years have litter inputs so
+low that the model predicts near-zero SOC at any parameter value, causing a
+−∞ likelihood at the pre-MCMC sanity check. The 100-year threshold corresponds
+to a clear gap in the MRT distribution. This filter also catches four plots
+with zero litter after AWEN-compound mapping (MRT = ∞) that bypass criterion
+5, which operates on raw litter inputs before compound-fraction assignment.
+In total, 14 plots are excluded (4 with MRT = ∞, 10 with MRT 100–489 years);
+several overlap with GTK peat/water classes, consistent with peat-influenced
+carbon dynamics unsupported by Yasso's mineral-soil parameterisation.
+
+**GTK soil class — reviewed, not used as a filter.** Tu (peat), Ve (water),
+and Ka (bedrock) classes together constitute ~26% of plots passing criteria
+1–6. Inspection showed: (a) SOC distributions for these classes are
+statistically indistinguishable from mineral plots (Tu median 59, Ve 59, Ka
+70, mineral 62 Mg C ha⁻¹); (b) Cajander vegetation surveys classified 53 of
+96 such plots as KA = 1 (rich mineral upland forest), with none classified as
+peatland (KA 11–13). The disagreement is consistent with the GTK map's coarse
+resolution (1:1,000,000). GTK class is retained in `site_raw` for descriptive
+use and for per-class λ estimation in the depth extrapolation.
+
+**Final calibration set: 351 plots** (365 before the MRT filter; 350–351
+after matching with climate and SOC records).
+
+---
+
+# Derived Site Covariates (site_raw)
+
+The following covariates are computed and stored in `site_raw` for use in the
+residual random-forest analysis.
+
+## Climate Normals and Variability
+
+Computed from long-run monthly normals (all available years in the netCDF):
+
+| Variable | Description |
+|---|---|
+| `mean_temp` | Annual mean air temperature (°C) |
+| `mean_precip_annual` | Annual precipitation sum (mm yr⁻¹) |
+| `PET_annual` | Annual Hargreaves–Samani PET sum |
+| `coldest_month_T`, `warmest_month_T` | Monthly temperature extremes |
+| `T_seasonality` | SD of monthly temperature normals |
+| `P_seasonality` | CV of monthly precipitation normals |
+| `GDD5` | Growing degree days base 5 °C (weighted by calendar-month length) |
+| `aridity_index` | mean_precip_annual / PET_annual |
+| `koppen_class` | Köppen–Geiger class (Beck et al. 2018, simplified; Dfb or Dfc for Finland) |
+| `temp_zone` | Tercile binning of mean_temp into cold / intermediate / warm |
+
+## Litter Quality
+
+Computed from cumulative litter totals across the full time series:
+
+| Variable | Description |
+|---|---|
+| `litter_{A,W,E,N}_frac` | AWEN compound fractions of total plot litter |
+| `woody_share` | (fwl + cwl) / (nwl + fwl + cwl) |
+| `conifer_share` | sp_frac_1 (Scots pine) + sp_frac_2 (Norway spruce) |
+
+All three size classes (nwl, fwl, cwl) are sourced directly from the Tupek
+et al. dataset.
+
+## Soil Chemistry
+
+Derived from Biosoil mineral topsoil (M01 + M12 layers, averaged):
+
+| Variable | Description |
+|---|---|
+| `CN_ratio` | OrganicCarbon / TotalNitrogen (NA where N = 0) |
+| `CEC` | Sum of exchangeable cations + free H acidity |
+| `base_saturation` | (Ca + Mg + K + Na) / CEC |
+
+For RF covariate selection: prefer `EstimatedBulkDensity` over
+`MeanBulkDensity` (the latter has 86% NA in the calibration set). Avoid using
+`OrganicCarbon` and `OrganicMatter` from Biosoil as RF covariates — they are
+highly collinear with the SOC observations and would trivially recover the SOC
+signal rather than model residual structure.
+
+---
+
+# Output Files
+
+## input_raw_monthly.csv
+
+Monthly time series, one row per (plot_id, year, month). Coverage: 405 plots
+with full climate data, 1985–2023, 12 months/year = 189,540 rows.
+
+Litter inputs in t C ha⁻¹ month⁻¹ (annual values divided by 12, i.e. assuming
+uniform within-year distribution). SOC observations placed in June of the
+observation year. Plots without full climate coverage are excluded; SOC
+observations for excluded plots are not carried forward.
+
+## climate_monthly.csv
+
+Standalone monthly climate per plot, deduplicated. Same plot coverage as
+`input_raw_monthly.csv`.
+
+## site_raw.csv
+
+Comprehensive per-plot attributes. 419 total plots; 351 with `calib_ready =
+TRUE`. Columns cover all covariates listed in Section 6 plus all raw Biosoil,
+GTK, and kuvio variables, exclusion flags (`peatland`, `organic_missing`,
+`organic_zero`, `high_mrt`), and the `calib_ready` flag.
+
+---
+
+# Automated Sanity Checks
+
+The script ends with 25 automated checks. Key checks relevant to the
+calibration:
+
+- No duplicate plot–year–month rows
+- No NA in climate fields
+- All plots have the same month count (468 rows = 39 years × 12 months)
+- No negative litter values
+- SOC observations placed only in June
+- SOC count consistent between `input_raw_monthly` and `SOC_agg`
+- Litter magnitude median within boreal range (1.5–4.5 t C ha⁻¹ yr⁻¹;
+  observed median 2.56 after CWL correction)
+- SOC plausibility for calib-ready plots (5–400 t C ha⁻¹)
+- 1 m extrapolated median ≥ raw sum median
+- No peatland, organic-excluded, or high-MRT plots in `calib_ready`
+- All derived covariates present in `site_raw`
+- AWEN fractions sum to 1 per plot
+
+---
+
+# Software and Reproducibility
+
+**Language:** R (≥ 4.3).  
+**Key packages:** `sf`, `ncdf4`, `httr`, `jsonlite`, `rnaturalearth`, `dplyr`,
+`ggplot2`.  
+**HPC:** Production runs on CSC Puhti (Finland); development on macOS.
+
+To reproduce from scratch, run `Data_work.R` from the project root directory.
+The GTK soil type extraction (section 1.3) requires internet access to the
+GTK ArcGIS REST API; all other steps are self-contained given the data files.
+After running, sync outputs to Puhti and recompile the Fortran shared libraries
+before submitting calibration jobs (see `Calibration_real_data/run_hiket_pipeline.R`
+for the full workflow).
