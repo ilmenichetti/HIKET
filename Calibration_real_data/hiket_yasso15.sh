@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name=hiket_yasso07
+#SBATCH --job-name=hiket_yasso15
 #SBATCH --account=project_2019134
 #SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso07_%j.out
 #SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso07_%j.err
