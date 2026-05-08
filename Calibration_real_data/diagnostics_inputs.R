@@ -802,3 +802,70 @@ if (!all(c("mean_temp", "mean_precip_annual") %in% names(site_raw))) {
               file.path(DIR_OUT, "10_climate_space_site_type.png")))
   
 }  # end climate-space guard
+
+
+
+# =============================================================================
+# 11.  SOC trajectory across measurement years (1985 / 2006 / 2024)
+# =============================================================================
+# Boxplot of 1m-extrapolated soc_obs_tCha by observation year, restricted to
+# calib-ready plots. Two panels:
+#   Left  — all calib-ready plots with an SOC observation in each year
+#   Right — plots present in ALL THREE years (tightest comparison)
+#
+# Uses soc_obs_tCha (placed in June of each observation year in input_raw_monthly)
+# so values are fully consistent with what enters the calibration likelihood.
+#
+# The 1985→2006 jump is expected to be large and likely reflects a measurement
+# protocol shift between survey waves rather than a real sink signal. Document
+# in M&M if the jump is confirmed here.
+# =============================================================================
+
+soc_traj <- input_calib[!is.na(input_calib$soc_obs_tCha) &
+                          input_calib$month == 6L,
+                        c("plot_id", "year", "soc_obs_tCha")]
+
+obs_years   <- sort(unique(soc_traj$year))
+plots_by_yr <- lapply(obs_years, function(y)
+  unique(soc_traj$plot_id[soc_traj$year == y]))
+names(plots_by_yr) <- as.character(obs_years)
+
+common_plots_traj <- Reduce(intersect, plots_by_yr)
+
+cat(sprintf("[11] SOC trajectory: %d obs years detected: %s\n",
+            length(obs_years), paste(obs_years, collapse = ", ")))
+cat(sprintf("     Plots per year: %s\n",
+            paste(sapply(plots_by_yr, length), collapse = " / ")))
+cat(sprintf("     Plots in ALL years: %d\n", length(common_plots_traj)))
+
+yr_cols <- c("grey70", "steelblue", "tomato")
+names(yr_cols) <- as.character(obs_years)
+
+png(file.path(DIR_OUT, "11_soc_trajectory_by_year.png"),
+    width = 14L * PX_PER_IN, height = 6L * PX_PER_IN, res = PX_PER_IN)
+par(mfrow = c(1, 2), mar = c(4, 4.5, 3.5, 1))
+
+# Left panel — all calib-ready plots per year
+soc_traj$year_f <- factor(soc_traj$year, levels = obs_years)
+boxplot(soc_obs_tCha ~ year_f, data = soc_traj,
+        col    = yr_cols[as.character(obs_years)],
+        border = "grey30", outline = TRUE,
+        xlab   = "Observation year",
+        ylab   = "SOC 1 m extrapolated (Mg C/ha)",
+        main   = sprintf("All calib-ready plots per year\n(n = %s)",
+                         paste(sapply(plots_by_yr, length), collapse = " / ")))
+
+# Right panel — common plots only
+soc_common <- soc_traj[soc_traj$plot_id %in% common_plots_traj, ]
+boxplot(soc_obs_tCha ~ year_f, data = soc_common,
+        col    = yr_cols[as.character(obs_years)],
+        border = "grey30", outline = TRUE,
+        xlab   = "Observation year",
+        ylab   = "SOC 1 m extrapolated (Mg C/ha)",
+        main   = sprintf("Common plots across all years\n(n = %d each)",
+                         length(common_plots_traj)))
+
+dev.off()
+
+cat(sprintf("    Written: %s\n\n",
+            file.path(DIR_OUT, "11_soc_trajectory_by_year.png")))
