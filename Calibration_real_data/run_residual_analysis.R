@@ -119,6 +119,9 @@ input_raw <- tryCatch(
 #   MeanBulkDensity              -- 84% NA in calib_ready (audit)
 #   plot_id, year                -- identifiers, not predictors
 #   any soc_*, log_*, residual_* -- the targets and derived quantities
+#
+# ranger handles numeric, integer, and factor columns natively.
+# Only character columns need explicit coercion since ranger rejects raw strings.
 
 target <- "residual_log"
 
@@ -151,41 +154,23 @@ candidate_vars <- c(
   "shallow", "n_soc_obs"
 )
 
-available  <- intersect(candidate_vars, names(resid_df))
-unused     <- setdiff(candidate_vars, names(resid_df))
-if (length(unused) > 0) {
+available <- intersect(candidate_vars, names(resid_df))
+unused    <- setdiff(candidate_vars, names(resid_df))
+if (length(unused) > 0)
   message(sprintf("Skipping %d not-found covariates: %s",
                   length(unused), paste(unused, collapse = ", ")))
-}
 
-# Build RF data: drop rows with NA in target or any selected covariate
+# Build RF data frame; coerce character columns to factor (ranger requirement)
 rf_df <- resid_df[, c(target, available), drop = FALSE]
+for (v in available)
+  if (is.character(rf_df[[v]])) rf_df[[v]] <- as.factor(rf_df[[v]])
 
-# Coerce categorical-looking columns to factor; coerce booleans to factor
-for (v in available) {
-  x <- rf_df[[v]]
-  if (is.character(x) || is.logical(x)) rf_df[[v]] <- as.factor(x)
-  if (is.integer(x) && length(unique(na.omit(x))) <= 12)
-    rf_df[[v]] <- as.factor(as.character(x))
-}
-
-# Drop covariates with zero variance or all-NA after coercion
-keep_vars <- vapply(available, function(v) {
-  vec <- rf_df[[v]]
-  if (all(is.na(vec))) return(FALSE)
-  if (is.factor(vec)) return(nlevels(droplevels(vec)) > 1)
-  length(unique(vec[!is.na(vec)])) > 1
-}, logical(1))
-available <- available[keep_vars]
-rf_df     <- rf_df[, c(target, available), drop = FALSE]
-
-# Drop rows with NA or Inf in the target (residual_log can be Inf if a
-# posterior-mean prediction was 0 or negative). complete.cases handles NA
-# but not Inf, so check both.
-complete_rows <- complete.cases(rf_df) & is.finite(rf_df[[target]])
-n_dropped <- sum(!complete_rows)
-rf_df     <- rf_df[complete_rows, , drop = FALSE]
-message(sprintf("RF data: %d rows x %d covariates (dropped %d incomplete/non-finite)",
+# Drop rows with NA or Inf in the target only.
+# Covariates with NA are handled internally by ranger (split on available obs).
+complete_rows <- is.finite(rf_df[[target]])
+n_dropped     <- sum(!complete_rows)
+rf_df         <- rf_df[complete_rows, , drop = FALSE]
+message(sprintf("RF data: %d rows x %d covariates (dropped %d non-finite targets)",
                 nrow(rf_df), length(available), n_dropped))
 
 
@@ -193,19 +178,14 @@ message(sprintf("RF data: %d rows x %d covariates (dropped %d incomplete/non-fin
 # 3.  Random Forest with permutation importance
 # =============================================================================
 
-set.seed(2025)   # standardised seed
+set.seed(2025)
 rf_fit <- ranger(
-  formula     = as.formula(paste(target, "~ .")),
-  data        = rf_df,
-  num.trees   = 500L,
-  importance  = "permutation",
-  num.threads = parallel::detectCores() - 1L
+  formula      = as.formula(paste(target, "~ .")),
+  data         = rf_df,
+  num.trees    = 500L,
+  importance   = "permutation",
+  num.threads  = parallel::detectCores() - 1L
 )
-
-oob_r2 <- 1 - rf_fit$prediction.error / var(rf_df[[target]])
-message(sprintf("\nRandom Forest OOB R2: %.3f", oob_r2))
-message("(fraction of residual log-SOC variance explained by site covariates)")
-
 imp <- sort(rf_fit$variable.importance, decreasing = TRUE)
 imp_df <- data.frame(variable = names(imp), importance = unname(imp))
 write.csv(imp_df,
@@ -213,14 +193,13 @@ write.csv(imp_df,
                     sprintf("%s_rf_importance_%s.csv", MODEL_NAME, RUN_ID)),
           row.names = FALSE)
 
-# Save full RF object + summary
 rf_summary <- list(
-  rf_fit       = rf_fit,
-  oob_r2       = oob_r2,
-  importance   = imp_df,
-  n_obs        = nrow(rf_df),
-  covariates   = available,
-  target       = target
+  rf_fit     = rf_fit,
+  oob_r2     = oob_r2,
+  importance = imp_df,
+  n_obs      = nrow(rf_df),
+  covariates = available,
+  target     = target
 )
 saveRDS(rf_summary,
         file.path(DIR_DIAG,
@@ -231,7 +210,7 @@ saveRDS(rf_summary,
 # 4.  Plot: RF importance
 # =============================================================================
 
-n_show <- min(20L, nrow(imp_df))
+n_show  <- min(20L, nrow(imp_df))
 imp_top <- imp_df[seq_len(n_show), ]
 imp_top <- imp_top[order(imp_top$importance), ]   # ascending for horizontal bar
 
@@ -251,7 +230,6 @@ dev.off()
 message(sprintf("RF importance plot: %s",
                 file.path(DIR_DIAG,
                           sprintf("%s_rf_importance_%s.png", MODEL_NAME, RUN_ID))))
-
 
 # =============================================================================
 # 5.  Diagnostic plot: 3x3 residual panel
