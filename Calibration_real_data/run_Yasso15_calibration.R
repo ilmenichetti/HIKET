@@ -150,16 +150,32 @@ FRAC_COL_E <- c("p_EA","p_EW","p_EN")
 FRAC_COL_N <- c("p_NA","p_NW","p_NE")
 
 param_spec <- list(
-  list(names = FRAC_COL_A,                         type = "stick_break",   budget = B),
-  list(names = FRAC_COL_W,                         type = "stick_break",   budget = B),
-  list(names = FRAC_COL_E,                         type = "stick_break",   budget = B),
-  list(names = FRAC_COL_N,                         type = "stick_break",   budget = B),
-  list(names = c("beta1",  "beta2",  "gamma"),      type = "unconstrained"),  # AWE climate
-  list(names = c("betaN1", "betaN2", "gammaN"),     type = "unconstrained"),  # N   climate
-  list(names = c("betaH1", "betaH2", "gammaH"),     type = "unconstrained"),  # H   climate
-  list(names = c("delta1", "delta2", "r"),          type = "unconstrained"),  # size modifier
-  list(names = c("sigma_init"),                     type = "log"),
-  list(names = c("sigma_input"),                    type = "log")
+  list(names = FRAC_COL_A,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_W,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_E,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_N,    type = "stick_break",   budget = B),
+  # AWE climate -- individual entries for per-parameter transforms.
+  # beta1/betaN1/betaH1 > 0 enforced by log (T increases decomp in Finland).
+  # gamma/gammaN/gammaH < 0 enforced by tight prior; mathematically unconstrained.
+  list(names = "beta1",       type = "log"),           # AWE T linear;    enforce > 0
+  list(names = "beta2",       type = "unconstrained"), # AWE T quadratic; can be negative
+  list(names = "gamma",       type = "unconstrained"), # AWE precip;      sign via prior
+  # N climate
+  list(names = "betaN1",      type = "log"),           # N T linear;      enforce > 0
+  list(names = "betaN2",      type = "unconstrained"), # N T quadratic
+  list(names = "gammaN",      type = "unconstrained"), # N precip
+  # H climate
+  list(names = "betaH1",      type = "log"),           # H T linear;      enforce > 0
+  list(names = "betaH2",      type = "unconstrained"), # H T quadratic
+  list(names = "gammaH",      type = "unconstrained"), # H precip
+  # Woody size modifier -- individual entries.
+  # delta2 > 0: NaN in Fortran if delta2 < 0 for d > ~0.4 cm.
+  # r log-transformed: only -ABS(r) used.
+  list(names = "delta1",      type = "unconstrained"), # linear;  can be negative
+  list(names = "delta2",      type = "log"),           # quadratic; enforce > 0
+  list(names = "r",           type = "log"),           # power;   only |r| used
+  list(names = "sigma_init",  type = "log"),
+  list(names = "sigma_input", type = "log")
 )
 
 transforms       <- build_transforms(param_spec)
@@ -169,11 +185,32 @@ log_jacobian     <- transforms$log_jacobian
 FREE_NAMES       <- transforms$param_names
 N_FREE           <- transforms$n_params
 
+MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
+
+# Prior centres in PHYSICAL space.
+# Climate/size: posterior means from FMI repository Yasso15.dat (10,000 MCMC
+# samples after dropping MAP row; confirmed to match y15par.csv to 4 sig. fig.
+# after column remapping -- see Priors_model_matching.R).
+# Fractions: Yasso15 published defaults (p_default).
 free_defaults <- c(
-  p_default[c(unlist(lapply(param_spec[1:8], `[[`, "names")))],  # 24 model params
+  p_default[MODEL_FREE_NAMES],
   sigma_init  = 0.10,
   sigma_input = 1.00
 )
+
+# Override climate/size centres with Yasso15 posterior means
+free_defaults["beta1"]   <-   0.09062
+free_defaults["beta2"]   <-  -0.000215
+free_defaults["gamma"]   <-  -1.80897
+free_defaults["betaN1"]  <-   0.04878
+free_defaults["betaN2"]  <-  -0.0000792
+free_defaults["gammaN"]  <-  -1.17294
+free_defaults["betaH1"]  <-   0.03518
+free_defaults["betaH2"]  <-  -0.000208
+free_defaults["gammaH"]  <- -12.54094
+free_defaults["delta1"]  <-  -0.43883
+free_defaults["delta2"]  <-   1.26838
+free_defaults["r"]       <-   0.25687
 
 best_x <- to_unconstrained(free_defaults)
 
@@ -187,15 +224,11 @@ message("Transform round-trip: OK")
 # =============================================================================
 # Combines fixed_rates (11 elements) and free model parameters (24 elements)
 # into a 35-element vector in YASSO15_PARAM_NAMES order, then appends
-# sigma_input. param_spec[1:8] are the model-parameter groups (all groups
-# except sigma_init and sigma_input).
+# sigma_input. MODEL_FREE_NAMES excludes sigma_init and sigma_input.
 # =============================================================================
 
 assemble_model_params <- function(p_free) {
-  yasso_params <- c(
-    fixed_rates,
-    p_free[c(unlist(lapply(param_spec[1:8], `[[`, "names")))]
-  )
+  yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
   yasso_params <- yasso_params[YASSO15_PARAM_NAMES]
   c(yasso_params, sigma_input = unname(p_free["sigma_input"]))
 }
@@ -427,14 +460,24 @@ yasso15_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 # wider prior lets the data speak more freely here.
 # =============================================================================
 
+# VALUES (Yasso15 -- from SD of FMI repository posterior, Yasso15.dat):
+# Log-transformed params: sigma = SD(log(samples)); physical params: SD(samples).
+# gammaH capped at 1.5: near-unidentifiable at Finnish P (~600mm) because
+# [1-exp(gammaH*0.6)] ~ 1 for any gammaH < -5; large SD is an artefact.
+# Transfer fractions remain at 1.0 (Finnish data informs pool structure).
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-
-# Temperature response -- all three pool groups
-sigma_ppm["beta1"]   <- 0.2;  sigma_ppm["beta2"]   <- 0.05
-sigma_ppm["betaN1"]  <- 0.2;  sigma_ppm["betaN2"]  <- 0.05
-sigma_ppm["betaH1"]  <- 0.2;  sigma_ppm["betaH2"]  <- 0.05
-
-# Nuisance
+sigma_ppm["beta1"]       <- 0.04593  # log space
+sigma_ppm["beta2"]       <- 0.00014  # physical space
+sigma_ppm["gamma"]       <- 0.07022  # physical space
+sigma_ppm["betaN1"]      <- 0.10502  # log space
+sigma_ppm["betaN2"]      <- 0.00008  # physical space
+sigma_ppm["gammaN"]      <- 0.15543  # physical space
+sigma_ppm["betaH1"]      <- 0.13477  # log space
+sigma_ppm["betaH2"]      <- 0.00016  # physical space
+sigma_ppm["gammaH"]      <- 1.50000  # physical space (capped; see above)
+sigma_ppm["delta1"]      <- 0.32810  # physical space
+sigma_ppm["delta2"]      <- 0.28643  # log space
+sigma_ppm["r"]           <- 0.05504  # log space
 sigma_ppm["sigma_init"]  <- 0.5
 sigma_ppm["sigma_input"] <- 0.5
 

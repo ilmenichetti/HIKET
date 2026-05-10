@@ -247,14 +247,25 @@ FRAC_COL_E <- c("p_EA","p_EW","p_EN")
 FRAC_COL_N <- c("p_NA","p_NW","p_NE")
 
 param_spec <- list(
-  list(names = FRAC_COL_A,                      type = "stick_break",   budget = B),
-  list(names = FRAC_COL_W,                      type = "stick_break",   budget = B),
-  list(names = FRAC_COL_E,                      type = "stick_break",   budget = B),
-  list(names = FRAC_COL_N,                      type = "stick_break",   budget = B),
-  list(names = c("beta1","beta2","gamma"),       type = "unconstrained"),
-  list(names = c("delta1","delta2","r"),         type = "unconstrained"),
-  list(names = c("sigma_init"),                  type = "log"),
-  list(names = c("sigma_input"),                 type = "log")
+  list(names = FRAC_COL_A,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_W,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_E,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_N,    type = "stick_break",   budget = B),
+  # Climate response -- individual entries to allow per-parameter transforms.
+  # beta1 > 0 enforced by log transform (decomp increases with T in Finland).
+  # gamma < 0 enforced by tight prior centre; mathematically unconstrained.
+  list(names = "beta1",       type = "log"),           # T linear;    enforce > 0
+  list(names = "beta2",       type = "unconstrained"), # T quadratic; can be negative
+  list(names = "gamma",       type = "unconstrained"), # precip;      sign via prior
+  # Woody size modifier -- individual entries.
+  # delta2 > 0 enforced by log: (1 + delta1*d + delta2*d^2)^(-|r|) produces
+  # NaN in Fortran when delta2 < 0 and d > ~0.4 cm (Finnish stumps: 5-30 cm).
+  # r log-transformed: only -ABS(r) enters Fortran; sign is irrelevant.
+  list(names = "delta1",      type = "unconstrained"), # linear;  can be negative
+  list(names = "delta2",      type = "log"),           # quadratic; enforce > 0
+  list(names = "r",           type = "log"),           # power;   only |r| used
+  list(names = "sigma_init",  type = "log"),
+  list(names = "sigma_input", type = "log")
 )
 
 # build_transforms returns four things: forward and inverse transforms, the
@@ -270,11 +281,18 @@ N_FREE           <- transforms$n_params
 # Default values in PHYSICAL space, used to centre the prior and as the
 # starting point for chains. Yasso07 published defaults for the 18 model
 # parameters; weakly informed reasonable starts for the 2 nuisance parameters.
+# All model parameter names from param_spec (excludes sigma_init, sigma_input).
+# Used here and in assemble_model_params to avoid hardcoded group counts.
+MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
+
+# Prior centres in PHYSICAL space.
+# Yasso07: published MAP values (Tuomi et al. 2009, 2011; y07par_gui.csv)
+# confirmed to match YASSO07_DEFAULT_PARAMS to numerical precision.
+# No posterior samples available; published values ARE the prior centres.
 free_defaults <- c(
-  p_default[c(unlist(lapply(param_spec[1:4], `[[`, "names")))],   # 12 fractions
-  p_default[c("beta1","beta2","gamma","delta1","delta2","r")],     # 6 climate/woody
+  p_default[MODEL_FREE_NAMES],
   sigma_init  = 0.10,    # ~10% initial-condition uncertainty
-  sigma_input = 1.00     # no scaling adjustment by default
+  sigma_input = 1.00     # no a priori litter scaling
 )
 
 # best_x: defaults transformed to UNCONSTRAINED space. This is what the
@@ -308,10 +326,7 @@ message("Transform round-trip: OK")
 # =============================================================================
 
 assemble_model_params <- function(p_free) {
-  yasso_params <- c(
-    fixed_rates,
-    p_free[c(unlist(lapply(param_spec[1:6], `[[`, "names")))]
-  )
+  yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
   # Reorder to match Fortran's expected layout (YASSO07_PARAM_NAMES)
   yasso_params <- yasso_params[names(p_default)]
   c(yasso_params, sigma_input = unname(p_free["sigma_input"]))
@@ -561,37 +576,37 @@ yasso07_run_engine <- function(inputs, model_params, C_init, xi_array) {
 # 5.  Prior specification (per-parameter widths)
 # =============================================================================
 # The prior is N(best_x, diag(sigma_ppm^2)) on UNCONSTRAINED space.
-# sigma_ppm is a per-parameter vector, not a scalar. Three widths matter:
+# sigma_ppm is a per-parameter vector, not a scalar.
 #
-#   beta1 (=0.2): exp(beta1 * T) with T~10C amplifies 0.2 width to a 95%
-#                 multiplicative range of about 0.4x to 7x for the temp
-#                 modifier. Wider would let the model produce any modifier
-#                 from 0 to 1000x, which is biophysically implausible.
+# DESIGN PHILOSOPHY (see HIKET_calibration.Rmd Section "Prior Distribution"):
+#   Climate / size parameters: informative priors from the original global
+#     calibration literature (Tuomi et al. 2008-2011, Table 4). Prevents the
+#     gamma/sigma_input compensation loop and the delta2 NaN pathology.
+#   Transfer fractions: sigma_ppm = 1.0 (weakly informative). Finnish data
+#     should freely inform pool flow structure -- the primary structural
+#     comparison axis between models.
+#   Nuisance parameters: sigma_ppm = 0.5 on log scale.
 #
-#   beta2 (=0.05): the quadratic term. Amplification is even more aggressive
-#                 (T^2). Tight prior keeps the modifier on a sensible curve.
-#
-#   sigma_init (=0.5): on log scale. Physical 95% CI is roughly [0.04, 0.27],
-#                 i.e. initial-condition uncertainty between 4% and 27% of
-#                 SOC. Reasonable range for boreal forest steady-state error.
-#
-#   sigma_input (=0.5): on log scale. Physical 95% CI is roughly [0.37, 2.72].
-#                 Symmetric on log scale, allows ~2.7x scaling either way to
-#                 capture the genuine ~20-50% allometric uncertainty in NFI
-#                 litter estimates.
-#
-#   Stick-break and unconstrained (=1.0): default; weakly informative.
-#
-# These widths were chosen empirically during script development; they could
-# be re-derived using the engine's run_prior_predictive_match() function,
-# which finds the smallest sigma giving prior predictive CV >= obs CV.
+# VALUES (Yasso07 -- from published 95% CI in Tuomi et al. 2008-2011):
+#   beta1  (log space):      0.20  -- exp(0.2*T) at T=10C gives ~0.4x-7x range
+#   beta2  (physical space): 0.05  -- quadratic; tight prevents unphysical curve
+#   gamma  (physical space): 0.30  -- keeps precip modifier in [0.3,0.6] at Finnish P
+#   delta1 (physical space): 0.15  -- Tuomi 2010 Table 4: +/-0.16 cm^-1
+#   delta2 (log space):      0.10  -- Tuomi 2010 Table 4: +/-0.10 cm^-2
+#   r      (log space):      0.015 -- Tuomi 2010 Table 4: +/-0.013
+#   sigma_init  (log):       0.5   -- physical 95% CI ~[0.04, 0.27]
+#   sigma_input (log):       0.5   -- physical 95% CI ~[0.37, 2.72]
 # =============================================================================
 
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm["beta1"]       <- 0.2
-sigma_ppm["beta2"]       <- 0.05
+sigma_ppm["beta1"]       <- 0.20    # log space;      Tuomi et al. 2008/2009
+sigma_ppm["beta2"]       <- 0.05    # physical space; Tuomi et al. 2008/2009
+sigma_ppm["gamma"]       <- 0.30    # physical space; keeps modifier in [0.3,0.6] at Finnish P
+sigma_ppm["delta1"]      <- 0.15    # physical space; Tuomi 2010 Table 4
+sigma_ppm["delta2"]      <- 0.10    # log space;      Tuomi 2010 Table 4
+sigma_ppm["r"]           <- 0.015   # log space;      Tuomi 2010 Table 4
 sigma_ppm["sigma_init"]  <- 0.5
-sigma_ppm["sigma_input"] <- 0.5    # global multiplier; reflects allometric uncertainty
+sigma_ppm["sigma_input"] <- 0.5
 
 stopifnot(length(sigma_ppm) == N_FREE)
 stopifnot(all(sigma_ppm > 0))

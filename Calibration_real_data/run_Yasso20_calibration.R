@@ -136,29 +136,55 @@ message("=============================================================\n")
 # =============================================================================
 
 p_default        <- YASSO20_DEFAULT_PARAMS
+# Yasso20 structural zeros: 11 parameters fixed at 0 in the original
+# calibration (SD = 0 across all 10,000 FMI repository posterior samples).
+# Moving them to FIXED_RATE_NAMES rather than sampling near a hard boundary,
+# which degrades DEzs mixing. Values confirmed from ParY20.dat MAP.
 FIXED_RATE_NAMES <- c("alpha_A","alpha_W","alpha_E","alpha_N",
                       "p_H","alpha_H",
-                      "w1","w2","w3","w4","w5")
+                      "w1","w2","w3","w4","w5",
+                      # Structural zeros from original Yasso20 calibration:
+                      "p_NW","p_AE","p_WE","p_NE","p_AN","p_EN")
 fixed_rates      <- p_default[FIXED_RATE_NAMES]
+# Ensure structural zeros are actually zero in fixed_rates
+fixed_rates[c("p_NW","p_AE","p_WE","p_NE","p_AN","p_EN")] <- 0.0
 
 B <- 1.0 - fixed_rates["p_H"]
 
-FRAC_COL_A <- c("p_AW","p_AE","p_AN")
-FRAC_COL_W <- c("p_WA","p_WE","p_WN")
-FRAC_COL_E <- c("p_EA","p_EW","p_EN")
-FRAC_COL_N <- c("p_NA","p_NW","p_NE")
+# FRAC_COL_* updated to exclude structurally fixed fractions.
+# Remaining free fractions per donor column:
+#   A: only p_AW  (p_AE=0, p_AN=0 fixed)
+#   W: p_WA, p_WN (p_WE=0 fixed)
+#   E: p_EA, p_EW (p_EN=0 fixed)
+#   N: only p_NA  (p_NW=0, p_NE=0 fixed)
+FRAC_COL_A <- c("p_AW")
+FRAC_COL_W <- c("p_WA","p_WN")
+FRAC_COL_E <- c("p_EA","p_EW")
+FRAC_COL_N <- c("p_NA")
 
 param_spec <- list(
-  list(names = FRAC_COL_A,                         type = "stick_break",   budget = B),
-  list(names = FRAC_COL_W,                         type = "stick_break",   budget = B),
-  list(names = FRAC_COL_E,                         type = "stick_break",   budget = B),
-  list(names = FRAC_COL_N,                         type = "stick_break",   budget = B),
-  list(names = c("beta1",  "beta2",  "gamma"),      type = "unconstrained"),  # AWE climate
-  list(names = c("betaN1", "betaN2", "gammaN"),     type = "unconstrained"),  # N   climate
-  list(names = c("betaH1", "betaH2", "gammaH"),     type = "unconstrained"),  # H   climate
-  list(names = c("delta1", "delta2", "r"),          type = "unconstrained"),  # size modifier
-  list(names = c("sigma_init"),                     type = "log"),
-  list(names = c("sigma_input"),                    type = "log")
+  list(names = FRAC_COL_A,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_W,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_E,    type = "stick_break",   budget = B),
+  list(names = FRAC_COL_N,    type = "stick_break",   budget = B),
+  # AWE climate
+  list(names = "beta1",       type = "log"),           # T linear;    enforce > 0
+  list(names = "beta2",       type = "unconstrained"), # T quadratic; can be negative
+  list(names = "gamma",       type = "unconstrained"), # precip;      sign via prior
+  # N climate
+  list(names = "betaN1",      type = "log"),           # T linear;    enforce > 0
+  list(names = "betaN2",      type = "unconstrained"),
+  list(names = "gammaN",      type = "unconstrained"),
+  # H climate
+  list(names = "betaH1",      type = "log"),           # T linear;    enforce > 0
+  list(names = "betaH2",      type = "unconstrained"),
+  list(names = "gammaH",      type = "unconstrained"),
+  # Woody size modifier
+  list(names = "delta1",      type = "unconstrained"), # linear;  can be negative
+  list(names = "delta2",      type = "log"),           # quadratic; enforce > 0
+  list(names = "r",           type = "log"),           # power;   only |r| used
+  list(names = "sigma_init",  type = "log"),
+  list(names = "sigma_input", type = "log")
 )
 
 transforms       <- build_transforms(param_spec)
@@ -168,11 +194,32 @@ log_jacobian     <- transforms$log_jacobian
 FREE_NAMES       <- transforms$param_names
 N_FREE           <- transforms$n_params
 
+MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
+
+# Prior centres in PHYSICAL space.
+# Climate/size: posterior means from FMI repository Yasso20.dat (10,000 MCMC
+# samples; confirmed to match ParY20.dat MAP after column remapping --
+# see Priors_model_matching.R).
+# Fractions: Yasso20 published defaults (p_default).
 free_defaults <- c(
-  p_default[c(unlist(lapply(param_spec[1:8], `[[`, "names")))],
+  p_default[MODEL_FREE_NAMES],
   sigma_init  = 0.10,
   sigma_input = 1.00
 )
+
+# Override climate/size centres with Yasso20 posterior means
+free_defaults["beta1"]   <-  0.16663
+free_defaults["beta2"]   <- -0.00236
+free_defaults["gamma"]   <- -1.56415
+free_defaults["betaN1"]  <-  0.17959
+free_defaults["betaN2"]  <- -0.00510
+free_defaults["gammaN"]  <- -1.96532
+free_defaults["betaH1"]  <-  0.06987
+free_defaults["betaH2"]  <- -0.0000980
+free_defaults["gammaH"]  <- -7.62555
+free_defaults["delta1"]  <- -2.42870
+free_defaults["delta2"]  <-  1.12699
+free_defaults["r"]       <-  0.25394
 
 best_x <- to_unconstrained(free_defaults)
 
@@ -188,10 +235,7 @@ message("Transform round-trip: OK")
 # =============================================================================
 
 assemble_model_params <- function(p_free) {
-  yasso_params <- c(
-    fixed_rates,
-    p_free[c(unlist(lapply(param_spec[1:8], `[[`, "names")))]
-  )
+  yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
   yasso_params <- yasso_params[YASSO20_PARAM_NAMES]
   c(yasso_params, sigma_input = unname(p_free["sigma_input"]))
 }
@@ -438,12 +482,22 @@ yasso20_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 # method, and the prior should not introduce additional asymmetry.
 # =============================================================================
 
+# VALUES (Yasso20 -- from SD of FMI repository posterior, Yasso20.dat).
+# Log-transformed params: sigma = SD(log(samples)); physical params: SD(samples).
+# gammaH not capped (SD=1.39, within acceptable range for Yasso20).
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-
-sigma_ppm["beta1"]   <- 0.2;  sigma_ppm["beta2"]   <- 0.05
-sigma_ppm["betaN1"]  <- 0.2;  sigma_ppm["betaN2"]  <- 0.05
-sigma_ppm["betaH1"]  <- 0.2;  sigma_ppm["betaH2"]  <- 0.05
-
+sigma_ppm["beta1"]       <- 0.10355  # log space
+sigma_ppm["beta2"]       <- 0.00054  # physical space
+sigma_ppm["gamma"]       <- 0.14583  # physical space
+sigma_ppm["betaN1"]      <- 0.06246  # log space
+sigma_ppm["betaN2"]      <- 0.00041  # physical space
+sigma_ppm["gammaN"]      <- 0.03532  # physical space
+sigma_ppm["betaH1"]      <- 0.09118  # log space
+sigma_ppm["betaH2"]      <- 0.00009  # physical space
+sigma_ppm["gammaH"]      <- 1.39056  # physical space
+sigma_ppm["delta1"]      <- 0.43530  # physical space
+sigma_ppm["delta2"]      <- 0.21098  # log space
+sigma_ppm["r"]           <- 0.05446  # log space
 sigma_ppm["sigma_init"]  <- 0.5
 sigma_ppm["sigma_input"] <- 0.5
 

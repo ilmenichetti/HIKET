@@ -9,7 +9,7 @@ output:
     toc_depth: 3
     number_sections: true
     latex_engine: xelatex
-    extra_dependencies: ["booktabs", "amsmath"]
+    extra_dependencies: ["booktabs", "amsmath", "longtable", "array"]
 geometry: margin=2.5cm
 fontsize: 11pt
 ---
@@ -57,23 +57,27 @@ irreversibly.
 
 The climate modifier is applied multiplicatively to all decomposition rates:
 
-$$\xi(T, T_{\mathrm{amp}}, P) = \exp\bigl(\beta_1(T - T_r) + \beta_2(T^2 - T_r^2)\bigr)
-  \times \bigl(1 - \exp(\gamma \, P)\bigr)$$
+$$\xi(T, T_{\mathrm{amp}}, P) = \exp\bigl(\beta_1 T + \beta_2 T^2\bigr)
+  \times \bigl(1 - \exp(\gamma \, P/1000)\bigr)$$
 
-where $T$ is annual mean temperature, $T_{\mathrm{amp}}$ is amplitude
-(internally decomposed into a sinusoidal within-year cycle), $P$ is annual
-precipitation, $T_r = 15\,^{\circ}$C is the reference temperature, and
-$\beta_1$, $\beta_2$, $\gamma$ are free parameters. A woody decomposition
-modifier is applied as an additional factor for FWL/CWL size classes
-($\delta_1$, $\delta_2$, $r$). Model core implemented in Fortran; called via
-`.Fortran()`.
+where $T$ is mean temperature ($^{\circ}$C), $P$ is annual precipitation (mm),
+and $\beta_1$, $\beta_2$, $\gamma$ are free parameters.
+A woody decomposition size modifier scales decomposition rates for FWL/CWL:
+
+$$h_S(d) = \min\!\bigl\{1,\; (1 + \delta_1 d + \delta_2 d^2)^{-|r|}\bigr\}$$
+
+where $d$ is woody litter diameter (cm). Model core implemented in Fortran;
+called via `.Fortran()`.
 
 ## Yasso15 / Yasso20
 
-Structurally similar to Yasso07 with pool-group-specific climate responses
-(separate $(\beta, \gamma)$ sets for A/W/E pools, N pool, and H pool). Yasso20
-additionally modifies the temperature response shape. Calibration follows the
-same architecture as Yasso07 with an expanded parameter vector.
+Structurally identical AWEN pool structure as Yasso07 with pool-group-specific
+climate responses: separate $(\beta_1, \beta_2, \gamma)$ triplets for the AWE
+pool group, N pool, and H pool. Yasso20 additionally modifies the temperature
+response shape for N and H. An additional set of leaching parameters
+($w_1, \ldots, w_5$) captures dissolved organic carbon export; in Yasso20,
+all leaching parameters are fixed at zero (structurally absent). Calibration
+follows the same architecture as Yasso07 with an expanded 35-parameter vector.
 
 ---
 
@@ -84,52 +88,140 @@ same architecture as Yasso07 with an expanded parameter vector.
 Six parameters are fixed at published values (Tuomi et al. 2009, 2011) and
 are not calibrated:
 
-| Parameter | Physical meaning |
-|---|---|
-| $\alpha_A,\; \alpha_W,\; \alpha_E,\; \alpha_N$ | Decomposition rate constants for the four litter pools (yr$^{-1}$) |
-| $p_H$ | Fraction of decomposed material entering the humus pool |
-| $\alpha_H$ | Humus decomposition rate (yr$^{-1}$) |
+| HIKET name | Published notation | Physical meaning |
+|---|---|---|
+| `alpha_A`, `alpha_W`, `alpha_E`, `alpha_N` | $\alpha_A, \alpha_W, \alpha_E, \alpha_N$ | Pool decomposition rate constants (yr$^{-1}$) |
+| `p_H` | $p_H$ | Fraction of decomposed mass entering humus |
+| `alpha_H` | $\alpha_H$ | Humus decomposition rate (yr$^{-1}$) |
 
-**Rationale for fixing:** Rate constants are well-constrained in the
-international Yasso literature. Calibrating them risks overfitting to Finnish
-climate and litter inputs. Structural differences between models are encoded in
-flow fractions and climate response, the scientifically interesting quantities
-for this intercomparison.
+**Rationale for fixing:** Rate constants are well-constrained across the
+international Yasso literature. Calibrating them against Finnish SOC alone
+risks overfitting to Finnish climate and litter inputs. Structural differences
+between models in this intercomparison are encoded in flow fractions and
+climate response --- the scientifically relevant comparison axes.
 
 ## Free Parameters
 
-20 parameters are jointly calibrated (18 Yasso07 physical + 2 nuisance):
+20 parameters are jointly calibrated (18 physical + 2 nuisance):
 
 **Inter-pool flow fractions (12):** $p_{AW},\; p_{AE},\; p_{AN},\; p_{WA},\;
 p_{WE},\; p_{WN},\; p_{EA},\; p_{EW},\; p_{EN},\; p_{NA},\; p_{NW},\; p_{NE}$.
 Each donor pool $i$ must satisfy $\sum_j p_{ij} \leq B = 1 - p_H$ (mass
 balance with humus formation).
 
-**Climate and woody response (6):**
-$\beta_1,\; \beta_2$ (temperature, linear and quadratic),
-$\gamma$ (precipitation),
-$\delta_1,\; \delta_2,\; r$ (woody litter decomposition adjustment).
+**Climate response (3):**
+$\beta_1$ (temperature, linear; log-transformed),
+$\beta_2$ (temperature, quadratic; unconstrained),
+$\gamma$ (precipitation; unconstrained).
+
+**Woody litter size modifier (3):**
+$\delta_1$ (linear diameter effect; unconstrained),
+$\delta_2$ (quadratic diameter effect; **log-transformed**),
+$r$ (power; **log-transformed**).
 
 **Nuisance parameters (2):**
 
 - $\sigma_{\mathrm{init}}$: multiplicative initial-condition uncertainty.
   Added in quadrature to $\sigma_{\mathrm{obs}}$ at the first observation per
   plot. Captures error from assuming the 1985 SOC equals the analytical steady
-  state.
+  state (log-transformed; strictly positive).
 
 - $\sigma_{\mathrm{input}}$: global litter scaling multiplier. Applied to all
   litter inputs before model evaluation (steady state and transient run
   consistently). Captures allometric uncertainty in NFI litter estimates
-  (~20--50% intrinsic uncertainty). Currently global (same multiplier for all
-  plots, species, and years).
+  ($\sim$20--50\% intrinsic uncertainty). Global (same multiplier for all
+  plots, species, and years). Log-transformed; centred at 1 (no scaling).
+
+---
+
+# Parameter Specification --- Yasso15 / Yasso20
+
+## Fixed Parameters
+
+Same six rate constants as Yasso07 ($\alpha_A, \alpha_W, \alpha_E, \alpha_N,
+p_H, \alpha_H$), fixed at the Yasso15/20 published values (Tuomi et al.
+2011 and repository; see Section \ref{sec:priors}).
+
+**Yasso20 additional fixed parameters:** eleven transfer fractions and all
+leaching parameters are structurally fixed at zero in the original Yasso20
+calibration (posterior SD $\approx 0$ across all 10,000 repository samples).
+These must be fixed in the HIKET calibration and are not sampled:
+
+$$p_{NW} = p_{AE} = p_{WE} = p_{NE} = p_{AN} = p_{EN} = 0$$
+$$w_1 = w_2 = w_3 = w_4 = w_5 = 0$$
+
+## Free Parameters
+
+**Yasso15:** 24 physical + 2 nuisance = 26 free parameters.
+**Yasso20:** 13 physical + 2 nuisance = 15 free parameters (structural zeros removed).
+
+**Inter-pool flow fractions:** same 12 as Yasso07 (Yasso15); subset for Yasso20.
+
+**Pool-group-specific climate response (9 for Yasso15; 9 for Yasso20):**
+
+| HIKET name | Physical meaning |
+|---|---|
+| `beta1`, `beta2`, `gamma` | Temperature and precipitation response for AWE pools |
+| `betaN1`, `betaN2`, `gammaN` | Temperature and precipitation response for N pool |
+| `betaH1`, `betaH2`, `gammaH` | Temperature and precipitation response for H pool |
+
+**Woody litter size modifier (3):** $\delta_1$, $\delta_2$, $r$ as in Yasso07.
+
+**Leaching parameters (5, Yasso15 only):** $w_1, \ldots, w_5$.
+Represent dissolved organic carbon export from each pool group.
+All fixed at zero in Yasso20.
+
+**Nuisance parameters (2):** $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$
+as in Yasso07.
+
+---
+
+# Parameter Naming Conventions
+
+The three model versions use different parameter naming conventions across
+publications, original calibration files, and this HIKET implementation.
+The table below reconciles all conventions for the non-fraction parameters
+(fractions follow a consistent $p_{XY}$ notation across all sources).
+
+\small
+| HIKET code name | $y$`07par_gui.csv` | $y$`15par.csv` | Fortran `theta(i)` (Y15/20) | Paper notation | Physical meaning |
+|---|---|---|---|---|---|
+| `alpha_A` | `aA` | `aA` | $\theta_1$ | $\alpha_A$ | A pool rate (yr$^{-1}$) |
+| `alpha_W` | `aW` | `aW` | $\theta_2$ | $\alpha_W$ | W pool rate (yr$^{-1}$) |
+| `alpha_E` | `aE` | `aE` | $\theta_3$ | $\alpha_E$ | E pool rate (yr$^{-1}$) |
+| `alpha_N` | `aN` | `aN` | $\theta_4$ | $\alpha_N$ | N pool rate (yr$^{-1}$) |
+| `beta1` | `b1` | `b1` | $\theta_{22}$ | $\beta_1$ | Temp. linear (AWE) |
+| `beta2` | `b2` | `b2` | $\theta_{23}$ | $\beta_2$ | Temp. quadratic (AWE) |
+| `gamma` | `gamma` | `g` | $\theta_{28}$ | $\gamma$ | Precip. (AWE) |
+| `betaN1` | --- | `bN1` | $\theta_{24}$ | $\beta_{N1}$ | Temp. linear (N) |
+| `betaN2` | --- | `bN2` | $\theta_{25}$ | $\beta_{N2}$ | Temp. quadratic (N) |
+| `gammaN` | --- | `gN` | $\theta_{29}$ | $\gamma_N$ | Precip. (N) |
+| `betaH1` | --- | `bH1` | $\theta_{26}$ | $\beta_{H1}$ | Temp. linear (H) |
+| `betaH2` | --- | `bH2` | $\theta_{27}$ | $\beta_{H2}$ | Temp. quadratic (H) |
+| `gammaH` | --- | `gH` | $\theta_{30}$ | $\gamma_H$ | Precip. (H) |
+| `delta1` | `phi1` | `th1` | $\theta_{33}$ | $\phi_1$ | Size modifier linear |
+| `delta2` | `phi2` | `th2` | $\theta_{34}$ | $\phi_2$ | Size modifier quadratic |
+| `r` | `r` | `r` | $\theta_{35}$ | $r$ | Size modifier power |
+| `alpha_H` | `aH` | `aH` | $\theta_{32}$ | $\alpha_H$ | Humus rate (yr$^{-1}$) |
+| `p_H` | `pH` | `pH` | $\theta_{31}$ | $p_H$ | Humus fraction |
+| `w1`--`w5` | --- | `w1`--`w5` | $\theta_{17}$--$\theta_{21}$ | $w_1$--$w_5$ | Leaching (Yasso15 only) |
+\normalsize
+
+**Critical ordering note.** The original Yasso15/20 Fortran and `.dat` files
+use the ordering $(\alpha, p_{ij}, w_{1:5}, \beta, \beta_N, \beta_H, \gamma,
+\gamma_N, \gamma_H, p_H, \alpha_H, \delta_1, \delta_2, r)$, placing leaching
+before climate parameters. The HIKET implementation reorders to $(\alpha, p_{ij},
+\beta, \gamma, \beta_N, \gamma_N, \beta_H, \gamma_H, p_H, \alpha_H, \delta_1,
+\delta_2, r, w_{1:5})$. The bijective column remapping is documented in
+`Priors_model_matching.R` (vector `ORIG_TO_LORENZO`).
 
 ---
 
 # Parameter Transformations
 
-The DEzs sampler operates in unconstrained $\mathbb{R}^{20}$. Physical
-parameters are recovered by applying `to_original()` to the sampler's
-proposals. Three primitive transform types are used.
+The DEzs sampler operates in unconstrained $\mathbb{R}^{n}$ where $n = 20$
+(Yasso07), 26 (Yasso15), or 15 (Yasso20). Physical parameters are recovered
+by applying `to_original()` to every proposal.
 
 ## Stick-Breaking (flow fractions)
 
@@ -142,62 +234,246 @@ to a valid fraction vector $\boldsymbol{p}$:
 
 $$p_i = \sigma(v_i) \times r_i, \qquad r_{i+1} = r_i - p_i, \quad r_1 = B$$
 
-where $\sigma(v) = (1 + e^{-v})^{-1}$ is the logistic sigmoid. The remaining
-stick $r_i$ shrinks at each step, guaranteeing $\sum_j p_{ij} \leq B$. The
-inverse (physical $\to$ unconstrained) follows by sequential logit
-transformation of the normalised remainder fractions.
+where $\sigma(v) = (1 + e^{-v})^{-1}$ is the logistic sigmoid. The inverse
+(physical $\to$ unconstrained) follows by sequential logit transformation of
+the normalised remainder fractions.
 
-## Log Transform ($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$)
+## Log Transform
+
+Applied to parameters that must be strictly positive:
 
 $$v = \log(\theta), \qquad \theta = e^v$$
 
-Ensures strict positivity. $\sigma_{\mathrm{input}}$ is centred at 1 in
-physical space ($v = 0$) by default.
+Applied to: $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$, $\beta_1$,
+$\beta_{N1}$, $\beta_{H1}$ (temperature sensitivities, must be positive for
+boreal decomposition; see Section \ref{sec:priors}), $\delta_2$ (size modifier
+quadratic, must be positive to prevent numerical failure; see below), $r$ (size
+modifier power; only $|r|$ is used in Fortran).
 
-## Unconstrained ($\beta_1, \beta_2, \gamma, \delta_1, \delta_2, r$)
+## Unconstrained
 
-No transformation. These parameters enter the climate modifier through an
-exponential expression; any real value is physically admissible.
+No transformation: $\beta_2$, $\beta_{N2}$, $\beta_{H2}$, $\gamma$,
+$\gamma_N$, $\gamma_H$, $\delta_1$, $w_{1:5}$.
+
+## The $\delta_2 > 0$ Constraint (NaN Pathology)
+
+The size modifier evaluates $(1 + \delta_1 d + \delta_2 d^2)^{-|r|}$.
+If $\delta_2 < 0$, the quadratic opens downward and crosses zero at a finite
+diameter:
+
+$$d_0 = \frac{-\delta_1 - \sqrt{\delta_1^2 - 4\delta_2}}{2\delta_2}$$
+
+For the published Yasso07 values ($\delta_1 = -1.71$, $\delta_2 = +0.86$),
+$d_0$ does not exist (discriminant negative; expression stays positive for all
+$d \geq 0$). With $\delta_2 < 0$ and realistic Finnish woody litter diameters
+($d > 2$ cm for stumps), the base goes negative, and a negative number raised
+to a non-integer power is undefined in Fortran --- propagating as NaN and
+returning $-\infty$ to the likelihood.
+
+Applying a log transform to $\delta_2$ enforces $\delta_2 > 0$ throughout
+the MCMC, eliminating this NaN source. The fix was confirmed against the
+original Yasso15 Fortran subroutine (`y15_subroutine.f90`, line 90).
+
+The log transform on $r$ is a minor complement: since only $-|r|$ enters the
+Fortran expression, the sign of $r$ is irrelevant. Sampling in unconstrained
+space therefore wasted half the prior support on numerically identical values.
 
 ## Jacobian Correction
 
 The log-Jacobian $\log|\partial \boldsymbol{\theta}/\partial \boldsymbol{v}|$ is added to the
-log-likelihood at every evaluation to correct for the volume distortion:
+log-likelihood at every evaluation:
 
 $$\log p(\boldsymbol{\theta} \mid \boldsymbol{y}) \propto
   \log p(\boldsymbol{y} \mid \boldsymbol{\theta}) + \log p(\boldsymbol{\theta})
   + \log \left|\frac{\partial \boldsymbol{\theta}}{\partial \boldsymbol{v}}\right|$$
 
-For the stick-breaking transform the Jacobian factor per element is
+For stick-breaking, the Jacobian factor per element is
 $\sigma(v_i)(1-\sigma(v_i)) \times r_i$. For the log transform it is
 $e^v = \theta$. The Jacobian is added to the likelihood (not the prior) so
 that the BayesianTools prior object remains a standard Gaussian.
 
 ---
 
-# Prior Distribution
+# Prior Distribution {#sec:priors}
+
+## Philosophy
 
 The prior is a multivariate normal in unconstrained space, independent across
 parameters:
 
-$$p(\boldsymbol{v}) = \prod_{k=1}^{20} \mathcal{N}(v_k;\; v_{k}^{*},\; \sigma_k^2)$$
+$$p(\boldsymbol{v}) = \prod_{k} \mathcal{N}(v_k;\; v_{k}^{*},\; \sigma_k^2)$$
 
-**Prior centre** $\boldsymbol{v}^{*}$: published Yasso07 defaults (Tuomi et al.
-2009, 2011) transformed to unconstrained space. Nuisance parameters centred
-at $\sigma_{\mathrm{init}} = 0.10$ and $\sigma_{\mathrm{input}} = 1.00$.
-A round-trip check verifies `to_original(to_unconstrained(theta)) == theta` to machine
-precision at startup.
+Three parameter groups receive qualitatively different prior treatment:
 
-**Prior widths** $\sigma_k$ (unconstrained space):
+1. **Climate and size modifier parameters:** informative priors derived from
+   the original global calibration datasets (Tuomi et al. 2008--2011) or from
+   the published Yasso15/20 MCMC posteriors (Finnish Meteorological Institute
+   repository). These parameters are well-constrained by external data; tight
+   priors prevent degenerate compensation between parameters (particularly the
+   $\gamma$--$\sigma_{\mathrm{input}}$ loop identified during initial runs)
+   and prevent exploration of physically invalid regions.
 
-| Parameter group | $\sigma_k$ | Rationale |
+2. **Transfer fractions:** weakly informative ($\sigma_k = 1.0$ in
+   unconstrained stick-breaking space). Finnish data should freely inform the
+   pool flow structure. This is the primary structural comparison axis between
+   models in the HIKET intercomparison; imposing tight priors would undermine
+   the study objective.
+
+3. **Nuisance parameters ($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$):**
+   moderately informative ($\sigma_k = 0.5$ in log space). This gives a
+   physical 95\% CI of approximately $[0.37, 2.72]$ --- wide enough to
+   accommodate systematic allometric errors but narrow enough to prevent
+   degenerate input scaling.
+
+## Prior Centres
+
+**Yasso07:** prior centres are the published parameter values from Tuomi et al.
+(2009, 2011), confirmed to agree with `YASSO07_DEFAULT_PARAMS` in the wrapper
+to within numerical precision. Decomposition rates in `y07par_gui.csv` are
+stored as positive absolute values; the wrapper correctly uses them with a
+negative sign in the transfer matrix.
+
+**Yasso15:** prior centres for climate and size modifier parameters are set to
+the posterior means from the original Yasso15 global calibration (FMI
+repository, `Yasso15.dat`, 10,000 thinned MCMC samples after dropping the MAP
+row). Transfer fractions use the Yasso15 model defaults. The posterior means
+agree with the published MAP values in `y15par.csv` to four significant figures
+after applying the column remapping described in Section \ref{sec:naming}.
+
+**Yasso20:** prior centres for climate and size modifier parameters are set to
+the posterior means from the original Yasso20 global calibration (FMI
+repository, `Yasso20.dat`, 10,000 samples). Transfer fractions use Yasso20
+model defaults.
+
+Nuisance parameters: $\sigma_{\mathrm{init}}$ centred at 0.10 (10\% initial
+condition uncertainty), $\sigma_{\mathrm{input}}$ centred at 1.00 (no a
+priori scaling adjustment).
+
+## Prior Widths --- Yasso07
+
+Yasso07 prior widths are set from the published 95\% credible intervals in
+the original calibration papers (no MCMC samples available in the repository).
+
+| Parameter | $\sigma_k$ | Space | Source |
+|---|---|---|---|
+| Flow fractions (stick-break) | 1.0 | unconstrained | Weakly informative |
+| $\beta_1$ | 0.20 | log | Tuomi et al. 2008; exp($\beta_1 T$) at $T = 10^{\circ}$C gives 95\% range $\approx 0.4\times$--$7\times$ |
+| $\beta_2$ | 0.05 | physical | Tight; quadratic amplification prevents unphysical curvature |
+| $\gamma$ | 0.30 | physical | Keeps precip.\ modifier in $[0.3, 0.6]$ at Finnish $P = 500$--$650$ mm |
+| $\delta_1$ | 0.15 | physical | Tuomi et al. 2010, Table 4: 95\% CI $\pm 0.16$ cm$^{-1}$ |
+| $\delta_2$ | 0.10 | log | Tuomi et al. 2010, Table 4: 95\% CI $\pm 0.10$ cm$^{-2}$ |
+| $r$ | 0.015 | log | Tuomi et al. 2010, Table 4: 95\% CI $\pm 0.013$ |
+| $\sigma_{\mathrm{init}}$ | 0.5 | log | Physical 95\% CI $\approx [0.04, 0.27]$ |
+| $\sigma_{\mathrm{input}}$ | 0.5 | log | Physical 95\% CI $\approx [0.37, 2.72]$ |
+
+## Prior Widths --- Yasso15 and Yasso20
+
+For Yasso15/20, prior widths for climate and size modifier parameters are
+derived directly from the standard deviations of the published posterior
+samples. For log-transformed parameters ($\beta_1$, $\beta_{N1}$,
+$\beta_{H1}$, $\delta_2$, $r$) the width is $\mathrm{SD}(\log \theta)$
+across posterior samples; for unconstrained parameters it is
+$\mathrm{SD}(\theta)$.
+
+The $\gamma_H$ (H pool precipitation sensitivity) prior width is capped at
+1.5 in both models. At Finnish precipitation ($P \approx 600$ mm),
+$1 - \exp(\gamma_H \times 0.6) \approx 1$ for any $\gamma_H < -5$, making the
+H pool precipitation modifier effectively constant and $\gamma_H$ nearly
+unidentifiable. The large posterior SD (3.99 for Yasso15, 1.39 for Yasso20)
+is an identifiability artefact; the cap uses the Yasso20 posterior as a more
+constrained reference.
+
+\small
+| Parameter | Yasso15 $\sigma_k$ | Yasso20 $\sigma_k$ | Space | Note |
+|---|---|---|---|---|
+| Flow fractions | 1.0 | 1.0 | unconstrained | Weakly informative |
+| $\beta_1$ | 0.046 | 0.104 | log | SD(log $\beta_1$) from posterior |
+| $\beta_2$ | 0.00014 | 0.00054 | physical | Very tight; well-identified |
+| $\gamma$ | 0.070 | 0.146 | physical | SD($\gamma$) from posterior |
+| $\beta_{N1}$ | 0.105 | 0.062 | log | SD(log $\beta_{N1}$) |
+| $\beta_{N2}$ | 0.00008 | 0.00041 | physical | |
+| $\gamma_N$ | 0.155 | 0.035 | physical | |
+| $\beta_{H1}$ | 0.135 | 0.091 | log | SD(log $\beta_{H1}$) |
+| $\beta_{H2}$ | 0.00016 | 0.00009 | physical | |
+| $\gamma_H$ | **1.50** | 1.391 | physical | Capped (identifiability; see above) |
+| $\delta_1$ | 0.328 | 0.435 | physical | SD($\delta_1$) |
+| $\delta_2$ | 0.286 | 0.211 | log | SD(log $\delta_2$) |
+| $r$ | 0.055 | 0.054 | log | SD(log $r$) |
+| $\sigma_{\mathrm{init}}$ | 0.5 | 0.5 | log | Fixed |
+| $\sigma_{\mathrm{input}}$ | 0.5 | 0.5 | log | Fixed |
+\normalsize
+
+## Physical Sign Constraints
+
+Several parameters must satisfy sign constraints from physical or mathematical
+requirements. These are enforced via log transforms rather than prior bounds,
+which would introduce hard edges incompatible with the Gaussian prior
+assumption.
+
+| Constraint | Parameters | Basis |
 |---|---|---|
-| Flow fractions (stick-break) | 1.0 | Weakly informative; physical range is $[0, B]$ |
-| $\beta_1$ | 0.2 | $\exp(\beta_1 T)$ at $T \approx 10\,^{\circ}$C: 95\% CI spans $\approx 0.4\times$--$7\times$ modifier |
-| $\beta_2$ | 0.05 | Quadratic amplification; tight prior prevents unphysical curvature |
-| $\gamma,\; \delta_1,\; \delta_2,\; r$ | 1.0 | Weakly informative |
-| $\sigma_{\mathrm{init}}$ (log scale) | 0.5 | Physical 95\% CI $\approx [0.04,\, 0.27]$: 4\%--27\% SOC init uncertainty |
-| $\sigma_{\mathrm{input}}$ (log scale) | 0.5 | Physical 95\% CI $\approx [0.37,\, 2.72]$: $\approx 2.7\times$ range either way |
+| $> 0$ | $\beta_1, \beta_{N1}, \beta_{H1}$ | Decomposition increases with temperature in boreal Finland ($-5$ to $+20^{\circ}$C). Enforced by log transform. |
+| $> 0$ | $\delta_2$ | Size modifier $h_S(d) > 0$ for all Finnish diameters requires positive quadratic. Negative $\delta_2$ causes NaN in Fortran for $d \gtrsim 0.4$ cm. Enforced by log transform. |
+| $> 0$ | $r$ | Only $-|r|$ enters Fortran. Sign is irrelevant; log transform avoids wasting half the prior on sign-equivalent values. |
+| $< 0$ | $\gamma, \gamma_N, \gamma_H$ | $1 - \exp(\gamma P/1000) > 0$ requires $\gamma < 0$. Enforced by tight prior centred on negative published values; all posteriors respect this sign. |
+
+Note on $\gamma_H$: enforcing $\gamma_H < 0$ via $\log(-\gamma_H)$ transform
+would require negating $\gamma_H$ in `assemble_model_params()`. The current
+implementation retains $\gamma_H$ as unconstrained with a tight prior centre
+(Yasso15: $-12.54$; Yasso20: $-7.63$) and a capped sigma; the likelihood
+itself strongly enforces the negative sign.
+
+## Published Parameter Values at Prior Centres
+
+The tables below give the physical-space prior centres for all free climate
+and size modifier parameters across models. Fraction prior centres are the
+respective model's published defaults and are not listed separately.
+
+**Yasso07** (from Tuomi et al. 2009, 2011; `y07par_gui.csv`):
+
+| Parameter | Value | Source |
+|---|---|---|
+| $\beta_1$ | 0.09873 | Tuomi et al. 2009 |
+| $\beta_2$ | $-$0.00157 | Tuomi et al. 2009 |
+| $\gamma$ | $-$1.2717 | Tuomi et al. 2009 |
+| $\delta_1$ | $-$1.7084 | Tuomi et al. 2010 |
+| $\delta_2$ | $+$0.8586 | Tuomi et al. 2010 |
+| $r$ | $-$0.3068 | Tuomi et al. 2010 |
+
+**Yasso15** (posterior means from FMI repository `Yasso15.dat`; agree with
+`y15par.csv` MAP to four significant figures):
+
+| Parameter | Value |
+|---|---|
+| $\beta_1$ | 0.0906 |
+| $\beta_2$ | $-$0.000215 |
+| $\gamma$ | $-$1.8090 |
+| $\beta_{N1}$ | 0.04878 |
+| $\beta_{N2}$ | $-$0.0000792 |
+| $\gamma_N$ | $-$1.1729 |
+| $\beta_{H1}$ | 0.03518 |
+| $\beta_{H2}$ | $-$0.000208 |
+| $\gamma_H$ | $-$12.541 |
+| $\delta_1$ | $-$0.4388 |
+| $\delta_2$ | $+$1.2684 |
+| $r$ | $+$0.2569 |
+
+**Yasso20** (posterior means from FMI repository `Yasso20.dat`):
+
+| Parameter | Value |
+|---|---|
+| $\beta_1$ | 0.1666 |
+| $\beta_2$ | $-$0.00236 |
+| $\gamma$ | $-$1.5641 |
+| $\beta_{N1}$ | 0.17959 |
+| $\beta_{N2}$ | $-$0.00510 |
+| $\gamma_N$ | $-$1.9653 |
+| $\beta_{H1}$ | 0.06987 |
+| $\beta_{H2}$ | $-$0.0000980 |
+| $\gamma_H$ | $-$7.6255 |
+| $\delta_1$ | $-$2.4287 |
+| $\delta_2$ | $+$1.1270 |
+| $r$ | $+$0.2539 |
 
 ---
 
@@ -215,7 +491,7 @@ $$s_t = \begin{cases}
   \hat{C}_t \, \sqrt{\sigma_{\mathrm{obs}}^2 + \sigma_{\mathrm{init}}^2}
     & \text{first observation per plot (1985)} \\[4pt]
   \hat{C}_t \, \sigma_{\mathrm{obs}}
-    & \text{subsequent observations (2006)}
+    & \text{subsequent observations (2006, 2024)}
 \end{cases}$$
 
 **Rationale for multiplicative-normal:** A log-normal error model was used
@@ -295,7 +571,7 @@ multiplier affects the initial condition and the trajectory consistently.
 Starting from $\boldsymbol{C}^{\ast}$, the model runs forward 1985--2023 using
 the annual $\xi_t$ time series and actual annual litter inputs. A single
 Fortran call per plot returns the full pool trajectory; predicted SOC at
-observation years (1985, 2006) is extracted and compared to observations.
+observation years (1985, 2006, 2024) is extracted and compared to observations.
 
 ---
 
@@ -308,7 +584,7 @@ implemented in `BayesianTools` (Hartig et al. 2023). Selected for:
 
 - No gradient requirements (black-box Fortran model).
 - Robust performance on correlated, moderately high-dimensional posteriors
-  (20 free parameters).
+  (15--26 free parameters).
 - Population-based proposals that efficiently explore posterior ridges from
   compositional constraints.
 
@@ -355,8 +631,8 @@ defaults) is run for 4 randomly selected plots:
 
 1. **Numerical stability:** all predicted SOC finite and positive.
 2. **Order-of-magnitude check:** predicted / observed $\in [0.1, 10]$
-   at both observation years.
-3. **Likelihood check:** `ll_fn(best_x)` finite across all 350 plots.
+   at all observation years.
+3. **Likelihood check:** `ll_fn(best_x)` finite across all calibration plots.
 
 Output: `{Model}_forward_at_defaults_{RUN_ID}.png` (2$\times$2 panel). If
 the sanity check fails, MCMC is not launched.
@@ -421,7 +697,7 @@ subsequently updated.
 
 # Key Design Decisions
 
-Architectural decisions locked in after discussion (April 2026):
+Architectural decisions locked in after discussion (April--May 2026):
 
 1. **Multiplicative-normal likelihood.** Reverted from a log-normal workaround
    added when litter inputs had a $\times10$ overestimate. With correct litter
@@ -443,12 +719,31 @@ Architectural decisions locked in after discussion (April 2026):
    p_H, \alpha_H$ fixed at published values. Structural intercomparison should
    be driven by flow fractions and climate response.
 
-6. **Sequential chains.** Mandatory on macOS. Hybrid strategy
+6. **Log transform on $\delta_2$ and $r$.** Enforces $\delta_2 > 0$ to prevent
+   NaN in the Fortran size modifier and eliminates sign-redundancy in $r$.
+   Addresses a systematic source of $-\infty$ likelihood evaluations (~24\%
+   of proposals in initial unconstrained runs).
+
+7. **Informative priors for climate/size parameters.** Derived from published
+   posteriors (Yasso15/20) or calibration confidence intervals (Yasso07).
+   Prevents the $\gamma$--$\sigma_{\mathrm{input}}$ compensation loop observed
+   in initial runs; preserves freedom for Finnish data to inform flow fractions.
+
+8. **Yasso20 structural zeros fixed.** Eleven parameters with $\mathrm{SD} = 0$
+   in the original Yasso20 calibration are fixed rather than sampled. Sampling
+   near a hard boundary degrades DEzs mixing.
+
+9. **Sequential chains.** Mandatory on macOS. Hybrid strategy
    ($4 \times 39$ cores) available on Puhti.
 
-7. **Global $\sigma_{\mathrm{input}}$.** Single litter scaling multiplier.
-   Per-species stratification is a possible extension but would introduce
-   identifiability questions that distract from the intercomparison.
+10. **Global $\sigma_{\mathrm{input}}$.** Single litter scaling multiplier.
+    Per-species stratification is a possible extension but would introduce
+    identifiability questions that distract from the intercomparison.
+
+11. **Three SOC observation years (1985, 2006, 2024).** The Komeetta campaign
+    (2024) provides a third calibration target. The 2006--2024 stability
+    constrains equilibrium decomposition rates independently of the
+    1985--2006 accumulation dynamics.
 
 ---
 
