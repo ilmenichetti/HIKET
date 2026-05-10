@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.9.2)  10 MAY 2026 21:52
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.9.2)  10 MAY 2026 23:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -878,7 +878,7 @@ libration.R\TU/lmr/m/n/10.95 ).
  []
 
 [2] [3]
-Overfull \hbox (31.26044pt too wide) in paragraph at lines 233--238
+Overfull \hbox (31.26044pt too wide) in paragraph at lines 247--252
 []\TU/lmr/bx/n/10.95 Inter-pool flow fractions (12): $[][][]  [][][]  [][][]  [
 ][][]  [][][]  [][][]  [][][]  [][][]  [][][]  [][][]  [][][]  [][]$\TU/lmr/m/n
 /10.95 .
@@ -888,89 +888,89 @@ Missing character: There is no ∼ (U+223C) in font [lmroman10-regular]:mapping=
 ex-text;!
 [4]
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 356.
+(Font)              scaled to size 10.0pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 356.
+(Font)              scaled to size 7.0pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 356.
+(Font)              scaled to size 5.0pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 10.00092pt on input line 356.
+(Font)              scaled to size 10.00092pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 7.00064pt on input line 356.
+(Font)              scaled to size 7.00064pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
-(Font)              scaled to size 5.00046pt on input line 356.
+(Font)              scaled to size 5.00046pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 9.99893pt on input line 356.
+(Font)              scaled to size 9.99893pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 6.99925pt on input line 356.
+(Font)              scaled to size 6.99925pt on input line 380.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
-(Font)              scaled to size 4.99947pt on input line 356.
+(Font)              scaled to size 4.99947pt on input line 380.
 
-Overfull \hbox (4.74345pt too wide) in paragraph at lines 356--357
+Overfull \hbox (4.74345pt too wide) in paragraph at lines 380--381
 []$[]$\TU/lmtt/m/n/10 07par_gui.csv  
  []
 
-[5]
+[5] [6]
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/b/n' will be
-(Font)              scaled to size 10.95pt on input line 441.
+(Font)              scaled to size 10.95pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/b/n' will be
-(Font)              scaled to size 7.665pt on input line 441.
+(Font)              scaled to size 7.665pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/b/n' will be
-(Font)              scaled to size 5.475pt on input line 441.
+(Font)              scaled to size 5.475pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/b/n' will be
-(Font)              scaled to size 10.95099pt on input line 441.
+(Font)              scaled to size 10.95099pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/b/n' will be
-(Font)              scaled to size 7.66568pt on input line 441.
+(Font)              scaled to size 7.66568pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/b/n' will be
-(Font)              scaled to size 5.4755pt on input line 441.
+(Font)              scaled to size 5.4755pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/b/n' will be
-(Font)              scaled to size 10.94882pt on input line 441.
+(Font)              scaled to size 10.94882pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/b/n' will be
-(Font)              scaled to size 7.66417pt on input line 441.
+(Font)              scaled to size 7.66417pt on input line 473.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/b/n' will be
-(Font)              scaled to size 5.47441pt on input line 441.
-[6] [7]
+(Font)              scaled to size 5.47441pt on input line 473.
+[7] [8]
 
-LaTeX Warning: Reference `sec:naming' on page 8 undefined on input line 565.
+LaTeX Warning: Reference `sec:naming' on page 9 undefined on input line 628.
 
-[8] [9]
-Underfull \hbox (badness 1168) in paragraph at lines 730--736
+[9] [10]
+Underfull \hbox (badness 1168) in paragraph at lines 805--811
 []\TU/lmr/m/n/10.95 Note on $[][]$: enforcing $[][] [] []$ via $[][][][][][]$ t
 ransform would require negating $[][]$ in
  []
 
-[10] [11] [12] [13] [14]
-Overfull \hbox (5.88841pt too wide) in paragraph at lines 1108--1108
+[11] [12] [13] [14] [15]
+Overfull \hbox (5.88841pt too wide) in paragraph at lines 1184--1184
 []|\TU/lmtt/m/n/10.95 {Model}_chains_{RUN_ID}.rds|  
  []
 
 
-Overfull \hbox (23.13466pt too wide) in paragraph at lines 1110--1110
+Overfull \hbox (23.13466pt too wide) in paragraph at lines 1186--1186
 []|\TU/lmtt/m/n/10.95 {Model}_posterior_{RUN_ID}.rds|  
  []
 
 
-Overfull \hbox (17.38591pt too wide) in paragraph at lines 1112--1112
+Overfull \hbox (17.38591pt too wide) in paragraph at lines 1188--1188
 []|\TU/lmtt/m/n/10.95 {Model}_metadata_{RUN_ID}.rds|  
  []
 
 
-Overfull \hbox (5.88841pt too wide) in paragraph at lines 1114--1114
+Overfull \hbox (5.88841pt too wide) in paragraph at lines 1190--1190
 []|\TU/lmtt/m/n/10.95 {Model}_inputs_{RUN_ID}.rds|  
  []
 
-[15] [16] [17] (./HIKET_calibration.aux)
+[16] [17] [18] (./HIKET_calibration.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 19229 strings out of 476683
- 356211 string characters out of 5804048
- 1873018 words of memory out of 5000000
- 39182 multiletter control sequences out of 15000+600000
- 523123 words of font info for 116 fonts, out of 8000000 for 9000
+ 19238 strings out of 476683
+ 356361 string characters out of 5804048
+ 1874018 words of memory out of 5000000
+ 39186 multiletter control sequences out of 15000+600000
+ 523131 words of font info for 117 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 86i,10n,121p,1014b,541s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 86i,10n,121p,1014b,470s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on HIKET_calibration.pdf (17 pages).
+Output written on HIKET_calibration.pdf (18 pages).
