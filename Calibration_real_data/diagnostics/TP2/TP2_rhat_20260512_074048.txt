@@ -1,0 +1,18 @@
+TP2 -- Gelman-Rubin R-hat
+Run: 20260512_074048  |  Date: 2026-05-12 08:45:53.21528
+Plots: 447 | Chains: 4 | Iter: 10000 | Burnin: 2000
+
+Good (<1.05): 1 | OK (1.05-1.10): 2 | Warn (>1.10): 5
+
+Parameter        Point est.  Upper C.I.  Status  
+------------------------------------------------ 
+alpha_A          1.3234      1.7913      Warning 
+alpha_H          1.2539      1.6463      Warning 
+p_H              1.1023      1.2687      Warning 
+beta1            2.6262      4.6768      Warning 
+beta2            2.0582      3.2916      Warning 
+gamma            1.0123      1.0375      Good    
+sigma_init       1.0520      1.1283      OK      
+sigma_input      1.0810      1.2252      OK      
+
+Multivariate psrf: 3.6016

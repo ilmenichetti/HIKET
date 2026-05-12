@@ -1,0 +1,57 @@
+=========================================================
+  TP2 Calibration Report
+  Run ID:    20260512_074048
+  Started:   2026-05-12 08:45:56
+  Wallclock: 64.8 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:        -10810.999   [PASS]
+    Plots in calibration:                 447
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1  -10810.999   -6038.278     10002    0.39%      16.4  +4772.721
+      2  -10810.999   -6031.309     10002    0.48%      16.9  +4779.690
+      3  -10810.999   -6049.624     10002    0.13%      16.3  +4761.375
+      4  -10810.999   -6022.987     10002    0.05%      15.1  +4788.012
+    Final-ll spread across chains: 26.636   [WARN]
+    Max -Inf rate across chains:   0.48%   [PASS]
+
+[3] Convergence
+    Univariate R-hat:    1.0123 -- 2.6262   [WARN]
+    Worst-converged parameters:
+        beta1            2.6262
+        beta2            2.0582
+        alpha_A          1.3234
+        alpha_H          1.2539
+        p_H              1.1023
+    Multivariate R-hat:  3.6016             [WARN]
+    ESS:                    4 -- 54   (8 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  2 / 8
+        beta1, beta2
+    Top correlated pairs (|rho| > 0.7):
+        beta2        <-> beta1         -0.913
+        p_H          <-> alpha_H       +0.899
+
+=========================================================
+  Status: PASS with 14 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           1121
+    R²:                     0.067
+    RMSE (mean predictor):  56.86 tC/ha
+    Bias (mean):            +15.27 tC/ha
+    RMSE (median):          56.71 tC/ha
+    Bias (median):          +15.10 tC/ha
+    95% CI coverage:        0.087   [target ~0.95]
+

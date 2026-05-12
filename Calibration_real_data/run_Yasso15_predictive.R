@@ -382,21 +382,26 @@ message(sprintf("Plot saved: %s", obs_pred_png))
 pp <- posterior_predictions %>%
   group_by(plot_id, draw) %>%
   arrange(year, .by_group = TRUE) %>%
-  mutate(delta_soc = total_soc - first(total_soc)) %>%
+  mutate(
+    first_soc  = first(total_soc),
+    first_year = first(year),
+    annual_rate = (total_soc - first_soc) / (year - first_year)
+  ) %>%
+  filter(year != first_year) %>%   # drop t=0 (0/0 undefined)
   ungroup()
 
 traj_summary <- pp %>%
   group_by(draw, year) %>%
-  summarise(mean_delta_soc = mean(delta_soc, na.rm = TRUE), .groups = "drop") %>%
+  summarise(mean_annual_rate = mean(annual_rate, na.rm = TRUE), .groups = "drop") %>%
   group_by(year) %>%
   summarise(
-    median_delta = median(mean_delta_soc, na.rm = TRUE),
-    q025 = quantile(mean_delta_soc, 0.025, na.rm = TRUE),
-    q250 = quantile(mean_delta_soc, 0.250, na.rm = TRUE),
-    q750 = quantile(mean_delta_soc, 0.750, na.rm = TRUE),
-    q975 = quantile(mean_delta_soc, 0.975, na.rm = TRUE),
-    .groups = "drop"
-  ) %>% arrange(year)
+    median_delta = median(mean_annual_rate, na.rm = TRUE),
+    q025 = quantile(mean_annual_rate, 0.025, na.rm = TRUE),
+    q250 = quantile(mean_annual_rate, 0.250, na.rm = TRUE),
+    q750 = quantile(mean_annual_rate, 0.750, na.rm = TRUE),
+    q975 = quantile(mean_annual_rate, 0.975, na.rm = TRUE),
+    .groups = "drop") %>%
+  arrange(year)
 
 obs_delta_per_plot <- posterior_summary %>%
   filter(!is.na(soc_obs_tCha)) %>%
@@ -404,14 +409,15 @@ obs_delta_per_plot <- posterior_summary %>%
   arrange(year, .by_group = TRUE) %>%
   summarise(
     delta_obs  = (last(soc_obs_tCha) - first(soc_obs_tCha)) /
-                 (last(year) - first(year)),
-    year_first = first(year), year_last = last(year),
-    .groups = "drop"
-  ) %>% filter(year_first != year_last)
+      (last(year) - first(year)),
+    year_first = first(year),
+    year_last  = last(year),
+    .groups = "drop") %>%
+  filter(year_first != year_last)
 
 obs_mean_delta <- mean(obs_delta_per_plot$delta_obs, na.rm = TRUE)
 obs_se_delta   <- sd(obs_delta_per_plot$delta_obs, na.rm = TRUE) /
-                  sqrt(nrow(obs_delta_per_plot))
+  sqrt(nrow(obs_delta_per_plot))
 
 traj_png <- file.path(DIR_DIAG,
                       sprintf("%s_delta_soc_trajectory_%s.png", MODEL_NAME, RUN_ID))
@@ -419,12 +425,14 @@ png(traj_png, width = 12L * PX_PER_IN, height = 7L * PX_PER_IN, res = PX_PER_IN)
 par(mar = c(4, 4, 3, 1))
 ylim_r <- range(c(traj_summary$q025, traj_summary$q975,
                   obs_mean_delta + 1.96 * obs_se_delta,
-                  obs_mean_delta - 1.96 * obs_se_delta, 0), na.rm = TRUE)
+                  obs_mean_delta - 1.96 * obs_se_delta,
+                  0), na.rm = TRUE)
 ylim_r <- ylim_r + c(-0.05, 0.05) * diff(ylim_r)
 plot(NA, xlim = range(traj_summary$year), ylim = ylim_r,
      xlab = "Year",
-     ylab = expression(paste(Delta, "SOC relative to first year (tC/ha)")),
-     main = sprintf("Mean ΔSOC  |  %s  |  %s", MODEL_NAME, RUN_ID))
+     ylab = "Mean annual ΔSOC since first year (tC/ha/yr)",
+     main = sprintf("Mean annual ΔSOC across plots  |  %s  |  %s",
+                    MODEL_NAME, RUN_ID))
 polygon(c(traj_summary$year, rev(traj_summary$year)),
         c(traj_summary$q025, rev(traj_summary$q975)),
         col = adjustcolor("steelblue", 0.15), border = NA)
@@ -434,19 +442,19 @@ polygon(c(traj_summary$year, rev(traj_summary$year)),
 lines(traj_summary$year, traj_summary$median_delta, col = "steelblue", lwd = 2)
 abline(h = 0, lty = 3, col = "grey40")
 abline(h = obs_mean_delta, col = "firebrick", lwd = 2.5, lty = 2)
-rect(xleft = min(obs_delta_per_plot$year_first),
-     xright = max(obs_delta_per_plot$year_last),
+rect(xleft   = min(obs_delta_per_plot$year_first),
+     xright  = max(obs_delta_per_plot$year_last),
      ybottom = obs_mean_delta - 1.96 * obs_se_delta,
      ytop    = obs_mean_delta + 1.96 * obs_se_delta,
      col = adjustcolor("firebrick", 0.12), border = NA)
 legend("topleft",
        legend = c("Posterior median", "50% CI", "95% CI",
-                  sprintf("Observed mean ΔSOC ± 95%% CI  (n = %d)", nrow(obs_delta_per_plot))),
-       col = c("steelblue", adjustcolor("steelblue", 0.35),
-               adjustcolor("steelblue", 0.15), "firebrick"),
-       lwd = c(2, NA, NA, 2.5), pch = c(NA, 15, 15, NA),
-       lty = c(1, NA, NA, 2), pt.cex = c(NA, 2, 2, NA),
-       bty = "n", cex = 0.9)
+                  sprintf("Observed mean annual ΔSOC ± 95%% CI  (n = %d)",
+                          nrow(obs_delta_per_plot))),
+       col    = c("steelblue", adjustcolor("steelblue", 0.35),
+                  adjustcolor("steelblue", 0.15), "firebrick"),
+       lwd = c(2, NA, NA, 2.5), pch = c(NA, 15, 15, NA), lty = c(1, NA, NA, 2),
+       pt.cex = c(NA, 2, 2, NA), bty = "n", cex = 0.9)
 dev.off()
 message(sprintf("Plot saved: %s", traj_png))
 
