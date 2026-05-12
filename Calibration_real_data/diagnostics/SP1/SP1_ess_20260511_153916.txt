@@ -1,0 +1,15 @@
+SP1 -- Effective Sample Size
+Run: 20260511_153916  |  Date: 2026-05-11 15:41:11.246624
+
+Total post-burnin samples: 1620
+ESS range: 22 -- 112
+Below 200:  6 / 6
+
+Parameter        ESS       
+---------------------------- 
+alpha            34        
+beta1            112       
+beta2            59        
+gamma            54        
+sigma_init       42        
+sigma_input      22        

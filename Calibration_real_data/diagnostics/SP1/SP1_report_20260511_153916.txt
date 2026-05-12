@@ -1,0 +1,44 @@
+=========================================================
+  SP1 Calibration Report
+  Run ID:    20260511_153916
+  Started:   2026-05-11 15:41:11
+  Wallclock: 1.6 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:         -1266.198   [PASS]
+    Plots in calibration:                   5
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [WARN]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1   -1266.198  -28087811722.961       501    0.00%       0.4  -28087810456.763
+      2   -1266.198     -63.016       501    0.00%       0.4  +1203.182
+      3   -1266.198     -57.867       501    0.00%       0.4  +1208.332
+      4   -1266.198     -60.277       501    0.00%       0.4  +1205.922
+    Final-ll spread across chains: 28087811665.095   [WARN]
+    Max -Inf rate across chains:   0.00%   [PASS]
+
+[3] Convergence
+    Univariate R-hat:    1.0377 -- 1.1662   [WARN]
+    Worst-converged parameters:
+        sigma_init       1.1662
+        beta1            1.1517
+        sigma_input      1.1130
+        alpha            1.0873
+        gamma            1.0458
+    Multivariate R-hat:  1.3978             [WARN]
+    ESS:                   22 -- 112   (6 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  5 / 6
+        alpha, beta1, gamma, sigma_init, sigma_input
+    No parameter pairs with |rho| > 0.7  [PASS]
+
+=========================================================
+  Status: PASS with 10 warning(s) -- inspect above
+=========================================================

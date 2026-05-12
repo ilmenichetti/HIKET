@@ -1,0 +1,16 @@
+SP1 -- Gelman-Rubin R-hat
+Run: 20260511_153916  |  Date: 2026-05-11 15:41:11.238937
+Plots: 5 | Chains: 4 | Iter: 500 | Burnin: 100
+
+Good (<1.05): 2 | OK (1.05-1.10): 1 | Warn (>1.10): 3
+
+Parameter        Point est.  Upper C.I.  Status  
+------------------------------------------------ 
+alpha            1.0873      1.2162      OK      
+beta1            1.1517      1.3953      Warning 
+beta2            1.0377      1.1110      Good    
+gamma            1.0458      1.0867      Good    
+sigma_init       1.1662      1.5257      Warning 
+sigma_input      1.1130      1.3030      Warning 
+
+Multivariate psrf: 1.3978

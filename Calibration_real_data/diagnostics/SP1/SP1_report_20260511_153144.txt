@@ -1,0 +1,22 @@
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           1121
+    R²:                     0.003
+    RMSE (mean predictor):  229.19 tC/ha
+    Bias (mean):            +187.67 tC/ha
+    RMSE (median):          220.43 tC/ha
+    Bias (median):          +179.49 tC/ha
+    95% CI coverage:        0.095   [target ~0.95]
+
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           1121
+    R²:                     0.003
+    RMSE (mean predictor):  229.19 tC/ha
+    Bias (mean):            +187.67 tC/ha
+    RMSE (median):          220.43 tC/ha
+    Bias (median):          +179.49 tC/ha
+    95% CI coverage:        0.095   [target ~0.95]
+

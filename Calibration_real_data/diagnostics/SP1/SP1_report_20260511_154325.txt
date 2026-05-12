@@ -1,0 +1,55 @@
+=========================================================
+  SP1 Calibration Report
+  Run ID:    20260511_154325
+  Started:   2026-05-11 16:02:33
+  Wallclock: 18.8 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:         -7021.445   [PASS]
+    Plots in calibration:                  50
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [WARN]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1   -7021.445    -705.433      4002    0.02%       4.8  +6316.012
+      2   -7021.445    -700.347      4002    0.00%       4.7  +6321.098
+      3   -7021.445    -702.247      4002    0.07%       4.6  +6319.199
+      4   -7021.445    -702.049      4002    0.07%       4.7  +6319.396
+    Final-ll spread across chains: 5.086   [WARN]
+    Max -Inf rate across chains:   0.07%   [PASS]
+
+[3] Convergence
+    Univariate R-hat:    1.0052 -- 1.0876   [PASS]
+    Worst-converged parameters:
+        beta1            1.0876
+        beta2            1.0711
+        gamma            1.0488
+        alpha            1.0189
+        sigma_input      1.0129
+    Multivariate R-hat:  1.0953             [PASS]
+    ESS:                  164 -- 277   (1 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  4 / 6
+        alpha, beta1, beta2, sigma_input
+    No parameter pairs with |rho| > 0.7  [PASS]
+
+=========================================================
+  Status: PASS with 1 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance
+    Posterior draws used:   100
+    Observations:           1121
+    R²:                     0.021
+    RMSE (mean predictor):  98.32 tC/ha
+    Bias (mean):            +63.57 tC/ha
+    RMSE (median):          97.95 tC/ha
+    Bias (median):          +63.16 tC/ha
+    95% CI coverage:        0.080   [target ~0.95]
+

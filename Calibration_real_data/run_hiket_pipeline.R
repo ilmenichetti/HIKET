@@ -43,7 +43,9 @@
 #   [on Puhti, from /scratch/project_2019134/HIKET/]
 #
 #   # Submit all three calibration jobs simultaneously
-#   sbatch Calibration_real_data/hiket_yasso07.sh
+#   sbatch Calibration_real_data/hiket_sp1.sh
+   sbatch Calibration_real_data/hiket_tp2.sh
+   sbatch Calibration_real_data/hiket_yasso07.sh
 #   sbatch Calibration_real_data/hiket_yasso15.sh
 #   sbatch Calibration_real_data/hiket_yasso20.sh
 #
@@ -98,7 +100,7 @@
 SCRIPT_DIR <- "./Calibration_real_data"
 RUNS_DIR   <- "./Calibration_real_data/runs"
 
-MODELS <- c("Yasso07", "Yasso15", "Yasso20")
+MODELS <- c("SP1", "TP2", "Yasso07", "Yasso15", "Yasso20")
 
 # Parse --skip-calibration flag
 args <- commandArgs(trailingOnly = TRUE)
