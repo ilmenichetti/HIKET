@@ -139,7 +139,7 @@ RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 # N_LOG = 200: log progress every 200 likelihood evaluations.
 N_PLOTS_TEST <- NA
 N_CHAINS     <- 4L
-N_ITER       <- 10000L
+N_ITER       <- 20000L
 N_BURNIN     <- 2000L
 N_LOG        <- 200L
 
@@ -294,6 +294,9 @@ free_defaults <- c(
   sigma_init  = 0.10,    # ~10% initial-condition uncertainty
   sigma_input = 1.00     # no a priori litter scaling
 )
+
+free_defaults["r"] <- abs(free_defaults["r"])   # r stored negative in YASSO07_DEFAULT_PARAMS;
+                                                # log transform requires positive prior centre
 
 # best_x: defaults transformed to UNCONSTRAINED space. This is what the
 # sampler sees. The prior is N(best_x, sigma_ppm^2 I) on this scale.
@@ -887,10 +890,10 @@ HIGHLIGHT <- c("beta1","beta2","gamma","delta1","delta2","r",
 # interesting set, plotted in a 2-column grid for larger, more readable panels.
 # These groupings also define what appears in the KL divergence barplot and
 # the marginals PNGs; highlight_params still controls the trace plots.
-GROUP1 <- c("p_AW","p_AE","p_AN",
-            "p_WA","p_WE","p_WN",
-            "p_EA","p_EW","p_EN",
-            "p_NA","p_NW","p_NE")
+GROUP1 <- c("p_AW",
+            "p_WA","p_WN",
+            "p_EA","p_EW",
+            "p_NA")
 GROUP2 <- HIGHLIGHT   # beta1, beta2, gamma, delta1, delta2, r, sigma_init, sigma_input
 
 diag_out <- run_diagnostics(

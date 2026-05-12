@@ -78,7 +78,7 @@ RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 # --- Test (Mac) settings ---
 N_PLOTS_TEST <- NA
 N_CHAINS     <- 4L
-N_ITER       <- 10000L
+N_ITER       <- 20000L
 N_BURNIN     <- 2000L
 N_LOG        <- 200L
 
@@ -208,18 +208,18 @@ free_defaults <- c(
 )
 
 # Override climate/size centres with Yasso20 posterior means
-free_defaults["beta1"]   <-  0.16663
-free_defaults["beta2"]   <- -0.00236
-free_defaults["gamma"]   <- -1.56415
-free_defaults["betaN1"]  <-  0.17959
-free_defaults["betaN2"]  <- -0.00510
-free_defaults["gammaN"]  <- -1.96532
-free_defaults["betaH1"]  <-  0.06987
-free_defaults["betaH2"]  <- -0.0000980
-free_defaults["gammaH"]  <- -7.62555
-free_defaults["delta1"]  <- -2.42870
-free_defaults["delta2"]  <-  1.12699
-free_defaults["r"]       <-  0.25394
+free_defaults["beta1"]   <-  0.158000
+free_defaults["beta2"]   <- -0.002000
+free_defaults["gamma"]   <- -1.440000
+free_defaults["betaN1"]  <-  0.170000
+free_defaults["betaN2"]  <- -0.005000
+free_defaults["gammaN"]  <- -2.000000
+free_defaults["betaH1"]  <-  0.067000
+free_defaults["betaH2"]  <-  0.000000
+free_defaults["gammaH"]  <- -6.900000
+free_defaults["delta1"]  <- -2.550000
+free_defaults["delta2"]  <-  1.240000
+free_defaults["r"]       <-  0.250000
 
 best_x <- to_unconstrained(free_defaults)
 
