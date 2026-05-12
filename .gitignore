@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 .DS_Store
-.rds
+
 
 
 # Calibration outputs
@@ -11,6 +11,8 @@
 #Calibration/diagnostics/
 Calibration/runs/
 Calibration/tests/
+Calibration_real_data/runs/
+Calibration_real_data/progress_logs/
 
 #Data
 Data/
@@ -20,3 +22,7 @@ Data/
 *.so
 *.o
 *.mod
+
+# logs and stored objects
+*.rds
+*.log
