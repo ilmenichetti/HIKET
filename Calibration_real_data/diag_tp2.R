@@ -88,6 +88,26 @@ if (!is.null(df_test)) {
   cat('data.frame: FAILED\n')
 }
 
+# Extract so mclapply workers can find them (must be before mclapply call)
+climate_by_plot <- inputs_pkg$climate_by_plot
+inputs_by_plot  <- inputs_pkg$inputs_by_plot
+litter_means    <- inputs_pkg$litter_means
+
+# Engine wrappers (as in predictive script)
+compute_xi_tp2_engine <- function(clim, model_params) {
+  compute_xi_yasso07(clim$temp_mean, clim$temp_amplitude, clim$precip,
+                     model_params["beta1"], model_params["beta2"], model_params["gamma"])
+}
+compute_xi_mean_tp2_engine <- function(clim_ss, model_params) {
+  compute_xi_mean_yasso07(clim_ss, model_params["beta1"],
+                          model_params["beta2"], model_params["gamma"])
+}
+steady_state_tp2_engine <- function(model_params, lm, xi_mean) {
+  tp2_steady_state(model_params, lm, xi_mean)
+}
+tp2_run_engine <- function(inputs, model_params, C_init, xi_array) {
+  tp2_run(inputs, model_params, C_init, xi_array)
+}
 
 # --- Step 6: test inside mclapply with error capture ---
 cat('\nTesting inside mclapply (3 plots)...\n')
@@ -122,26 +142,3 @@ for (i in seq_along(test_results))
   cat(sprintf('  Plot %s: %s\n', inputs_pkg$plots_real[[i]],
               if (is.null(test_results[[i]])) 'NULL' else
                 sprintf('data.frame %d rows', nrow(test_results[[i]]))))
-
-
-
-# Extract so mclapply workers can find them
-climate_by_plot <- inputs_pkg$climate_by_plot
-inputs_by_plot  <- inputs_pkg$inputs_by_plot
-litter_means    <- inputs_pkg$litter_means
-
-# Also define engine wrappers (as in predictive script)
-compute_xi_tp2_engine <- function(clim, model_params) {
-  compute_xi_yasso07(clim$temp_mean, clim$temp_amplitude, clim$precip,
-                     model_params["beta1"], model_params["beta2"], model_params["gamma"])
-}
-compute_xi_mean_tp2_engine <- function(clim_ss, model_params) {
-  compute_xi_mean_yasso07(clim_ss, model_params["beta1"],
-                          model_params["beta2"], model_params["gamma"])
-}
-steady_state_tp2_engine <- function(model_params, lm, xi_mean) {
-  tp2_steady_state(model_params, lm, xi_mean)
-}
-tp2_run_engine <- function(inputs, model_params, C_init, xi_array) {
-  tp2_run(inputs, model_params, C_init, xi_array)
-}
