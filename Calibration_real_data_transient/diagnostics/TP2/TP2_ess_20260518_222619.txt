@@ -1,0 +1,17 @@
+TP2 -- Effective Sample Size
+Run: 20260518_222619  |  Date: 2026-05-18 22:32:02.075116
+
+Total post-burnin samples: 3228
+ESS range: 2 -- 7
+Below 200:  8 / 8
+
+Parameter        ESS       
+---------------------------- 
+alpha_A          5         
+alpha_H          2         
+p_H              4         
+beta1            2         
+beta2            7         
+gamma            2         
+sigma_init       3         
+sigma_input      7         

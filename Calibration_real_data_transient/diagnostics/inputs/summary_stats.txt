@@ -1,0 +1,32 @@
+=============================================================
+  Input diagnostics summary -- 2026-05-08 09:20:34
+  447 calib-ready plots
+=============================================================
+
+[1] MRT distribution
+    Plots with finite MRT:  447  (0 dropped for zero input)
+    Median MRT:             36.9 years
+    Mean MRT:               40.1 years
+    Range:                  9.4 -- 99.0 years
+    Boreal expected:        ~30-80 years
+    Plots with MRT > 100y:  0 (0.0%)
+    Plots with MRT < 20y:   38 (8.5%)
+
+[2] Magnitude (assuming MRT_expected = 50y)
+    obs/implied ratio: median 0.74, mean 0.80
+    Plots with ratio < 0.5: 100  (inputs likely too high)
+    Plots with ratio > 2:   0  (inputs likely too low)
+
+[3] Oscillation (across all plot-years)
+    Year-to-year |diff|:  median 0.067, max 14.338 tC/ha
+    2-year |slope|:       median 0.067, max 14.338 tC/ha/yr
+    4-year |slope|:       median 0.072, max 5.108 tC/ha/yr
+
+    Per-plot CV of annual inputs:
+        Median:  0.338
+        Max:     2.141
+    Per-plot max |yr-to-yr diff|:
+        Median:  2.046 tC/ha
+        Max:     14.338 tC/ha
+
+    Output PNGs written to ./Calibration_real_data/diagnostics/inputs

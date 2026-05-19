@@ -9,5 +9,7 @@
 #SBATCH --output=Calibration_real_data/progress_logs/pipeline_%j.out
 #SBATCH --error=Calibration_real_data/progress_logs/pipeline_%j.err
 
+module load r-env
+
 cd /scratch/project_2019134/HIKET/
 srun apptainer_wrapper exec Rscript --no-save Calibration_real_data/run_hiket_pipeline.R --skip-calibration

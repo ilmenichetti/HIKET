@@ -1,0 +1,45 @@
+=========================================================
+  Yasso20 Calibration Report
+  Run ID:    20260519_013217
+  Started:   2026-05-19 02:06:45
+  Wallclock: 33.9 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:        -12128.877   [PASS]
+    Plots in calibration:                 447
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1  -12128.877   -6069.728      2001    0.00%       8.4  +6059.149
+      2  -12128.877   -6067.214      2001    0.00%       9.5  +6061.663
+      3  -12128.877   -6075.112      2001    0.00%       8.2  +6053.765
+      4  -12128.877   -6131.885      2001    3.90%       7.9  +5996.992
+    Final-ll spread across chains: 64.672   [WARN]
+    Max -Inf rate across chains:   3.90%   [PASS]
+
+[3] Convergence
+    Univariate R-hat:    1.0649 -- 5.3262   [WARN]
+    Worst-converged parameters:
+        beta2            5.3262
+        betaH1           3.7856
+        p_AW             3.1825
+        p_WN             3.1732
+        delta2           3.0861
+    Multivariate R-hat:  8.7092             [WARN]
+    ESS:                    2 -- 48   (20 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  14 / 20
+        p_AW, p_WA, p_EA, p_EW, p_NA, beta1, gamma, betaN2, gammaN, betaH1, gammaH, delta1, delta2, r
+    Top correlated pairs (|rho| > 0.7):
+        p_WN         <-> p_WA          -0.711
+
+=========================================================
+  Status: PASS with 40 warning(s) -- inspect above
+=========================================================

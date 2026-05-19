@@ -1,0 +1,30 @@
+Yasso07 -- Gelman-Rubin R-hat
+Run: 20260504_100551  |  Date: 2026-05-04 10:48:29.517861
+Plots: 40 | Chains: 4 | Iter: 10000 | Burnin: 2000
+
+Good (<1.05): 4 | OK (1.05-1.10): 3 | Warn (>1.10): 13
+
+Parameter        Point est.  Upper C.I.  Status  
+------------------------------------------------ 
+p_AW             1.0482      1.1171      Good    
+p_AE             1.1083      1.3083      Warning 
+p_AN             1.0281      1.0748      Good    
+p_WA             1.3238      1.8086      Warning 
+p_WE             1.0654      1.1576      OK      
+p_WN             1.2976      1.7357      Warning 
+p_EA             1.1810      1.4649      Warning 
+p_EW             1.0702      1.1942      OK      
+p_EN             1.1581      1.4311      Warning 
+p_NA             1.1099      1.2933      Warning 
+p_NW             1.3779      1.8954      Warning 
+p_NE             1.0871      1.2424      OK      
+beta1            1.4415      2.1015      Warning 
+beta2            1.4878      2.1786      Warning 
+gamma            1.6126      2.4800      Warning 
+delta1           1.1023      1.2817      Warning 
+delta2           1.0473      1.1363      Good    
+r                1.1867      1.4919      Warning 
+sigma_init       1.0407      1.0919      Good    
+sigma_input      1.5264      2.1968      Warning 
+
+Multivariate psrf: 2.0187

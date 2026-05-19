@@ -1,0 +1,18 @@
+#!/bin/bash -l
+#SBATCH --job-name=hiket_yasso20
+#SBATCH --account=project_2019134
+#SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso20_%j.out
+#SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data/progress_logs/yasso020_%j.err
+#SBATCH --partition=small
+#SBATCH --time=36:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=40
+#SBATCH --nodes=1
+#SBATCH --mem-per-cpu=2000
+module load r-env
+if test -f ~/.Renviron; then
+    sed -i '/TMPDIR/d' ~/.Renviron
+fi
+echo "TMPDIR=/scratch/project_2019134" >> ~/.Renviron
+cd /scratch/project_2019134/HIKET/
+srun apptainer_wrapper exec Rscript --no-save Calibration_real_data/run_Yasso20_calibration.R

@@ -1,0 +1,60 @@
+=========================================================
+  TP2 Calibration Report
+  Run ID:    20260518_222619
+  Started:   2026-05-18 22:32:02
+  Wallclock: 5.4 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:        -10862.734   [PASS]
+    Plots in calibration:                 447
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1  -10862.734   -6105.595      1002    0.10%       1.3  +4757.139
+      2  -10862.734   -6145.023      1002    0.00%       1.4  +4717.712
+      3  -10862.734   -6236.188      1002    0.00%       1.4  +4626.547
+      4  -10862.734   -6122.900      1002    5.59%       1.3  +4739.834
+    Final-ll spread across chains: 130.592   [WARN]
+    Max -Inf rate across chains:   5.59%   [WARN]
+
+[3] Convergence
+    Univariate R-hat:    1.5155 -- 9.8721   [WARN]
+    Worst-converged parameters:
+        alpha_H          9.8721
+        alpha_A          6.5876
+        gamma            4.8972
+        beta1            4.0692
+        p_H              3.8950
+    Multivariate R-hat:  16.7549             [WARN]
+    ESS:                    2 -- 7   (8 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  4 / 8
+        p_H, beta1, beta2, gamma
+    Top correlated pairs (|rho| > 0.7):
+        beta1        <-> alpha_H       +0.874
+        gamma        <-> alpha_H       +0.842
+        p_H          <-> alpha_H       +0.811
+        gamma        <-> p_H           +0.795
+        beta1        <-> p_H           +0.773
+        gamma        <-> beta1         +0.750
+
+=========================================================
+  Status: PASS with 17 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance (transient init)
+    Posterior draws:        100
+    Observations:           1121
+    R²:                     0.053
+    RMSE (mean):            61.97 tC/ha
+    Bias (mean):            +22.60 tC/ha
+    RMSE (median):          61.10 tC/ha
+    Bias (median):          +21.75 tC/ha
+    95% CI coverage:        0.178
