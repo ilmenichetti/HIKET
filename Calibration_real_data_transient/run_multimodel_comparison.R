@@ -28,8 +28,8 @@
 library(dplyr)
 
 MODELS <- c("Yasso07", "Yasso15", "Yasso20")
-DIR_RUNS <- "./Calibration_real_data/runs/"
-DIR_OUT  <- "./Calibration_real_data/diagnostics/multimodel"
+DIR_RUNS <- "./Calibration_real_data_transient/runs/"
+DIR_OUT  <- "./Calibration_real_data_transient/diagnostics/multimodel"
 dir.create(DIR_OUT, showWarnings = FALSE, recursive = TRUE)
 
 PX_PER_IN <- 150L

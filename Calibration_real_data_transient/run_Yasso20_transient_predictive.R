@@ -14,6 +14,7 @@
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso20_wrapper_transient.R")
 source("./Model_functions_real_data/input_compatibility_layer.R")
+source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15_wrapper_transient.R")
 
 dyn.load("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15.so")
 

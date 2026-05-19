@@ -1,0 +1,55 @@
+=========================================================
+  Yasso15 Calibration Report
+  Run ID:    20260519_160313
+  Started:   2026-05-19 16:24:10
+  Wallclock: 20.5 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:         -7146.572   [PASS]
+    Plots in calibration:                 447
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1   -7146.572   -6203.893      2001    0.00%       5.1  +942.679
+      2   -7146.572   -6175.932      2001    0.00%       5.0  +970.640
+      3   -7146.572   -6279.896      2001    0.00%       5.2  +866.676
+      4   -7146.572   -6202.357      2001    0.00%       5.2  +944.215
+    Final-ll spread across chains: 103.964   [WARN]
+    Max -Inf rate across chains:   0.00%   [PASS]
+
+[3] Convergence
+    Univariate R-hat:    1.2020 -- 3.9030   [WARN]
+    Worst-converged parameters:
+        betaH2           3.9030
+        p_AN             3.8054
+        p_WA             3.5261
+        p_EW             3.2201
+        sigma_input      3.1943
+    Multivariate R-hat:  12.6104             [WARN]
+    ESS:                    3 -- 33   (26 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  17 / 26
+        p_AW, p_AE, p_AN, p_WA, p_WE, p_EA, p_EW, p_EN, p_NA, p_NW, p_NE, beta2, betaN2, betaH1, gammaH, delta1, r
+    Top correlated pairs (|rho| > 0.7):
+        p_NE         <-> p_NA          -0.983
+        p_NW         <-> p_NA          -0.854
+        p_AN         <-> p_AW          -0.845
+        p_NE         <-> p_NW          +0.773
+        betaH1       <-> gamma         -0.753
+        sigma_input  <-> p_WA          -0.743
+        p_NW         <-> p_EN          -0.738
+        beta1        <-> p_NA          +0.725
+
+=========================================================
+  Status: PASS with 53 warning(s) -- inspect above
+=========================================================
+
+[5] Predictive performance (transient init)
+    R²: 0.080  RMSE: 61.32  Bias: +22.55  Cov95: 0.086
