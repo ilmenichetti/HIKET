@@ -44,8 +44,8 @@
 #
 #   # Submit all three calibration jobs simultaneously
 #   sbatch Calibration_real_data/hiket_sp1.sh
-   sbatch Calibration_real_data/hiket_tp2.sh
-   sbatch Calibration_real_data/hiket_yasso07.sh
+#   sbatch Calibration_real_data/hiket_tp2.sh
+#   sbatch Calibration_real_data/hiket_yasso07.sh
 #   sbatch Calibration_real_data/hiket_yasso15.sh
 #   sbatch Calibration_real_data/hiket_yasso20.sh
 #
