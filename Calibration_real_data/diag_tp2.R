@@ -87,3 +87,38 @@ if (!is.null(df_test)) {
 } else {
   cat('data.frame: FAILED\n')
 }
+
+
+# --- Step 6: test inside mclapply with error capture ---
+cat('\nTesting inside mclapply (3 plots)...\n')
+library(parallel)
+
+model_params <- unlist(posterior[1, ])
+
+test_results <- mclapply(inputs_pkg$plots_real[1:3], function(pid) {
+  tryCatch({
+    clim   <- climate_by_plot[[pid]]
+    inputs <- inputs_by_plot[[pid]]
+    lm     <- litter_means[[pid]]
+    
+    xi_array <- compute_xi_tp2_engine(clim, model_params)
+    n_ss     <- min(20L, nrow(clim))
+    xi_ss    <- compute_xi_mean_tp2_engine(clim[seq_len(n_ss), , drop=FALSE],
+                                           model_params)
+    C_init   <- steady_state_tp2_engine(model_params, lm, xi_ss)
+    run_out  <- tp2_run_engine(inputs, model_params, C_init, xi_array)
+    
+    data.frame(plot_id=pid, year=run_out$year, draw=1L,
+               A=run_out$A, H=run_out$H, total_soc=run_out$total_soc)
+    
+  }, error = function(e) {
+    cat(sprintf("  Worker error [%s]: %s\n", pid, e$message))
+    NULL
+  })
+}, mc.cores = 3L)
+
+cat('Results per plot:\n')
+for (i in seq_along(test_results))
+  cat(sprintf('  Plot %s: %s\n', inputs_pkg$plots_real[[i]],
+              if (is.null(test_results[[i]])) 'NULL' else
+                sprintf('data.frame %d rows', nrow(test_results[[i]]))))
