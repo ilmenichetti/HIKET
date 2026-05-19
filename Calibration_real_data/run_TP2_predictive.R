@@ -96,7 +96,7 @@ assemble_model_params <- function(p_free) p_free
 # 3.  Model interface wrappers
 # =============================================================================
 
-cocompute_xi_tp2_engine <- function(clim, model_params) {
+compute_xi_tp2_engine <- function(clim, model_params) {
   compute_xi_yasso07(
     temp_mean = clim$temp_mean,
     temp_amp  = clim$temp_amplitude,
@@ -194,6 +194,10 @@ SOC_obs_all <- do.call(rbind, lapply(names(obs_meta), function(pid) {
              soc_obs_tCha = m$soc_obs, is_first = m$is_first)
 }))
 
+message("Building posterior_summary...")
+message("  pp class: ", paste(class(posterior_predictions), collapse=","))
+message("  pp nrow: ", nrow(posterior_predictions))
+message("  pp names: ", paste(names(posterior_predictions), collapse=","))
 posterior_summary <- posterior_predictions %>%
   group_by(plot_id, year) %>%
   summarise(
@@ -215,6 +219,7 @@ posterior_summary <- posterior_predictions %>%
 site_raw <- read.csv("./Data/model_inputs/site_raw.csv")
 site_raw$plot_id <- as.character(site_raw$plot_id)
 
+message("Building residuals_df...")
 residuals_df <- posterior_summary %>%
   filter(!is.na(soc_obs_tCha)) %>%
   mutate(
@@ -310,6 +315,7 @@ dev.off()
 message(sprintf("Plot saved: %s", obs_pred_png))
 
 # --- Plot B: mean ΔSOC trajectory ---
+message("Building trajectory pp...")
 pp <- posterior_predictions %>%
   group_by(plot_id, draw) %>%
   arrange(year, .by_group = TRUE) %>%
