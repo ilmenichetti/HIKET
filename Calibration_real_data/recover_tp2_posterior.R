@@ -55,7 +55,7 @@ cat("All beta1 > 0:     ", all(phys_df$beta1 > 0), "\n")
 cat("All gamma < 0:     ", all(phys_df$gamma < 0), "\n")
 
 # --- Uncomment to save once checks pass ---
-# saveRDS(phys_df,
-#         file.path("./Calibration_real_data/runs",
-#                   sprintf("TP2_posterior_%s.rds", RUN_ID)))
-# cat("\nPosterior saved.\n")
+saveRDS(phys_df,
+        file.path("./Calibration_real_data/runs",
+                  sprintf("TP2_posterior_%s.rds", RUN_ID)))
+cat("\nPosterior saved.\n")
