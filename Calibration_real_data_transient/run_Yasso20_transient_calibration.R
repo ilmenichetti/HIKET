@@ -58,7 +58,7 @@
 # =============================================================================
 
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
-source("./Model_functions_real_data/input_compatibility_layer.R")
+source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 # Yasso20 reuses yasso15.so; yasso15_wrapper.R must be loaded first because
 # yasso20_wrapper.R aliases YASSO15_PARAM_NAMES and calls yasso15_run().
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15_wrapper_transient.R")
@@ -76,7 +76,7 @@ MODEL_NAME <- "Yasso20"
 RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
-source("./Calibration_real_data/calib_config.R")
+source("./Calibration_real_data_transient/calib_config.R")
 
 
 CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()["nodename"])) parallelly::availableCores() else parallel::detectCores() - 1L

@@ -38,7 +38,7 @@ MODEL_NAME       <- "TP2"
 RUN_ID           <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
-source("./Calibration_real_data/calib_config.R")
+source("./Calibration_real_data_transient/calib_config.R")
 
 
 CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()[["nodename"]])) {

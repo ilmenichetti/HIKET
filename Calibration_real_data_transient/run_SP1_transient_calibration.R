@@ -21,7 +21,7 @@
 # =============================================================================
 
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
-source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso07_wrapper.R")
+source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper.R")
 # No dyn.load: only the pure-R xi functions are used (compute_xi_yasso07,
 # compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
 source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/sp1_wrapper_transient.R")
@@ -38,7 +38,7 @@ MODEL_NAME       <- "SP1"
 RUN_ID           <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
-source("./Calibration_real_data/calib_config.R")
+source("./Calibration_real_data_transient/calib_config.R")
 
 
 CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()[["nodename"]])) {
