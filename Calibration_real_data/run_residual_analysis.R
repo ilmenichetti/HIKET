@@ -186,6 +186,7 @@ rf_fit <- ranger(
   importance   = "permutation",
   num.threads  = parallel::detectCores() - 1L
 )
+oob_r2 <- rf_fit$r.squared   # ranger OOB R² (on residual_log scale)
 imp <- sort(rf_fit$variable.importance, decreasing = TRUE)
 imp_df <- data.frame(variable = names(imp), importance = unname(imp))
 write.csv(imp_df,
