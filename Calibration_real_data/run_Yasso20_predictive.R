@@ -281,7 +281,7 @@ t_pp <- system.time({
         return(NULL)
       }
       
-      data.frame(
+      result_df <- data.frame(
         plot_id     = pid,
         year        = run_out$year,
         draw        = d,
@@ -293,6 +293,8 @@ t_pp <- system.time({
         total_soc   = run_out$total_soc,
         respiration = run_out$respiration
       )
+      assign("success_count", get("success_count", envir = .GlobalEnv) + nrow(result_df), envir = .GlobalEnv)
+      result_df
     }, mc.cores = CORES_PER_CHAIN))
   }))
   message(sprintf("\nFailure counts across all plots/draws:"))
