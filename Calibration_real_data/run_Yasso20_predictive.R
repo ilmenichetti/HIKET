@@ -95,13 +95,21 @@ message(sprintf("Loaded plots:       %d", length(plots_real)))
 
 p_default        <- YASSO20_DEFAULT_PARAMS
 FIXED_RATE_NAMES <- c("alpha_A","alpha_W","alpha_E","alpha_N",
-                      "p_H","alpha_H","w1","w2","w3","w4","w5")
+                      "p_H","alpha_H","w1","w2","w3","w4","w5",
+                      # Structural zeros: fixed at 0 in the original Yasso20
+                      # calibration (SD = 0 across FMI posterior). These were
+                      # never sampled, so they are absent from posterior_phys.
+                      # Must be supplied here or assemble_model_params returns NA.
+                      "p_NW","p_AE","p_WE","p_NE","p_AN","p_EN")
 fixed_rates      <- p_default[FIXED_RATE_NAMES]
+fixed_rates[c("p_NW","p_AE","p_WE","p_NE","p_AN","p_EN")] <- 0.0
 
-FREE_FRAC_NAMES <- c("p_AW","p_AE","p_AN",
-                     "p_WA","p_WE","p_WN",
-                     "p_EA","p_EW","p_EN",
-                     "p_NA","p_NW","p_NE")
+# Only the 6 fractions that were actually free in the calibration.
+# The other 6 (structural zeros) are now in fixed_rates above.
+FREE_FRAC_NAMES <- c("p_AW",
+                     "p_WA","p_WN",
+                     "p_EA","p_EW",
+                     "p_NA")
 
 assemble_model_params <- function(p_free) {
   yasso_params <- c(
@@ -116,36 +124,6 @@ assemble_model_params <- function(p_free) {
   c(yasso_params, sigma_input = unname(p_free["sigma_input"]))
 }
 
-
-# Diagnostic: test first plot to see which step fails
-test_pid <- plots_real[1]
-test_clim <- climate_by_plot[[test_pid]]
-test_inputs <- inputs_by_plot[[test_pid]]
-test_lm <- litter_means[[test_pid]]
-
-test_xi <- tryCatch(
-  compute_xi_yasso20_engine(test_clim, model_params),
-  error = function(e) { message("XI_ERROR: ", e$message); NULL })
-
-if (!is.null(test_xi)) {
-  test_xi_ss <- tryCatch(
-    compute_xi_mean_yasso20_engine(
-      test_clim[seq_len(min(STEADY_STATE_YEARS * 12L, nrow(test_clim))), , drop = FALSE],
-      model_params),
-    error = function(e) { message("XI_SS_ERROR: ", e$message); NULL })
-  
-  if (!is.null(test_xi_ss)) {
-    test_cinit <- tryCatch(
-      steady_state_yasso20_engine(model_params, test_lm, test_xi_ss),
-      error = function(e) { message("CINIT_ERROR: ", e$message); NULL })
-    
-    if (!is.null(test_cinit)) {
-      test_run <- tryCatch(
-        yasso20_run_engine(test_inputs, model_params, test_cinit, test_xi),
-        error = function(e) { message("RUN_ERROR: ", e$message); NULL })
-    }
-  }
-}
 
 # =============================================================================
 # 3.  Model interface wrappers  [YASSO20]
@@ -195,6 +173,8 @@ yasso20_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 }
 
 
+
+
 # =============================================================================
 # 4.  Posterior predictive simulation  [YASSO20: n_ss in monthly rows]
 # =============================================================================
@@ -203,38 +183,10 @@ set.seed(2025)
 draw_idx <- sample(nrow(posterior_phys), N_PP_DRAWS)
 draws    <- posterior_phys[draw_idx, ]
 
-# Initialize failure counters
-xi_fail_count <- 0
-xi_ss_fail_count <- 0
-cinit_fail_count <- 0
-run_fail_count <- 0
 
 message(sprintf("\nGenerating %d posterior predictive draws across %d plots...",
                 N_PP_DRAWS, length(plots_real)))
 t_pp <- system.time({
-  
-  # DEBUG: Force write diagnostics
-  debug_file <- file.path(DIR_DIAG, sprintf("Yasso20_debug_%s.txt", RUN_ID))
-  
-  # Check 1: inputs structure before draws
-  sink(debug_file, append = FALSE)
-  cat("=== YASSO20 DEBUG START ===\n")
-  cat("posterior_phys dims:", nrow(posterior_phys), "x", ncol(posterior_phys), "\n")
-  cat("plots_real length:", length(plots_real), "\n")
-  cat("climate_by_plot is NULL?", is.null(climate_by_plot), "\n")
-  cat("First plot climate structure:\n")
-  if (length(plots_real) > 0) {
-    first_pid <- plots_real[1]
-    cat("  First plot ID:", first_pid, "\n")
-    if (!is.null(climate_by_plot[[first_pid]])) {
-      cat("  Climate rows:", nrow(climate_by_plot[[first_pid]]), "\n")
-      cat("  Climate cols:", ncol(climate_by_plot[[first_pid]]), "\n")
-      cat("  Climate col names:", paste(colnames(climate_by_plot[[first_pid]]), collapse = ", "), "\n")
-    } else {
-      cat("  Climate for first plot is NULL!\n")
-    }
-  }
-  sink()
   
   posterior_predictions <- do.call(rbind, lapply(seq_len(N_PP_DRAWS), function(d) {
     if (d %% 10 == 0) message(sprintf("  Draw %d / %d", d, N_PP_DRAWS))
@@ -251,7 +203,6 @@ t_pp <- system.time({
         compute_xi_yasso20_engine(clim, model_params),
         error = function(e) NULL)
       if (is.null(xi_array)) {
-        assign("xi_fail_count", get("xi_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
         return(NULL)
       }
       
@@ -261,7 +212,6 @@ t_pp <- system.time({
           clim[seq_len(n_ss), , drop = FALSE], model_params),
         error = function(e) NULL)
       if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) {
-        assign("xi_ss_fail_count", get("xi_ss_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
         return(NULL)
       }
       
@@ -269,7 +219,6 @@ t_pp <- system.time({
         steady_state_yasso20_engine(model_params, lm, xi_for_ss),
         error = function(e) NULL)
       if (is.null(C_init) || any(!is.finite(C_init)) || any(C_init < 0)) {
-        assign("cinit_fail_count", get("cinit_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
         return(NULL)
       }
       
@@ -277,7 +226,6 @@ t_pp <- system.time({
         yasso20_run_engine(inputs, model_params, C_init, xi_array),
         error = function(e) NULL)
       if (is.null(run_out)) {
-        assign("run_fail_count", get("run_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
         return(NULL)
       }
       
@@ -293,43 +241,12 @@ t_pp <- system.time({
         total_soc   = run_out$total_soc,
         respiration = run_out$respiration
       )
-      assign("success_count", get("success_count", envir = .GlobalEnv) + nrow(result_df), envir = .GlobalEnv)
       result_df
     }, mc.cores = CORES_PER_CHAIN))
   }))
-  message(sprintf("\nFailure counts across all plots/draws:"))
-  message(sprintf("  XI failures: %d", xi_fail_count))
-  message(sprintf("  XI_SS failures: %d", xi_ss_fail_count))
-  message(sprintf("  C_init failures: %d", cinit_fail_count))
-  message(sprintf("  Run failures: %d", run_fail_count))
-  message(sprintf("\nTotal successful rows returned: %d", success_count))
-  write(sprintf("Success count: %d", success_count),
-        file = file.path(DIR_DIAG, "YASSO20_SUCCESS.txt"))
-  
-  write(sprintf(
-    "=== FAILURE COUNTERS ===\nXI: %d\nXI_SS: %d\nC_init: %d\nRun: %d",
-    xi_fail_count, xi_ss_fail_count, cinit_fail_count, run_fail_count),
-    file = file.path(DIR_DIAG, "YASSO20_FAILURES.txt"))
 })["elapsed"]
 message(sprintf("Posterior predictive complete: %.1f min  (%d rows)",
                 t_pp / 60, nrow(posterior_predictions)))
-
-# Check 2: posterior_predictions structure after draws
-sink(debug_file, append = TRUE)
-cat("\n=== After posterior predictive generation ===\n")
-cat("posterior_predictions class:", class(posterior_predictions), "\n")
-cat("posterior_predictions is NULL?", is.null(posterior_predictions), "\n")
-if (!is.null(posterior_predictions)) {
-  cat("posterior_predictions dims:", nrow(posterior_predictions), "x", ncol(posterior_predictions), "\n")
-  cat("posterior_predictions colnames:", paste(colnames(posterior_predictions), collapse = ", "), "\n")
-  cat("First few rows of posterior_predictions:\n")
-  print(head(posterior_predictions))
-} else {
-  cat("posterior_predictions is NULL - THIS IS THE PROBLEM\n")
-}
-sink()
-
-message(sprintf("Debug output written to: %s", debug_file))
 
 
 # =============================================================================
