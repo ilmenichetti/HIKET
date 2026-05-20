@@ -60,9 +60,9 @@ detect_latest <- function(model) {
 }
 
 args <- commandArgs(trailingOnly = TRUE)
-run_ids <- setNames(vector("list", 3), MODELS)
+run_ids <- setNames(vector("list", 5), MODELS)
 
-if (length(args) >= 3) {
+if (length(args) >= 1) {
   # Parse "Model:RUN_ID" pairs from command line
   for (a in args) {
     parts <- strsplit(a, ":", fixed = TRUE)[[1]]
@@ -316,8 +316,8 @@ legend("topleft",
        legend = c(MODELS,
                   sprintf("Observed mean ΔSOC ± 95%% CI  (n=%d)", nrow(obs_delta))),
        col    = c(MODEL_COLS[MODELS], "grey20"),
-       lwd    = c(2.5, 2.5, 2.5, 2),
-       lty    = c(1, 1, 1, 2),
+       lwd = c(rep(2.5, length(MODELS)), 2),
+       lty = c(rep(1,   length(MODELS)), 2),
        bty = "n", cex = 0.9)
 dev.off()
 message(sprintf("ΔSOC trajectory: %s", delta_png))
