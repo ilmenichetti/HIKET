@@ -11,4 +11,4 @@
 
 module load r-env
 cd /scratch/project_2019134/HIKET/
-srun apptainer_wrapper exec Rscript --no-save Calibration_real_data/run_hiket_pipeline.R --skip-calibration
+srun apptainer_wrapper exec Rscript --no-save Calibration_real_data_transient/run_hiket_pipeline.R --skip-calibration
