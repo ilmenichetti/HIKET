@@ -310,7 +310,10 @@ plot_rf_importance_heatmap <- function(
        xlab = "", ylab = "")
   
   # Cells: colour from heat_pal; map [0, 1] -> [1, 100]
-  col_idx <- pmax(1L, pmin(100L, round(mat * 99) + 1L))
+  # pmax/pmin strip matrix dimensions and return a flat vector;
+  # restore them explicitly so [i, j] indexing works in the cell loop below.
+  col_idx        <- pmax(1L, pmin(100L, round(mat * 99) + 1L))
+  dim(col_idx)   <- dim(mat)
   for (i in seq_len(n_pred)) {
     for (j in seq_len(n_mod)) {
       rect(j - 1, i - 1, j, i,
