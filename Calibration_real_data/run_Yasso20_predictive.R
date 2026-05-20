@@ -302,6 +302,9 @@ t_pp <- system.time({
   message(sprintf("  XI_SS failures: %d", xi_ss_fail_count))
   message(sprintf("  C_init failures: %d", cinit_fail_count))
   message(sprintf("  Run failures: %d", run_fail_count))
+  message(sprintf("\nTotal successful rows returned: %d", success_count))
+  write(sprintf("Success count: %d", success_count),
+        file = file.path(DIR_DIAG, "YASSO20_SUCCESS.txt"))
   
   write(sprintf(
     "=== FAILURE COUNTERS ===\nXI: %d\nXI_SS: %d\nC_init: %d\nRun: %d",
