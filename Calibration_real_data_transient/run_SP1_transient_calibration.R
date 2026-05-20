@@ -21,7 +21,7 @@
 # =============================================================================
 
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
-source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper.R")
+source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper_transient.R")
 # No dyn.load: only the pure-R xi functions are used (compute_xi_yasso07,
 # compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
 source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/sp1_wrapper_transient.R")
