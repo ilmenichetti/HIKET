@@ -206,6 +206,30 @@ draws    <- posterior_phys[draw_idx, ]
 message(sprintf("\nGenerating %d posterior predictive draws across %d plots...",
                 N_PP_DRAWS, length(plots_real)))
 t_pp <- system.time({
+  
+  # DEBUG: Force write diagnostics
+  debug_file <- file.path(DIR_DIAG, sprintf("Yasso20_debug_%s.txt", RUN_ID))
+  
+  # Check 1: inputs structure before draws
+  sink(debug_file, append = FALSE)
+  cat("=== YASSO20 DEBUG START ===\n")
+  cat("posterior_phys dims:", nrow(posterior_phys), "x", ncol(posterior_phys), "\n")
+  cat("plots_real length:", length(plots_real), "\n")
+  cat("climate_by_plot is NULL?", is.null(climate_by_plot), "\n")
+  cat("First plot climate structure:\n")
+  if (length(plots_real) > 0) {
+    first_pid <- plots_real[1]
+    cat("  First plot ID:", first_pid, "\n")
+    if (!is.null(climate_by_plot[[first_pid]])) {
+      cat("  Climate rows:", nrow(climate_by_plot[[first_pid]]), "\n")
+      cat("  Climate cols:", ncol(climate_by_plot[[first_pid]]), "\n")
+      cat("  Climate col names:", paste(colnames(climate_by_plot[[first_pid]]), collapse = ", "), "\n")
+    } else {
+      cat("  Climate for first plot is NULL!\n")
+    }
+  }
+  sink()
+  
   posterior_predictions <- do.call(rbind, lapply(seq_len(N_PP_DRAWS), function(d) {
     if (d %% 10 == 0) message(sprintf("  Draw %d / %d", d, N_PP_DRAWS))
 
@@ -258,6 +282,23 @@ t_pp <- system.time({
 })["elapsed"]
 message(sprintf("Posterior predictive complete: %.1f min  (%d rows)",
                 t_pp / 60, nrow(posterior_predictions)))
+
+# Check 2: posterior_predictions structure after draws
+sink(debug_file, append = TRUE)
+cat("\n=== After posterior predictive generation ===\n")
+cat("posterior_predictions class:", class(posterior_predictions), "\n")
+cat("posterior_predictions is NULL?", is.null(posterior_predictions), "\n")
+if (!is.null(posterior_predictions)) {
+  cat("posterior_predictions dims:", nrow(posterior_predictions), "x", ncol(posterior_predictions), "\n")
+  cat("posterior_predictions colnames:", paste(colnames(posterior_predictions), collapse = ", "), "\n")
+  cat("First few rows of posterior_predictions:\n")
+  print(head(posterior_predictions))
+} else {
+  cat("posterior_predictions is NULL - THIS IS THE PROBLEM\n")
+}
+sink()
+
+message(sprintf("Debug output written to: %s", debug_file))
 
 
 # =============================================================================
