@@ -139,9 +139,9 @@ RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 # N_LOG = 200: log progress every 200 likelihood evaluations.
 N_PLOTS_TEST <- NA
 N_CHAINS     <- 4L
-N_ITER       <- 20000L
-N_BURNIN     <- 2000L
-N_LOG        <- 200L
+N_ITER       <- 2000L
+N_BURNIN     <- 200L
+N_LOG        <- 20L
 
 # --- Production (Roihu) settings: uncomment to switch ---
 # Full ~3700-plot dataset, longer chains, less frequent logging.

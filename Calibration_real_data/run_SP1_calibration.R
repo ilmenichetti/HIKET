@@ -55,9 +55,9 @@ RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 N_PLOTS_TEST <- NA    # NA = all calibration-ready plots
 N_CHAINS     <- 4L
-N_ITER       <- 20000L
-N_BURNIN     <- 2000L
-N_LOG        <- 200L
+N_ITER       <- 2000L
+N_BURNIN     <- 200L
+N_LOG        <- 20L
 
 # Production (Roihu): uncomment below
 # N_ITER   <- 50000L
