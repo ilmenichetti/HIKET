@@ -31,11 +31,9 @@ library(dplyr)
 MODEL_NAME       <- "Yasso07"
 RUN_ID           <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
-N_PLOTS_TEST     <- NA
-N_CHAINS         <- 4L
-N_ITER           <- 1000L
-N_BURNIN         <- 200L
-N_LOG            <- 20L
+# read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
+source("./Calibration_real_data/calib_config.R")
+
 
 CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()[["nodename"]])) {
   parallelly::availableCores()
