@@ -203,6 +203,12 @@ set.seed(2025)
 draw_idx <- sample(nrow(posterior_phys), N_PP_DRAWS)
 draws    <- posterior_phys[draw_idx, ]
 
+# Initialize failure counters
+xi_fail_count <- 0
+xi_ss_fail_count <- 0
+cinit_fail_count <- 0
+run_fail_count <- 0
+
 message(sprintf("\nGenerating %d posterior predictive draws across %d plots...",
                 N_PP_DRAWS, length(plots_real)))
 t_pp <- system.time({
@@ -237,34 +243,44 @@ t_pp <- system.time({
     model_params <- assemble_model_params(p_free)
 
     do.call(rbind, mclapply(plots_real, function(pid) {
-      clim   <- climate_by_plot[[pid]]   # monthly
-      inputs <- inputs_by_plot[[pid]]    # annual
+      clim   <- climate_by_plot[[pid]]
+      inputs <- inputs_by_plot[[pid]]
       lm     <- litter_means[[pid]]
-
+      
       xi_array <- tryCatch(
         compute_xi_yasso20_engine(clim, model_params),
         error = function(e) NULL)
-      if (is.null(xi_array)) return(NULL)
-
-      # YASSO20: steady-state window in monthly rows
+      if (is.null(xi_array)) {
+        assign("xi_fail_count", get("xi_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
+        return(NULL)
+      }
+      
       n_ss      <- min(STEADY_STATE_YEARS * 12L, nrow(clim))
       xi_for_ss <- tryCatch(
         compute_xi_mean_yasso20_engine(
           clim[seq_len(n_ss), , drop = FALSE], model_params),
         error = function(e) NULL)
-      if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(NULL)
-
+      if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) {
+        assign("xi_ss_fail_count", get("xi_ss_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
+        return(NULL)
+      }
+      
       C_init <- tryCatch(
         steady_state_yasso20_engine(model_params, lm, xi_for_ss),
         error = function(e) NULL)
-      if (is.null(C_init) || any(!is.finite(C_init)) || any(C_init < 0))
+      if (is.null(C_init) || any(!is.finite(C_init)) || any(C_init < 0)) {
+        assign("cinit_fail_count", get("cinit_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
         return(NULL)
-
+      }
+      
       run_out <- tryCatch(
         yasso20_run_engine(inputs, model_params, C_init, xi_array),
         error = function(e) NULL)
-      if (is.null(run_out)) return(NULL)
-
+      if (is.null(run_out)) {
+        assign("run_fail_count", get("run_fail_count", envir = .GlobalEnv) + 1, envir = .GlobalEnv)
+        return(NULL)
+      }
+      
       data.frame(
         plot_id     = pid,
         year        = run_out$year,
@@ -279,6 +295,16 @@ t_pp <- system.time({
       )
     }, mc.cores = CORES_PER_CHAIN))
   }))
+  message(sprintf("\nFailure counts across all plots/draws:"))
+  message(sprintf("  XI failures: %d", xi_fail_count))
+  message(sprintf("  XI_SS failures: %d", xi_ss_fail_count))
+  message(sprintf("  C_init failures: %d", cinit_fail_count))
+  message(sprintf("  Run failures: %d", run_fail_count))
+  
+  write(sprintf(
+    "=== FAILURE COUNTERS ===\nXI: %d\nXI_SS: %d\nC_init: %d\nRun: %d",
+    xi_fail_count, xi_ss_fail_count, cinit_fail_count, run_fail_count),
+    file = file.path(DIR_DIAG, "YASSO20_FAILURES.txt"))
 })["elapsed"]
 message(sprintf("Posterior predictive complete: %.1f min  (%d rows)",
                 t_pp / 60, nrow(posterior_predictions)))
