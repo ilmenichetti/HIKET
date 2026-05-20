@@ -117,6 +117,36 @@ assemble_model_params <- function(p_free) {
 }
 
 
+# Diagnostic: test first plot to see which step fails
+test_pid <- plots_real[1]
+test_clim <- climate_by_plot[[test_pid]]
+test_inputs <- inputs_by_plot[[test_pid]]
+test_lm <- litter_means[[test_pid]]
+
+test_xi <- tryCatch(
+  compute_xi_yasso20_engine(test_clim, model_params),
+  error = function(e) { message("XI_ERROR: ", e$message); NULL })
+
+if (!is.null(test_xi)) {
+  test_xi_ss <- tryCatch(
+    compute_xi_mean_yasso20_engine(
+      test_clim[seq_len(min(STEADY_STATE_YEARS * 12L, nrow(test_clim))), , drop = FALSE],
+      model_params),
+    error = function(e) { message("XI_SS_ERROR: ", e$message); NULL })
+  
+  if (!is.null(test_xi_ss)) {
+    test_cinit <- tryCatch(
+      steady_state_yasso20_engine(model_params, test_lm, test_xi_ss),
+      error = function(e) { message("CINIT_ERROR: ", e$message); NULL })
+    
+    if (!is.null(test_cinit)) {
+      test_run <- tryCatch(
+        yasso20_run_engine(test_inputs, model_params, test_cinit, test_xi),
+        error = function(e) { message("RUN_ERROR: ", e$message); NULL })
+    }
+  }
+}
+
 # =============================================================================
 # 3.  Model interface wrappers  [YASSO20]
 # =============================================================================
