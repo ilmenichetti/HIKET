@@ -19,7 +19,7 @@
 # OUTPUTS:
 #   ./Calibration_real_data_transient/diagnostics/multimodel/
 #     multimodel_metrics_<COMP_ID>.txt          -- formatted metrics table
-#     multimodel_obs_vs_pred_<COMP_ID>.png      -- 5-panel scatter
+#     multimodel_obs_vs_pred_<COMP_ID>.png      -- 2x3 scatter + bias panel
 #     multimodel_delta_soc_<COMP_ID>.png        -- annual ΔSOC rate trajectories
 #     multimodel_residuals_<COMP_ID>.png        -- residual distributions + by KA
 #     multimodel_summary_<COMP_ID>.rds          -- metrics list for downstream use
@@ -156,7 +156,7 @@ print(metrics_df[, c("Model","R2","RMSE_median","Bias_median","Coverage_95")])
 
 
 # =============================================================================
-# 3.  Plot A: Obs vs predicted — 5 panels side by side
+# 3.  Plot A: Obs vs predicted — 2x3 grid (5 model panels + bias barplot)
 # =============================================================================
 
 obs_pred_png <- file.path(DIR_OUT,
@@ -170,19 +170,19 @@ ax_max <- max(sapply(MODELS, function(m) {
 ax_lim <- c(0, ax_max)
 
 png(obs_pred_png,
-    width  = 28L * PX_PER_IN,   # 5 panels at ~5.6 in each
-    height =  7L * PX_PER_IN,
+    width  = 18L * PX_PER_IN,
+    height = 14L * PX_PER_IN,
     res    = PX_PER_IN)
-par(mfrow = c(1, 5), mar = c(4.5, 4.5, 3.5, 1))
+par(mfrow = c(2, 3), mar = c(4.5, 4.5, 3.5, 1))
 
 for (m in MODELS) {
   rd <- pp[[m]]$residuals_df
   mt <- pp[[m]]$metrics
-
+  
   ka_col <- c("1" = "#2166ac","2" = "#74add1",
-               "3" = "#f4a582","4" = "#d6604d")[as.character(rd$KA)]
+              "3" = "#f4a582","4" = "#d6604d")[as.character(rd$KA)]
   ka_col[is.na(ka_col)] <- "grey60"
-
+  
   plot(NA, xlim = ax_lim, ylim = ax_lim,
        xlab = "Observed SOC (tC/ha)",
        ylab = "Predicted SOC — posterior median (tC/ha)",
@@ -199,6 +199,29 @@ for (m in MODELS) {
                     sprintf("Cov = %.2f",      mt$coverage_95)),
          bty = "n", cex = 0.8)
 }
+
+# Panel 6: bias barplot across all five models.
+# Bias_median = median(log(obs) - log(pred)) across all observations for that
+# model. Positive = systematic under-prediction; negative = over-prediction.
+# Reference line at 0 = unbiased. Models ordered by complexity (SP1 -> Yasso20)
+# so complexity-vs-bias trends are immediately visible.
+bias_vals <- sapply(MODELS, function(m) pp[[m]]$metrics$bias_median)
+ylim_bias <- c(min(bias_vals, 0), max(bias_vals, 0)) *
+  c(ifelse(min(bias_vals) < 0, 1.25, 1), ifelse(max(bias_vals) > 0, 1.25, 1))
+
+bp <- barplot(bias_vals,
+              col       = MODEL_COLS[MODELS],
+              names.arg = MODELS,
+              ylab      = "Bias — posterior median  log(obs/pred)",
+              main      = "Systematic bias by model",
+              border    = "white",
+              ylim      = ylim_bias,
+              las       = 1)
+abline(h = 0, lty = 2, col = "grey40", lwd = 1.5)
+text(x      = bp,
+     y      = bias_vals + sign(bias_vals) * diff(ylim_bias) * 0.04,
+     labels = sprintf("%+.3f", bias_vals),
+     cex    = 0.9, font = 2)
 
 mtext("HIKET — Observed vs Predicted SOC (posterior median)",
       side = 3, outer = TRUE, line = -1.5, cex = 1.1, font = 2)
@@ -257,7 +280,7 @@ obs_delta <- obs_ref %>%
   arrange(year, .by_group = TRUE) %>%
   summarise(
     delta_obs  = (last(soc_obs_tCha) - first(soc_obs_tCha)) /
-                 (last(year) - first(year)),
+      (last(year) - first(year)),
     year_first = first(year), year_last = last(year),
     .groups = "drop"
   ) %>% filter(year_first != year_last)
@@ -336,7 +359,6 @@ names(finite_resids) <- MODELS
 x_range <- range(unlist(finite_resids), na.rm = TRUE)
 x_range <- c(max(x_range[1], -3), min(x_range[2], 3))  # clip extreme tails
 
-
 y_max <- 0
 dens_list <- lapply(MODELS, function(m) {
   d <- density(finite_resids[[m]], from = x_range[1], to = x_range[2])
@@ -369,12 +391,11 @@ ka_levels <- sort(unique(na.omit(resid_combined$KA)))
 if (length(ka_levels) > 0) {
   n_ka  <- length(ka_levels)
   n_mod <- length(MODELS)
-  gap   <- 0.3
   width <- 0.14   # narrower to keep five models legible within each KA cluster
-
+  
   x_centres <- seq_len(n_ka)
   offsets    <- seq(-(n_mod - 1)/2, (n_mod - 1)/2, length.out = n_mod) * width * 1.5
-
+  
   plot(NA,
        xlim = c(0.5, n_ka + 0.5),
        ylim = range(resid_combined$residual_log, na.rm = TRUE),
@@ -384,14 +405,14 @@ if (length(ka_levels) > 0) {
        xaxt = "n")
   axis(1, at = x_centres, labels = paste("KA", ka_levels))
   abline(h = 0, lty = 2, col = "grey40")
-
+  
   for (j in seq_along(MODELS)) {
     m <- MODELS[j]
     for (i in seq_along(ka_levels)) {
       ka  <- ka_levels[i]
       vals <- resid_combined$residual_log[
         resid_combined$model == m & resid_combined$KA == ka &
-        is.finite(resid_combined$residual_log)]
+          is.finite(resid_combined$residual_log)]
       if (length(vals) < 3) next
       xc <- x_centres[i] + offsets[j]
       boxplot(vals, at = xc, add = TRUE, boxwex = width,
@@ -405,7 +426,7 @@ if (length(ka_levels) > 0) {
   plot.new(); title("KA not available")
 }
 
-# Panel 3: residuals vs fitted (all three models, same axes)
+# Panel 3: residuals vs fitted (all five models, same axes)
 plot(NA,
      xlim = range(unlist(lapply(MODELS, function(m)
        pp[[m]]$residuals_df$log_hat_mean[
@@ -430,7 +451,7 @@ for (m in MODELS) {
 legend("topright", legend = MODELS, col = MODEL_COLS[MODELS],
        lwd = 2, bty = "n", cex = 0.85)
 
-# Panel 4: metrics bar chart (RMSE per model)
+# Panel 4: RMSE barplot across all five models
 rmse_vals <- sapply(MODELS, function(m) pp[[m]]$metrics$RMSE_median)
 barplot(rmse_vals,
         col    = MODEL_COLS[MODELS],

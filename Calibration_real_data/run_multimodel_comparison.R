@@ -19,17 +19,17 @@
 # OUTPUTS:
 #   ./Calibration_real_data/diagnostics/multimodel/
 #     multimodel_metrics_<COMP_ID>.txt          -- formatted metrics table
-#     multimodel_obs_vs_pred_<COMP_ID>.png      -- 5-panel scatter
-#     multimodel_delta_soc_<COMP_ID>.png        -- annual ΔSOC rate trajectories
+#     multimodel_obs_vs_pred_<COMP_ID>.png      -- 2x3 scatter + bias panel
+#     multimodel_delta_soc_<COMP_ID>.png        -- ΔSOC trajectories overlaid
 #     multimodel_residuals_<COMP_ID>.png        -- residual distributions + by KA
 #     multimodel_summary_<COMP_ID>.rds          -- metrics list for downstream use
 #
-#   where COMP_ID = <RUN_ID_SP1>_<RUN_ID_TP2>_<RUN_ID_07>_<RUN_ID_15>_<RUN_ID_20>
+#   where COMP_ID = <RUN_ID_07>_<RUN_ID_15>_<RUN_ID_20>
 # =============================================================================
 
 library(dplyr)
 
-MODELS <- c("Yasso07", "Yasso15", "Yasso20")
+MODELS <- c("SP1", "TP2", "Yasso07", "Yasso15", "Yasso20")
 DIR_RUNS <- "./Calibration_real_data/runs/"
 DIR_OUT  <- "./Calibration_real_data/diagnostics/multimodel"
 dir.create(DIR_OUT, showWarnings = FALSE, recursive = TRUE)
@@ -38,9 +38,11 @@ PX_PER_IN <- 150L
 
 # Model colours used consistently across all comparison plots
 MODEL_COLS <- c(
-  Yasso07 = "#2166ac",
-  Yasso15 = "#d6604d",
-  Yasso20 = "#1a9641"
+  SP1     = "#762a83",   # purple  — simplest model (1 pool)
+  TP2     = "#e08214",   # amber   — intermediate (2 pools)
+  Yasso07 = "#2166ac",   # blue
+  Yasso15 = "#d6604d",   # red-orange
+  Yasso20 = "#1a9641"    # green
 )
 
 
@@ -167,9 +169,9 @@ ax_lim <- c(0, ax_max)
 
 png(obs_pred_png,
     width  = 18L * PX_PER_IN,
-    height =  7L * PX_PER_IN,
+    height = 14L * PX_PER_IN,
     res    = PX_PER_IN)
-par(mfrow = c(1, 3), mar = c(4.5, 4.5, 3.5, 1))
+par(mfrow = c(2, 3), mar = c(4.5, 4.5, 3.5, 1))
 
 for (m in MODELS) {
   rd <- pp[[m]]$residuals_df
@@ -196,23 +198,49 @@ for (m in MODELS) {
          bty = "n", cex = 0.8)
 }
 
+# Panel 6: bias barplot across all five models.
+# Bias_median = median(log(obs) - log(pred)) across all observations for that
+# model. Positive = systematic under-prediction; negative = over-prediction.
+# Reference line at 0 = unbiased. Sorted by model complexity (SP1 -> Yasso20)
+# to make complexity-vs-bias trends immediately visible.
+bias_vals  <- sapply(MODELS, function(m) pp[[m]]$metrics$bias_median)
+bar_cols   <- MODEL_COLS[MODELS]
+ylim_bias  <- c(min(bias_vals, 0), max(bias_vals, 0)) *
+  c(ifelse(min(bias_vals) < 0, 1.25, 1), ifelse(max(bias_vals) > 0, 1.25, 1))
+
+bp <- barplot(bias_vals,
+              col       = bar_cols,
+              names.arg = MODELS,
+              ylab      = "Bias — posterior median  log(obs/pred)",
+              main      = "Systematic bias by model",
+              border    = "white",
+              ylim      = ylim_bias,
+              las       = 1)
+abline(h = 0, lty = 2, col = "grey40", lwd = 1.5)
+text(x      = bp,
+     y      = bias_vals + sign(bias_vals) * diff(ylim_bias) * 0.04,
+     labels = sprintf("%+.3f", bias_vals),
+     cex    = 0.9, font = 2)
+
 mtext("HIKET — Observed vs Predicted SOC (posterior median)",
       side = 3, outer = TRUE, line = -1.5, cex = 1.1, font = 2)
 dev.off()
-message(sprintf("Obs vs pred: %s", obs_pred_png))
 
 
 # =============================================================================
 # 4.  Plot B: ΔSOC trajectories overlaid
 # =============================================================================
 
-# Build trajectory summary per model
+# Build trajectory summary per model.
+# Annual rate = year-on-year difference in mean SOC across plots (tC/ha/yr),
+# so model and observed are on the same axis. The first year of each plot
+# produces NA (no lag) and is dropped by na.rm = TRUE in summarise.
 traj_list <- lapply(MODELS, function(m) {
   preds <- pp[[m]]$posterior_predictions
   preds %>%
     group_by(plot_id, draw) %>%
     arrange(year, .by_group = TRUE) %>%
-    mutate(delta_soc = total_soc - first(total_soc)) %>%
+    mutate(delta_soc = total_soc - lag(total_soc)) %>%   # annual rate, tC/ha/yr
     ungroup() %>%
     group_by(draw, year) %>%
     summarise(mean_delta = mean(delta_soc, na.rm = TRUE), .groups = "drop") %>%
@@ -227,7 +255,8 @@ traj_list <- lapply(MODELS, function(m) {
 })
 names(traj_list) <- MODELS
 
-# Observed ΔSOC from first model's summary (observations are the same)
+# Observed mean annual rate: (SOC_last - SOC_first) / (year_last - year_first)
+# per plot, then averaged across plots. Same units as model trajectories.
 obs_ref <- pp[[MODELS[1]]]$posterior_summary
 obs_delta <- obs_ref %>%
   filter(!is.na(soc_obs_tCha)) %>%
@@ -257,7 +286,7 @@ par(mar = c(4, 4.5, 3.5, 1))
 
 plot(NA, xlim = range(all_years), ylim = ylim_r,
      xlab = "Year",
-     ylab = expression(paste(Delta, "SOC relative to first year (tC/ha)")),
+     ylab = expression(paste(Delta, "SOC annual rate (tC/ha/yr)")),
      main = "HIKET — Mean ΔSOC across models")
 abline(h = 0, lty = 3, col = "grey50")
 
