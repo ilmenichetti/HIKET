@@ -1,44 +1,50 @@
 # =============================================================================
 # run_multimodel_comparison.R
 #
-# Multi-model comparison stage of the HIKET pipeline.
-# Loads the posterior predictive bundles from Yasso07, Yasso15, and Yasso20
-# and produces a single comparison report and figure set.
+# Multi-model comparison stage of the HIKET pipeline (transient version).
+# Loads the posterior predictive bundles from all five models (SP1, TP2,
+# Yasso07, Yasso15, Yasso20) and produces a single comparison report and
+# figure set.
 #
 # USAGE:
 #   Rscript run_multimodel_comparison.R \
+#     SP1:<RUN_ID_SP1> TP2:<RUN_ID_TP2> \
 #     Yasso07:<RUN_ID_07> Yasso15:<RUN_ID_15> Yasso20:<RUN_ID_20>
 #
 #   or with no arguments to auto-detect the most recent run for each model.
 #
 # INPUTS (one per model):
-#   ./Calibration_real_data/runs/<MODEL>_posterior_predictive_<RUN_ID>.rds
+#   ./Calibration_real_data_transient/runs/<MODEL>_posterior_predictive_<RUN_ID>.rds
 #
 # OUTPUTS:
-#   ./Calibration_real_data/diagnostics/multimodel/
+#   ./Calibration_real_data_transient/diagnostics/multimodel/
 #     multimodel_metrics_<COMP_ID>.txt          -- formatted metrics table
-#     multimodel_obs_vs_pred_<COMP_ID>.png      -- 3-panel scatter
-#     multimodel_delta_soc_<COMP_ID>.png        -- ΔSOC trajectories overlaid
+#     multimodel_obs_vs_pred_<COMP_ID>.png      -- 5-panel scatter
+#     multimodel_delta_soc_<COMP_ID>.png        -- annual ΔSOC rate trajectories
 #     multimodel_residuals_<COMP_ID>.png        -- residual distributions + by KA
 #     multimodel_summary_<COMP_ID>.rds          -- metrics list for downstream use
 #
-#   where COMP_ID = <RUN_ID_07>_<RUN_ID_15>_<RUN_ID_20>
+#   where COMP_ID = <RUN_ID_SP1>_<RUN_ID_TP2>_<RUN_ID_07>_<RUN_ID_15>_<RUN_ID_20>
 # =============================================================================
 
 library(dplyr)
 
-MODELS <- c("Yasso07", "Yasso15", "Yasso20")
+MODELS <- c("SP1", "TP2", "Yasso07", "Yasso15", "Yasso20")
 DIR_RUNS <- "./Calibration_real_data_transient/runs/"
 DIR_OUT  <- "./Calibration_real_data_transient/diagnostics/multimodel"
 dir.create(DIR_OUT, showWarnings = FALSE, recursive = TRUE)
 
 PX_PER_IN <- 150L
 
-# Model colours used consistently across all comparison plots
+# Model colours used consistently across all comparison plots.
+# SP1/TP2 use brown tones to visually distinguish the simpler benchmark
+# models from the three YASSO variants (blue/red/green).
 MODEL_COLS <- c(
-  Yasso07 = "#2166ac",
-  Yasso15 = "#d6604d",
-  Yasso20 = "#1a9641"
+  SP1     = "#8c510a",   # brown  -- 1-pool baseline
+  TP2     = "#bf812d",   # tan    -- 2-pool intermediate
+  Yasso07 = "#2166ac",   # blue
+  Yasso15 = "#d6604d",   # red
+  Yasso20 = "#1a9641"    # green
 )
 
 
@@ -56,9 +62,9 @@ detect_latest <- function(model) {
 }
 
 args <- commandArgs(trailingOnly = TRUE)
-run_ids <- setNames(vector("list", 3), MODELS)
+run_ids <- setNames(vector("list", length(MODELS)), MODELS)
 
-if (length(args) >= 3) {
+if (length(args) >= 1) {
   # Parse "Model:RUN_ID" pairs from command line
   for (a in args) {
     parts <- strsplit(a, ":", fixed = TRUE)[[1]]
@@ -150,13 +156,13 @@ print(metrics_df[, c("Model","R2","RMSE_median","Bias_median","Coverage_95")])
 
 
 # =============================================================================
-# 3.  Plot A: Obs vs predicted — 3 panels side by side
+# 3.  Plot A: Obs vs predicted — 5 panels side by side
 # =============================================================================
 
 obs_pred_png <- file.path(DIR_OUT,
                           sprintf("multimodel_obs_vs_pred_%s.png", COMP_ID))
 
-# Shared axis limits across all three models for comparability
+# Shared axis limits across all five models for comparability
 ax_max <- max(sapply(MODELS, function(m) {
   max(c(pp[[m]]$residuals_df$soc_obs_tCha,
         pp[[m]]$residuals_df$soc_q975), na.rm = TRUE)
@@ -164,10 +170,10 @@ ax_max <- max(sapply(MODELS, function(m) {
 ax_lim <- c(0, ax_max)
 
 png(obs_pred_png,
-    width  = 18L * PX_PER_IN,
+    width  = 28L * PX_PER_IN,   # 5 panels at ~5.6 in each
     height =  7L * PX_PER_IN,
     res    = PX_PER_IN)
-par(mfrow = c(1, 3), mar = c(4.5, 4.5, 3.5, 1))
+par(mfrow = c(1, 5), mar = c(4.5, 4.5, 3.5, 1))
 
 for (m in MODELS) {
   rd <- pp[[m]]$residuals_df
@@ -203,29 +209,47 @@ message(sprintf("Obs vs pred: %s", obs_pred_png))
 # =============================================================================
 # 4.  Plot B: ΔSOC trajectories overlaid
 # =============================================================================
+# Both the model trajectories and the observed reference are expressed as an
+# annual rate of change relative to each plot's first simulation year:
+#
+#   annual_rate(t) = (SOC(t) - SOC(t0)) / (t - t0)    [tC/ha/yr]
+#
+# This is identical to the formula used in the individual predictive scripts
+# (run_Yasso07_predictive.R, etc.) and makes the model trajectories directly
+# comparable to the observed metric, which is also an annual rate computed
+# over each plot's monitoring window.  The first year is dropped (0/0
+# undefined); the trajectory therefore starts one year after t0 and is
+# expected to converge toward the long-run observed rate as time increases.
 
 # Build trajectory summary per model
 traj_list <- lapply(MODELS, function(m) {
-  preds <- pp[[m]]$posterior_predictions
-  preds %>%
+  pp[[m]]$posterior_predictions %>%
     group_by(plot_id, draw) %>%
     arrange(year, .by_group = TRUE) %>%
-    mutate(delta_soc = total_soc - first(total_soc)) %>%
+    mutate(
+      first_soc  = first(total_soc),
+      first_year = first(year),
+      annual_rate = (total_soc - first_soc) / (year - first_year)
+    ) %>%
+    filter(year != first_year) %>%   # drop t=0 (rate is 0/0 = undefined)
     ungroup() %>%
     group_by(draw, year) %>%
-    summarise(mean_delta = mean(delta_soc, na.rm = TRUE), .groups = "drop") %>%
+    summarise(mean_annual_rate = mean(annual_rate, na.rm = TRUE),
+              .groups = "drop") %>%
     group_by(year) %>%
     summarise(
-      median_delta = median(mean_delta, na.rm = TRUE),
-      q025         = quantile(mean_delta, 0.025, na.rm = TRUE),
-      q975         = quantile(mean_delta, 0.975, na.rm = TRUE),
+      median_delta = median(mean_annual_rate, na.rm = TRUE),
+      q025         = quantile(mean_annual_rate, 0.025, na.rm = TRUE),
+      q975         = quantile(mean_annual_rate, 0.975, na.rm = TRUE),
       .groups = "drop"
-    ) %>% arrange(year) %>%
+    ) %>%
+    arrange(year) %>%
     mutate(model = m)
 })
 names(traj_list) <- MODELS
 
-# Observed ΔSOC from first model's summary (observations are the same)
+# Observed annual rate per plot: (SOC_last - SOC_first) / (year_last - year_first).
+# Uses the first model's bundle since observations are the same across models.
 obs_ref <- pp[[MODELS[1]]]$posterior_summary
 obs_delta <- obs_ref %>%
   filter(!is.na(soc_obs_tCha)) %>%
@@ -251,12 +275,14 @@ all_years <- sort(unique(unlist(lapply(traj_list, `[[`, "year"))))
 
 delta_png <- file.path(DIR_OUT, sprintf("multimodel_delta_soc_%s.png", COMP_ID))
 png(delta_png, width = 13L * PX_PER_IN, height = 7L * PX_PER_IN, res = PX_PER_IN)
-par(mar = c(4, 4.5, 3.5, 1))
+par(mar = c(4, 5, 3.5, 1))
 
 plot(NA, xlim = range(all_years), ylim = ylim_r,
      xlab = "Year",
-     ylab = expression(paste(Delta, "SOC relative to first year (tC/ha)")),
-     main = "HIKET — Mean ΔSOC across models")
+     ylab = expression(paste("Mean annual ",
+                             Delta, "SOC / years since t"[0],
+                             "  (tC/ha/yr)")),
+     main = "HIKET — Mean annual ΔSOC rate across models")
 abline(h = 0, lty = 3, col = "grey50")
 
 # 95% CI ribbons then median lines per model
@@ -273,7 +299,7 @@ for (m in MODELS) {
   lines(tr$year, tr$median_delta, col = col, lwd = 2.5)
 }
 
-# Observed
+# Observed mean annual rate as horizontal reference line spanning the obs window
 abline(h = obs_mean_delta, col = "grey20", lwd = 2, lty = 2)
 rect(xleft   = min(obs_delta$year_first),
      xright  = max(obs_delta$year_last),
@@ -283,10 +309,10 @@ rect(xleft   = min(obs_delta$year_first),
 
 legend("topleft",
        legend = c(MODELS,
-                  sprintf("Observed mean ΔSOC ± 95%% CI  (n=%d)", nrow(obs_delta))),
+                  sprintf("Observed mean annual ΔSOC ± 95%% CI  (n=%d)", nrow(obs_delta))),
        col    = c(MODEL_COLS[MODELS], "grey20"),
-       lwd    = c(2.5, 2.5, 2.5, 2),
-       lty    = c(1, 1, 1, 2),
+       lwd    = c(rep(2.5, length(MODELS)), 2),
+       lty    = c(rep(1,   length(MODELS)), 2),
        bty = "n", cex = 0.9)
 dev.off()
 message(sprintf("ΔSOC trajectory: %s", delta_png))
@@ -344,7 +370,7 @@ if (length(ka_levels) > 0) {
   n_ka  <- length(ka_levels)
   n_mod <- length(MODELS)
   gap   <- 0.3
-  width <- 0.2
+  width <- 0.14   # narrower to keep five models legible within each KA cluster
 
   x_centres <- seq_len(n_ka)
   offsets    <- seq(-(n_mod - 1)/2, (n_mod - 1)/2, length.out = n_mod) * width * 1.5
