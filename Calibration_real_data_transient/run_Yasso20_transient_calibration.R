@@ -644,12 +644,12 @@ pre_mcmc_sanity <- list(
 
 # Thermodynamic recycling constraint: carbon flow from a pool back toward
 # faster pools must be a minority flux (< 0.5). Column A has no constraint
-# as it is the fastest labile pool. Yasso20 structural zeros (p_NW=0, p_EW=0)
-# reduce the constraint to single terms for E and N columns.
+# as it is the fastest labile pool. Column N is not constrained -- see
+# Yasso07 note. p_EW is structurally fixed at 0 in Yasso20 so the E column
+# reduces to p_EA only; kept as sum for Yasso15 where p_EW is free.
 check_recycling_fractions <- function(p_phys) {
-  (p_phys["p_WA"]  < 0.5) &&
-    (p_phys["p_EA"]  < 0.5) &&
-    (p_phys["p_NA"]  < 0.5)
+  (p_phys["p_WA"]                   < 0.5) &&
+    (p_phys["p_EA"] + p_phys["p_EW"] < 0.5)
 }
 
 prior <- createPrior(

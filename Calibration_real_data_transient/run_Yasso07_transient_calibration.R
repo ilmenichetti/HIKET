@@ -457,12 +457,14 @@ pre_mcmc_sanity <- list(
 
 # Thermodynamic recycling constraint: carbon flow from a pool back toward
 # faster pools must be a minority flux (< 0.5). Column A has no constraint
-# as it is the fastest labile pool. Yasso07 uses the full three-term version
-# since p_NW and p_EW are free (not structurally fixed as in Yasso15/20).
+# as it is the fastest labile pool. Column N is not constrained because the
+# published Yasso07 default (p_NA = 0.97) suggests the model structurally
+# relies on strong N->A recycling -- applying < 0.5 here would override
+# model structure rather than exclude physically unreasonable draws.
+# Revisit after inspecting posterior behaviour.
 check_recycling_fractions <- function(p_phys) {
   (p_phys["p_WA"]                   < 0.5) &&
-    (p_phys["p_EA"] + p_phys["p_EW"] < 0.5) &&
-    (p_phys["p_NA"] + p_phys["p_NW"] < 0.5)
+    (p_phys["p_EA"] + p_phys["p_EW"] < 0.5)
 }
 
 prior <- createPrior(
