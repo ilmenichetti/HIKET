@@ -464,67 +464,17 @@ message(sprintf("Residual comparison: %s", resid_png))
 # answers "how consistently does this predictor structure the residuals across
 # models?" rather than "how large is the number for this model?"
 #
-# Rows sorted by mean relative importance (ascending, so the most important
+# Rows sorted by mean relative importance (ascending so the most important
 # predictor appears at the top — heatmap() renders row 1 at the bottom).
-# RowSideColors strip encodes predictor category.
 #
 # Requires (per model):
 #   <DIR_DIAG>/<MODEL>/<MODEL>_rf_importance_<RUN_ID>.csv
 #   <DIR_DIAG>/<MODEL>/<MODEL>_rf_summary_<RUN_ID>.rds   (for OOB R²)
 #
-# If any model's CSV is missing the function issues a warning and continues;
-# that model's column will simply be absent from the heatmap.
+# If any model's CSV is missing a warning is issued and that model's column
+# will be absent from the heatmap.
 # =============================================================================
 
-# Predictor category definitions.
-# Keep in sync with candidate_vars in run_residual_analysis.R.
-PRED_CATS <- list(
-  Climate          = c("mean_temp", "mean_precip_annual", "GDD5",
-                       "coldest_month_T", "warmest_month_T",
-                       "T_seasonality", "P_seasonality", "aridity_index",
-                       "temp_sum_NFI", "elevation_m"),
-  Spatial          = c("lat_WGS84", "lon_WGS84"),
-  `Soil physical`  = c("clay", "SiltContent", "SandContent",
-                       "CoarseFragments", "EstimatedBulkDensity",
-                       "profile_depth_cm"),
-  `Org. horizon`   = c("ofh_lower_cm", "ofh_weight_kgm2"),
-  `Soil chemistry` = c("pH.CaCl2.", "pH.H2O.", "TotalNitrogen",
-                       "CN_ratio", "CEC", "base_saturation",
-                       "ExchangeableAl", "ExchangeableFe",
-                       "ExchangeableCa"),
-  `Stand & mgmt`   = c("stand_age_85", "stand_age_2006_est",
-                       "basal_area_85", "mean_height_85_dm",
-                       "any_cut_85_95", "n_cuts_85_95",
-                       "any_trt_85_95", "soil_prep_pre85"),
-  `Litter quality` = c("litter_A_frac", "litter_W_frac",
-                       "litter_E_frac", "litter_N_frac",
-                       "woody_share", "conifer_share"),
-  Stratification   = c("KA", "kasvyo_syke", "kasvyo_ahti",
-                       "species_code", "soil_code", "TexturalClass",
-                       "temp_zone", "koppen_class", "ojitustilanne",
-                       "dev_class_85", "kasvup_tyyppi", "alaryhma"),
-  `Plot summary`   = c("shallow", "n_soc_obs")
-)
-
-CAT_COLS <- c(
-  Climate          = "#80b1d3",
-  Spatial          = "#fdb462",
-  `Soil physical`  = "#ffffb3",
-  `Org. horizon`   = "#bebada",
-  `Soil chemistry` = "#fb8072",
-  `Stand & mgmt`   = "#b3de69",
-  `Litter quality` = "#fccde5",
-  Stratification   = "#8dd3c7",
-  `Plot summary`   = "#d9d9d9"
-)
-
-get_cat <- function(p) {
-  for (cat in names(PRED_CATS))
-    if (p %in% PRED_CATS[[cat]]) return(cat)
-  "Other"
-}
-
-# Load importance CSVs and OOB R²
 TOP_N    <- 15L
 imp_list <- setNames(vector("list", length(MODELS)), MODELS)
 oob_r2   <- setNames(rep(NA_real_,  length(MODELS)), MODELS)
@@ -589,48 +539,30 @@ if (length(ok_models) == 0) {
     if (!is.na(oob_r2[m])) sprintf("%s (OOB R2=%.2f)", m, oob_r2[m]) else m
   })
   
-  # RowSideColors: category strip
-  pred_cat   <- sapply(rownames(imp_mat), get_cat)
-  row_colors <- ifelse(pred_cat %in% names(CAT_COLS),
-                       CAT_COLS[pred_cat], "#cccccc")
-  
   heat_pal <- colorRampPalette(
     c("white", "#deebf7", "#9ecae1", "#3182bd", "#08306b")
   )(100)
   
-  n_pred    <- nrow(imp_mat)
-  plot_h    <- max(7L, round(n_pred * 0.45 + 4L))
-  heat_png  <- file.path(DIR_OUT,
-                         sprintf("multimodel_rf_importance_heatmap_%s.png", COMP_ID))
+  n_pred   <- nrow(imp_mat)
+  plot_h   <- max(7L, round(n_pred * 0.45 + 4L))
+  heat_png <- file.path(DIR_OUT,
+                        sprintf("multimodel_rf_importance_heatmap_%s.png", COMP_ID))
   
   png(heat_png,
-      width  = 10L * PX_PER_IN,
-      height = plot_h * PX_PER_IN,
-      res    = PX_PER_IN)
+      width  = 10L * 300L,
+      height = plot_h * 300L,
+      res    = 300L)
   
   heatmap(imp_mat,
-          Rowv          = NA,
-          Colv          = NA,
-          scale         = "none",
-          col           = heat_pal,
-          RowSideColors = row_colors,
-          labCol        = col_labels,
-          margins       = c(8, 14),
-          main          = "RF residual predictor importance (relative, within-model)",
-          cexRow        = 0.85,
-          cexCol        = 0.80)
-  
-  used_cats <- unique(pred_cat[pred_cat != "Other"])
-  legend("bottomleft",
-         xpd    = NA,
-         inset  = c(0, -0.08),
-         legend = used_cats,
-         fill   = CAT_COLS[used_cats],
-         border = "white",
-         bty    = "n",
-         cex    = 0.72,
-         ncol   = 3L,
-         title  = "Category")
+          Rowv    = NA,
+          Colv    = NA,
+          scale   = "none",
+          col     = heat_pal,
+          labCol  = col_labels,
+          margins = c(8, 14),
+          main    = "RF residual predictor importance (relative, within-model)",
+          cexRow  = 0.85,
+          cexCol  = 0.80)
   
   dev.off()
   message(sprintf("[heatmap] Written: %s", heat_png))
