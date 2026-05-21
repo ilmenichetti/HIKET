@@ -51,323 +51,6 @@ MODEL_COLS <- c(
 
 
 # =============================================================================
-# Helper: RF importance heatmap
-# =============================================================================
-#
-# Reads the per-model RF importance CSVs written by run_residual_analysis.R,
-# normalises each model's importance vector to [0, 1] (relative importance),
-# takes the union of the top `top_n` predictors across all models, and plots
-# a heatmap where colour encodes relative importance.
-#
-# WHY RELATIVE IMPORTANCE:
-#   Raw permutation importance values are not cross-model comparable -- they
-#   depend on each model's residual variance, number of observations used in
-#   the RF, and fit quality. Dividing by the within-model maximum maps all
-#   models to [0, 1] where 1.0 = "the best predictor for this model" and
-#   0.5 = "half as important as that model's top predictor". The question
-#   becomes: which predictors are consistently near 1.0 across all models?
-#   Those are the structural blind spots shared by the whole framework.
-#
-# LAYOUT:
-#   3-panel layout: [predictor labels + category strip] | [heatmap] | [colorbar]
-#   Rows sorted by mean relative importance (descending) so shared structure
-#   floats to the top. Stars (*) mark predictors in each model's top 10.
-#   OOB R² shown under each model's column header to contextualise signal
-#   strength (a model with OOB R² = 0.08 means the heatmap is mostly noise
-#   for that model regardless of which predictor appears brighter).
-#
-# INPUTS (per model):
-#   <DIR_DIAG>/<MODEL>/<MODEL>_rf_importance_<RUN_ID>.csv
-#   <DIR_DIAG>/<MODEL>/<MODEL>_rf_summary_<RUN_ID>.rds   (for OOB R²)
-#
-# OUTPUT:
-#   <dir_out>/multimodel_rf_importance_heatmap_<comp_id>.png
-#
-plot_rf_importance_heatmap <- function(
-    models,           # character vector of model names
-    run_ids,          # named list: model -> RUN_ID string
-    dir_diag_root,    # root diagnostics dir; per-model subdirs live here
-    dir_out,          # output directory for the PNG
-    comp_id,          # comparison ID used in filename
-    top_n     = 15L,  # union of top-N predictors per model to display
-    px_per_in = 150L
-) {
-  
-  # ------------------------------------------------------------------ #
-  # A.  Predictor category definitions                                  #
-  #     Mirrors candidate_vars in run_residual_analysis.R.              #
-  #     Update both places if covariates are added or renamed.          #
-  # ------------------------------------------------------------------ #
-  
-  PRED_CATS <- list(
-    Climate          = c("mean_temp", "mean_precip_annual", "GDD5",
-                         "coldest_month_T", "warmest_month_T",
-                         "T_seasonality", "P_seasonality", "aridity_index",
-                         "temp_sum_NFI", "elevation_m"),
-    Spatial          = c("lat_WGS84", "lon_WGS84"),
-    `Soil physical`  = c("clay", "SiltContent", "SandContent",
-                         "CoarseFragments", "EstimatedBulkDensity",
-                         "profile_depth_cm"),
-    `Org. horizon`   = c("ofh_lower_cm", "ofh_weight_kgm2"),
-    `Soil chemistry` = c("pH.CaCl2.", "pH.H2O.", "TotalNitrogen",
-                         "CN_ratio", "CEC", "base_saturation",
-                         "ExchangeableAl", "ExchangeableFe",
-                         "ExchangeableCa"),
-    `Stand & mgmt`   = c("stand_age_85", "stand_age_2006_est",
-                         "basal_area_85", "mean_height_85_dm",
-                         "any_cut_85_95", "n_cuts_85_95",
-                         "any_trt_85_95", "soil_prep_pre85"),
-    `Litter quality` = c("litter_A_frac", "litter_W_frac",
-                         "litter_E_frac", "litter_N_frac",
-                         "woody_share", "conifer_share"),
-    Stratification   = c("KA", "kasvyo_syke", "kasvyo_ahti",
-                         "species_code", "soil_code", "TexturalClass",
-                         "temp_zone", "koppen_class", "ojitustilanne",
-                         "dev_class_85", "kasvup_tyyppi", "alaryhma"),
-    `Plot summary`   = c("shallow", "n_soc_obs")
-  )
-  
-  CAT_COLS <- c(
-    Climate          = "#80b1d3",
-    Spatial          = "#fdb462",
-    `Soil physical`  = "#ffffb3",
-    `Org. horizon`   = "#bebada",
-    `Soil chemistry` = "#fb8072",
-    `Stand & mgmt`   = "#b3de69",
-    `Litter quality` = "#fccde5",
-    Stratification   = "#8dd3c7",
-    `Plot summary`   = "#d9d9d9"
-  )
-  
-  get_cat <- function(p) {
-    for (cat in names(PRED_CATS))
-      if (p %in% PRED_CATS[[cat]]) return(cat)
-    "Other"
-  }
-  
-  # ------------------------------------------------------------------ #
-  # B.  Load importance CSVs and OOB R²                                 #
-  # ------------------------------------------------------------------ #
-  
-  imp_list <- setNames(vector("list", length(models)), models)
-  oob_r2   <- setNames(rep(NA_real_,  length(models)), models)
-  
-  for (m in models) {
-    csv_path <- file.path(dir_diag_root, m,
-                          sprintf("%s_rf_importance_%s.csv", m, run_ids[[m]]))
-    rds_path <- file.path(dir_diag_root, m,
-                          sprintf("%s_rf_summary_%s.rds",   m, run_ids[[m]]))
-    
-    if (!file.exists(csv_path)) {
-      warning(sprintf("[heatmap] RF importance CSV not found for %s: %s",
-                      m, csv_path))
-      next
-    }
-    imp_list[[m]] <- read.csv(csv_path, stringsAsFactors = FALSE)
-    
-    if (file.exists(rds_path))
-      oob_r2[m] <- readRDS(rds_path)$oob_r2
-  }
-  
-  ok_models <- models[!sapply(imp_list, is.null)]
-  if (length(ok_models) == 0) {
-    warning("[heatmap] No RF importance data found; skipping heatmap. ",
-            "Run run_residual_analysis.R for each model first.")
-    return(invisible(NULL))
-  }
-  if (length(ok_models) < length(models))
-    message(sprintf("[heatmap] Missing RF data for: %s (will leave column blank)",
-                    paste(setdiff(models, ok_models), collapse = ", ")))
-  message(sprintf("[heatmap] Building importance matrix for: %s",
-                  paste(ok_models, collapse = ", ")))
-  
-  # ------------------------------------------------------------------ #
-  # C.  Relative importance + union of top predictors                   #
-  # ------------------------------------------------------------------ #
-  
-  # Scale each model's importance to [0, 1] relative to its own maximum.
-  rel_list <- lapply(ok_models, function(m) {
-    df      <- imp_list[[m]]
-    df$rel  <- df$importance / max(df$importance, na.rm = TRUE)
-    df
-  })
-  names(rel_list) <- ok_models
-  
-  # Union of the top-N predictors across all models
-  top_preds <- unique(unlist(lapply(ok_models, function(m) {
-    df <- rel_list[[m]][order(rel_list[[m]]$importance, decreasing = TRUE), ]
-    head(df$variable, top_n)
-  })))
-  
-  # Build wide matrix: rows = predictors, cols = models.
-  # Predictors not found in a model's RF output get 0: they were present
-  # in the RF but ranked below all others -- not absent from the analysis.
-  mat <- matrix(0, nrow = length(top_preds), ncol = length(ok_models),
-                dimnames = list(top_preds, ok_models))
-  for (m in ok_models) {
-    df  <- rel_list[[m]]
-    idx <- match(top_preds, df$variable)
-    has <- !is.na(idx)
-    mat[has, m] <- df$rel[idx[has]]
-  }
-  
-  # Sort rows ascending by mean relative importance so the top-ranking
-  # predictor appears at the top of the plot (highest y coordinate).
-  ord   <- order(rowMeans(mat), decreasing = FALSE)
-  mat   <- mat[ord, , drop = FALSE]
-  preds <- rownames(mat)
-  n_pred <- length(preds)
-  n_mod  <- length(ok_models)
-  
-  # ------------------------------------------------------------------ #
-  # D.  Category colours + top-10 membership mask                       #
-  # ------------------------------------------------------------------ #
-  
-  pred_cat <- sapply(preds, get_cat)
-  cell_bg  <- ifelse(pred_cat %in% names(CAT_COLS),
-                     CAT_COLS[pred_cat], "#cccccc")
-  
-  # top10_mask[i, j] = TRUE if predictor i is in model j's top 10
-  top10_mask <- matrix(FALSE, n_pred, n_mod, dimnames = dimnames(mat))
-  for (m in ok_models) {
-    df    <- rel_list[[m]][order(rel_list[[m]]$importance, decreasing = TRUE), ]
-    top10 <- head(df$variable, 10L)
-    top10_mask[preds %in% top10, m] <- TRUE
-  }
-  
-  # ------------------------------------------------------------------ #
-  # E.  Plot                                                             #
-  # ------------------------------------------------------------------ #
-  
-  heat_pal <- colorRampPalette(
-    c("white", "#deebf7", "#9ecae1", "#3182bd", "#08306b")
-  )(100)
-  
-  # PNG height scales with row count; width fixed at 14 inches
-  plot_h   <- max(6L, n_pred * 0.42 + 3.5)
-  out_path <- file.path(dir_out,
-                        sprintf("multimodel_rf_importance_heatmap_%s.png", comp_id))
-  
-  png(out_path,
-      width  = 14L * px_per_in,
-      height = round(plot_h) * px_per_in,
-      res    = px_per_in)
-  
-  # Three-column layout: labels+strip | heatmap | colorbar.
-  # Keeping label and heatmap panels as separate layout cells guarantees
-  # that long predictor names can never collide with heatmap cell borders
-  # regardless of n_mod or plot dimensions.
-  n_label_w <- 5L
-  n_heat_w  <- max(4L, n_mod * 2L)
-  n_cb_w    <- 2L
-  layout(matrix(c(1L, 2L, 3L), 1L, 3L),
-         widths = c(n_label_w, n_heat_w, n_cb_w))
-  
-  # ---- Panel 1: predictor labels + category strip ----------------------
-  
-  par(mar = c(7, 0.3, 5.5, 0.2))
-  plot(NA, xlim = c(0, 1), ylim = c(0, n_pred),
-       xaxs = "i", yaxs = "i",
-       xaxt = "n", yaxt = "n",
-       xlab = "", ylab = "")
-  
-  # Thin category strip on the right side of the label panel
-  for (i in seq_len(n_pred)) {
-    rect(0.88, i - 1, 1.00, i,
-         col = cell_bg[i], border = "white", lwd = 0.5)
-  }
-  # Predictor names right-justified up to the strip
-  for (i in seq_len(n_pred)) {
-    text(0.84, i - 0.5, preds[i],
-         adj = c(1, 0.5), cex = 0.82, family = "mono")
-  }
-  
-  # Category legend in the bottom margin
-  used_cats <- unique(pred_cat[pred_cat != "Other"])
-  # Compute y position: just below y = 0, using margin depth in user units
-  u1 <- par("usr"); p1 <- par("pin"); m1 <- par("mai")
-  leg_y <- u1[3] - (m1[1] * diff(u1[3:4]) / p1[2]) * 0.08
-  legend(x   = 0, y = leg_y,
-         xpd = NA,
-         legend = used_cats,
-         fill   = CAT_COLS[used_cats],
-         border = "white",
-         bty    = "n",
-         cex    = 0.68,
-         ncol   = 2L,
-         title  = "Category",
-         title.adj = 0)
-  
-  mtext("* top 10 for this model",
-        side = 1, line = 5.5, adj = 1, cex = 0.72, col = "grey30")
-  
-  # ---- Panel 2: heatmap ------------------------------------------------
-  
-  par(mar = c(7, 0, 5.5, 0.5))
-  plot(NA, xlim = c(0, n_mod), ylim = c(0, n_pred),
-       xaxs = "i", yaxs = "i",
-       xaxt = "n", yaxt = "n",
-       xlab = "", ylab = "")
-  
-  # Cells: colour from heat_pal; map [0, 1] -> [1, 100]
-  # pmax/pmin strip matrix dimensions and return a flat vector;
-  # restore them explicitly so [i, j] indexing works in the cell loop below.
-  col_idx        <- pmax(1L, pmin(100L, round(mat * 99) + 1L))
-  dim(col_idx)   <- dim(mat)
-  for (i in seq_len(n_pred)) {
-    for (j in seq_len(n_mod)) {
-      rect(j - 1, i - 1, j, i,
-           col    = heat_pal[col_idx[i, j]],
-           border = "white", lwd = 0.8)
-      if (top10_mask[i, j])
-        text(j - 0.5, i - 0.5, "*",
-             cex = 1.1, col = "grey20", font = 2)
-    }
-  }
-  
-  # Light grid for readability between rows
-  abline(h = seq_len(n_pred - 1L), col = adjustcolor("white", 0.6), lwd = 0.5)
-  
-  # Column headers: model name + OOB R² on the line below
-  u2 <- par("usr"); p2 <- par("pin"); m2 <- par("mai")
-  top_gap_u <- (m2[3] * diff(u2[3:4]) / p2[2])  # top margin in y user units
-  for (j in seq_len(n_mod)) {
-    m <- ok_models[j]
-    text(j - 0.5, n_pred + top_gap_u * 0.55,
-         m, cex = 0.90, font = 2, xpd = NA)
-    if (!is.na(oob_r2[m]))
-      text(j - 0.5, n_pred + top_gap_u * 0.22,
-           sprintf("OOB R\u00b2=%.2f", oob_r2[m]),
-           cex = 0.72, col = "grey35", xpd = NA)
-  }
-  
-  mtext("HIKET \u2014 RF residual predictor importance (relative, within-model)",
-        side = 3, line = 3.5, cex = 0.95, font = 2, xpd = NA)
-  
-  # ---- Panel 3: colorbar -----------------------------------------------
-  
-  par(mar = c(7, 0.3, 5.5, 3.2))
-  cb_y <- seq(0, 1, length.out = 100)
-  image(x = 1, y = cb_y,
-        z = matrix(cb_y, nrow = 1),
-        col  = heat_pal,
-        zlim = c(0, 1),
-        xaxt = "n", yaxt = "n",
-        xlab = "", ylab = "")
-  axis(4,
-       at     = c(0, 0.25, 0.5, 0.75, 1.0),
-       labels = c("0.00", "0.25", "0.50", "0.75", "1.00"),
-       las    = 1, cex.axis = 0.80)
-  mtext("Relative importance", side = 4, line = 2.6, cex = 0.82)
-  box()
-  
-  dev.off()
-  message(sprintf("[heatmap] Written: %s", out_path))
-  invisible(out_path)
-}
-
-
-# =============================================================================
 # 0.  Parse arguments / auto-detect RUN_IDs
 # =============================================================================
 
@@ -768,26 +451,190 @@ message(sprintf("Residual comparison: %s", resid_png))
 
 # =============================================================================
 # 6.  Plot D: RF importance heatmap (cross-model residual structure)
-# =============================================================================
 #
-# Requires that run_residual_analysis.R has been run for each model, producing:
+# Reads the per-model RF importance CSVs written by run_residual_analysis.R
+# and produces a single heatmap where:
+#   - rows  = union of the top-15 predictors across all models
+#   - cols  = models
+#   - colour = relative importance (within-model max = 1)
+#
+# WHY RELATIVE: raw permutation importance scales with each model's residual
+# variance and fit quality, so raw values are not cross-model comparable.
+# Dividing by the within-model maximum maps every model to [0, 1]: the colour
+# answers "how consistently does this predictor structure the residuals across
+# models?" rather than "how large is the number for this model?"
+#
+# Rows sorted by mean relative importance (ascending, so the most important
+# predictor appears at the top — heatmap() renders row 1 at the bottom).
+# RowSideColors strip encodes predictor category.
+#
+# Requires (per model):
 #   <DIR_DIAG>/<MODEL>/<MODEL>_rf_importance_<RUN_ID>.csv
-#   <DIR_DIAG>/<MODEL>/<MODEL>_rf_summary_<RUN_ID>.rds
+#   <DIR_DIAG>/<MODEL>/<MODEL>_rf_summary_<RUN_ID>.rds   (for OOB R²)
 #
-# If any model's CSV is missing (e.g. because residual analysis hasn't been
-# run yet) the function issues a warning and continues; that model's column
-# simply will not appear in the heatmap.
+# If any model's CSV is missing the function issues a warning and continues;
+# that model's column will simply be absent from the heatmap.
+# =============================================================================
 
-plot_rf_importance_heatmap(
-  models        = MODELS,
-  run_ids       = run_ids,
-  dir_diag_root = DIR_DIAG,
-  dir_out       = DIR_OUT,
-  comp_id       = COMP_ID,
-  top_n         = 15L,
-  px_per_in     = PX_PER_IN
+# Predictor category definitions.
+# Keep in sync with candidate_vars in run_residual_analysis.R.
+PRED_CATS <- list(
+  Climate          = c("mean_temp", "mean_precip_annual", "GDD5",
+                       "coldest_month_T", "warmest_month_T",
+                       "T_seasonality", "P_seasonality", "aridity_index",
+                       "temp_sum_NFI", "elevation_m"),
+  Spatial          = c("lat_WGS84", "lon_WGS84"),
+  `Soil physical`  = c("clay", "SiltContent", "SandContent",
+                       "CoarseFragments", "EstimatedBulkDensity",
+                       "profile_depth_cm"),
+  `Org. horizon`   = c("ofh_lower_cm", "ofh_weight_kgm2"),
+  `Soil chemistry` = c("pH.CaCl2.", "pH.H2O.", "TotalNitrogen",
+                       "CN_ratio", "CEC", "base_saturation",
+                       "ExchangeableAl", "ExchangeableFe",
+                       "ExchangeableCa"),
+  `Stand & mgmt`   = c("stand_age_85", "stand_age_2006_est",
+                       "basal_area_85", "mean_height_85_dm",
+                       "any_cut_85_95", "n_cuts_85_95",
+                       "any_trt_85_95", "soil_prep_pre85"),
+  `Litter quality` = c("litter_A_frac", "litter_W_frac",
+                       "litter_E_frac", "litter_N_frac",
+                       "woody_share", "conifer_share"),
+  Stratification   = c("KA", "kasvyo_syke", "kasvyo_ahti",
+                       "species_code", "soil_code", "TexturalClass",
+                       "temp_zone", "koppen_class", "ojitustilanne",
+                       "dev_class_85", "kasvup_tyyppi", "alaryhma"),
+  `Plot summary`   = c("shallow", "n_soc_obs")
 )
 
+CAT_COLS <- c(
+  Climate          = "#80b1d3",
+  Spatial          = "#fdb462",
+  `Soil physical`  = "#ffffb3",
+  `Org. horizon`   = "#bebada",
+  `Soil chemistry` = "#fb8072",
+  `Stand & mgmt`   = "#b3de69",
+  `Litter quality` = "#fccde5",
+  Stratification   = "#8dd3c7",
+  `Plot summary`   = "#d9d9d9"
+)
+
+get_cat <- function(p) {
+  for (cat in names(PRED_CATS))
+    if (p %in% PRED_CATS[[cat]]) return(cat)
+  "Other"
+}
+
+# Load importance CSVs and OOB R²
+TOP_N    <- 15L
+imp_list <- setNames(vector("list", length(MODELS)), MODELS)
+oob_r2   <- setNames(rep(NA_real_,  length(MODELS)), MODELS)
+
+for (m in MODELS) {
+  csv_path <- file.path(DIR_DIAG, m,
+                        sprintf("%s_rf_importance_%s.csv", m, run_ids[[m]]))
+  rds_path <- file.path(DIR_DIAG, m,
+                        sprintf("%s_rf_summary_%s.rds",   m, run_ids[[m]]))
+  if (!file.exists(csv_path)) {
+    warning(sprintf("[heatmap] RF importance CSV not found for %s: %s", m, csv_path))
+    next
+  }
+  imp_list[[m]] <- read.csv(csv_path, stringsAsFactors = FALSE)
+  if (file.exists(rds_path))
+    oob_r2[m] <- readRDS(rds_path)$oob_r2
+}
+
+ok_models <- MODELS[!sapply(imp_list, is.null)]
+
+if (length(ok_models) == 0) {
+  warning("[heatmap] No RF importance data found; skipping heatmap. ",
+          "Run run_residual_analysis.R for each model first.")
+} else {
+  
+  if (length(ok_models) < length(MODELS))
+    message(sprintf("[heatmap] Missing RF data for: %s",
+                    paste(setdiff(MODELS, ok_models), collapse = ", ")))
+  message(sprintf("[heatmap] Building importance matrix for: %s",
+                  paste(ok_models, collapse = ", ")))
+  
+  # Relative importance: divide each model's vector by its own maximum
+  rel_list <- lapply(ok_models, function(m) {
+    df     <- imp_list[[m]]
+    df$rel <- df$importance / max(df$importance, na.rm = TRUE)
+    df
+  })
+  names(rel_list) <- ok_models
+  
+  # Union of top-N predictors across all models
+  top_preds <- unique(unlist(lapply(ok_models, function(m) {
+    df <- rel_list[[m]][order(rel_list[[m]]$importance, decreasing = TRUE), ]
+    head(df$variable, TOP_N)
+  })))
+  
+  # Matrix: rows = predictors, cols = models (absent predictors get 0)
+  imp_mat <- matrix(0, nrow = length(top_preds), ncol = length(ok_models),
+                    dimnames = list(top_preds, ok_models))
+  for (m in ok_models) {
+    df  <- rel_list[[m]]
+    idx <- match(top_preds, df$variable)
+    has <- !is.na(idx)
+    imp_mat[has, m] <- df$rel[idx[has]]
+  }
+  
+  # Sort ascending: heatmap() renders row 1 at the bottom, so the most
+  # important predictor (last row) ends up at the top of the image.
+  imp_mat <- imp_mat[order(rowMeans(imp_mat), decreasing = FALSE), , drop = FALSE]
+  
+  # Column labels with OOB R² where available
+  col_labels <- sapply(ok_models, function(m) {
+    if (!is.na(oob_r2[m])) sprintf("%s (OOB R2=%.2f)", m, oob_r2[m]) else m
+  })
+  
+  # RowSideColors: category strip
+  pred_cat   <- sapply(rownames(imp_mat), get_cat)
+  row_colors <- ifelse(pred_cat %in% names(CAT_COLS),
+                       CAT_COLS[pred_cat], "#cccccc")
+  
+  heat_pal <- colorRampPalette(
+    c("white", "#deebf7", "#9ecae1", "#3182bd", "#08306b")
+  )(100)
+  
+  n_pred    <- nrow(imp_mat)
+  plot_h    <- max(7L, round(n_pred * 0.45 + 4L))
+  heat_png  <- file.path(DIR_OUT,
+                         sprintf("multimodel_rf_importance_heatmap_%s.png", COMP_ID))
+  
+  png(heat_png,
+      width  = 10L * PX_PER_IN,
+      height = plot_h * PX_PER_IN,
+      res    = PX_PER_IN)
+  
+  heatmap(imp_mat,
+          Rowv          = NA,
+          Colv          = NA,
+          scale         = "none",
+          col           = heat_pal,
+          RowSideColors = row_colors,
+          labCol        = col_labels,
+          margins       = c(8, 14),
+          main          = "RF residual predictor importance (relative, within-model)",
+          cexRow        = 0.85,
+          cexCol        = 0.80)
+  
+  used_cats <- unique(pred_cat[pred_cat != "Other"])
+  legend("bottomleft",
+         xpd    = NA,
+         inset  = c(0, -0.08),
+         legend = used_cats,
+         fill   = CAT_COLS[used_cats],
+         border = "white",
+         bty    = "n",
+         cex    = 0.72,
+         ncol   = 3L,
+         title  = "Category")
+  
+  dev.off()
+  message(sprintf("[heatmap] Written: %s", heat_png))
+}
 
 # =============================================================================
 # 7.  Save summary bundle + print metrics
