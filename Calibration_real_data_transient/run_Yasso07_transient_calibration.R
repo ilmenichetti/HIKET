@@ -463,8 +463,8 @@ pre_mcmc_sanity <- list(
 # model structure rather than exclude physically unreasonable draws.
 # Revisit after inspecting posterior behaviour.
 check_recycling_fractions <- function(p_phys) {
-  (p_phys["p_WA"]                   < 0.5) &&
-    (p_phys["p_EA"] + p_phys["p_EW"] < 0.5)
+  (p_phys["p_WA"]                   <= 0.5) &&
+    (p_phys["p_EA"] + p_phys["p_EW"] <= 0.5)
 }
 
 prior <- createPrior(
