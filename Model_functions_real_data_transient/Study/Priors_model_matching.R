@@ -41,12 +41,20 @@
 #     have SD=0 in posterior -- must be fixed, not calibrated.
 # =============================================================================
 
-DAT_DIR <- "./Model_functions_real_data/Decomposition_functions/Yasso_original"
+# When sourced from a calibration script to set DEFAULT_PARAMS only, set this
+# flag first to skip the slow posterior-reading and sigma_ppm sections:
+#   DEFAULTS_ONLY <- TRUE; source("path/to/Priors_model_matching.R")
+# Running the script standalone (Rscript or interactive) runs everything.
+DEFAULTS_ONLY <- exists("DEFAULTS_ONLY") && isTRUE(DEFAULTS_ONLY)
+
+DAT_DIR  <- "./Model_functions_real_data/Decomposition_functions/Yasso_original"
 RDA_FILE <- file.path(DAT_DIR, "Yasso20_sample_parameters.rda")
 
-source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso07_wrapper.R")
-source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15_wrapper.R")
-source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso20_wrapper.R")
+if (!DEFAULTS_ONLY) {
+  source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso07_wrapper.R")
+  source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15_wrapper.R")
+  source("./Model_functions_real_data/Decomposition_functions/Yasso/yasso20_wrapper.R")
+}
 
 
 # =============================================================================
@@ -87,20 +95,23 @@ NAME_MAP <- c(
 # =============================================================================
 # 2.  Read posterior samples (.dat files -- needed for sigma_ppm computation)
 # =============================================================================
+# Skipped when DEFAULTS_ONLY = TRUE (sigma_ppm not needed, only MAP values).
 
-y15_raw     <- read.table(file.path(DAT_DIR, "Yasso15.dat"), header = FALSE)
-y15_raw     <- y15_raw[-1L, ]           # row 1 = MAP; rows 2-10001 = MCMC
-y15_samples <- as.data.frame(y15_raw[, ORIG_TO_LORENZO])
-colnames(y15_samples) <- YASSO15_PARAM_NAMES
+if (!DEFAULTS_ONLY) {
+  y15_raw     <- read.table(file.path(DAT_DIR, "Yasso15.dat"), header = FALSE)
+  y15_raw     <- y15_raw[-1L, ]           # row 1 = MAP; rows 2-10001 = MCMC
+  y15_samples <- as.data.frame(y15_raw[, ORIG_TO_LORENZO])
+  colnames(y15_samples) <- YASSO15_PARAM_NAMES
 
-y20_raw     <- read.table(file.path(DAT_DIR, "Yasso20.dat"), header = FALSE)
-y20_samples <- as.data.frame(y20_raw[, ORIG_TO_LORENZO])
-colnames(y20_samples) <- YASSO20_PARAM_NAMES
+  y20_raw     <- read.table(file.path(DAT_DIR, "Yasso20.dat"), header = FALSE)
+  y20_samples <- as.data.frame(y20_raw[, ORIG_TO_LORENZO])
+  colnames(y20_samples) <- YASSO20_PARAM_NAMES
 
-cat(sprintf("Yasso15 posterior: %d samples x %d parameters\n",
-            nrow(y15_samples), ncol(y15_samples)))
-cat(sprintf("Yasso20 posterior: %d samples x %d parameters\n",
-            nrow(y20_samples), ncol(y20_samples)))
+  cat(sprintf("Yasso15 posterior: %d samples x %d parameters\n",
+              nrow(y15_samples), ncol(y15_samples)))
+  cat(sprintf("Yasso20 posterior: %d samples x %d parameters\n",
+              nrow(y20_samples), ncol(y20_samples)))
+}
 
 
 # =============================================================================
@@ -192,6 +203,13 @@ if (any(y07_mismatch))
                   sum(y07_mismatch),
                   paste(names(y07_map)[y07_mismatch], collapse = ", ")))
 
+
+
+# =============================================================================
+# 4-9.  Posterior analysis (skipped when DEFAULTS_ONLY = TRUE)
+# =============================================================================
+
+if (!DEFAULTS_ONLY) {
 
 # =============================================================================
 # 4.  Sanity check: posterior means vs MAP
@@ -467,5 +485,50 @@ Replace current grouped entries for size/climate with individual entries:
   free_defaults["r"] <- abs(free_defaults["r"])
   # (YASSO07_DEFAULT_PARAMS stores r as -0.307; log transform requires positive)
 ')
+
+} # end if (!DEFAULTS_ONLY)
+
+
+# =============================================================================
+# 11.  Yasso15 wrapper validation (analogous to Yasso07 check, Section 3)
+# =============================================================================
+# Flags any discrepancy between YASSO15_DEFAULT_PARAMS (hardcoded in wrapper)
+# and the authoritative y15par.csv values. Run standalone to verify.
+
+if (!DEFAULTS_ONLY) {
+  y15_wrapper_vals <- YASSO15_DEFAULT_PARAMS[names(y15_map)]
+  y15_discrepancy  <- abs(y15_wrapper_vals - y15_map) / (abs(y15_map) + 1e-12)
+  y15_mismatch     <- y15_discrepancy > 1e-3
+  cat("\n=== Yasso15 y15par.csv vs wrapper defaults ===\n")
+  print(data.frame(
+    parameter    = names(y15_map),
+    published    = round(y15_map, 7),
+    wrapper      = round(y15_wrapper_vals, 7),
+    rel_diff_pct = round(y15_discrepancy * 100, 3),
+    match        = !y15_mismatch,
+    row.names    = NULL
+  ), row.names = FALSE)
+  if (any(y15_mismatch))
+    warning(sprintf("Yasso15: %d parameters differ >0.1%%: %s",
+                    sum(y15_mismatch),
+                    paste(names(y15_map)[y15_mismatch], collapse = ", ")))
+}
+
+
+# =============================================================================
+# 12.  Assign authoritative DEFAULT_PARAMS from source files
+# =============================================================================
+# These two lines are the reason calibration scripts source this file.
+# They overwrite the aliased wrapper values with MAP values read in Section 3:
+#   YASSO15_DEFAULT_PARAMS  <- y15_map      (source: y15par.csv)
+#   YASSO20_DEFAULT_PARAMS  <- y20_map_rda  (source: Yasso20_sample_parameters.rda)
+# Yasso07 wrapper already matches y07par_gui.csv (validated in Section 3).
+#
+# USAGE in calibration scripts (source AFTER wrappers):
+#   DEFAULTS_ONLY <- TRUE
+#   source("<path>/Priors_model_matching.R")
+
+YASSO15_DEFAULT_PARAMS <- y15_map
+YASSO20_DEFAULT_PARAMS <- y20_map_rda
 
 message("\nPriors_model_matching.R complete -- no files written to disk.")

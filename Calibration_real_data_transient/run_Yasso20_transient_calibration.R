@@ -67,6 +67,12 @@ source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15_wrapper_transient.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso20_wrapper_transient.R")
 dyn.load("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so")
+# Load authoritative DEFAULT_PARAMS from source files (Viskari 2022 / FMI).
+# DEFAULTS_ONLY=TRUE skips wrapper re-sourcing and posterior loading;
+# only MAP values are read (y15par.csv + Yasso20_sample_parameters.rda).
+DEFAULTS_ONLY <- TRUE
+source("./Model_functions_real_data/Study/Priors_model_matching.R")
+rm(DEFAULTS_ONLY)
 
 library(dplyr)
 

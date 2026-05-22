@@ -61,6 +61,10 @@ source("./Calibration_real_data_transient/calibration_engine_transient.R")
 source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15_wrapper_transient.R")
 dyn.load("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so")
+# Load authoritative DEFAULT_PARAMS from source files (y15par.csv).
+DEFAULTS_ONLY <- TRUE
+source("./Model_functions_real_data/Study/Priors_model_matching.R")
+rm(DEFAULTS_ONLY)
 
 library(dplyr)
 
