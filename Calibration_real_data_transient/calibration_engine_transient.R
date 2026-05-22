@@ -90,6 +90,13 @@ make_likelihood <- function(n_cores,
       if (is.null(run_out) ||
           any(!is.finite(run_out$total_soc)))     return(-Inf)
 
+      # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      # Guard: reject parameter draws producing physically impossible SOC.
+      # Catches near-unstable combinations that pass the finite check but
+      # accumulate unrealistically over the simulation horizon.
+      if (max(run_out$total_soc, na.rm = TRUE) > 1000) return(-Inf)
+      
+      
       SOC_hat <- run_out$total_soc[meta$idx]
       if (any(!is.finite(SOC_hat)) ||
           any(SOC_hat <= 0))                      return(-Inf)
