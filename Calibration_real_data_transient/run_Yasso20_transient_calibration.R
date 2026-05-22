@@ -34,13 +34,16 @@
 #   * Annual precip for yasso15_run's leaching term is aggregated from monthly
 #     precip and merged into inputs_by_plot, same approach as Yasso15.
 #
-# PARAMETER STRUCTURE: identical to Yasso15.
-#   35 parameters, same names, same defaults (YASSO20_DEFAULT_PARAMS aliases
-#   YASSO15_DEFAULT_PARAMS). Same 28 free / 11 fixed split. Same priors.
-#   This is by design: the only structural difference between Yasso15 and
-#   Yasso20 in the intercomparison is the intra-annual temperature integration
-#   method. All else equal, posterior differences in climate response parameters
-#   are attributable to that design choice alone.
+# PARAMETER STRUCTURE: 35 parameters (same names and defaults as Yasso15).
+#   25 free (23 model + 2 nuisance) / 14 fixed (11 structural + 3 derived).
+#   Differs from Yasso15 in that p_AW, p_EA, p_NA are NOT sampled: structural
+#   zeros collapse columns A and N to a single outflow path, and column E to
+#   two, making these fractions algebraically determined from p_H and p_EW
+#   (Viskari 2022, likelihood.R lines 47-51). See Section 1 and
+#   assemble_model_params for the derivation and rationale.
+#   Keeping all other priors identical to Yasso15 ensures that posterior
+#   differences between the two models are attributable solely to the
+#   intra-annual temperature integration method.
 #
 # OUTPUTS:
 #   ./Calibration_real_data/runs/Yasso20_chains_<RUN_ID>.rds
@@ -135,30 +138,30 @@ p_default        <- YASSO20_DEFAULT_PARAMS
 FIXED_RATE_NAMES <- c("alpha_A","alpha_W","alpha_E","alpha_N",
                       "p_H","alpha_H",
                       "w1","w2","w3","w4","w5",
-                      # Structural zeros from original Yasso20 calibration:
-                      "p_NW","p_AE","p_WE","p_NE","p_AN","p_EN")
+                      # Structural zeros (SD = 0 across FMI posterior):
+                      "p_NW","p_AE","p_WE","p_NE","p_AN","p_EN",
+                      # Derived fractions -- not sampled; overwritten in
+                      # assemble_model_params from p_H and p_EW (Viskari 2022):
+                      "p_AW","p_EA","p_NA")
 fixed_rates      <- p_default[FIXED_RATE_NAMES]
 # Ensure structural zeros are actually zero in fixed_rates
 fixed_rates[c("p_NW","p_AE","p_WE","p_NE","p_AN","p_EN")] <- 0.0
 
 B <- 1.0 - fixed_rates["p_H"]
 
-# FRAC_COL_* updated to exclude structurally fixed fractions.
-# Remaining free fractions per donor column:
-#   A: only p_AW  (p_AE=0, p_AN=0 fixed)
-#   W: p_WA, p_WN (p_WE=0 fixed)
-#   E: p_EA, p_EW (p_EN=0 fixed)
-#   N: only p_NA  (p_NW=0, p_NE=0 fixed)
-FRAC_COL_A <- c("p_AW")
+# Columns A and N each have only one non-H outflow (all other fracs are
+# structural zeros), so they are fully determined: p_AW = p_NA = 1 - p_H.
+# Column E has two paths; p_EW is free and p_EA is derived as 1-p_EW-p_H.
+# Only Column W retains fully free fractions (p_WA, p_WN).
+# Free fraction count: 6 -> 3 relative to Yasso15.
+FRAC_COL_A <- character(0)     # derived: p_AW = 1 - p_H
 FRAC_COL_W <- c("p_WA","p_WN")
-FRAC_COL_E <- c("p_EA","p_EW")
-FRAC_COL_N <- c("p_NA")
+FRAC_COL_E <- c("p_EW")        # p_EA derived: 1 - p_EW - p_H
+FRAC_COL_N <- character(0)     # derived: p_NA = 1 - p_H
 
 param_spec <- list(
-  list(names = FRAC_COL_A,    type = "stick_break",   budget = B),
   list(names = FRAC_COL_W,    type = "stick_break",   budget = B),
   list(names = FRAC_COL_E,    type = "stick_break",   budget = B),
-  list(names = FRAC_COL_N,    type = "stick_break",   budget = B),
   # AWE climate
   list(names = "beta1",       type = "log"),           # T linear;    enforce > 0
   list(names = "beta2",       type = "unconstrained"), # T quadratic; can be negative
@@ -223,15 +226,21 @@ message("Transform round-trip: OK")
 # =============================================================================
 # 2.  Parameter assembly
 # =============================================================================
-# Identical to Yasso15; uses YASSO20_PARAM_NAMES for the reorder step.
+# Same pattern as Yasso15, with the addition of derived fraction constraints
+# applied after the standard fixed+free merge and PARAM_NAMES reorder.
 # =============================================================================
 
 assemble_model_params <- function(p_free) {
   yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
   yasso_params <- yasso_params[YASSO20_PARAM_NAMES]
+  # Derived fractions (Viskari 2022): overwrite the placeholders set in
+  # fixed_rates. p_H is fixed; p_EW was just assembled from p_free above.
+  yasso_params["p_AW"] <- 1 - yasso_params["p_H"]
+  yasso_params["p_EA"] <- max(1 - yasso_params["p_EW"] - yasso_params["p_H"], 0)
+  yasso_params["p_NA"] <- 1 - yasso_params["p_H"]
   c(yasso_params,
     sigma_input = unname(p_free["sigma_input"]),
-    sigma_init  = unname(p_free["sigma_init"]))   # NEW: needed by transient_init
+    sigma_init  = unname(p_free["sigma_init"]))
 }
 
 
@@ -642,20 +651,26 @@ pre_mcmc_sanity <- list(
   forward_run_pass   = forward_run_pass
 )
 
-# Thermodynamic recycling constraint: carbon flow from a pool back toward
-# faster pools must be a minority flux (< 0.5). Column A has no constraint
-# as it is the fastest labile pool. Column N is not constrained -- see
-# Yasso07 note. p_EW is structurally fixed at 0 in Yasso20 so the E column
-# reduces to p_EA only; kept as sum for Yasso15 where p_EW is free.
+# Thermodynamic recycling constraint: W->A back-flow must be a minority
+# flux (< 0.5). p_AW and p_NA are derived (not free) so need no check.
+# p_EA is also derived (1-p_EW-p_H), so only p_EW could in principle
+# dominate the E column, but stick-breaking with budget B already caps it.
+# Only p_WA retains an explicit guard.
 check_recycling_fractions <- function(p_phys) {
-  (p_phys["p_WA"]                   <= 0.5) &&
-    (p_phys["p_EA"] + p_phys["p_EW"] <= 0.5)
+  p_phys["p_WA"] <= 0.5
 }
 
 prior <- createPrior(
   density = function(x) {
     p_phys <- to_original(x)
     if (!check_recycling_fractions(p_phys)) return(-Inf)
+    # Simplex backstop: total outflow per pool <= 1.
+    # Guaranteed by derived constraints + stick-breaking, but kept as an
+    # explicit guard for documentation and cross-model consistency.
+    if (with(as.list(p_phys), {
+          (p_WA + p_WN + fixed_rates["p_H"] > 1) ||
+          (p_EW       + fixed_rates["p_H"] > 1)
+        })) return(-Inf)
     sum(dnorm(x, mean = best_x, sd = sigma_ppm, log = TRUE))
   },
   sampler = function(n = 1) {
@@ -699,10 +714,7 @@ HIGHLIGHT <- c("beta1","beta2","gamma",
                "delta1","delta2","r",
                "sigma_init","sigma_input")
 
-GROUP1 <- c("p_AW","p_AE","p_AN",
-            "p_WA","p_WE","p_WN",
-            "p_EA","p_EW","p_EN",
-            "p_NA","p_NW","p_NE")
+GROUP1 <- c(FRAC_COL_W, FRAC_COL_E)   # free fraction params only; derived (p_AW, p_EA, p_NA) excluded
 GROUP2 <- HIGHLIGHT
 
 diag_out <- run_diagnostics(

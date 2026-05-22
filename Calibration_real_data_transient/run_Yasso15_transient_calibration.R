@@ -622,8 +622,8 @@ pre_mcmc_sanity <- list(
 # Thermodynamic recycling constraint: carbon flow from a pool back toward
 # faster pools must be a minority flux (< 0.5). Column A has no constraint
 # as it is the fastest labile pool. Column N is not constrained -- see
-# Yasso07 note. p_EW is structurally fixed at 0 in Yasso20 so the E column
-# reduces to p_EA only; kept as sum for Yasso15 where p_EW is free.
+# Yasso07 note. Both p_EA and p_EW are free in Yasso15 so the E column
+# is checked as their sum.
 check_recycling_fractions <- function(p_phys) {
   (p_phys["p_WA"]                   <= 0.5) &&
     (p_phys["p_EA"] + p_phys["p_EW"] <= 0.5)
@@ -633,6 +633,15 @@ prior <- createPrior(
   density = function(x) {
     p_phys <- to_original(x)
     if (!check_recycling_fractions(p_phys)) return(-Inf)
+    # Simplex backstop: total outflow per pool <= 1.
+    # Redundant here -- stick-breaking with budget B = 1-p_H already
+    # guarantees it -- but kept for documentation and cross-model consistency.
+    if (with(as.list(p_phys), {
+          (p_AW + p_AE + p_AN + fixed_rates["p_H"] > 1) ||
+          (p_WA + p_WE + p_WN + fixed_rates["p_H"] > 1) ||
+          (p_EA + p_EW + p_EN + fixed_rates["p_H"] > 1) ||
+          (p_NA + p_NW + p_NE + fixed_rates["p_H"] > 1)
+        })) return(-Inf)
     sum(dnorm(x, mean = best_x, sd = sigma_ppm, log = TRUE))
   },
   sampler = function(n = 1) {

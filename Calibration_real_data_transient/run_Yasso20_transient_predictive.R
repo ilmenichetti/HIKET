@@ -98,6 +98,10 @@ MODEL_FREE_NAMES <- setdiff(colnames(posterior_phys), c("sigma_init","sigma_inpu
 assemble_model_params <- function(p_free) {
   yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
   yasso_params <- yasso_params[YASSO20_PARAM_NAMES]
+  # Derived fractions (Viskari 2022): same constraints as calibration script.
+  yasso_params["p_AW"] <- 1 - yasso_params["p_H"]
+  yasso_params["p_EA"] <- max(1 - yasso_params["p_EW"] - yasso_params["p_H"], 0)
+  yasso_params["p_NA"] <- 1 - yasso_params["p_H"]
   c(yasso_params,
     sigma_input = unname(p_free["sigma_input"]),
     sigma_init  = unname(p_free["sigma_init"]))
