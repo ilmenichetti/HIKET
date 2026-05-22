@@ -177,8 +177,16 @@ t_pp <- system.time({
       run_out <- tryCatch(
         yasso20_run_engine(inputs, model_params, C_init, clim),
         error = function(e) NULL)
+      
       if (is.null(run_out)) return(NULL)
-
+      # Guard: reject draws with physically impossible SOC accumulation.
+      # 1000 tC/ha is ~10x the realistic Finnish forest maximum -- anything
+      # above this is a numerical artefact from near-unstable parameter draws
+      # that passed the calibration filter at observed years but blow up in
+      # the extended forward projection.
+      if (!all(is.finite(run_out$total_soc)) ||
+          max(run_out$total_soc, na.rm = TRUE) > 1000) return(NULL)
+      
       data.frame(plot_id   = pid,
                  year      = run_out$year,
                  draw      = d,
