@@ -19,6 +19,18 @@
 #
 #   With transient_init = FALSE the engine is bit-for-bit identical to the
 #   original. This flag is the revert switch.
+#
+# STABILITY GUARD (obs-year restriction):
+#   Both the finite check and the physical-impossibility guard are applied only
+#   at observation years (meta$idx), not over the full simulated trajectory.
+#   Rationale: Yasso20's recycling architecture (p_NA = 1 - p_H) can produce
+#   post-calibration-window divergence even for draws that are near-correct at
+#   the 1985 and 2006 observation years. Restricting the full-trajectory finite
+#   check would hard-exclude the stable obs-window subspace that MCMC needs to
+#   explore. Post-2006 instability is penalised naturally via likelihood mismatch
+#   in the predictive context, and is itself a structural finding worth reporting.
+#   This behaviour differs from Viskari (2022), who uses only simplex checks
+#   (outflow fractions sum <= 1); document the obs-year restriction in methods.
 # =============================================================================
 
 source("./Calibration_real_data/calibration_engine.R")
@@ -42,79 +54,67 @@ make_likelihood <- function(n_cores,
                             obs_meta,
                             steady_state_n  = NULL,
                             transient_init  = FALSE) {
-
+  
   force(n_cores); force(to_original); force(log_jacobian)
   force(assemble_params); force(compute_xi); force(compute_xi_mean)
   force(steady_state); force(run_model); force(sigma_obs_fixed); force(plots)
   force(climate_by_plot); force(inputs_by_plot); force(litter_means)
   force(obs_meta); force(steady_state_n); force(transient_init)
-
+  
   cmpfun(function(x) {
-
+    
     p_free       <- to_original(x)
     sigma_init   <- p_free["sigma_init"]
     model_params <- assemble_params(p_free)
     log_jac      <- log_jacobian(x, p_free)
-
+    
     log_liks <- parallel::mclapply(plots, function(pid) {
-
+      
       clim   <- climate_by_plot[[pid]]
       inputs <- inputs_by_plot[[pid]]
       lm     <- litter_means[[pid]]
       meta   <- obs_meta[[pid]]
-
+      
       if (any(is.na(meta$idx))) return(-Inf)
-
+      
       xi_array <- tryCatch(compute_xi(clim, model_params),
                            error = function(e) NULL)
       if (is.null(xi_array)) return(-Inf)
-
+      
       n_ss <- if (is.null(steady_state_n)) nrow(clim)
-              else min(steady_state_n, nrow(clim))
-
+      else min(steady_state_n, nrow(clim))
+      
       xi_for_ss <- tryCatch(
         compute_xi_mean(clim[seq_len(n_ss), , drop = FALSE], model_params),
         error = function(e) NULL)
       if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(-Inf)
-
+      
       C_init <- tryCatch(
         steady_state(model_params, lm, xi_for_ss),
         error = function(e) NULL)
       if (is.null(C_init) ||
           any(!is.finite(C_init)) ||
           any(C_init < 0))                        return(-Inf)
-
+      
       run_out <- tryCatch(
         run_model(inputs, model_params, C_init, xi_array),
         error = function(e) NULL)
+      
+      # Finiteness checked only at observation years (meta$idx).
+      # A crashed run_model() returns NULL and is caught by the NULL guard.
+      # Post-calibration-window Inf/NaN (Yasso20 recycling instability) is
+      # allowed through; it is penalised in the predictive context.
       if (is.null(run_out) ||
-          any(!is.finite(run_out$total_soc)))     return(-Inf)
-
-      # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      # Guard: reject parameter draws producing physically impossible SOC
-      # AT THE OBSERVATION YEARS (1985, 2006).
-      #
-      # Deliberately checks only meta$idx (obs years), NOT the full trajectory.
-      # Rationale: post-calibration-window instability is penalised naturally
-      # by the likelihood mismatch when the draw is replayed in the predictive
-      # script. Imposing a hard -Inf on the full trajectory would prevent MCMC
-      # from exploring the stable subspace that fits the obs window, because
-      # Yasso20's recycling architecture (p_NA = 1 - p_H) can produce
-      # divergence after 2006 even for draws that are near-correct in 1985–2006.
-      #
-      # The threshold (1000 tC/ha) remains a physical impossibility guard;
-      # Finnish forest SOC does not exceed ~300 tC/ha.
-      #
-      # NOTE: this guard is not in the original Viskari (2022) likelihood.
-      # Viskari uses only simplex checks (outflow fractions sum <= 1).
-      # The obs-year restriction is a HIKET-specific choice; document in methods.
-      # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (max(run_out$total_soc[meta$idx], na.rm = TRUE) > 1000) return(-Inf)  
+          any(!is.finite(run_out$total_soc[meta$idx]))) return(-Inf)
+      
+      # Physical-impossibility guard: also applied at obs years only.
+      # Finnish forest SOC does not exceed ~300 tC/ha; 1000 is a hard ceiling.
+      if (max(run_out$total_soc[meta$idx], na.rm = TRUE) > 1000) return(-Inf)
       
       SOC_hat <- run_out$total_soc[meta$idx]
       if (any(!is.finite(SOC_hat)) ||
           any(SOC_hat <= 0))                      return(-Inf)
-
+      
       # -------------------------------------------------------------------
       # Observation error model
       # -------------------------------------------------------------------
@@ -124,8 +124,8 @@ make_likelihood <- function(n_cores,
       #
       # transient_init = TRUE (new):
       #   sigma_init already propagated physically through the 68-year pre-run
-      #   (see *_transient_init() in model wrappers). Adding it again in
-      #   sd_vec would double-count. All observations use sigma_obs_fixed only.
+      #   (see *_wrapper_transient.R). Adding it again in sd_vec would
+      #   double-count. All observations use sigma_obs_fixed only.
       # -------------------------------------------------------------------
       sd_vec <- if (transient_init) {
         SOC_hat * sigma_obs_fixed
@@ -134,11 +134,11 @@ make_likelihood <- function(n_cores,
                SOC_hat * sqrt(sigma_obs_fixed^2 + sigma_init^2),
                SOC_hat * sigma_obs_fixed)
       }
-
+      
       sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = sd_vec, log = TRUE))
-
+      
     }, mc.cores = n_cores)
-
+    
     log_liks <- unlist(log_liks)
     if (any(!is.finite(log_liks))) return(-Inf)
     sum(log_liks) + log_jac
