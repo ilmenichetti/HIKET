@@ -91,11 +91,25 @@ make_likelihood <- function(n_cores,
           any(!is.finite(run_out$total_soc)))     return(-Inf)
 
       # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      # Guard: reject parameter draws producing physically impossible SOC.
-      # Catches near-unstable combinations that pass the finite check but
-      # accumulate unrealistically over the simulation horizon.
-      if (max(run_out$total_soc, na.rm = TRUE) > 1000) return(-Inf)
-      
+      # Guard: reject parameter draws producing physically impossible SOC
+      # AT THE OBSERVATION YEARS (1985, 2006).
+      #
+      # Deliberately checks only meta$idx (obs years), NOT the full trajectory.
+      # Rationale: post-calibration-window instability is penalised naturally
+      # by the likelihood mismatch when the draw is replayed in the predictive
+      # script. Imposing a hard -Inf on the full trajectory would prevent MCMC
+      # from exploring the stable subspace that fits the obs window, because
+      # Yasso20's recycling architecture (p_NA = 1 - p_H) can produce
+      # divergence after 2006 even for draws that are near-correct in 1985–2006.
+      #
+      # The threshold (1000 tC/ha) remains a physical impossibility guard;
+      # Finnish forest SOC does not exceed ~300 tC/ha.
+      #
+      # NOTE: this guard is not in the original Viskari (2022) likelihood.
+      # Viskari uses only simplex checks (outflow fractions sum <= 1).
+      # The obs-year restriction is a HIKET-specific choice; document in methods.
+      # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      if (max(run_out$total_soc[meta$idx], na.rm = TRUE) > 1000) return(-Inf)  
       
       SOC_hat <- run_out$total_soc[meta$idx]
       if (any(!is.finite(SOC_hat)) ||
