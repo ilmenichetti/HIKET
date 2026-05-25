@@ -20,17 +20,25 @@
 #   With transient_init = FALSE the engine is bit-for-bit identical to the
 #   original. This flag is the revert switch.
 #
-# STABILITY GUARD (obs-year restriction):
-#   Both the finite check and the physical-impossibility guard are applied only
-#   at observation years (meta$idx), not over the full simulated trajectory.
-#   Rationale: Yasso20's recycling architecture (p_NA = 1 - p_H) can produce
-#   post-calibration-window divergence even for draws that are near-correct at
-#   the 1985 and 2006 observation years. Restricting the full-trajectory finite
-#   check would hard-exclude the stable obs-window subspace that MCMC needs to
-#   explore. Post-2006 instability is penalised naturally via likelihood mismatch
-#   in the predictive context, and is itself a structural finding worth reporting.
-#   This behaviour differs from Viskari (2022), who uses only simplex checks
-#   (outflow fractions sum <= 1); document the obs-year restriction in methods.
+# REJECTION LOGIC:
+#   Only three hard rejections are applied, all strictly necessary for
+#   arithmetic validity:
+#     (1) run_model() returned NULL (Fortran crash or tryCatch error)
+#     (2) SOC_hat is non-finite (Inf/NaN) at observation years -- dnorm undefined
+#     (3) SOC_hat <= 0 at observation years -- undefined in multiplicative error model
+#
+#   No physical-ceiling guard (e.g. SOC > 1000) is applied. Physically
+#   impossible predictions receive a very large negative log-likelihood and
+#   are rejected by MCMC naturally; a hard -Inf ceiling is unnecessary and
+#   would asymmetrically penalise models (e.g. Yasso20) whose recycling
+#   architecture explores a wider region of parameter space. Post-calibration-
+#   window instability is never evaluated in the likelihood: the trajectory
+#   beyond meta$idx is computed but not touched here. It appears in full in
+#   the predictive scripts, where structural divergence across models is a
+#   primary scientific output.
+#
+#   This matches Viskari (2022), who applies only simplex checks (outflow
+#   fractions sum <= 1) and no physical ceiling.
 # =============================================================================
 
 source("./Calibration_real_data/calibration_engine.R")
@@ -99,18 +107,11 @@ make_likelihood <- function(n_cores,
       run_out <- tryCatch(
         run_model(inputs, model_params, C_init, xi_array),
         error = function(e) NULL)
+      if (is.null(run_out)) return(-Inf)
       
-      # Finiteness checked only at observation years (meta$idx).
-      # A crashed run_model() returns NULL and is caught by the NULL guard.
-      # Post-calibration-window Inf/NaN (Yasso20 recycling instability) is
-      # allowed through; it is penalised in the predictive context.
-      if (is.null(run_out) ||
-          any(!is.finite(run_out$total_soc[meta$idx]))) return(-Inf)
-      
-      # Physical-impossibility guard: also applied at obs years only.
-      # Finnish forest SOC does not exceed ~300 tC/ha; 1000 is a hard ceiling.
-      if (max(run_out$total_soc[meta$idx], na.rm = TRUE) > 1000) return(-Inf)
-      
+      # Extract predicted SOC at observation years only.
+      # Trajectory values beyond meta$idx are not evaluated here; post-
+      # calibration-window behaviour appears in the predictive scripts.
       SOC_hat <- run_out$total_soc[meta$idx]
       if (any(!is.finite(SOC_hat)) ||
           any(SOC_hat <= 0))                      return(-Inf)
