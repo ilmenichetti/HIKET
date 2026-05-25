@@ -45,16 +45,22 @@ MODEL_NAME      <- "Yasso20"
 N_PP_DRAWS      <- 100L
 CORES_PER_CHAIN <- parallel::detectCores() - 1L
 
+# Forward projection settings (Section 4b)
+PROJ_YEARS    <- 60L                        # years to project beyond last historical year
+RECYCLE_YEARS <- 20L                        # length of climate window to recycle
+POOL_COLS     <- c("A","W","E","N","H")     # Yasso20 five-pool state vector
+# Note: climate recycling uses RECYCLE_YEARS * 12L monthly rows (see Section 4b)
+
+LITTER_COLS <- c("nwl_A","nwl_W","nwl_E","nwl_N",
+                 "fwl_A","fwl_W","fwl_E","fwl_N",
+                 "cwl_A","cwl_W","cwl_E","cwl_N")
+
 DIR_DIAG   <- file.path("./Calibration_real_data_transient/diagnostics", MODEL_NAME)
 DIR_RUNS   <- "./Calibration_real_data_transient/runs/"
 DIR_INPUTS <- "./Data/model_inputs/"
 for (d in c(DIR_DIAG, DIR_RUNS)) dir.create(d, showWarnings = FALSE, recursive = TRUE)
 
 run_config <- list(MODEL_NAME = MODEL_NAME, RUN_ID = RUN_ID, DIR_DIAG = DIR_DIAG)
-
-LITTER_COLS <- c("nwl_A","nwl_W","nwl_E","nwl_N",
-                 "fwl_A","fwl_W","fwl_E","fwl_N",
-                 "cwl_A","cwl_W","cwl_E","cwl_N")
 
 message("=============================================================")
 message(sprintf("  %s Transient Posterior Predictive  |  Run: %s",
@@ -98,10 +104,6 @@ MODEL_FREE_NAMES <- setdiff(colnames(posterior_phys), c("sigma_init","sigma_inpu
 assemble_model_params <- function(p_free) {
   yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
   yasso_params <- yasso_params[YASSO20_PARAM_NAMES]
-  # Derived fractions (Viskari 2022): same constraints as calibration script.
-  yasso_params["p_AW"] <- 1 - yasso_params["p_H"]
-  yasso_params["p_EA"] <- max(1 - yasso_params["p_EW"] - yasso_params["p_H"], 0)
-  yasso_params["p_NA"] <- 1 - yasso_params["p_H"]
   c(yasso_params,
     sigma_input = unname(p_free["sigma_input"]),
     sigma_init  = unname(p_free["sigma_init"]))
@@ -142,7 +144,7 @@ yasso20_run_engine <- function(inputs, model_params, C_init, clim) {
 
 
 # =============================================================================
-# 4.  Posterior predictive simulation
+# 4.  Posterior predictive simulation (historical period)
 # =============================================================================
 
 set.seed(2025)
@@ -181,16 +183,8 @@ t_pp <- system.time({
       run_out <- tryCatch(
         yasso20_run_engine(inputs, model_params, C_init, clim),
         error = function(e) NULL)
-      
       if (is.null(run_out)) return(NULL)
-      # Guard: reject draws with physically impossible SOC accumulation.
-      # 1000 tC/ha is ~10x the realistic Finnish forest maximum -- anything
-      # above this is a numerical artefact from near-unstable parameter draws
-      # that passed the calibration filter at observed years but blow up in
-      # the extended forward projection.
-      if (!all(is.finite(run_out$total_soc)) ||
-          max(run_out$total_soc, na.rm = TRUE) > 1000) return(NULL)
-      
+
       data.frame(plot_id   = pid,
                  year      = run_out$year,
                  draw      = d,
@@ -205,6 +199,104 @@ t_pp <- system.time({
 })[["elapsed"]]
 message(sprintf("Posterior predictive complete: %.1f min  (%d rows)",
                 t_pp / 60, nrow(posterior_predictions)))
+
+
+# =============================================================================
+# 4b.  60-year forward projection
+# =============================================================================
+# Extends each posterior draw PROJ_YEARS beyond the last historical year.
+#
+# The historical run is repeated here to recover the terminal pool state.
+# This duplicates Section 4 but keeps both sections self-contained and
+# Sections 5-9 completely unchanged.
+#
+# YASSO20-SPECIFIC: climate_by_plot holds monthly rows (12 per year).
+#   Climate recycling operates on RECYCLE_YEARS * 12 monthly rows and
+#   produces PROJ_YEARS * 12 projection rows. The year and month columns
+#   are overwritten to reflect the projection period.
+#   yasso20_run() computes xi internally from clim_proj -- no separate
+#   xi computation is needed before the forward run call.
+#
+# Litter:  constant at the last available annual value (last inputs row).
+# Initial state: terminal pool values from the repeated historical run.
+#
+# No SOC ceiling guard is applied: structurally unstable draws (Yasso20's
+# N-pool recycling architecture) produce large but finite total_soc and are
+# visible in the projection envelope. This is the intended behaviour for
+# the cross-model instability comparison.
+# =============================================================================
+
+message(sprintf("\nGenerating %d-year forward projections (%d draws x %d plots)...",
+                PROJ_YEARS, N_PP_DRAWS, length(plots_real)))
+t_proj <- system.time({
+  projection_predictions <- do.call(rbind, lapply(seq_len(N_PP_DRAWS), function(d) {
+    if (d %% 10 == 0) message(sprintf("  Projection draw %d / %d", d, N_PP_DRAWS))
+    p_free       <- draws[d, ]
+    model_params <- assemble_model_params(p_free)
+
+    do.call(rbind, mclapply(plots_real, function(pid) {
+      clim   <- climate_by_plot[[pid]]
+      inputs <- inputs_by_plot[[pid]]
+      lm     <- litter_means[[pid]]
+
+      # -- Repeat historical run to recover terminal pool state ---------------
+      n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
+      xi_for_ss <- tryCatch(
+        compute_xi_mean_yasso20_engine(
+          clim[seq_len(n_ss), , drop = FALSE], model_params),
+        error = function(e) NULL)
+      if (is.null(xi_for_ss)) return(NULL)
+      xi_vals <- unlist(xi_for_ss)
+      if (any(!is.finite(xi_vals)) || any(xi_vals <= 0)) return(NULL)
+
+      C_init <- tryCatch(
+        steady_state_yasso20_engine(model_params, lm, xi_for_ss),
+        error = function(e) NULL)
+      if (is.null(C_init) || any(!is.finite(C_init)) || any(C_init < 0))
+        return(NULL)
+
+      run_hist <- tryCatch(
+        yasso20_run_engine(inputs, model_params, C_init, clim),
+        error = function(e) NULL)
+      if (is.null(run_hist)) return(NULL)
+
+      # -- Build projection climate (monthly) and litter (annual) ------------
+      last_year <- max(run_hist$year)
+      proj_yrs  <- seq(last_year + 1L, last_year + PROJ_YEARS)
+
+      # Monthly climate: recycle last RECYCLE_YEARS * 12 rows cyclically
+      clim_recycle <- tail(clim, RECYCLE_YEARS * 12L)
+      clim_proj    <- clim_recycle[
+        ((seq_len(PROJ_YEARS * 12L) - 1L) %% (RECYCLE_YEARS * 12L)) + 1L,
+        , drop = FALSE]
+      clim_proj$year  <- rep(proj_yrs, each = 12L)
+      clim_proj$month <- rep(1:12, PROJ_YEARS)
+
+      # Annual litter: constant at last available year
+      inputs_proj      <- tail(inputs, 1L)[rep(1L, PROJ_YEARS), , drop = FALSE]
+      inputs_proj$year <- proj_yrs
+
+      # -- Initial state: terminal pool values from historical run ------------
+      C_proj_init <- unlist(run_hist[nrow(run_hist), POOL_COLS])
+
+      # -- Forward run --------------------------------------------------------
+      # yasso20_run computes xi internally from clim_proj; no xi call needed
+      run_proj <- tryCatch(
+        yasso20_run_engine(inputs_proj, model_params, C_proj_init, clim_proj),
+        error = function(e) NULL)
+      if (is.null(run_proj)) return(NULL)
+
+      data.frame(
+        plot_id   = pid,
+        year      = run_proj$year,
+        draw      = d,
+        total_soc = run_proj$total_soc
+      )
+    }, mc.cores = CORES_PER_CHAIN))
+  }))
+})[["elapsed"]]
+message(sprintf("Projection complete: %.1f min  (%d rows)",
+                t_proj / 60, nrow(projection_predictions)))
 
 
 # =============================================================================
@@ -376,14 +468,16 @@ dev.off()
 message(sprintf("Plot saved: %s", traj_png))
 
 pp_output <- list(
-  posterior_predictions = posterior_predictions,
-  posterior_summary     = as.data.frame(posterior_summary),
-  residuals_df          = residuals_df,
+  posterior_predictions  = posterior_predictions,
+  projection_predictions = projection_predictions,
+  posterior_summary      = as.data.frame(posterior_summary),
+  residuals_df           = residuals_df,
   metrics = list(R2=R2, RMSE_mean=RMSE, bias_mean=bias,
                  RMSE_median=RMSE_med, bias_median=bias_med,
                  coverage_95=coverage_95),
   config  = list(model=MODEL_NAME, run_id=RUN_ID,
                  n_draws=N_PP_DRAWS, n_plots=length(plots_real),
+                 proj_years=PROJ_YEARS, recycle_years=RECYCLE_YEARS,
                  transient_init=TRUE, timestamp=Sys.time())
 )
 saveRDS(pp_output,
@@ -394,6 +488,8 @@ message("Saved posterior predictive bundle.")
 append_to_report(run_config, paste(c(
   "\n[5] Predictive performance (transient init)\n",
   sprintf("    R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov95: %.3f\n",
-          R2, RMSE_med, bias_med, coverage_95)), collapse=""))
+          R2, RMSE_med, bias_med, coverage_95),
+  sprintf("    Projection years:       %d\n",       PROJ_YEARS),
+  sprintf("    Climate recycle window: %d years\n", RECYCLE_YEARS)), collapse=""))
 
 message("\nDone. Next: run_residual_analysis.R Yasso20 ", RUN_ID)

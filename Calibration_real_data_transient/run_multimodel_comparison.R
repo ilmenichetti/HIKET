@@ -592,6 +592,174 @@ if (length(ok_models) == 0) {
 }
 
 
+
+# =============================================================================
+# 6b.  Plot E: 60-year SOC projection by NFI region
+# =============================================================================
+# For each model: aggregate projection_predictions by NFI region (North/South),
+# compute the cross-draw median and 95% CI of mean regional SOC, and plot as
+# a continuous trajectory spanning both the historical calibration period and
+# the 60-year forward projection.
+#
+# nfi_region is read from site_raw.csv (written by assign_nfi_regions.R).
+# Northern Finland = Lappi, Pohjois-Pohjanmaa, Kainuu (NFI convention).
+#
+# If projection_predictions is absent from a bundle (old run without Section 4b),
+# that model's projection panel is left blank with a warning.
+#
+# Y-axis is capped at Y_MAX_PROJ (tC/ha). Draws that exceed this produce CI
+# polygons clipped to Y_MAX_PROJ -- this is intentional: the clipping itself
+# visualises the structural instability of models whose posterior spans
+# physically impossible SOC values in the projection window.
+# =============================================================================
+
+Y_MAX_PROJ <- 300L   # tC/ha display ceiling; Finnish forest SOC < 250 tC/ha
+
+# --- Load region lookup -------------------------------------------------------
+site_raw_proj <- tryCatch(
+  read.csv("./Data/model_inputs/site_raw.csv", stringsAsFactors = FALSE),
+  error = function(e) {
+    warning("[projection] site_raw.csv not found -- skipping projection plot")
+    NULL
+  })
+
+if (!is.null(site_raw_proj) && "nfi_region" %in% names(site_raw_proj)) {
+  
+  site_raw_proj$plot_id <- as.character(site_raw_proj$plot_id)
+  region_lookup <- site_raw_proj[!is.na(site_raw_proj$nfi_region),
+                                 c("plot_id", "nfi_region")]
+  
+  # --- Aggregate historical and projection per model -------------------------
+  aggregate_regional <- function(pred_df) {
+    if (is.null(pred_df) || nrow(pred_df) == 0) return(NULL)
+    pred_df$plot_id <- as.character(pred_df$plot_id)
+    pred_df <- merge(pred_df, region_lookup, by = "plot_id", all.x = FALSE)
+    if (nrow(pred_df) == 0) return(NULL)
+    
+    pred_df %>%
+      group_by(draw, nfi_region, year) %>%
+      summarise(mean_soc = mean(total_soc, na.rm = TRUE), .groups = "drop") %>%
+      group_by(nfi_region, year) %>%
+      summarise(
+        soc_median = median(mean_soc, na.rm = TRUE),
+        soc_q025   = quantile(mean_soc, 0.025, na.rm = TRUE),
+        soc_q975   = quantile(mean_soc, 0.975, na.rm = TRUE),
+        .groups = "drop"
+      )
+  }
+  
+  hist_reg <- lapply(MODELS, function(m)
+    aggregate_regional(pp[[m]]$posterior_predictions))
+  names(hist_reg) <- MODELS
+  
+  proj_reg <- lapply(MODELS, function(m) {
+    if (is.null(pp[[m]]$projection_predictions)) {
+      message(sprintf("[projection] No projection_predictions in %s bundle", m))
+      return(NULL)
+    }
+    aggregate_regional(pp[[m]]$projection_predictions)
+  })
+  names(proj_reg) <- MODELS
+  
+  # --- Shared x range (historical + projection) ------------------------------
+  all_years <- sort(unique(c(
+    unlist(lapply(hist_reg, function(d) if (!is.null(d)) d$year)),
+    unlist(lapply(proj_reg, function(d) if (!is.null(d)) d$year))
+  )))
+  x_range <- range(all_years, na.rm = TRUE)
+  
+  # --- Plot ------------------------------------------------------------------
+  REGION_COLS <- c(North = "#2166ac", South = "#d6604d")
+  REGION_LTY  <- c(North = 1,        South  = 2)
+  
+  proj_png <- file.path(DIR_OUT,
+                        sprintf("multimodel_projection_%s.png", COMP_ID))
+  png(proj_png,
+      width  = 20L * PX_PER_IN,
+      height =  7L * PX_PER_IN,
+      res    = PX_PER_IN)
+  par(mfrow = c(1, 5),
+      mar   = c(4, 4, 3.5, 0.5),
+      oma   = c(0, 0, 2.5, 0))
+  
+  for (m in MODELS) {
+    hd <- hist_reg[[m]]
+    pd <- proj_reg[[m]]
+    
+    plot(NA,
+         xlim = x_range,
+         ylim = c(0, Y_MAX_PROJ),
+         xlab = "Year",
+         ylab = if (m == MODELS[1]) "Mean SOC (tC/ha)" else "",
+         main = m,
+         yaxt = if (m == MODELS[1]) "s" else "n")
+    
+    # Vertical reference at last observation year
+    abline(v = 2006, lty = 3, col = "grey55", lwd = 1.2)
+    
+    for (reg in c("North", "South")) {
+      col <- REGION_COLS[reg]
+      lty <- REGION_LTY[reg]
+      
+      # Historical ribbon + median
+      if (!is.null(hd)) {
+        hd_r <- hd[hd$nfi_region == reg, ]
+        hd_r <- hd_r[order(hd_r$year), ]
+        if (nrow(hd_r) > 0) {
+          polygon(c(hd_r$year, rev(hd_r$year)),
+                  pmin(c(hd_r$soc_q025, rev(hd_r$soc_q975)), Y_MAX_PROJ),
+                  col = adjustcolor(col, 0.12), border = NA)
+          lines(hd_r$year, pmin(hd_r$soc_median, Y_MAX_PROJ),
+                col = col, lwd = 1.5, lty = lty)
+        }
+      }
+      
+      # Projection ribbon + median (slightly darker alpha to distinguish period)
+      if (!is.null(pd)) {
+        pd_r <- pd[pd$nfi_region == reg, ]
+        pd_r <- pd_r[order(pd_r$year), ]
+        if (nrow(pd_r) > 0) {
+          polygon(c(pd_r$year, rev(pd_r$year)),
+                  pmin(c(pd_r$soc_q025, rev(pd_r$soc_q975)), Y_MAX_PROJ),
+                  col = adjustcolor(col, 0.20), border = NA)
+          lines(pd_r$year, pmin(pd_r$soc_median, Y_MAX_PROJ),
+                col = col, lwd = 2.2, lty = lty)
+        }
+      }
+    }
+    
+    # Note if 95% CI exceeds display ceiling (scientifically meaningful)
+    if (!is.null(pd)) {
+      max_ci <- max(pd$soc_q975, na.rm = TRUE)
+      if (max_ci > Y_MAX_PROJ)
+        mtext(sprintf("95%% CI max: %.0f tC/ha (clipped)", max_ci),
+              side = 1, line = -1.5, cex = 0.62, col = "grey35", adj = 0.05)
+    }
+    
+    # Legend on first panel only
+    if (m == MODELS[1])
+      legend("topleft",
+             legend  = c("North — median (95% CI)",
+                         "South — median (95% CI)",
+                         "Last obs. year (2006)"),
+             col     = c(REGION_COLS, "grey55"),
+             lwd     = c(2.2, 2.2, 1.2),
+             lty     = c(REGION_LTY, 3),
+             bty     = "n", cex = 0.78)
+  }
+  
+  mtext(
+    sprintf("HIKET — 60-year SOC projection by NFI region  |  y-axis capped at %d tC/ha  |  comp %s",
+            Y_MAX_PROJ, COMP_ID),
+    side = 3, outer = TRUE, line = 0.8, cex = 0.92, font = 2)
+  dev.off()
+  message(sprintf("Projection plot: %s", proj_png))
+  
+} else {
+  message("[projection] nfi_region not found in site_raw.csv -- ",
+          "run assign_nfi_regions.R first; skipping projection plot.")
+}
+
 # =============================================================================
 # 7.  Save summary bundle + print metrics
 # =============================================================================

@@ -53,3 +53,8 @@
 
 [5] Predictive performance (transient init)
     R²: 0.080  RMSE: 61.32  Bias: +22.55  Cov95: 0.086
+
+[5] Predictive performance (transient init)
+    R²: 0.080  RMSE: 61.32  Bias: +22.55  Cov95: 0.086
+    Projection years:       60
+    Climate recycle window: 20 years

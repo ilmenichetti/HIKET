@@ -52,3 +52,15 @@
     RMSE (median):          60.41 tC/ha
     Bias (median):          +21.29 tC/ha
     95% CI coverage:        0.149
+
+[5] Predictive performance (transient init)
+    Posterior draws:        100
+    Observations:           1121
+    R²:                     0.072
+    RMSE (mean):            60.75 tC/ha
+    Bias (mean):            +21.90 tC/ha
+    RMSE (median):          60.41 tC/ha
+    Bias (median):          +21.29 tC/ha
+    95% CI coverage:        0.149
+    Projection years:       60
+    Climate recycle window: 20 years
