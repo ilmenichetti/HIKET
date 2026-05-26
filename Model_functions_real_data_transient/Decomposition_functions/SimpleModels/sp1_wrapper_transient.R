@@ -260,8 +260,8 @@ sp1_run <- function(inputs, model_params, C_init, xi_array) {
   n     <- nrow(inputs)
 
   C    <- numeric(n + 1L)    # C[1] = C_init; C[2..n+1] = post-step values
-  C[1] <- C_init["C"]
-
+  C[1] <- as.numeric(C_init)[1]
+  
   for (t in seq_len(n)) {
     xi    <- xi_array[t]
     J     <- inputs$J_total[t] * si

@@ -89,3 +89,75 @@
 
     sigma_input posterior:    median=4.493  95% CI=[2.006, 6.322]
 
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.570
+    Top covariates by permutation importance:
+        basal_area_85              0.1327
+        woody_share                0.0613
+        dev_class_85               0.0521
+        litter_W_frac              0.0451
+        TotalNitrogen              0.0378
+        litter_N_frac              0.0362
+        clay                       0.0315
+        litter_E_frac              0.0296
+        ExchangeableAl             0.0275
+        CEC                        0.0268
+
+    sigma_input posterior:    median=4.493  95% CI=[2.006, 6.322]
+
+
+[5] Predictive performance (transient init)
+    R²: 0.048  RMSE: 62.55  Bias: +14.16  Cov95: 0.222
+    Projection years:       60
+    Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.570
+    Top covariates by permutation importance:
+        basal_area_85              0.1327
+        woody_share                0.0613
+        dev_class_85               0.0521
+        litter_W_frac              0.0451
+        TotalNitrogen              0.0378
+        litter_N_frac              0.0362
+        clay                       0.0315
+        litter_E_frac              0.0296
+        ExchangeableAl             0.0275
+        CEC                        0.0268
+
+    sigma_input posterior:    median=4.493  95% CI=[2.006, 6.322]
+
+
+[5] Predictive performance (transient init)
+    R²: 0.048  RMSE: 62.55  Bias: +14.16  Cov95: 0.222
+    Projection years:       60
+    Climate recycle window: 20 years
+
+[5] Predictive performance (transient init)
+    R²: 0.012  RMSE: 236787812554890.56  Bias: +33354894358801.40  Cov95: 0.245
+    Projection years:       60
+    Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         -0.631
+    Top covariates by permutation importance:
+        n_soc_obs                  32.7664
+        ofh_lower_cm               0.0000
+        alaryhma                   -0.1154
+        shallow                    -0.3434
+        any_trt_85_95              -0.4413
+        ojitustilanne              -0.7507
+        profile_depth_cm           -0.9841
+        soil_prep_pre85            -1.1592
+        koppen_class               -2.0383
+        any_cut_85_95              -2.0904
+
+    sigma_input posterior:    median=4.493  95% CI=[2.006, 6.322]
+

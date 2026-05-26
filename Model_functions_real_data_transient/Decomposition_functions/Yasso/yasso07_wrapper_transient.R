@@ -116,18 +116,24 @@ yasso07_run <- function(input_df, params, C_init, xi_array,
                      diam_cwl = as.double(diam_cwl),
                      C_init   = as.double(C_init),
                      C_out    = double(n_years * 5),
-                     resp_out = double(n_years)
+                     resp_out = double(n_years),
+                     C_final  = double(15)        # terminal per-cohort state
   )
   
   C_mat <- matrix(result$C_out, nrow = n_years, ncol = 5)
   colnames(C_mat) <- c("A", "W", "E", "N", "H")
   
-  data.frame(
+  out <- data.frame(
     year        = input_df$year,
     C_mat,
     total_soc   = rowSums(C_mat),
     respiration = result$resp_out
   )
+  # Attach terminal 15-element state as attribute.
+  # Layout: [C_nwl(1:5) | C_fwl(6:10) | C_cwl(11:15)] -- directly usable
+  # as C_init for a chained run (e.g. projection) without approximation.
+  attr(out, "C_final") <- result$C_final
+  out
 }
 
 

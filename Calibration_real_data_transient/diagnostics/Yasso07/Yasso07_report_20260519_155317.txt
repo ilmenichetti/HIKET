@@ -60,3 +60,94 @@
     R²: 0.080  RMSE: 60.22  Bias: +21.00  Cov95: 0.150
     Projection years:       60
     Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.551
+    Top covariates by permutation importance:
+        basal_area_85              0.0839
+        TotalNitrogen              0.0446
+        woody_share                0.0356
+        clay                       0.0340
+        dev_class_85               0.0317
+        litter_N_frac              0.0303
+        ExchangeableAl             0.0293
+        CEC                        0.0266
+        litter_W_frac              0.0263
+        SiltContent                0.0260
+
+    sigma_input posterior:    median=2.063  95% CI=[1.066, 3.090]
+
+
+[5] Predictive performance (transient init)
+    R²: 0.080  RMSE: 60.22  Bias: +21.00  Cov95: 0.150
+    Projection years:       60
+    Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.551
+    Top covariates by permutation importance:
+        basal_area_85              0.0839
+        TotalNitrogen              0.0446
+        woody_share                0.0356
+        clay                       0.0340
+        dev_class_85               0.0317
+        litter_N_frac              0.0303
+        ExchangeableAl             0.0293
+        CEC                        0.0266
+        litter_W_frac              0.0263
+        SiltContent                0.0260
+
+    sigma_input posterior:    median=2.063  95% CI=[1.066, 3.090]
+
+
+[5] Predictive performance (transient init)
+    R²: 0.080  RMSE: 60.22  Bias: +21.00  Cov95: 0.150
+    Projection years:       60
+    Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.551
+    Top covariates by permutation importance:
+        basal_area_85              0.0839
+        TotalNitrogen              0.0446
+        woody_share                0.0356
+        clay                       0.0340
+        dev_class_85               0.0317
+        litter_N_frac              0.0303
+        ExchangeableAl             0.0293
+        CEC                        0.0266
+        litter_W_frac              0.0263
+        SiltContent                0.0260
+
+    sigma_input posterior:    median=2.063  95% CI=[1.066, 3.090]
+
+
+[5] Predictive performance (transient init)
+    R²: 0.080  RMSE: 60.22  Bias: +21.00  Cov95: 0.150
+    Projection years:       60
+    Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.551
+    Top covariates by permutation importance:
+        basal_area_85              0.0839
+        TotalNitrogen              0.0446
+        woody_share                0.0356
+        clay                       0.0340
+        dev_class_85               0.0317
+        litter_N_frac              0.0303
+        ExchangeableAl             0.0293
+        CEC                        0.0266
+        litter_W_frac              0.0263
+        SiltContent                0.0260
+
+    sigma_input posterior:    median=2.063  95% CI=[1.066, 3.090]
+

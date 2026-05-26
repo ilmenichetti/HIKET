@@ -70,3 +70,22 @@
     95% CI coverage:        0.178
     Projection years:       60
     Climate recycle window: 20 years
+
+[6] Residual analysis
+    Observations used:        1077
+    Covariates considered:    57
+    RF Out-Of-Bag R2:         0.510
+    Top covariates by permutation importance:
+        basal_area_85              0.0803
+        TotalNitrogen              0.0416
+        woody_share                0.0351
+        clay                       0.0336
+        dev_class_85               0.0329
+        ExchangeableAl             0.0288
+        CEC                        0.0271
+        SiltContent                0.0264
+        SandContent                0.0258
+        warmest_month_T            0.0237
+
+    sigma_input posterior:    median=2.146  95% CI=[0.714, 5.116]
+

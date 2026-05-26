@@ -274,9 +274,13 @@ t_proj <- system.time({
       inputs_proj      <- tail(inputs, 1L)[rep(1L, PROJ_YEARS), , drop = FALSE]
       inputs_proj$year <- proj_yrs
 
-      # -- Initial state: terminal pool values from historical run ------------
-      C_proj_init <- unlist(run_hist[nrow(run_hist), POOL_COLS])
-
+      # -- Initial state: exact terminal per-cohort state from historical run -
+      # Fortran yasso07_run_r now returns C_final(15) = [C_nwl|C_fwl|C_cwl],
+      # the per-cohort pool state at the end of the last historical year.
+      # Attached as attr(run_hist, "C_final") by yasso07_run in the wrapper.
+      # Lossless chain: no steady-state approximation, no discontinuity.
+      C_proj_init <- attr(run_hist, "C_final")
+      
       # -- Forward run --------------------------------------------------------
       xi_proj <- tryCatch(compute_xi_yasso07_engine(clim_proj, model_params),
                           error = function(e) NULL)

@@ -276,8 +276,37 @@ t_proj <- system.time({
       inputs_proj      <- tail(inputs, 1L)[rep(1L, PROJ_YEARS), , drop = FALSE]
       inputs_proj$year <- proj_yrs
 
-      # -- Initial state: terminal pool values from historical run ------------
-      C_proj_init <- unlist(run_hist[nrow(run_hist), POOL_COLS])
+      # Belt-and-suspenders: tail() + index subset carries original row names,
+      # which can confuse downstream rbind / dplyr joins. Reset both frames here.
+      rownames(inputs_proj) <- NULL
+      rownames(clim_proj)   <- NULL
+      
+      # -- Initial state: exact terminal per-cohort state from historical run --
+      # PATCH (2025-05-25): replaced steady-state workaround with C_final.
+      #
+      # Previous code re-ran yasso20_steady_state() under "terminal climate"
+      # (clim_recycle xi) to approximate C_proj_init. This was wrong in two
+      # ways:
+      #   (a) steady state != transient end-state after 21 years of forcing;
+      #   (b) the result was a 5-element summed vector, but Fortran yasso15_run_r
+      #       declares C_init(15) = [C_nwl(1:5) | C_fwl(6:10) | C_cwl(11:15)].
+      #       Passing 5 elements caused Fortran to read garbage memory for
+      #       slots 6-15, producing the ~10 tC/ha discontinuity at 2006 and
+      #       NaN / Inf explosions in ~20% of draw x plot pairs.
+      #
+      # Fix chain (all already in place before this script):
+      #   yasso15.f90  yasso15_run / yasso15_run_r: C_final(15) INTENT(OUT),
+      #                populated as [C_nwl | C_fwl | C_cwl] after the time loop.
+      #   yasso15_wrapper_transient.R  yasso15_run(): .Fortran() receives
+      #                C_final = single(15); attached as attr(out, "C_final")
+      #                converted back to double.
+      #   yasso20_wrapper_transient.R  yasso20_run(): delegates directly to
+      #                yasso15_run() with no intermediate data frame, so the
+      #                attribute survives the passthrough automatically.
+      #   This script: consume attr(run_hist, "C_final") here.
+      #
+      # No separate yasso20.f90 exists -- Yasso20 reuses yasso15.so throughout.
+      C_proj_init <- attr(run_hist, "C_final")
 
       # -- Forward run --------------------------------------------------------
       # yasso20_run computes xi internally from clim_proj; no xi call needed
@@ -306,8 +335,8 @@ message(sprintf("Projection complete: %.1f min  (%d rows)",
 SOC_obs_all <- do.call(rbind, lapply(names(obs_meta), function(pid) {
   m <- obs_meta[[pid]]
   if (length(m$soc_obs) == 0) return(NULL)
-  clim_yrs <- climate_by_plot[[pid]]$year
-  data.frame(plot_id = pid, year = clim_yrs[m$idx],
+  inp_yrs  <- inputs_by_plot[[pid]]$year
+  data.frame(plot_id = pid, year = inp_yrs[m$idx],
              soc_obs_tCha = m$soc_obs, is_first = m$is_first)
 }))
 

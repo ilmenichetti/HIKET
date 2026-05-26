@@ -22,6 +22,12 @@
 !     when scaling is heavy
 !   - model_step: added diagonal dominance check before matrixexp call;
 !     falls back to Euler step for near-singular matrices (pathological params)
+!   - yasso07_run / yasso07_run_r: added C_final(15) output argument that
+!     returns the terminal per-cohort pool state [C_nwl | C_fwl | C_cwl].
+!     Without this, the R caller only has the 5 summed pools and cannot
+!     correctly initialise a chained projection run (the 15-element C_init
+!     required by the next yasso07_run call cannot be reconstructed losslessly
+!     from 5 totals). C_final exposes the exact terminal state at zero cost.
 !
 ! Compile with:
 !   R CMD SHLIB yasso07.f90
@@ -377,6 +383,11 @@ CONTAINS
   ! Output layout:
   !   C_out(n_years, 5): total C per pool (summed across litter types)
   !   resp_out(n_years): total annual respiration
+  !   C_final(15): terminal per-cohort pool state [C_nwl | C_fwl | C_cwl]
+  !     at the end of the last simulated year. Returned so the R caller can
+  !     initialise a chained run (e.g. projection) with the exact 15-element
+  !     state vector, avoiding the lossless-reconstruction problem that arises
+  !     when only the 5 summed pools in C_out are available.
   !
   ! =========================================================================
 
@@ -385,7 +396,7 @@ CONTAINS
                           xi_array, &
                           diam_fwl, diam_cwl, &
                           C_init, &
-                          C_out, resp_out)
+                          C_out, resp_out, C_final)
 
     INTEGER,  INTENT(IN)    :: n_years
     REAL(dp), INTENT(IN)    :: params(24)
@@ -397,6 +408,7 @@ CONTAINS
     REAL(dp), INTENT(IN)    :: C_init(3 * NPOOLS)
     REAL(dp), INTENT(INOUT) :: C_out(n_years, NPOOLS)
     REAL(dp), INTENT(INOUT) :: resp_out(n_years)
+    REAL(dp), INTENT(OUT)   :: C_final(3 * NPOOLS)
 
     REAL(dp) :: xi, dt
     REAL(dp) :: A_nwl(NPOOLS,NPOOLS), A_fwl(NPOOLS,NPOOLS), A_cwl(NPOOLS,NPOOLS)
@@ -453,6 +465,14 @@ CONTAINS
       resp_out(yr) = C_total_prev + input_total - C_total_next
 
     END DO
+
+    ! -- Write terminal per-cohort state --
+    ! C_nwl, C_fwl, C_cwl hold the pool values at the end of the last year.
+    ! Returned as C_final so the R caller can chain a projection run without
+    ! losing the per-cohort breakdown (which C_out does not preserve).
+    C_final(1:5)   = C_nwl
+    C_final(6:10)  = C_fwl
+    C_final(11:15) = C_cwl
 
   END SUBROUTINE yasso07_run
 
@@ -696,14 +716,17 @@ END SUBROUTINE yasso07_steady_state_r
 ! -----------------------------------------------------------------------------
 ! Transient forward simulation
 ! Called from R: yasso07_run(n_years, params, nwl_awen, fwl_awen, cwl_awen,
-!                             xi_array, diam_fwl, diam_cwl, C_init)
+!                             xi_array, diam_fwl, diam_cwl, C_init,
+!                             C_out, resp_out, C_final)
+! C_final(15): terminal per-cohort state [C_nwl | C_fwl | C_cwl].
+!   Use as C_init for a chained projection run.
 ! -----------------------------------------------------------------------------
 SUBROUTINE yasso07_run_r(n_years, params, &
                           nwl_awen, fwl_awen, cwl_awen, &
                           xi_array, &
                           diam_fwl, diam_cwl, &
                           C_init, &
-                          C_out, resp_out)
+                          C_out, resp_out, C_final)
   USE yasso07_mod
   IMPLICIT NONE
 
@@ -717,12 +740,13 @@ SUBROUTINE yasso07_run_r(n_years, params, &
   REAL(dp), INTENT(IN)    :: C_init(15)
   REAL(dp), INTENT(INOUT) :: C_out(n_years, 5)
   REAL(dp), INTENT(INOUT) :: resp_out(n_years)
+  REAL(dp), INTENT(OUT)   :: C_final(15)
 
   CALL yasso07_run(n_years, params, &
                    nwl_awen, fwl_awen, cwl_awen, &
                    xi_array, &
                    diam_fwl, diam_cwl, &
                    C_init, &
-                   C_out, resp_out)
+                   C_out, resp_out, C_final)
 
 END SUBROUTINE yasso07_run_r

@@ -1,49 +1,39 @@
 ! =============================================================================
-! Yasso15 Fortran Implementation for R Interface
+! Yasso07 Fortran Implementation for R Interface
 ! =============================================================================
 !
 ! Based on:
-!   Järvenpää (2015) Yasso15 core code, Finnish Meteorological Institute
-!   GPL-3.0 licence
+!   Tuomi et al. (2009) Eco. Mod. 220: 3362-3371
+!   Original R implementation by Taru Palosuo (FMI, December 2011)
+!   Matrix exponential routines adapted from Yasso15 Fortran (Järvenpää, 2015)
 !
-! Key differences from Yasso07:
-!   - Pool-group-specific climate responses:
-!       AWE pools: beta1, beta2, gamma        (params 17-19)
-!       N pool:    betaN1, betaN2, gammaN      (params 20-22)
-!       H pool:    betaH1, betaH2, gammaH      (params 23-25)
-!   - Leaching term on AWEN diagonal (requires leac scalar + precip)
-!   - 35-parameter vector (original Järvenpää indexing preserved in comments)
+! Architecture:
+!   xi (climate modifier) is computed entirely in R and passed as a pre-computed
+!   array. This avoids duplicating the climate response logic in Fortran.
 !
-! Architecture mirrors Yasso07:
-!   - xi computation entirely in R, passed as pre-computed arrays
-!     (xi_awe, xi_n, xi_h -- one per pool group per year)
-!   - Two R entry points: yasso15_steady_state_r, yasso15_run_r
+!   Two entry points are exposed to R:
+!     yasso07_steady_state_r  -- computes equilibrium C pools from mean inputs
+!     yasso07_run_r           -- transient forward simulation from C_init
 !
-! Changes from original Järvenpää (2025):
+! Changes from original (2025):
 !   - matrixexp: capped scaling steps at MAX_SCALE_STEPS = 64 to prevent
-!     effective hang when matrix norm is very large (near-singular A matrices)
+!     infinite loop when matrix norm is very large (near-singular A matrices)
 !   - matrixexp: increased Taylor terms from 10 to 20 for better accuracy
 !     when scaling is heavy
 !   - model_step: added diagonal dominance check before matrixexp call;
 !     falls back to Euler step for near-singular matrices (pathological params)
-!   - yasso15_run / yasso15_run_r: added C_final(15) output argument that
-!     returns the terminal per-cohort pool state [C_nwl | C_fwl | C_cwl].
-!     Without this, the R caller only has the 5 summed pools and cannot
-!     correctly initialise a chained projection run. Also covers Yasso20,
-!     which reuses this file compiled as yasso15.so.
 !
 ! Compile with:
-!   R CMD SHLIB yasso15.f90
+!   R CMD SHLIB yasso07.f90
 !
 ! =============================================================================
 
-MODULE yasso15_mod
+MODULE yasso07_mod
   IMPLICIT NONE
 
   ! Double precision kind -- 15 significant digits, exponent up to 307
-  !INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(15, 307)
-  INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(6, 37)   ! single precision
-  
+  INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(15, 307)
+
   INTEGER, PARAMETER :: NPOOLS = 5      ! A, W, E, N, H
 
   ! Tolerance for treating a value as zero (used in solver and step guard)
@@ -63,62 +53,59 @@ CONTAINS
   !
   ! Constructs the 5x5 matrix A for the ODE: dC/dt = A*C + b
   !
-  ! Identical structure to Yasso07 except:
-  !   - Three separate xi values (xi_awe, xi_n, xi_h) replace the single xi,
-  !     reflecting pool-group-specific climate responses
-  !   - Size modifier uses MIN(1, ...) with negative exponent convention
-  !     (Yasso15 Eq. vs Yasso07 Eq. 3.1 -- different sign convention for r)
-  !   - Leaching adds an extra term to the AWEN diagonal:
-  !     A(i,i) += leac * precip / 1000  for i = 1..4
-  !     This represents dissolved organic carbon loss via water percolation.
-  !     No leaching for H pool.
+  ! The matrix encodes:
+  !   - Diagonal:     net loss rate of each pool  A(i,i) = -alpha_i * xi * size_mod
+  !   - Off-diagonal: carbon transfer from pool j to pool i
+  !                   A(i,j) = p_{j->i} * |k_j|
+  !                   where p_{j->i} is the fraction of decomposed carbon
+  !                   from pool j that moves to pool i (not respired)
+  !   - Row 5:        humus formation from all AWEN pools
+  !                   A(5,j) = p_H * |k_j|  for j = 1..4
   !
-  ! Parameter vector (35 elements, standardised for this wrapper):
-  !   1-4:   alpha_A, alpha_W, alpha_E, alpha_N   (base decomp rates)
-  !   5-16:  p_WA, p_EA, p_NA, p_AW, p_EW, p_NW,
-  !          p_AE, p_WE, p_NE, p_AN, p_WN, p_EN  (transfer fractions, same order as Yasso07)
-  !   17-19: beta1, beta2, gamma                   (AWE climate response; orig params 22-24, 28)
-  !   20-22: betaN1, betaN2, gammaN                (N climate response;   orig params 24-25, 29)
-  !   23-25: betaH1, betaH2, gammaH                (H climate response;   orig params 26-27, 30)
-  !   26-27: p_H, alpha_H                          (humus formation & decomp; orig 31-32)
-  !   28-30: delta1, delta2, r                     (size modifier; orig 33-35)
-  !   31-35: w1, w2, w3, w4, w5                   (leaching weights; stored but leac scalar used)
+  ! This convention matches the original R code: A = p_matrix %*% diag(k)
+  ! where p_matrix has -1 on diagonal and transfer fractions off-diagonal.
+  !
+  ! Parameters layout (matches R parameter vector order):
+  !   params(1:4)   = alpha_A, alpha_W, alpha_E, alpha_N  (base decomp rates)
+  !   params(5:16)  = p_WA, p_EA, p_NA,   <- fractions going INTO pool A
+  !                   p_AW, p_EW, p_NW,   <- fractions going INTO pool W
+  !                   p_AE, p_WE, p_NE,   <- fractions going INTO pool E
+  !                   p_AN, p_WN, p_EN    <- fractions going INTO pool N
+  !   params(17:19) = beta1, beta2, gamma  (used in R for xi; ignored here)
+  !   params(20:22) = delta1, delta2, r    (woody size modifier)
+  !   params(23)    = p_H                  (humus formation fraction)
+  !   params(24)    = alpha_H              (humus decomp rate)
   !
   ! =========================================================================
 
-  SUBROUTINE build_matrix_A(params, xi_awe, xi_n, xi_h, woody_diam, leac, precip, A)
+  SUBROUTINE build_matrix_A(params, xi, woody_diam, A)
 
-    REAL(dp), INTENT(IN)  :: params(35)
-    REAL(dp), INTENT(IN)  :: xi_awe      ! climate modifier for AWE pools (pre-computed in R)
-    REAL(dp), INTENT(IN)  :: xi_n        ! climate modifier for N pool
-    REAL(dp), INTENT(IN)  :: xi_h        ! climate modifier for H pool
-    REAL(dp), INTENT(IN)  :: woody_diam  ! diameter of woody litter (0 = non-woody)
-    REAL(dp), INTENT(IN)  :: leac        ! leaching scalar (site-level)
-    REAL(dp), INTENT(IN)  :: precip      ! annual precipitation [mm]
+    REAL(dp), INTENT(IN)  :: params(24)
+    REAL(dp), INTENT(IN)  :: xi           ! climate modifier (pre-computed in R)
+    REAL(dp), INTENT(IN)  :: woody_diam   ! diameter of woody litter (0 = non-woody)
     REAL(dp), INTENT(OUT) :: A(NPOOLS, NPOOLS)
 
     REAL(dp) :: alpha(NPOOLS)  ! base decomposition rates
-    REAL(dp) :: k(NPOOLS)      ! effective rates (alpha * xi * size_mod)
+    REAL(dp) :: k(NPOOLS)      ! effective rates = alpha * xi * size_mod
     REAL(dp) :: size_mod       ! woody size modifier (1.0 for non-woody)
 
-    ! Transfer fractions: p_ij = fraction of decomposed carbon
-    ! from pool j that moves to pool i (not respired, not to humus)
+    ! Transfer fractions: p_ij means "fraction of decomposed carbon
+    ! from pool j that moves to pool i"
+    ! Named as p{dest}{source}: p12 = fraction from pool 2 going to pool 1
     REAL(dp) :: p12, p13, p14   ! into A from W, E, N
     REAL(dp) :: p21, p23, p24   ! into W from A, E, N
     REAL(dp) :: p31, p32, p34   ! into E from A, W, N
     REAL(dp) :: p41, p42, p43   ! into N from A, W, E
     REAL(dp) :: p_H             ! fraction going to humus from each AWEN pool
 
-    INTEGER  :: i
-
     ! -- Unpack decomposition rates --
     alpha(1) = params(1)   ! pool A (acid-hydrolysable)
     alpha(2) = params(2)   ! pool W (water-soluble)
     alpha(3) = params(3)   ! pool E (ethanol-soluble)
     alpha(4) = params(4)   ! pool N (non-soluble)
-    alpha(5) = params(27)  ! pool H (humus)
+    alpha(5) = params(24)  ! pool H (humus)
 
-    ! -- Unpack transfer fractions (same positional order as Yasso07 params 5-16) --
+    ! -- Unpack transfer fractions (positional, matching R PA[5:16]) --
     p12 = params(5)    ! W -> A
     p13 = params(6)    ! E -> A
     p14 = params(7)    ! N -> A
@@ -131,37 +118,35 @@ CONTAINS
     p41 = params(14)   ! A -> N
     p42 = params(15)   ! W -> N
     p43 = params(16)   ! E -> N
-    p_H = params(26)   ! all AWEN -> H (same fraction for all pools)
+    p_H = params(23)   ! all AWEN -> H (same fraction for all pools)
 
-    ! -- Woody size modifier --
-    ! Yasso15 convention: size_mod = MIN(1, (1 + d1*d + d2*d^2)^(-|r|))
-    ! Note the negative exponent and MIN(1,...) cap -- different from Yasso07.
-    ! Larger pieces decompose more slowly (size_mod <= 1).
+    ! -- Woody size modifier (Eq. 3.1 in model description) --
+    ! Reduces decomposition rate for larger woody pieces.
+    ! Only applied to AWEN pools, not H.
     ! No effect when woody_diam = 0 (non-woody litter).
     IF (woody_diam > 0.0_dp) THEN
-      size_mod = MIN(1.0_dp, (1.0_dp + params(28) * woody_diam + &
-                               params(29) * woody_diam**2)**(-ABS(params(30))))
+      size_mod = (1.0_dp + params(20) * woody_diam + &
+                  params(21) * woody_diam**2)**params(22)
     ELSE
       size_mod = 1.0_dp
     END IF
 
     ! -- Effective decomposition rates --
-    ! Pool-group-specific xi: AWE share one xi, N and H have their own.
-    ! ABS() on alpha ensures sign does not matter in parameter vector.
-    k(1) = -ABS(alpha(1)) * xi_awe * size_mod   ! A
-    k(2) = -ABS(alpha(2)) * xi_awe * size_mod   ! W
-    k(3) = -ABS(alpha(3)) * xi_awe * size_mod   ! E
-    k(4) = -ABS(alpha(4)) * xi_n   * size_mod   ! N (different climate response)
-    k(5) = -ABS(alpha(5)) * xi_h                ! H (no size effect)
+    ! k_i = alpha_i * xi * size_mod  (negative = loss from pool)
+    k(1:4) = -alpha(1:4) * xi * size_mod
+    k(5)   = -alpha(5)   * xi          ! humus: no size effect
 
     ! -- Build matrix A --
     ! Start with zeros
     A = 0.0_dp
 
     ! Diagonal: net loss rate of each pool
-    DO i = 1, NPOOLS
-      A(i,i) = k(i)
-    END DO
+    ! A(i,i) = k_i < 0  (carbon leaves pool i through decomposition)
+    A(1,1) = k(1)
+    A(2,2) = k(2)
+    A(3,3) = k(3)
+    A(4,4) = k(4)
+    A(5,5) = k(5)
 
     ! Off-diagonal AWEN transfers: A(dest, source) = p * |k(source)|
     ! Fraction p of the carbon decomposed from source goes to dest.
@@ -194,14 +179,6 @@ CONTAINS
     A(3,5) = 0.0_dp
     A(4,5) = 0.0_dp
 
-    ! -- Leaching: additive loss from AWEN diagonal --
-    ! Represents dissolved organic carbon lost via water percolation.
-    ! Proportional to precipitation (converted mm -> m).
-    ! H pool is not subject to leaching.
-    DO i = 1, 4
-      A(i,i) = A(i,i) + leac * precip / 1000.0_dp
-    END DO
-
   END SUBROUTINE build_matrix_A
 
 
@@ -209,32 +186,36 @@ CONTAINS
   ! SINGLE TIMESTEP: advance C by one year
   ! =========================================================================
   !
-  ! Identical to Yasso07 model_step except for the additional variables
-  ! needed for the diagonal dominance check (diag_abs, offdiag_sum,
-  ! well_conditioned). The logic and fallback are the same.
-  !
   ! Solves the ODE: dC/dt = A*C + b  analytically over interval [0, dt].
   !
-  ! Analytical solution:
+  ! Analytical solution (Eq. 1.3 in model description):
   !   C(t+dt) = A^{-1} * (exp(A*dt) * (A*C(t) + b) - b)
   !
-  ! Special cases:
-  !   1. No decomposition (diagonal ~ 0): simple accumulation
-  !   2. Near-singular matrix (diagonal dominance lost): Euler fallback
-  !      These correspond to near-zero respiration -- physically unrealistic,
-  !      strongly penalised by the likelihood during MCMC.
+  ! Two special cases handled before the main path:
+  !
+  !   1. No decomposition (diagonal near zero): simple accumulation
+  !      C(t+dt) = C(t) + b*dt
+  !
+  !   2. Near-singular matrix (column sums approach diagonal):
+  !      This happens when transfer fractions nearly exhaust the pool budget,
+  !      leaving almost no carbon respired. The matrix exponential then
+  !      requires excessive scaling steps and effectively hangs.
+  !      Fallback: Euler step C(t+dt) = C(t) + (A*C(t) + b)*dt
+  !      Less accurate but always terminates. These are physically unrealistic
+  !      parameter combinations (near-zero respiration) that the likelihood
+  !      will strongly penalise anyway.
   !
   ! =========================================================================
 
   SUBROUTINE model_step(A, C_prev, litter_in, dt, C_next)
 
     REAL(dp), INTENT(IN)  :: A(NPOOLS, NPOOLS)
-    REAL(dp), INTENT(IN)  :: C_prev(NPOOLS)    ! C pools at start of timestep
+    REAL(dp), INTENT(IN)  :: C_prev(NPOOLS)   ! C pools at start of timestep
     REAL(dp), INTENT(IN)  :: litter_in(NPOOLS) ! litter input rate (b vector)
-    REAL(dp), INTENT(IN)  :: dt                ! timestep length (1 year)
-    REAL(dp), INTENT(OUT) :: C_next(NPOOLS)    ! C pools at end of timestep
+    REAL(dp), INTENT(IN)  :: dt               ! timestep length (1 year)
+    REAL(dp), INTENT(OUT) :: C_next(NPOOLS)   ! C pools at end of timestep
 
-    REAL(dp) :: At(NPOOLS, NPOOLS)     ! A * dt
+    REAL(dp) :: At(NPOOLS, NPOOLS)    ! A * dt
     REAL(dp) :: mexpAt(NPOOLS, NPOOLS) ! matrix exponential exp(A*dt)
     REAL(dp) :: z1(NPOOLS), z2(NPOOLS) ! intermediate vectors
     REAL(dp) :: diag_abs, offdiag_sum  ! for diagonal dominance check
@@ -242,22 +223,24 @@ CONTAINS
     LOGICAL  :: well_conditioned
 
     ! -- Special case 1: no decomposition --
-    ! If the first two diagonal entries are essentially zero, xi ~ 0.
-    ! Just accumulate litter without decomposition.
+    ! If the first two diagonal entries are essentially zero, xi ~ 0
+    ! (no precipitation or extreme conditions). Just accumulate litter.
     IF (ABS(A(1,1)) < TOL .AND. ABS(A(2,2)) < TOL) THEN
       C_next = C_prev + litter_in * dt
       RETURN
     END IF
 
     ! -- Special case 2: near-singular matrix check --
-    ! Diagonal dominance: |A(i,i)| > sum of |A(j,i)| for j/=i.
-    ! Lost when transfer fractions nearly exhaust the pool budget (respiration -> 0).
-    ! Near-singular matrices cause matrixexp to require excessive scaling steps.
-    ! Threshold 0.9999 gives a small safety margin below exact singularity.
+    ! The A matrix is diagonally dominant when |A(i,i)| > sum of |A(j,i)| for j/=i.
+    ! This holds when the respiration fraction per pool > 0.
+    ! When transfer fractions nearly exhaust the budget (respiration -> 0),
+    ! diagonal dominance is lost and matrixexp requires huge scaling steps.
+    ! We check: offdiag column sum < 0.9999 * |diagonal|
+    ! (0.9999 rather than 1.0 gives a small safety margin)
     well_conditioned = .TRUE.
     DO i = 1, NPOOLS
       diag_abs    = ABS(A(i,i))
-      offdiag_sum = SUM(ABS(A(:,i))) - diag_abs
+      offdiag_sum = SUM(ABS(A(:,i))) - diag_abs  ! sum of off-diagonal in column i
       IF (diag_abs < TOL .OR. offdiag_sum > diag_abs * 0.9999_dp) THEN
         well_conditioned = .FALSE.
         EXIT
@@ -323,31 +306,26 @@ CONTAINS
   ! coarse woody litter, then concatenates into C_init(15).
   !
   ! Each litter type has its own size modifier (via woody_diam), so three
-  ! separate A matrices are built. xi_*_mean are long-run average climate
-  ! modifiers, pre-computed in R.
+  ! separate A matrices are built. xi_mean is the long-run average climate
+  ! modifier, pre-computed in R.
   !
   ! Output layout: C_init = [C_nwl(1:5) | C_fwl(6:10) | C_cwl(11:15)]
   !
   ! =========================================================================
 
-  SUBROUTINE yasso15_steady_state(params, &
+  SUBROUTINE yasso07_steady_state(params, &
                                    nwl_mean, fwl_mean, cwl_mean, &
-                                   xi_awe_mean, xi_n_mean, xi_h_mean, &
-                                   leac, precip_mean, &
+                                   xi_mean, &
                                    diam_fwl, diam_cwl, &
                                    C_init)
 
-    REAL(dp), INTENT(IN)  :: params(35)
-    REAL(dp), INTENT(IN)  :: nwl_mean(4)    ! mean annual AWEN litter input, non-woody
-    REAL(dp), INTENT(IN)  :: fwl_mean(4)    ! mean annual AWEN litter input, fine woody
-    REAL(dp), INTENT(IN)  :: cwl_mean(4)    ! mean annual AWEN litter input, coarse woody
-    REAL(dp), INTENT(IN)  :: xi_awe_mean    ! mean climate modifier for AWE pools
-    REAL(dp), INTENT(IN)  :: xi_n_mean      ! mean climate modifier for N pool
-    REAL(dp), INTENT(IN)  :: xi_h_mean      ! mean climate modifier for H pool
-    REAL(dp), INTENT(IN)  :: leac           ! leaching scalar (site-level)
-    REAL(dp), INTENT(IN)  :: precip_mean    ! mean annual precipitation [mm]
-    REAL(dp), INTENT(IN)  :: diam_fwl       ! diameter of fine woody litter [cm]
-    REAL(dp), INTENT(IN)  :: diam_cwl       ! diameter of coarse woody litter [cm]
+    REAL(dp), INTENT(IN)  :: params(24)
+    REAL(dp), INTENT(IN)  :: nwl_mean(4)   ! mean annual AWEN litter input, non-woody
+    REAL(dp), INTENT(IN)  :: fwl_mean(4)   ! mean annual AWEN litter input, fine woody
+    REAL(dp), INTENT(IN)  :: cwl_mean(4)   ! mean annual AWEN litter input, coarse woody
+    REAL(dp), INTENT(IN)  :: xi_mean       ! mean climate modifier
+    REAL(dp), INTENT(IN)  :: diam_fwl      ! diameter of fine woody litter [cm]
+    REAL(dp), INTENT(IN)  :: diam_cwl      ! diameter of coarse woody litter [cm]
     REAL(dp), INTENT(OUT) :: C_init(3 * NPOOLS)
 
     REAL(dp) :: A(NPOOLS, NPOOLS)
@@ -357,28 +335,25 @@ CONTAINS
     ! -- Non-woody litter (no size effect) --
     litter(1:4) = nwl_mean
     litter(5)   = 0.0_dp           ! no direct litter input to H pool
-    CALL build_matrix_A(params, xi_awe_mean, xi_n_mean, xi_h_mean, &
-                         0.0_dp, leac, precip_mean, A)
+    CALL build_matrix_A(params, xi_mean, 0.0_dp, A)
     CALL model_steady_state(A, litter, C_ss)
     C_init(1:5) = C_ss
 
     ! -- Fine woody litter --
     litter(1:4) = fwl_mean
     litter(5)   = 0.0_dp
-    CALL build_matrix_A(params, xi_awe_mean, xi_n_mean, xi_h_mean, &
-                         diam_fwl, leac, precip_mean, A)
+    CALL build_matrix_A(params, xi_mean, diam_fwl, A)
     CALL model_steady_state(A, litter, C_ss)
     C_init(6:10) = C_ss
 
     ! -- Coarse woody litter --
     litter(1:4) = cwl_mean
     litter(5)   = 0.0_dp
-    CALL build_matrix_A(params, xi_awe_mean, xi_n_mean, xi_h_mean, &
-                         diam_cwl, leac, precip_mean, A)
+    CALL build_matrix_A(params, xi_mean, diam_cwl, A)
     CALL model_steady_state(A, litter, C_ss)
     C_init(11:15) = C_ss
 
-  END SUBROUTINE yasso15_steady_state
+  END SUBROUTINE yasso07_steady_state
 
 
   ! =========================================================================
@@ -386,8 +361,7 @@ CONTAINS
   ! =========================================================================
   !
   ! Advances C pools forward in time, one year at a time.
-  ! Receives pre-computed xi arrays (one value per pool group per year)
-  ! and precip_array (needed for the leaching term in build_matrix_A).
+  ! Each year uses the current xi from xi_array (pre-computed in R).
   !
   ! Three litter types (nwl, fwl, cwl) are tracked separately because they
   ! have different size modifiers, then summed for output.
@@ -397,50 +371,39 @@ CONTAINS
   !
   ! Input layout:
   !   C_init(15) = [C_nwl(1:5) | C_fwl(6:10) | C_cwl(11:15)]
-  !   *_awen: annual litter inputs, rows = years, cols = AWEN
-  !   xi_*_array: annual climate modifiers per pool group
-  !   precip_array: annual precipitation [mm]
+  !   nwl_awen, fwl_awen, cwl_awen: annual litter inputs, rows = years
+  !   xi_array: annual climate modifier, length = n_years
   !
   ! Output layout:
   !   C_out(n_years, 5): total C per pool (summed across litter types)
   !   resp_out(n_years): total annual respiration
-  !   C_final(15): terminal per-cohort pool state [C_nwl | C_fwl | C_cwl]
-  !     at the end of the last simulated year. Use as C_init for a chained
-  !     projection run (e.g. forward projection beyond historical period).
   !
   ! =========================================================================
 
-  SUBROUTINE yasso15_run(n_years, params, &
+  SUBROUTINE yasso07_run(n_years, params, &
                           nwl_awen, fwl_awen, cwl_awen, &
-                          xi_awe_array, xi_n_array, xi_h_array, &
-                          leac, precip_array, &
+                          xi_array, &
                           diam_fwl, diam_cwl, &
                           C_init, &
-                          C_out, resp_out, C_final)
+                          C_out, resp_out)
 
     INTEGER,  INTENT(IN)    :: n_years
-    REAL(dp), INTENT(IN)    :: params(35)
+    REAL(dp), INTENT(IN)    :: params(24)
     REAL(dp), INTENT(IN)    :: nwl_awen(n_years, 4)
     REAL(dp), INTENT(IN)    :: fwl_awen(n_years, 4)
     REAL(dp), INTENT(IN)    :: cwl_awen(n_years, 4)
-    REAL(dp), INTENT(IN)    :: xi_awe_array(n_years)  ! climate modifier for AWE
-    REAL(dp), INTENT(IN)    :: xi_n_array(n_years)    ! climate modifier for N
-    REAL(dp), INTENT(IN)    :: xi_h_array(n_years)    ! climate modifier for H
-    REAL(dp), INTENT(IN)    :: leac                   ! leaching scalar (site-level)
-    REAL(dp), INTENT(IN)    :: precip_array(n_years)  ! annual precipitation [mm]
+    REAL(dp), INTENT(IN)    :: xi_array(n_years)
     REAL(dp), INTENT(IN)    :: diam_fwl, diam_cwl
     REAL(dp), INTENT(IN)    :: C_init(3 * NPOOLS)
     REAL(dp), INTENT(INOUT) :: C_out(n_years, NPOOLS)
     REAL(dp), INTENT(INOUT) :: resp_out(n_years)
-    REAL(dp), INTENT(OUT)   :: C_final(3 * NPOOLS)
 
-    REAL(dp) :: dt
+    REAL(dp) :: xi, dt
     REAL(dp) :: A_nwl(NPOOLS,NPOOLS), A_fwl(NPOOLS,NPOOLS), A_cwl(NPOOLS,NPOOLS)
     REAL(dp) :: C_nwl(NPOOLS), C_fwl(NPOOLS), C_cwl(NPOOLS)
     REAL(dp) :: C_nwl_next(NPOOLS), C_fwl_next(NPOOLS), C_cwl_next(NPOOLS)
     REAL(dp) :: litter_nwl(NPOOLS), litter_fwl(NPOOLS), litter_cwl(NPOOLS)
     REAL(dp) :: C_total_prev, C_total_next, input_total
-    REAL(dp) :: xi_awe, xi_n, xi_h, precip
     INTEGER  :: yr
 
     dt = 1.0_dp   ! annual timestep
@@ -452,11 +415,8 @@ CONTAINS
 
     DO yr = 1, n_years
 
-      ! Climate modifiers and precipitation for this year (pre-computed in R)
-      xi_awe = xi_awe_array(yr)
-      xi_n   = xi_n_array(yr)
-      xi_h   = xi_h_array(yr)
-      precip = precip_array(yr)
+      ! Climate modifier for this year (pre-computed in R)
+      xi = xi_array(yr)
 
       ! Litter inputs for this year (H pool receives no direct input)
       litter_nwl(1:4) = nwl_awen(yr, :)
@@ -470,10 +430,10 @@ CONTAINS
       C_total_prev = SUM(C_nwl) + SUM(C_fwl) + SUM(C_cwl)
       input_total  = SUM(litter_nwl) + SUM(litter_fwl) + SUM(litter_cwl)
 
-      ! Build decomposition matrices for this year's climate
-      CALL build_matrix_A(params, xi_awe, xi_n, xi_h, 0.0_dp,   leac, precip, A_nwl)
-      CALL build_matrix_A(params, xi_awe, xi_n, xi_h, diam_fwl, leac, precip, A_fwl)
-      CALL build_matrix_A(params, xi_awe, xi_n, xi_h, diam_cwl, leac, precip, A_cwl)
+      ! Build decomposition matrices for this year's xi
+      CALL build_matrix_A(params, xi, 0.0_dp,   A_nwl)
+      CALL build_matrix_A(params, xi, diam_fwl, A_fwl)
+      CALL build_matrix_A(params, xi, diam_cwl, A_cwl)
 
       ! Advance each litter type by one year
       CALL model_step(A_nwl, C_nwl, litter_nwl, dt, C_nwl_next)
@@ -494,15 +454,7 @@ CONTAINS
 
     END DO
 
-    ! -- Write terminal per-cohort state --
-    ! C_nwl, C_fwl, C_cwl hold the pool values at the end of the last year.
-    ! Returned as C_final so the R caller can chain a projection run without
-    ! losing the per-cohort breakdown (which C_out does not preserve).
-    C_final(1:5)   = C_nwl
-    C_final(6:10)  = C_fwl
-    C_final(11:15) = C_cwl
-
-  END SUBROUTINE yasso15_run
+  END SUBROUTINE yasso07_run
 
 
   ! =========================================================================
@@ -548,6 +500,8 @@ CONTAINS
     END DO
 
     ! -- Step 1: find scaling factor 2^j such that ||A|| < 2^j --
+    ! j counts how many times we need to halve A.
+    ! normiter doubles each iteration: 2, 4, 8, 16, ...
     normiter = 2.0_dp
     j = 1
     CALL matrixnorm(A, p)
@@ -575,6 +529,7 @@ CONTAINS
 
     ! -- Step 3: recover exp(A) by repeated squaring --
     ! exp(A) = exp(A/2^j)^{2^j} = B^{2^j}
+    ! Each squaring doubles the exponent: B -> B^2 -> B^4 -> ... -> B^{2^j}
     DO i = 1, j
       B = MATMUL(B, B)
     END DO
@@ -649,7 +604,8 @@ CONTAINS
   !
   ! Transforms A*x = b into upper triangular form U*x = c.
   ! At each step k, swaps rows to bring the largest element in column k
-  ! to the pivot position -- avoids dividing by very small numbers.
+  ! to the pivot position -- this is partial pivoting, which avoids
+  ! dividing by very small numbers that would amplify rounding errors.
   !
   ! =========================================================================
 
@@ -696,7 +652,7 @@ CONTAINS
 
   END SUBROUTINE pgauss5
 
-END MODULE yasso15_mod
+END MODULE yasso07_mod
 
 
 ! =============================================================================
@@ -711,77 +667,62 @@ END MODULE yasso15_mod
 
 ! -----------------------------------------------------------------------------
 ! Steady-state initialisation
-! Called from R: yasso15_steady_state(params, nwl_mean, fwl_mean, cwl_mean,
-!                                      xi_awe_mean, xi_n_mean, xi_h_mean,
-!                                      leac, precip_mean, diam_fwl, diam_cwl)
+! Called from R: yasso07_steady_state(params, nwl_mean, fwl_mean, cwl_mean,
+!                                      xi_mean, diam_fwl, diam_cwl)
 ! -----------------------------------------------------------------------------
-SUBROUTINE yasso15_steady_state_r(params, &
+SUBROUTINE yasso07_steady_state_r(params, &
                                    nwl_mean, fwl_mean, cwl_mean, &
-                                   xi_awe_mean, xi_n_mean, xi_h_mean, &
-                                   leac, precip_mean, &
+                                   xi_mean, &
                                    diam_fwl, diam_cwl, &
                                    C_init)
-  USE yasso15_mod
+  USE yasso07_mod
   IMPLICIT NONE
 
-  REAL(dp), INTENT(IN)  :: params(35)
+  REAL(dp), INTENT(IN)  :: params(24)
   REAL(dp), INTENT(IN)  :: nwl_mean(4), fwl_mean(4), cwl_mean(4)
-  REAL(dp), INTENT(IN)  :: xi_awe_mean, xi_n_mean, xi_h_mean
-  REAL(dp), INTENT(IN)  :: leac, precip_mean
+  REAL(dp), INTENT(IN)  :: xi_mean
   REAL(dp), INTENT(IN)  :: diam_fwl, diam_cwl
   REAL(dp), INTENT(OUT) :: C_init(15)
 
-  CALL yasso15_steady_state(params, &
+  CALL yasso07_steady_state(params, &
                              nwl_mean, fwl_mean, cwl_mean, &
-                             xi_awe_mean, xi_n_mean, xi_h_mean, &
-                             leac, precip_mean, &
+                             xi_mean, &
                              diam_fwl, diam_cwl, &
                              C_init)
 
-END SUBROUTINE yasso15_steady_state_r
+END SUBROUTINE yasso07_steady_state_r
 
 
 ! -----------------------------------------------------------------------------
 ! Transient forward simulation
-! Called from R: yasso15_run(n_years, params, nwl_awen, fwl_awen, cwl_awen,
-!                             xi_awe_array, xi_n_array, xi_h_array,
-!                             leac, precip_array, diam_fwl, diam_cwl, C_init,
-!                             C_out, resp_out, C_final)
-! C_final(15): terminal per-cohort state [C_nwl | C_fwl | C_cwl].
-!   Use as C_init for a chained projection run.
+! Called from R: yasso07_run(n_years, params, nwl_awen, fwl_awen, cwl_awen,
+!                             xi_array, diam_fwl, diam_cwl, C_init)
 ! -----------------------------------------------------------------------------
-SUBROUTINE yasso15_run_r(n_years, params, &
+SUBROUTINE yasso07_run_r(n_years, params, &
                           nwl_awen, fwl_awen, cwl_awen, &
-                          xi_awe_array, xi_n_array, xi_h_array, &
-                          leac, precip_array, &
+                          xi_array, &
                           diam_fwl, diam_cwl, &
                           C_init, &
-                          C_out, resp_out, C_final)
-  USE yasso15_mod
+                          C_out, resp_out)
+  USE yasso07_mod
   IMPLICIT NONE
 
   INTEGER,  INTENT(IN)    :: n_years
-  REAL(dp), INTENT(IN)    :: params(35)
+  REAL(dp), INTENT(IN)    :: params(24)
   REAL(dp), INTENT(IN)    :: nwl_awen(n_years, 4)
   REAL(dp), INTENT(IN)    :: fwl_awen(n_years, 4)
   REAL(dp), INTENT(IN)    :: cwl_awen(n_years, 4)
-  REAL(dp), INTENT(IN)    :: xi_awe_array(n_years)
-  REAL(dp), INTENT(IN)    :: xi_n_array(n_years)
-  REAL(dp), INTENT(IN)    :: xi_h_array(n_years)
-  REAL(dp), INTENT(IN)    :: leac
-  REAL(dp), INTENT(IN)    :: precip_array(n_years)
+  REAL(dp), INTENT(IN)    :: xi_array(n_years)
   REAL(dp), INTENT(IN)    :: diam_fwl, diam_cwl
   REAL(dp), INTENT(IN)    :: C_init(15)
   REAL(dp), INTENT(INOUT) :: C_out(n_years, 5)
   REAL(dp), INTENT(INOUT) :: resp_out(n_years)
-  REAL(dp), INTENT(OUT)   :: C_final(15)
 
-  CALL yasso15_run(n_years, params, &
+  CALL yasso07_run(n_years, params, &
                    nwl_awen, fwl_awen, cwl_awen, &
-                   xi_awe_array, xi_n_array, xi_h_array, &
-                   leac, precip_array, &
+                   xi_array, &
                    diam_fwl, diam_cwl, &
                    C_init, &
-                   C_out, resp_out, C_final)
+                   C_out, resp_out)
 
-END SUBROUTINE yasso15_run_r
+END SUBROUTINE yasso07_run_r

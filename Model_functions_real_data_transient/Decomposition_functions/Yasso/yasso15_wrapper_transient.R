@@ -247,18 +247,21 @@ yasso15_run <- function(input_df, params, C_init, xi_arrays,
                      diam_cwl      = as.single(diam_cwl),
                      C_init        = as.single(C_init),
                      C_out         = single(n_years * 5),
-                     resp_out      = single(n_years)
+                     resp_out      = single(n_years),
+                     C_final       = single(15)       # terminal per-cohort state
   )
   
   C_mat <- matrix(as.double(result$C_out), nrow = n_years, ncol = 5)
   colnames(C_mat) <- c("A", "W", "E", "N", "H")
   
-  data.frame(
+  out <- data.frame(
     year        = input_df$year,
     C_mat,
     total_soc   = rowSums(C_mat),
     respiration = as.double(result$resp_out)
   )
+  attr(out, "C_final") <- as.double(result$C_final)
+  out
 }
 
 # =============================================================================

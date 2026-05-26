@@ -163,11 +163,11 @@ print(metrics_df[, c("Model","R2","RMSE_median","Bias_median","Coverage_95")])
 obs_pred_png <- file.path(DIR_OUT,
                           sprintf("multimodel_obs_vs_pred_%s.png", COMP_ID))
 
-# Shared axis limits across all five models for comparability
-ax_max <- max(sapply(MODELS, function(m) {
-  max(c(pp[[m]]$residuals_df$soc_obs_tCha,
-        pp[[m]]$residuals_df$soc_q975), na.rm = TRUE)
-})) * 1.05
+# Shared axis limit, anchor to observations, which are physically bounded.
+# soc_q975 bars for stable models extend slightly beyond, which is fine.
+all_obs_vals <- do.call(c, lapply(MODELS, function(m)
+  pp[[m]]$residuals_df$soc_obs_tCha))
+ax_max <- max(all_obs_vals, na.rm = TRUE) * 1.50   # 50% headroom for CI bars
 ax_lim <- c(0, ax_max)
 
 png(obs_pred_png,
@@ -290,9 +290,15 @@ obs_mean_delta <- mean(obs_delta$delta_obs, na.rm = TRUE)
 obs_se_delta   <- sd(obs_delta$delta_obs, na.rm = TRUE) / sqrt(nrow(obs_delta))
 
 # Shared y limits
-all_vals <- c(unlist(lapply(traj_list, function(t) c(t$q025, t$q975))),
-              obs_mean_delta + c(-1.96, 1.96) * obs_se_delta, 0)
-ylim_r <- range(all_vals, na.rm = TRUE)
+# Cap at a physically meaningful rate; Finnish forest SOC can't change
+# faster than ~5 tC/ha/yr. Yasso20's trajectory is drawn; it just exits the panel.
+RATE_CAP_ABS <- 5.0   # tC/ha/yr
+safe_vals <- c(
+  unlist(lapply(MODELS[MODELS != "Yasso20"], function(m)
+    c(traj_list[[m]]$q025, traj_list[[m]]$q975))),
+  obs_mean_delta + c(-1.96, 1.96) * obs_se_delta, 0)
+ylim_r <- range(safe_vals, na.rm = TRUE)
+ylim_r <- c(max(ylim_r[1], -RATE_CAP_ABS), min(ylim_r[2], RATE_CAP_ABS))
 ylim_r <- ylim_r + c(-0.05, 0.05) * diff(ylim_r)
 
 all_years <- sort(unique(unlist(lapply(traj_list, `[[`, "year"))))
@@ -661,6 +667,54 @@ if (!is.null(site_raw_proj) && "nfi_region" %in% names(site_raw_proj)) {
   })
   names(proj_reg) <- MODELS
   
+  # --- Observed SOC at campaign years, aggregated by NFI region ---------------
+  # Use the first model's posterior_summary (observations are model-invariant).
+  # For each (region, year) where soc_obs_tCha is non-NA — i.e. a real field
+  # campaign measurement exists — compute the cross-plot median and the 2.5th /
+  # 97.5th percentiles of the site-level distribution.  This mirrors the
+  # summary statistic used for model predictions (median) and uses the same
+  # North/South colour coding, so campaign points are visually coherent with
+  # the model ribbons.  Campaign years are discovered automatically from the
+  # data without hard-coding year values.
+  obs_regional_campaigns <- tryCatch({
+    obs_ps <- pp[[MODELS[1]]]$posterior_summary
+    obs_ps$plot_id <- as.character(obs_ps$plot_id)
+    obs_ps <- merge(obs_ps, region_lookup, by = "plot_id", all.x = FALSE)
+    obs_ps <- obs_ps[!is.na(obs_ps$soc_obs_tCha), ]
+    
+    if (nrow(obs_ps) == 0) {
+      warning("[projection obs] No non-NA soc_obs_tCha rows after region join")
+      NULL
+    } else {
+      split_key <- paste(obs_ps$nfi_region, obs_ps$year, sep = ":")
+      do.call(rbind, Filter(Negate(is.null), lapply(
+        split(obs_ps, split_key), function(df) {
+          if (nrow(df) == 0) return(NULL)
+          data.frame(
+            nfi_region = df$nfi_region[1],
+            year       = df$year[1],
+            obs_median = median(df$soc_obs_tCha, na.rm = TRUE),
+            obs_q025   = quantile(df$soc_obs_tCha, 0.025, na.rm = TRUE),
+            obs_q975   = quantile(df$soc_obs_tCha, 0.975, na.rm = TRUE),
+            n_plots    = nrow(df),
+            stringsAsFactors = FALSE,
+            row.names  = NULL
+          )
+        }
+      )))
+    }
+  }, error = function(e) {
+    warning(sprintf("[projection obs] Could not aggregate observed campaigns: %s",
+                    conditionMessage(e)))
+    NULL
+  })
+  
+  if (!is.null(obs_regional_campaigns))
+    message(sprintf("[projection obs] Found %d campaign×region combinations (%s)",
+                    nrow(obs_regional_campaigns),
+                    paste(sort(unique(obs_regional_campaigns$year)),
+                          collapse = ", ")))
+  
   # --- Shared x range (historical + projection) ------------------------------
   all_years <- sort(unique(c(
     unlist(lapply(hist_reg, function(d) if (!is.null(d)) d$year)),
@@ -736,16 +790,67 @@ if (!is.null(site_raw_proj) && "nfi_region" %in% names(site_raw_proj)) {
               side = 1, line = -1.5, cex = 0.62, col = "grey35", adj = 0.05)
     }
     
+    # Observed campaign points — drawn on top of ribbons so they are never
+    # occluded.  One point per (region, campaign year): median across sites,
+    # with vertical error bars spanning the 2.5th – 97.5th percentile of the
+    # cross-site SOC distribution.  Same North/South colour coding as the
+    # model trajectories; filled circles (pch 21) with a white fill so the
+    # point is distinguishable from the ribbon even when colours overlap.
+    if (!is.null(obs_regional_campaigns)) {
+      for (reg in c("North", "South")) {
+        col   <- REGION_COLS[reg]
+        obs_r <- obs_regional_campaigns[obs_regional_campaigns$nfi_region == reg, ]
+        if (nrow(obs_r) == 0) next
+        obs_r <- obs_r[order(obs_r$year), ]
+        # Vertical bar + crossbar whiskers
+        arrows(obs_r$year, pmin(obs_r$obs_q025, Y_MAX_PROJ),
+               obs_r$year, pmin(obs_r$obs_q975, Y_MAX_PROJ),
+               angle = 90, code = 3, length = 0.04,
+               col = col, lwd = 1.5)
+        # Median point (white fill keeps it readable on top of any ribbon)
+        points(obs_r$year, pmin(obs_r$obs_median, Y_MAX_PROJ),
+               pch = 21, cex = 1.4,
+               col = col, bg = "white", lwd = 2.0)
+      }
+    }
+    
     # Legend on first panel only
-    if (m == MODELS[1])
-      legend("topleft",
-             legend  = c("North — median (95% CI)",
-                         "South — median (95% CI)",
-                         "Last obs. year (2006)"),
-             col     = c(REGION_COLS, "grey55"),
-             lwd     = c(2.2, 2.2, 1.2),
-             lty     = c(REGION_LTY, 3),
-             bty     = "n", cex = 0.78)
+    if (m == MODELS[1]) {
+      # Observed campaign entries use pch=21 (point-only, no line segment).
+      # They are conditionally appended so the legend degrades gracefully if
+      # obs_regional_campaigns could not be built (e.g. old bundle format).
+      obs_legend_entries <- if (!is.null(obs_regional_campaigns))
+        c("Observed — North (median \u00b1 95% range)",
+          "Observed — South (median \u00b1 95% range)")
+      else character(0)
+      
+      legend(
+        "topleft",
+        legend = c("North — model median (95% CI)",
+                   "South — model median (95% CI)",
+                   "Last obs. year (2006)",
+                   obs_legend_entries),
+        col    = c(REGION_COLS["North"], REGION_COLS["South"],
+                   "grey55",
+                   if (!is.null(obs_regional_campaigns))
+                     c(REGION_COLS["North"], REGION_COLS["South"]) else c()),
+        lwd    = c(2.2, 2.2, 1.2,
+                   if (!is.null(obs_regional_campaigns))
+                     c(NA_real_, NA_real_) else c()),
+        lty    = c(REGION_LTY["North"], REGION_LTY["South"], 3,
+                   if (!is.null(obs_regional_campaigns))
+                     c(0L, 0L) else c()),
+        pch    = c(NA_integer_, NA_integer_, NA_integer_,
+                   if (!is.null(obs_regional_campaigns))
+                     c(21L, 21L) else c()),
+        pt.bg  = c(NA, NA, NA,
+                   if (!is.null(obs_regional_campaigns))
+                     c("white", "white") else c()),
+        pt.cex = c(1, 1, 1,
+                   if (!is.null(obs_regional_campaigns))
+                     c(1.3, 1.3) else c()),
+        bty    = "n", cex = 0.75)
+    }
   }
   
   mtext(

@@ -286,9 +286,12 @@ t_proj <- system.time({
       inputs_proj      <- tail(inputs, 1L)[rep(1L, PROJ_YEARS), , drop = FALSE]
       inputs_proj$year <- proj_yrs
 
-      # -- Initial state: terminal pool values from historical run ------------
-      C_proj_init <- unlist(run_hist[nrow(run_hist), POOL_COLS])
-
+      # -- Initial state: exact terminal per-cohort state from historical run -
+      # Fortran yasso15_run_r now returns C_final(15) = [C_nwl|C_fwl|C_cwl],
+      # attached as attr(run_hist, "C_final") by yasso15_run in the wrapper.
+      # Covers Yasso20 too (reuses yasso15.so). Lossless chain, no discontinuity.
+      C_proj_init <- attr(run_hist, "C_final")
+      
       # -- Forward run --------------------------------------------------------
       # clim_proj$precip carries the recycled annual precip for the leaching term
       xi_proj <- tryCatch(compute_xi_yasso15_engine(clim_proj, model_params),
