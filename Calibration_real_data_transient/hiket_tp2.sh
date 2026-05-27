@@ -4,7 +4,7 @@
 #SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/tp2_%j.out
 #SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/tp2_%j.err
 #SBATCH --partition=small
-#SBATCH --time=18:00:00
+#SBATCH --time=48:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1

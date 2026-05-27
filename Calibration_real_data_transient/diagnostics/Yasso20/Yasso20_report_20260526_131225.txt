@@ -1,0 +1,49 @@
+=========================================================
+  Yasso20 Calibration Report
+  Run ID:    20260526_131225
+  Started:   2026-05-26 14:55:32
+  Wallclock: 102.3 minutes
+=========================================================
+
+[1] Pre-MCMC sanity
+    Likelihood at defaults:        -11374.633   [PASS]
+    Plots in calibration:                 447
+    SOC observations:                    1121
+    Steady-state window (years):           20
+    sigma_obs (fixed):                 0.4723
+    Forward-run sanity check:      [PASS]
+
+[2] Chain health
+     ch     init_ll    final_ll     evals  inf_rate  wall_min  delta_ll
+    ----------------------------------------------------------------
+      1  -11374.633   -6122.363      4229    0.00%      20.8  +5252.269
+      2  -11374.633   -6119.341      4561    0.00%      21.9  +5255.292
+      3  -11374.633   -6128.294      4528    0.00%      21.8  +5246.339
+      4  -11374.633   -6123.037      3587    0.00%      17.4  +5251.596
+      5  -11374.633   -6114.781      4356    0.00%      20.4  +5259.852
+    Final-ll spread across chains: 13.513   [WARN]
+    Max -Inf rate across chains:   0.00%   [PASS]
+
+[3] Convergence
+    Univariate R-hat:    1.1566 -- 3.3286   [WARN]
+    Worst-converged parameters:
+        gammaN           3.3286
+        p_NW             3.1414
+        p_AW             2.4096
+        betaH1           2.3006
+        betaN1           2.2994
+    Multivariate R-hat:  5.4001             [WARN]
+    ESS:                    4 -- 83   (26 < 200)   [WARN]
+
+[4] Posterior shape
+    Params within 0.5 sigma_ppm of prior centre:  22 / 26
+        p_AW, p_AE, p_AN, p_WA, p_WE, p_WN, p_EA, p_EW, p_EN, p_NA, p_NW, p_NE, beta1, beta2, gamma, betaN2, gammaN, betaH1, betaH2, delta1, delta2, r
+    Top correlated pairs (|rho| > 0.7):
+        p_NW         <-> p_NA          -0.832
+        p_NE         <-> p_NA          -0.825
+        betaH1       <-> betaN1        +0.734
+        p_AN         <-> p_AW          -0.712
+
+=========================================================
+  Status: PASS with 53 warning(s) -- inspect above
+=========================================================

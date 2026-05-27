@@ -1,6 +1,6 @@
 ---
-title: "HIKET --- Bayesian Calibration"
-subtitle: "Methods and pipeline documentation"
+title: "HIKET --- Bayesian Calibration of Forest SOC Models"
+subtitle: "Methods and pipeline documentation (transient pre-initialisation)"
 author: "Lorenzo Menichetti"
 date: "`r format(Sys.Date(), '%B %Y')`"
 output:
@@ -9,7 +9,7 @@ output:
     toc_depth: 3
     number_sections: true
     latex_engine: xelatex
-    extra_dependencies: ["booktabs", "amsmath", "longtable", "array"]
+    extra_dependencies: ["booktabs", "amsmath", "longtable", "array", "siunitx"]
 geometry: margin=2.5cm
 fontsize: 11pt
 ---
@@ -20,970 +20,967 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 # Overview
 
-This document describes the Bayesian calibration pipeline for the HIKET
-multi-model SOC intercomparison study. The calibration is implemented in a
-model-agnostic engine (`calibration_engine.R`) and five model-specific
-orchestration scripts (`run_{Model}_calibration.R`).
+This document describes the Bayesian calibration framework underlying the
+HIKET intercomparison of soil organic carbon (SOC) decomposition models for
+Finnish forest ecosystems. The pipeline is implemented in a model-agnostic
+engine (`calibration_engine_transient.R`) and five model-specific
+orchestration scripts.
 
-**Models in the intercomparison:** SP1, TP2, Yasso07, Yasso15, Yasso20.
+## Research question
 
-**Model complexity spectrum.** The five models form a deliberate complexity
-ladder: SP1 (1 pool, 6 free parameters), TP2 (2 pools, 8 free parameters),
-and Yasso07/15/20 (5 pools, 15--26 free parameters depending on version).
-This design allows the question ``how much structural complexity does Finnish
-SOC data actually require?'' to be answered quantitatively, with all models
-calibrated under the same statistical framework against the same data.
+Divergent projections of the Finnish forest carbon sink saturation point
+emerge from existing SOC models. Are these differences a property of model
+*structure*, or artefacts of *calibration*? HIKET addresses this by
+calibrating five models against the same data, with identical likelihood,
+data filtering, and observation-error assumptions, so that residual
+differences are attributable to structure rather than to parametric
+freedom.
 
-**Why not RothC?** RothC was originally planned as the fifth comparison model
-but was replaced by SP1 and TP2. RothC introduces conceptual differences
-beyond pool count --- clay-based partitioning, a moisture deficit calculation,
-and an inert organic matter definition --- that confound the structural
-comparison. SP1 and TP2 provide a cleaner complexity ladder in which each
-step adds precisely one structural element (a second pool and one transfer
-coefficient) while keeping the climate modifier, litter inputs, and likelihood
-architecture identical.
+## Models
 
-**Core research question:** Do divergent model projections of Finnish forest
-carbon sink saturation reflect genuine structural differences between models,
-or calibration artefacts? All models are calibrated against the same data
-with the same statistical framework; structural differences are designed to
-appear in residuals rather than being absorbed into error terms.
+Five models span a complexity ladder crossed with two climate-integration
+choices:
 
-**Pipeline split:**
+| Model    | Pools | Free params | Climate $\xi$            | Notes                         |
+|----------|------:|------------:|--------------------------|-------------------------------|
+| SP1      | 1     | 6           | single triplet, Yasso07  | Pure R                        |
+| TP2      | 2     | 8           | single triplet, Yasso07  | ICBM topology, pure R         |
+| Yasso07  | 5     | 18          | single triplet           | Fortran core                  |
+| Yasso15  | 5     | 28          | pool-group-specific      | Fortran core (yasso15.so)     |
+| Yasso20  | 5     | 28          | pool-group-specific, monthly $T$ | Same Fortran as Yasso15 |
 
-| Script | Purpose |
-|---|---|
-| `Data_work.R` | Data preparation |
-| `run_{Model}_calibration.R` | MCMC calibration, posterior samples |
-| `run_{Model}_predictive.R` | Posterior predictive trajectories, obs vs pred |
-| `run_residual_analysis.R` | Random forest residual analysis (model-agnostic) |
-| `run_multimodel_comparison.R` | Cross-model metrics and overlay plots |
+SP1 $\rightarrow$ TP2 $\rightarrow$ Yasso07 isolates the effect of adding
+pools (1 $\rightarrow$ 2 $\rightarrow$ 5). Yasso07 $\rightarrow$ Yasso15
+isolates the effect of pool-group-specific climate response (single $\xi$
+$\rightarrow$ three $\xi$). Yasso15 $\rightarrow$ Yasso20 isolates the
+effect of intra-annual temperature integration (Gaussian quarterly
+approximation $\rightarrow$ direct monthly average). All other modelling
+choices --- AWEN fractionation, decomposition rates, observation error,
+likelihood form, prior structure, initialisation strategy --- are held
+identical wherever possible.
+
+SP1 and TP2 share the Yasso07 $\xi$ functional form, with independently
+calibrated $(\beta_1, \beta_2, \gamma)$. This guarantees that the
+climate-response comparison across the complexity ladder is not confounded
+by approximation-scheme differences.
+
+## Pipeline
+
+| Script                          | Purpose                                                   |
+|---------------------------------|-----------------------------------------------------------|
+| `Data_work.R`                   | Data preparation (separately documented)                  |
+| `run_{Model}_transient_calibration.R` | MCMC calibration; produces posterior samples        |
+| `run_{Model}_transient_predictive.R`  | Posterior predictive trajectories, residuals        |
+| `run_residual_analysis.R`             | Random-forest residual analysis (model-agnostic)    |
+| `run_multimodel_comparison.R`         | Cross-model metrics and overlay plots               |
+
+This document covers the calibration stage only. Data preparation is
+documented in `Data_work.R` itself.
 
 ---
 
 # Models
 
-## SP1 (Single-Pool)
+All five models follow first-order kinetics: each pool decomposes at a rate
+proportional to its size, modulated by a climate modifier $\xi$. The
+litter input $J$ is partitioned by chemical composition (AWEN: acid-,
+water-, ethanol-, and non-soluble fractions), and the partitioning is
+fixed from the input data.
 
-SP1 is the simplest model in the suite. All litter inputs (NWL + FWL + CWL,
-all AWEN fractions collapsed to a single total flux $J$) enter one carbon
-pool $C$, which decomposes by first-order kinetics:
+## SP1 (single pool)
 
-$$\frac{dC}{dt} = J(t) - \alpha \, \xi(t) \, C(t)$$
+All litter inputs --- NWL (non-woody), FWL (fine woody), CWL (coarse
+woody), summed across AWEN fractions --- enter a single pool $C$ which
+decomposes by first-order kinetics:
 
-The steady-state pool size is $C^* = J / (\alpha \xi)$, and the annual
-step solution is exact:
+$$\frac{dC}{dt} = J(t) - \alpha\, \xi(t)\, C(t).$$
 
-$$C(t+1) = C_{\mathrm{ss}}(t) + \bigl(C(t) - C_{\mathrm{ss}}(t)\bigr)\,
-  e^{-\alpha \xi(t)}$$
+The annual step has an exact closed-form solution (piecewise-constant $J$
+and $\xi$ within each year):
 
-where $C_{\mathrm{ss}}(t) = J(t)/(\alpha \xi(t))$ is the instantaneous
-steady state. Pure R implementation; no Fortran.
+$$C(t+1) = C_{\mathrm{ss}}(t) + \bigl(C(t) - C_{\mathrm{ss}}(t)\bigr)
+  \,e^{-\alpha \xi(t)},
+  \qquad C_{\mathrm{ss}}(t) = \frac{J(t)}{\alpha\, \xi(t)}.$$
 
-The climate modifier $\xi$ uses the identical formula to Yasso07 (same
-functional form and data flow; see Section 2.3), with independently
-calibrated parameters $\beta_1$, $\beta_2$, $\gamma$.
-
-## TP2 (Two-Pool, ICBM-style)
-
-TP2 follows the ICBM topology (Andren \& Katterer 1997): all litter inputs
-enter the active pool A; the humus pool H receives only transferred mass from
-A. Using Yasso07 parameter notation:
-
-$$\frac{dA}{dt} = J(t) - \alpha_A \, \xi(t) \, A(t)$$
-$$\frac{dH}{dt} = p_H \, \alpha_A \, \xi(t) \, A(t) - \alpha_H \, \xi(t) \, H(t)$$
-
-where $\alpha_A$, $\alpha_H$ are pool decomposition rates and $p_H$ is the
-humification fraction (fraction of A decomposition entering H). This makes
-the TP2 parameter set a structural subset of Yasso07, facilitating direct
-comparison of pool-specific posteriors.
-
-Analytical steady states:
-
-$$A^* = \frac{J}{\alpha_A \xi}, \qquad H^* = \frac{p_H J}{\alpha_H \xi}$$
-
-Note that $\xi$ cancels in $H^*$ through the cascade, so $H^* = p_H \cdot
-A^* \cdot \alpha_A / \alpha_H$.
-
-The transient step is solved exactly (not Euler-approximated) by integrating
-A's trajectory analytically as a time-varying input to H:
-
-$$H(t+1) = H(t)\,e^{-k_H} + \frac{p_H J}{k_H}(1-e^{-k_H})
-  + \frac{p_H k_A \Delta_A}{k_H - k_A}(e^{-k_A} - e^{-k_H})$$
-
-where $k_A = \alpha_A \xi$, $k_H = \alpha_H \xi$, and $\Delta_A = A(t) - A_{\mathrm{ss}}$.
-The degenerate case $k_A = k_H$ is handled via the L'H\^{o}pital limit.
 Pure R implementation; no Fortran.
+
+## TP2 (two pools, ICBM topology)
+
+Two pools, $A$ (active) and $H$ (humus). All litter enters $A$; $H$
+receives transferred mass from $A$ only:
+
+$$\frac{dA}{dt} = J(t) - \alpha_A \xi(t) A(t),
+  \qquad \frac{dH}{dt} = p_H \alpha_A \xi(t) A(t) - \alpha_H \xi(t) H(t).$$
+
+This is the ICBM topology of Andrén \& Kätterer (1997), with the
+modification that $\xi$ multiplies *both* pool decay rates (ICBM uses
+separate climate factors). Parameter naming follows Yasso07
+($\alpha_A, \alpha_H, p_H$), making the TP2 parameter set a *strict
+subset* of Yasso07 and clarifying the structural comparison.
+
+The annual step is solved exactly, not Euler-approximated. With
+$k_A = \alpha_A \xi$, $k_H = \alpha_H \xi$, $A_{\mathrm{ss}} = J/k_A$,
+and $\Delta_A = A(t) - A_{\mathrm{ss}}$:
+
+$$A(t+1) = A_{\mathrm{ss}} + \Delta_A\, e^{-k_A}$$
+
+$$H(t+1) = H(t)\, e^{-k_H}
+  + \frac{p_H J}{k_H}(1-e^{-k_H})
+  + \frac{p_H k_A \Delta_A}{k_H - k_A}\bigl(e^{-k_A} - e^{-k_H}\bigr).$$
+
+The degenerate case $k_A = k_H$ is handled by the L'Hôpital limit
+($p_H k_A \Delta_A e^{-k_A}$ for the last term). The analytical steady
+states are $A^* = J/(\alpha_A \xi)$ and $H^* = p_H J/(\alpha_H \xi)$;
+$\xi$ cancels in the ratio $H^*/A^*$. Pure R; no Fortran.
 
 ## Yasso07
 
-The Yasso07 model (Tuomi et al. 2009, 2011) describes SOC decomposition as
-first-order kinetics in five pools: A (acid-soluble), W (water-soluble),
-E (ethanol-soluble), N (non-soluble/lignin), and H (humus). Litter enters
-the A, W, E, N pools proportionally to AWEN fractions; material flows between
-AWEN pools (controlled by transfer fractions $p_{ij}$) and to H; H decomposes
-irreversibly.
+Five pools (Tuomi et al. 2009, 2011): A (acid-soluble), W (water-soluble),
+E (ethanol-soluble), N (non-soluble / lignin), H (humus). Litter inputs
+enter A, W, E, N proportionally to their AWEN fractions; transfers between
+AWEN pools are controlled by 12 fractions $p_{ij}$; all four AWEN pools
+contribute to H at a humification rate $p_H$; H decomposes irreversibly
+($\alpha_H$).
 
-The climate modifier is applied multiplicatively to all decomposition rates:
+The dynamics are written as a linear system $dC/dt = AC + b(t)$, with the
+matrix $A$ assembled from the decomposition rates and transfer fractions
+and the input vector $b$ from AWEN-fractionated litter. The Fortran core
+solves each annual step analytically through the matrix exponential
+$C(t+1) = A^{-1}(e^{A\Delta t}(AC(t) + b) - b)$, with two well-tested
+fallback paths (near-zero diagonal: pure accumulation; near-singular
+matrix: Euler step). FWL and CWL inputs are decomposed separately as
+parallel cohorts; the per-cohort state has 15 elements (5 pools $\times$ 3
+size classes).
 
-$$\xi(T, T_{\mathrm{amp}}, P) =
-  \frac{1}{4}\sum_{k=1}^{4}\exp\!\bigl(\beta_1 T_k + \beta_2 T_k^2\bigr)
-  \times \bigl(1 - \exp(\gamma \, P/1000)\bigr)$$
+The climate modifier is a four-point Gaussian approximation of the
+intra-annual temperature cycle:
 
-where $T_1, \ldots, T_4$ are quarterly temperatures derived from the annual
-mean $T$ and seasonal amplitude $T_{\mathrm{amp}}$ via a Gaussian
-approximation of the sinusoidal cycle; $P$ is annual precipitation (mm);
-and $\beta_1$, $\beta_2$, $\gamma$ are free parameters. A woody decomposition
-size modifier scales decomposition rates for FWL/CWL:
+$$\xi(\bar T, T_{\mathrm{amp}}, P) =
+  \frac{1}{4}\sum_{k=1}^{4} \exp\!\bigl(\beta_1 T_k + \beta_2 T_k^2\bigr)
+  \times \bigl(1 - \exp(\gamma P/1000)\bigr),$$
 
-$$h_S(d) = \min\!\bigl\{1,\; (1 + \delta_1 d + \delta_2 d^2)^{-|r|}\bigr\}$$
+where $T_k$ are four quarterly temperatures derived from annual mean
+$\bar T$ and seasonal amplitude $T_{\mathrm{amp}}$. A single $(\beta_1,
+\beta_2, \gamma)$ triplet applies to all decomposition rates.
 
-where $d$ is woody litter diameter (cm). Model core implemented in Fortran;
-called via `.Fortran()`.
+A woody-size modifier scales decomposition for FWL/CWL cohorts:
 
-**The SP1 and TP2 xi formula is identical to Yasso07** (same functional form,
-same data flow). Parameters $\beta_1$, $\beta_2$, $\gamma$ are independently
-calibrated per model, using the same `compute_xi_yasso07()` R implementation
-from the Yasso07 wrapper. This ensures the climate response comparison is
-not confounded by different approximation schemes.
+$$h_S(d) = \min\!\Bigl\{1,\; (1 + \delta_1 d + \delta_2 d^2)^{-|r|}\Bigr\},$$
 
-## Yasso15 / Yasso20
+where $d$ is the cohort diameter (cm). Fixed diameters $d_{\mathrm{fwl}} =
+2$ cm and $d_{\mathrm{cwl}} = 15$ cm are used throughout the pipeline.
 
-Structurally identical AWEN pool structure as Yasso07, with pool-group-specific
-climate responses: separate $(\beta_1, \beta_2, \gamma)$ triplets for the AWE
-pool group, N pool, and H pool. Both Yasso15 and Yasso20 share the same
-Fortran core and the same 35-parameter vector structure. The sole computational
-difference is the temperature integration method: Yasso15 uses a four-point
-Gaussian approximation of the seasonal temperature cycle, while Yasso20
-averages $\exp(\beta_1 T + \beta_2 T^2)$ over all 12 monthly temperatures
-directly.
+## Yasso15
 
-Yasso15 includes leaching parameters $w_1, \ldots, w_5$ (positions 17--21 of
-the parameter vector) representing dissolved organic carbon export. In Yasso20,
-these positions are retained for structural compatibility but are explicitly
-ignored by the Fortran routine (\texttt{mod5c20}, confirmed from source). In
-Yasso20, leaching is controlled by a fixed scalar argument rather than
-calibrated parameters. The original Yasso20 calibration (FMI GitHub repository,
-\url{https://github.com/YASSOmodel}) fixed $w_1$--$w_5$ at zero; they are
-retained in \texttt{FIXED\_RATE\_NAMES} accordingly.
+Identical pool topology, AWEN partitioning, and matrix-exponential
+machinery as Yasso07. The structural change is *pool-group-specific*
+climate response: three triplets $(\beta_1, \beta_2, \gamma)$,
+$(\beta_{N1}, \beta_{N2}, \gamma_N)$, $(\beta_{H1}, \beta_{H2},
+\gamma_H)$ act on the AWE, N, and H pool groups respectively. The
+functional form of each $\xi$ matches Yasso07 (four-point Gaussian
+temperature approximation, exponential-with-saturation precipitation
+response).
 
-Calibration follows the same architecture as Yasso07 with an expanded
-parameter vector.
+Leaching parameters $w_1, \ldots, w_5$ are present in the parameter
+vector (positions 31--35) but inactive in the calibration: the leaching
+scalar argument to the Fortran is held at zero throughout. Yasso15 uses a
+35-element parameter vector.
 
----
+## Yasso20
 
-# Parameter Specification --- SP1
+Same Fortran core as Yasso15 (`yasso15.so` is reused) and the same
+35-parameter vector. The single structural change is the intra-annual
+temperature integration: instead of the four-point Gaussian
+approximation, the temperature modifier is averaged over all 12 monthly
+temperatures directly,
 
-## Free Parameters
+$$\xi_T^{(g)} = \frac{1}{12}\sum_{m=1}^{12}
+  \exp\!\bigl(\beta_1^{(g)} T_m + \beta_2^{(g)} T_m^2\bigr),
+  \qquad g \in \{\mathrm{AWE}, N, H\},$$
 
-SP1 has no fixed parameters: there are no published global calibrations to
-anchor the kinetic rate, so all parameters are learned from the Finnish data.
+with the same exponential precipitation factor applied to the annual
+total precipitation. This is the only computational difference between
+Yasso15 and Yasso20. Both share the same R wrapper functions for the
+matrix-exponential solver; only the $\xi$ computation differs.
 
-| HIKET name | Physical meaning | Transform |
-|---|---|---|
-| `alpha` | Decomposition rate (yr$^{-1}$) | log |
-| `beta1` | Temperature response, linear | log |
-| `beta2` | Temperature response, quadratic | unconstrained |
-| `gamma` | Precipitation response | unconstrained |
-| `sigma_init` | Initial-condition uncertainty | log |
-| `sigma_input` | Global litter scaling | log |
-
-**Total: 6 free parameters.**
-
-The posterior $\alpha$ from SP1 can be interpreted as the ``effective mean
-residence time of the entire Finnish mineral forest SOC column under a
-single-pool assumption'' --- a meaningful summary statistic for comparison
-with the Yasso pool structure.
+Yasso20 therefore inherits the same parameter structure as Yasso15 in
+this calibration (all 12 inter-pool flow fractions free; see §3.3).
 
 ---
 
-# Parameter Specification --- TP2
+# Parameter specification
 
-## Free Parameters
+## Free, fixed, and derived parameters
 
-Likewise, TP2 has no fixed parameters. The parameter set is a named subset
-of Yasso07, enabling direct comparison of pool-specific posteriors.
+For each model the parameter set splits into three groups:
 
-| HIKET name | Physical meaning | Transform |
-|---|---|---|
-| `alpha_A` | A pool decomposition rate (yr$^{-1}$) | log |
-| `alpha_H` | H pool decomposition rate (yr$^{-1}$) | log |
-| `p_H` | Humification fraction (A $\to$ H) | logit |
-| `beta1` | Temperature response, linear | log |
-| `beta2` | Temperature response, quadratic | unconstrained |
-| `gamma` | Precipitation response | unconstrained |
-| `sigma_init` | Initial-condition uncertainty | log |
-| `sigma_input` | Global litter scaling | log |
+* **Free**: sampled by MCMC. Includes nuisance parameters
+  $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$.
+* **Fixed**: not sampled, held at published or structurally-motivated
+  values. Includes decomposition rates and humus parameters for the
+  Yasso family.
+* **Derived**: computed deterministically from other parameters at
+  assembly time. *None* in the current pipeline.
 
-**Total: 8 free parameters.**
+For each model the parameters are listed below with their physical
+meaning and transform. Transforms map a constrained physical parameter
+to an unconstrained sampling space, with a corresponding log-Jacobian
+contribution to the prior density. Three transform types are used:
 
-Note that `alpha_A` and `alpha_H` are **free** in TP2, unlike Yasso07 where
-the corresponding rates are fixed. This is necessary because there are no
-published global TP2 calibrations. Comparing TP2's posterior `alpha_A` to
-Yasso07's fixed $\alpha_A$ (and its posterior `alpha_H` to Yasso07's $\alpha_H$)
-is itself a structural finding: it reveals whether a two-pool model with
-Finnish data recovers pool timescales consistent with the Yasso07 global
-calibration.
+* `log`: enforces positivity; $\theta \in (0, \infty) \leftrightarrow
+  x \in \mathbb{R}$, $x = \log\theta$.
+* `logit`: enforces $(0,1)$ bounds; $\theta \in (0,1) \leftrightarrow
+  x \in \mathbb{R}$, $x = \log(\theta/(1-\theta))$.
+* `unconstrained`: identity ($\theta = x$); used where the parameter
+  has no natural constraint and the prior alone shapes the support.
+* `stick_break`: a $K$-element simplex constrained to sum $\leq B$, used
+  for transfer fractions; described separately in §3.4.
 
----
+## SP1 (6 free, 0 fixed)
 
-# Parameter Specification --- Yasso07
+| Parameter            | Meaning                                    | Transform     |
+|----------------------|--------------------------------------------|---------------|
+| $\alpha$             | Decomposition rate (yr$^{-1}$)             | log           |
+| $\beta_1$            | Temperature response, linear               | log           |
+| $\beta_2$            | Temperature response, quadratic            | unconstrained |
+| $\gamma$             | Precipitation response                     | unconstrained |
+| $\sigma_{\mathrm{init}}$  | 1917 litter scaling (initial state)   | log           |
+| $\sigma_{\mathrm{input}}$ | Global litter scaling (contemporary)  | log           |
 
-## Fixed Parameters
+No fixed parameters. SP1 has no published global calibration to anchor
+the kinetic rate, so all parameters are learned from the Finnish data.
 
-Six parameters are fixed at published values (Tuomi et al. 2009, 2011) and
-are not calibrated:
+## TP2 (8 free, 0 fixed)
 
-| HIKET name | Published notation | Physical meaning |
-|---|---|---|
-| `alpha_A`, `alpha_W`, `alpha_E`, `alpha_N` | $\alpha_A, \alpha_W, \alpha_E, \alpha_N$ | Pool decomposition rate constants (yr$^{-1}$) |
-| `p_H` | $p_H$ | Fraction of decomposed mass entering humus |
-| `alpha_H` | $\alpha_H$ | Humus decomposition rate (yr$^{-1}$) |
+| Parameter            | Meaning                                      | Transform     |
+|----------------------|----------------------------------------------|---------------|
+| $\alpha_A$           | A-pool decomposition rate (yr$^{-1}$)        | log           |
+| $\alpha_H$           | H-pool decomposition rate (yr$^{-1}$)        | log           |
+| $p_H$                | Humification fraction (A $\to$ H)            | logit         |
+| $\beta_1, \beta_2, \gamma$ | Climate response (Yasso07 form)        | log, unc., unc. |
+| $\sigma_{\mathrm{init}}, \sigma_{\mathrm{input}}$ | Litter scalings | log, log |
 
-**Rationale for fixing:** Rate constants are well-constrained across the
-international Yasso literature. Calibrating them against Finnish SOC alone
-risks overfitting to Finnish climate and litter inputs. Structural differences
-between models in this intercomparison are encoded in flow fractions and
-climate response --- the scientifically relevant comparison axes.
+## Yasso07 (18 free, 6 fixed)
 
-## Free Parameters
+**Fixed (6):** $\alpha_A, \alpha_W, \alpha_E, \alpha_N$ (AWEN
+decomposition rates), $p_H$ (humification fraction), $\alpha_H$
+(humus decomposition rate). Published Tuomi et al. defaults.
 
-20 parameters are jointly calibrated (18 physical + 2 auxiliary uncertainty):
+**Free (18):**
 
-**Inter-pool flow fractions (12):** $p_{AW},\; p_{AE},\; p_{AN},\; p_{WA},\;
-p_{WE},\; p_{WN},\; p_{EA},\; p_{EW},\; p_{EN},\; p_{NA},\; p_{NW},\; p_{NE}$.
-Each donor pool $i$ must satisfy $\sum_j p_{ij} \leq B = 1 - p_H$ (mass
-balance with humus formation).
+| Parameter                                                   | Count | Transform        |
+|-------------------------------------------------------------|------:|------------------|
+| 12 inter-pool transfer fractions $p_{ij}$, 4 columns of 3   | 12    | stick_break      |
+| $\beta_1$, $\beta_2$, $\gamma$                              | 3     | log, unc., unc.  |
+| $\delta_1$, $\delta_2$, $r$ (size modifier)                 | 3     | unc., log, log   |
+| $\sigma_{\mathrm{init}}, \sigma_{\mathrm{input}}$           | 2     | log, log         |
 
-**Climate response (3):**
-$\beta_1$ (temperature, linear; log-transformed),
-$\beta_2$ (temperature, quadratic; unconstrained),
-$\gamma$ (precipitation; unconstrained).
+The size modifier transforms: $\delta_2 > 0$ is enforced because the
+Fortran returns NaN for $\delta_2 < 0$ when $d > \!\sim\! 0.4$ cm.
+The log transform on $r$ removes the sign-redundancy of $|r|$ in the
+size formula ($r$ is stored as positive in HIKET; Yasso07 reference
+defaults store it negative).
 
-**Woody litter size modifier (3):**
-$\delta_1$ (linear diameter effect; unconstrained),
-$\delta_2$ (quadratic diameter effect; **log-transformed**),
-$r$ (power; **log-transformed**).
+## Yasso15 (28 free, 11 fixed)
 
-**Auxiliary uncertainty parameters (2):**
+**Fixed (11):** $\alpha_A, \alpha_W, \alpha_E, \alpha_N$, $p_H$,
+$\alpha_H$, $w_1, w_2, w_3, w_4, w_5$ (leaching weights, inactive at
+$\mathrm{leac}=0$). Published Yasso15 defaults.
 
-- $\sigma_{\mathrm{init}}$: multiplicative initial-condition uncertainty.
-  Added in quadrature to $\sigma_{\mathrm{obs}}$ at the first observation per
-  plot. Captures error from assuming the 1985 SOC equals the analytical steady
-  state (log-transformed; strictly positive).
+**Free (28):**
 
-- $\sigma_{\mathrm{input}}$: global litter scaling multiplier. Applied to all
-  litter inputs before model evaluation (steady state and transient run
-  consistently). Captures allometric uncertainty in NFI litter estimates
-  ($\sim$20--50\% intrinsic uncertainty). Global (same multiplier for all
-  plots, species, and years). Log-transformed; centred at 1 (no scaling).
+| Parameter                                                | Count | Transform           |
+|----------------------------------------------------------|------:|---------------------|
+| 12 inter-pool transfer fractions $p_{ij}$                | 12    | stick_break         |
+| AWE climate: $\beta_1, \beta_2, \gamma$                  | 3     | log, unc., unc.     |
+| N climate:   $\beta_{N1}, \beta_{N2}, \gamma_N$          | 3     | log, unc., unc.     |
+| H climate:   $\beta_{H1}, \beta_{H2}, \gamma_H$          | 3     | log, unc., unc.     |
+| Size modifier: $\delta_1, \delta_2, r$                   | 3     | unc., log, log      |
+| $\sigma_{\mathrm{init}}, \sigma_{\mathrm{input}}$        | 2     | log, log            |
 
----
+## Yasso20 (28 free, 11 fixed)
 
-# Parameter Specification --- Yasso15 / Yasso20
+Identical fixed/free structure to Yasso15. The same 35-parameter vector
+is used; only the $\xi$ computation method differs at runtime.
 
-## Fixed Parameters
+**Uniform 12-fraction structure across the Yasso family.** Earlier
+Yasso20 calibrations (Viskari 2022) fixed six transfer fractions at zero
+(empirical structural zeros from global-dataset MCMC) and derived three
+($p_{AW}, p_{NA}, p_{EA}$) algebraically from $p_H$ and $p_{EW}$. HIKET
+*does not* impose these constraints. All 12 inter-pool fractions are
+sampled in all three Yasso models. The reasoning is twofold:
 
-Same six rate constants as Yasso07 ($\alpha_A, \alpha_W, \alpha_E, \alpha_N,
-p_H, \alpha_H$), fixed at the Yasso15/20 published values.
+1. The Viskari zeros are properties of a warm-site global calibration
+   dataset, not general biological laws. Finnish boreal data, where the
+   recycling-loop dynamics dominate decomposition in cold sites, should
+   be free to inform the full pool-flow structure.
+2. If Yasso20 had fewer free fractions than Yasso07 and Yasso15, any
+   calibration-quality difference between the models would be
+   uninterpretable: structural (climate-integration) versus parametric
+   (missing degrees of freedom).
 
-**Yasso15 and Yasso20: leaching parameters $w_1$--$w_5$.**
-Positions 17--21 of the parameter vector are explicitly marked ``IGNORED IN
-THIS FUNCTION'' in both the Yasso15 and Yasso20 Fortran sources. Leaching
-enters the model via an external scalar argument (\texttt{leac}); the HIKET R
-wrappers set this to zero, disabling leaching in both models. The $w$
-parameters are therefore inert in the HIKET calibration and are included in
-\texttt{FIXED\_RATE\_NAMES}. How the original FMI calibration used these
-parameters is unknown, as no R wrapper is provided in the Yasso15 repository;
-the non-zero $w$ values in the published Yasso15 posterior may reflect a
-different calling convention or simply unidentified parameters.
+Prior centres for the previously-zeroed fractions use the published
+Yasso15 defaults (which are nonzero MAP estimates from the same global
+calibration); see §4.
 
-**Yasso20 additional fixed parameters:** six transfer fractions are
-structurally fixed at zero in the original Yasso20 calibration (posterior
-SD $\approx 0$ across all 10,000 repository samples). These are fixed in the
-HIKET calibration and not sampled:
+## Stick-breaking parameterisation for transfer fractions
 
-$$p_{NW} = p_{AE} = p_{WE} = p_{NE} = p_{AN} = p_{EN} = 0$$
+Each column $j$ of the AWEN transfer matrix has three outflow fractions
+$p_{ij}$ ($i \in \{A,W,E,N\} \setminus \{j\}$) that must satisfy
+$\sum_i p_{ij} + p_H \leq 1$ (mass conservation). The simplex constraint
+is enforced via a stick-breaking transform with budget $B = 1 - p_H$.
+Two unconstrained real-valued parameters $z_1, z_2$ map to three
+fractions $(p_1, p_2, p_3)$ summing to $\leq B$ by
 
-## Free Parameters
+$$p_1 = B \cdot \sigma(z_1),\qquad
+  p_2 = (B - p_1) \cdot \sigma(z_2),\qquad
+  p_3 = B - p_1 - p_2,$$
 
-**Yasso15:** 24 physical + 2 auxiliary uncertainty = 26 free parameters.
-**Yasso20:** 13 physical + 2 auxiliary uncertainty = 15 free parameters
-(structural zeros removed from free set).
+where $\sigma$ is the logistic function. The associated log-Jacobian is
+added to the prior density. Stick-breaking is preferred to logit on each
+fraction because (i) it guarantees the simplex constraint exactly, (ii)
+the Jacobian is well-conditioned, and (iii) the parameters are
+exchangeable in the sense that a swap of column order produces a
+mathematically equivalent posterior.
 
-**Inter-pool flow fractions:** same 12 as Yasso07 (Yasso15); subset for Yasso20
-(only the 6 non-zero fractions: $p_{AW}, p_{WA}, p_{WN}, p_{EA}, p_{EW}, p_{NA}$).
+In Yasso07, Yasso15, and Yasso20, all four AWEN columns
+(A, W, E, N) use stick-breaking with the same budget $B = 1 - p_H$.
+Each column contributes 2 free parameters (the third is determined),
+for $4 \times 2 + 4 = 12$ fractions in total.
 
-**Pool-group-specific climate response (9 for Yasso15; 9 for Yasso20):**
+## Cross-model parameter overlap
 
-| HIKET name | Physical meaning |
-|---|---|
-| `beta1`, `beta2`, `gamma` | Temperature and precipitation response for AWE pools |
-| `betaN1`, `betaN2`, `gammaN` | Temperature and precipitation response for N pool |
-| `betaH1`, `betaH2`, `gammaH` | Temperature and precipitation response for H pool |
+The following table summarises which parameters appear in which models:
 
-**Woody litter size modifier (3):** $\delta_1$, $\delta_2$, $r$ as in Yasso07.
-
-**Auxiliary uncertainty parameters (2):** $\sigma_{\mathrm{init}}$,
-$\sigma_{\mathrm{input}}$ as in Yasso07.
-
----
-
-# Parameter Naming Conventions {#sec:naming}
-
-The three Yasso model versions use different parameter naming conventions across
-publications, original calibration files, and this HIKET implementation.
-SP1 and TP2 use the HIKET names exclusively (no prior naming conflicts).
-The table below reconciles conventions for the non-fraction parameters across
-all Yasso sources.
-
-\small
-| HIKET code name | $y$`07par_gui.csv` | $y$`15par.csv` / rda | Fortran `theta(i)` (Y15/20) | Paper notation | Physical meaning |
-|---|---|---|---|---|---|
-| `alpha_A` | `aA` | `aA` | $\theta_1$ | $\alpha_A$ | A pool rate (yr$^{-1}$) |
-| `alpha_W` | `aW` | `aW` | $\theta_2$ | $\alpha_W$ | W pool rate (yr$^{-1}$) |
-| `alpha_E` | `aE` | `aE` | $\theta_3$ | $\alpha_E$ | E pool rate (yr$^{-1}$) |
-| `alpha_N` | `aN` | `aN` | $\theta_4$ | $\alpha_N$ | N pool rate (yr$^{-1}$) |
-| `beta1` | `b1` | `b1` | $\theta_{22}$ | $\beta_1$ | Temp.\ linear (AWE) |
-| `beta2` | `b2` | `b2` | $\theta_{23}$ | $\beta_2$ | Temp.\ quadratic (AWE) |
-| `gamma` | `gamma` | `g` | $\theta_{28}$ | $\gamma$ | Precip.\ (AWE) |
-| `betaN1` | --- | `bN1` | $\theta_{24}$ | $\beta_{N1}$ | Temp.\ linear (N) |
-| `betaN2` | --- | `bN2` | $\theta_{25}$ | $\beta_{N2}$ | Temp.\ quadratic (N) |
-| `gammaN` | --- | `gN` | $\theta_{29}$ | $\gamma_N$ | Precip.\ (N) |
-| `betaH1` | --- | `bH1` | $\theta_{26}$ | $\beta_{H1}$ | Temp.\ linear (H) |
-| `betaH2` | --- | `bH2` | $\theta_{27}$ | $\beta_{H2}$ | Temp.\ quadratic (H) |
-| `gammaH` | --- | `gH` | $\theta_{30}$ | $\gamma_H$ | Precip.\ (H) |
-| `delta1` | `phi1` | `th1` | $\theta_{33}$ | $\phi_1$ | Size modifier linear |
-| `delta2` | `phi2` | `th2` | $\theta_{34}$ | $\phi_2$ | Size modifier quadratic |
-| `r` | `r` | `r` | $\theta_{35}$ | $r$ | Size modifier power |
-| `alpha_H` | `aH` | `aH` | $\theta_{32}$ | $\alpha_H$ | Humus rate (yr$^{-1}$) |
-| `p_H` | `pH` | `pH` | $\theta_{31}$ | $p_H$ | Humus fraction |
-| `w1`--`w5` | --- | `w1`--`w5` | $\theta_{17}$--$\theta_{21}$ | $w_1$--$w_5$ | Leaching (Yasso15); ignored in Yasso20 |
-\normalsize
-
-**Fortran index reference.** The `Fortran theta(i)` column refers to the
-original Yasso15/20 Fortran subroutine (`mod5c20`) from the FMI GitHub
-repository (\url{https://github.com/YASSOmodel}), not the HIKET reimplementation.
-The HIKET wrapper reorders parameters internally via `ORIG\_TO\_LORENZO` before
-calling the Fortran.
-
-**Critical ordering note.** The original Yasso15/20 Fortran and `.dat` files
-use the ordering $(\alpha, p_{ij}, w_{1:5}, \beta, \beta_N, \beta_H, \gamma,
-\gamma_N, \gamma_H, p_H, \alpha_H, \delta_1, \delta_2, r)$, placing leaching
-before climate parameters. The HIKET implementation reorders to $(\alpha, p_{ij},
-\beta, \gamma, \beta_N, \gamma_N, \beta_H, \gamma_H, p_H, \alpha_H, \delta_1,
-\delta_2, r, w_{1:5})$. The bijective column remapping is documented in
-`Priors_model_matching.R` (vector `ORIG_TO_LORENZO`).
+\begin{small}
+\begin{longtable}{l c c c c c}
+\toprule
+Parameter & SP1 & TP2 & Yasso07 & Yasso15 & Yasso20 \\
+\midrule
+$\alpha$ (single rate)        & free  & ---   & ---   & ---   & ---   \\
+$\alpha_A, \alpha_H$          & ---   & free  & fixed & fixed & fixed \\
+$\alpha_W, \alpha_E, \alpha_N$ & ---   & ---   & fixed & fixed & fixed \\
+$p_H$                         & ---   & free  & fixed & fixed & fixed \\
+12 transfer fractions $p_{ij}$ & ---   & ---  & free  & free  & free  \\
+$\beta_1, \beta_2, \gamma$    & free  & free  & free  & free (AWE) & free (AWE) \\
+$\beta_{N1}, \beta_{N2}, \gamma_N$ & --- & --- & ---   & free  & free  \\
+$\beta_{H1}, \beta_{H2}, \gamma_H$ & --- & --- & ---   & free  & free  \\
+$\delta_1, \delta_2, r$       & ---   & ---   & free  & free  & free  \\
+$w_1, \ldots, w_5$            & ---   & ---   & ---   & fixed (=0) & fixed (=0) \\
+$\sigma_{\mathrm{init}}, \sigma_{\mathrm{input}}$ & free & free & free & free & free \\
+\midrule
+\textbf{Total free}           & \textbf{6} & \textbf{8} & \textbf{18} & \textbf{28} & \textbf{28} \\
+\bottomrule
+\end{longtable}
+\end{small}
 
 ---
 
-# Parameter Transformations
+# Priors
 
-The DEzs sampler operates in unconstrained $\mathbb{R}^{n}$ where $n$ is
-6 (SP1), 8 (TP2), 20 (Yasso07), 26 (Yasso15), or 15 (Yasso20). Physical
-parameters are recovered by applying `to_original()` to every proposal.
+All priors are normal in the unconstrained (transformed) space, centred
+at the published model defaults. The prior density factorises across
+parameters; the joint prior is
 
-## Stick-Breaking (flow fractions, Yasso models)
+$$p(x) = \prod_{i} \mathcal{N}\!\bigl(x_i \,;\, x_i^{\mathrm{ctr}},
+  \sigma_{\mathrm{ppm},i}\bigr) + \log J(x),$$
 
-Each of the four donor columns (A, W, E, N) has three outflows satisfying:
+where $x^{\mathrm{ctr}}$ is the unconstrained-space image of the
+physical-space prior centre, $\sigma_{\mathrm{ppm}}$ is the
+unconstrained-space prior standard deviation, and $\log J$ is the
+log-Jacobian of the parameter transforms.
 
-$$p_{ij} \geq 0 \quad \forall j, \qquad \sum_j p_{ij} \leq B$$
+## Sources
 
-The stick-breaking transform converts a vector $\boldsymbol{v} \in \mathbb{R}^3$
-to a valid fraction vector $\boldsymbol{p}$:
+Prior centres and widths are derived from the most authoritative
+publicly available source for each model:
 
-$$p_i = \sigma(v_i) \times r_i, \qquad r_{i+1} = r_i - p_i, \quad r_1 = B$$
+\begin{small}
+\begin{longtable}{l l l}
+\toprule
+Model & Source for prior centres ($x^{\mathrm{ctr}}$) &
+        Source for prior widths ($\sigma_{\mathrm{ppm}}$) \\
+\midrule
+SP1 & Hand-set defaults (no published global calib.) & Weakly informative \\
+TP2 & Hand-set ICBM-style defaults                   & Weakly informative \\
+Yasso07 & \texttt{y07par\_gui.csv} (Tuomi et al.)    & Literature CIs       \\
+Yasso15 & \texttt{Yasso15.dat} posterior mean
+          (FMI Ryassofortran) & \texttt{Yasso15.dat} posterior SD     \\
+Yasso20 & \texttt{Yasso20\_sample\_parameters.rda}
+          (FMI Ryassofortran) & \texttt{Yasso20.dat} posterior SD     \\
+\bottomrule
+\end{longtable}
+\end{small}
 
-where $\sigma(v) = (1 + e^{-v})^{-1}$ is the logistic sigmoid. The inverse
-(physical $\to$ unconstrained) follows by sequential logit transformation of
-the normalised remainder fractions.
+The FMI repository is at
+\url{https://github.com/YASSOmodel/Ryassofortran/tree/master/data}.
+The `.dat` files contain 10\,000 MCMC samples from the original
+calibrations, with row 1 being the MAP and rows 2--10\,001 the posterior
+draws. For Yasso15/20, the MAP from `.rda` (or `y15par.csv`) and the
+posterior mean from `.dat` agree to four significant figures after
+column remapping (the original column ordering differs from HIKET's
+parameter-name ordering). The matching is verified in
+`Priors_model_matching.R`.
 
-## Logit Transform ($p_H$ in TP2)
+For Yasso20 the `.rda` file is preferred as the authoritative MAP because
+it is the FMI-validated point estimate used in the Ryassofortran
+package; `ParY20.dat` is retained as a cross-validation check.
 
-$$v = \log\!\frac{\theta}{1-\theta}, \qquad \theta = \sigma(v)$$
+For Yasso07 no posterior file is publicly available, so $\sigma_{\mathrm{ppm}}$
+on its calibrated parameters comes from the confidence intervals
+reported in Tuomi et al. (2008--2010).
 
-Applied to $p_H$ in TP2 (single proportion in $(0,1)$ with no budget constraint).
+For SP1 and TP2 there is no global posterior to draw from. The defaults
+are set to plausible Yasso07-style starting values (e.g. $\beta_1, \beta_2,
+\gamma$ copied from Yasso07 MAP, $\alpha = 0.09$ for SP1, ICBM-style
+$\alpha_A, \alpha_H, p_H$ for TP2), and prior widths are set wide enough
+to let the Finnish data dominate.
 
-## Log Transform
+## Transfer-fraction priors
 
-Applied to parameters that must be strictly positive:
+For all three Yasso models the prior standard deviation on every
+transfer fraction is held at $\sigma_{\mathrm{ppm}} = 1.0$ in the
+unconstrained (stick-breaking) space. This is a deliberately
+weakly-informative choice: the Finnish data should drive the pool-flow
+structure, which is the primary structural-comparison axis of the
+intercomparison. The prior centres for the fractions are the published
+defaults (Yasso07: `y07par_gui.csv`; Yasso15: published defaults from
+`y15par.csv`; Yasso20: same Yasso15 defaults, since the previously-fixed
+zeros are now sampled and the Yasso15 MAP values are nonzero and from
+the same chemical-fractionation framework).
 
-$$v = \log(\theta), \qquad \theta = e^v$$
+## Climate-response and size-modifier priors
 
-Applied to: $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$, $\alpha$
-(SP1), $\alpha_A$, $\alpha_H$ (TP2), $\beta_1$, $\beta_{N1}$, $\beta_{H1}$
-(temperature sensitivities, must be positive for boreal decomposition),
-$\delta_2$ (size modifier quadratic, must be positive to prevent numerical
-failure), $r$ (size modifier power; only $|r|$ is used in Fortran).
+In contrast to the transfer fractions, the climate and size parameters
+receive *informative* priors, derived from the FMI posterior. This
+prevents two pathologies:
 
-## Unconstrained
+1. The $\gamma$ / $\sigma_{\mathrm{input}}$ compensation loop. Both
+   parameters scale total decomposition; without an informative prior
+   on $\gamma$ they trade off freely, producing a ridge in the
+   posterior that destabilises MCMC mixing.
+2. The $\delta_2 < 0$ NaN pathology. The Fortran size modifier returns
+   NaN for $\delta_2 < 0$ at $d > 0.4$ cm; a log transform combined
+   with an informative prior keeps $\delta_2$ in the well-behaved
+   region.
 
-No transformation: $\beta_2$, $\beta_{N2}$, $\beta_{H2}$, $\gamma$,
-$\gamma_N$, $\gamma_H$, $\delta_1$, $w_{1:5}$.
+$\gamma_H$ for Yasso15 is capped at $\sigma_{\mathrm{ppm}} = 1.5$: the
+H-pool precipitation response is near-unidentifiable at Finnish
+precipitation levels ($\sim 600$ mm), where $[1 - \exp(\gamma_H P/1000)]
+\approx 1$ for any $\gamma_H < -5$. The raw posterior SD ($\sim 3$)
+reflects a flat likelihood surface, not genuine uncertainty.
 
-## The $\delta_2 > 0$ Requirement
+## Numerical values --- Yasso07
 
-The size modifier is $h_S(d) = \min\!\{1, (1 + \delta_1 d + \delta_2 d^2)^{-|r|}\}$.
-The expression inside the brackets must stay positive for all realistic woody
-litter diameters $d$ (Finnish stumps: 2--30 cm). With $\delta_2 > 0$ the
-quadratic opens upward and stays positive for all $d \geq 0$ given the
-published values ($\delta_1 = -1.71$). With $\delta_2 < 0$ the quadratic opens
-downward, reaches zero at some diameter $d_0$, and the expression becomes
-negative beyond that point. Raising a negative number to the non-integer
-power $-|r|$ is undefined in Fortran and propagates as NaN, which returns
-$-\infty$ to the likelihood.
+| Parameter | $x^{\mathrm{ctr}}$ (physical) | $\sigma_{\mathrm{ppm}}$ | Space |
+|-----------|------------------------------:|------------------------:|-------|
+| $p_{ij}$ (12 fractions) | published defaults     | 1.0                    | unconstrained |
+| $\beta_1$               | 0.0987                 | 0.20                   | log     |
+| $\beta_2$               | -0.00157               | 0.05                   | physical |
+| $\gamma$                | -1.272                 | 0.30                   | physical |
+| $\delta_1$              | -1.708                 | 0.15                   | physical |
+| $\delta_2$              | 0.859                  | 0.10                   | log     |
+| $r$ ($=|r|$)            | 0.307                  | 0.015                  | log     |
+| $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$ | 1.00 | 0.50 | log |
 
-This is not a HIKET-specific issue: the same formula appears verbatim in
-both the original Yasso15 and Yasso20 Fortran sources from the FMI repository.
-Any parameter set with $\delta_2 < 0$ would produce NaN in the original code
-when applied to woody litter larger than a few millimetres. The problem did
-not manifest in the original calibrations because those datasets apparently
-contained little variation in woody litter diameter, leaving $\delta_2$
-unidentified and allowing it to drift negative without penalty.
+## Numerical values --- Yasso15
 
-Applying a log transform to $\delta_2$ in the HIKET calibration enforces
-$\delta_2 > 0$ throughout the MCMC. The published defaults ($\delta_2 =
-+0.86$ for Yasso07, $+1.27$ for Yasso15/20) confirm the physically correct sign.
+| Parameter         | $x^{\mathrm{ctr}}$ | $\sigma_{\mathrm{ppm}}$ | Space    |
+|-------------------|-------------------:|------------------------:|----------|
+| $p_{ij}$ (12 fr.) | published defaults | 1.0                     | unconstr.|
+| $\beta_1$         | 0.0906             | 0.0459                  | log      |
+| $\beta_2$         | -2.15$\times10^{-4}$ | 1.4$\times10^{-4}$    | physical |
+| $\gamma$          | -1.809             | 0.0702                  | physical |
+| $\beta_{N1}$      | 0.0488             | 0.105                   | log      |
+| $\beta_{N2}$      | -7.92$\times10^{-5}$ | 8$\times10^{-5}$      | physical |
+| $\gamma_N$        | -1.173             | 0.155                   | physical |
+| $\beta_{H1}$      | 0.0352             | 0.135                   | log      |
+| $\beta_{H2}$      | -2.08$\times10^{-4}$ | 1.6$\times10^{-4}$    | physical |
+| $\gamma_H$        | -12.54             | 1.50 (capped)           | physical |
+| $\delta_1$        | -0.439             | 0.328                   | physical |
+| $\delta_2$        | 1.267              | 0.286                   | log      |
+| $r$               | 0.257              | 0.055                   | log      |
+| $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$ | 1.00 | 0.50 | log |
 
-The log transform on $r$ is a minor complement: since only $-|r|$ enters the
-Fortran expression, the sign of $r$ is irrelevant. Sampling in unconstrained
-space therefore wasted half the prior support on sign-equivalent values.
-Note that `YASSO07_DEFAULT_PARAMS` stores $r$ as $-0.307$ (negative), consistent
-with the Fortran convention; the calibration script applies `abs()` to obtain
-the positive prior centre $+0.307$ required by the log transform. The Yasso15
-and Yasso20 wrappers store $r = +0.257$ (positive), requiring no correction.
+## Numerical values --- Yasso20
 
-## Jacobian Correction
+| Parameter         | $x^{\mathrm{ctr}}$ | $\sigma_{\mathrm{ppm}}$ | Space    |
+|-------------------|-------------------:|------------------------:|----------|
+| $p_{ij}$ (12 fr.) | Yasso15 defaults   | 1.0                     | unconstr.|
+| $\beta_1$         | 0.158              | 0.104                   | log      |
+| $\beta_2$         | -0.002             | 5.4$\times10^{-4}$      | physical |
+| $\gamma$          | -1.440             | 0.146                   | physical |
+| $\beta_{N1}$      | 0.170              | 0.0625                  | log      |
+| $\beta_{N2}$      | -0.005             | 4.1$\times10^{-4}$      | physical |
+| $\gamma_N$        | -2.000             | 0.0353                  | physical |
+| $\beta_{H1}$      | 0.067              | 0.0912                  | log      |
+| $\beta_{H2}$      | 0.000              | 9$\times10^{-5}$        | physical |
+| $\gamma_H$        | -6.900             | 1.391                   | physical |
+| $\delta_1$        | -2.550             | 0.435                   | physical |
+| $\delta_2$        | 1.240              | 0.211                   | log      |
+| $r$               | 0.250              | 0.0545                  | log      |
+| $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$ | 1.00 | 0.50 | log |
 
-When parameters are reparameterised (e.g.\ the sampler proposes $v = \log \delta_2$
-instead of $\delta_2$ itself), the probability density must be corrected for
-the stretching or compression introduced by the transformation. The log-Jacobian
-$\log|\partial \boldsymbol{\theta}/\partial \boldsymbol{v}|$ is added to the
-log-likelihood at every evaluation:
+## Numerical values --- SP1 and TP2
 
-$$\log p(\boldsymbol{\theta} \mid \boldsymbol{y}) \propto
-  \log p(\boldsymbol{y} \mid \boldsymbol{\theta}) + \log p(\boldsymbol{\theta})
-  + \log \left|\frac{\partial \boldsymbol{\theta}}{\partial \boldsymbol{v}}\right|$$
-
-For stick-breaking, the Jacobian factor per element is
-$\sigma(v_i)(1-\sigma(v_i)) \times r_i$. For the log transform it is
-$e^v = \theta$. For the logit transform it is $\theta(1-\theta)$. The
-Jacobian is added to the likelihood (not the prior) so that the BayesianTools
-prior object remains a standard Gaussian.
+| Parameter             | $x^{\mathrm{ctr}}$ | $\sigma_{\mathrm{ppm}}$ | Space   |
+|-----------------------|-------------------:|------------------------:|---------|
+| **SP1**               |                    |                         |         |
+| $\alpha$              | 0.09               | 0.50                    | log     |
+| $\beta_1$             | 0.095              | 0.20                    | log     |
+| $\beta_2$             | -0.00014           | 0.05                    | physical|
+| $\gamma$              | -1.21              | 0.30                    | physical|
+| **TP2**               |                    |                         |         |
+| $\alpha_A$            | 0.73               | 0.50                    | log     |
+| $\alpha_H$            | 0.0015             | 0.50                    | log     |
+| $p_H$                 | 0.028              | 1.00                    | logit   |
+| $\beta_1$             | 0.095              | 0.20                    | log     |
+| $\beta_2$             | -0.00014           | 0.05                    | physical|
+| $\gamma$              | -1.21              | 0.30                    | physical|
+| **Both**              |                    |                         |         |
+| $\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$ | 1.00 | 0.50 | log |
 
 ---
 
-# Prior Distribution {#sec:priors}
+# Transient initialisation
 
-## Philosophy
+## Why transient initialisation
 
-The prior is a multivariate normal in unconstrained space, independent across
-parameters:
+Finnish forest plots in the Biosoil network show, on average, a *positive*
+trend in mineral SOC from 1985 to 2006. Under a steady-state initial
+condition --- where $C(1985) = C_{\mathrm{ss}}$ given the litter inputs
+observed since 1985 --- a model with first-order kinetics can only
+*increase* SOC if the litter input itself is increasing. The MUSTIKKA
+litter-input dataset does not show such an increase consistent in
+magnitude with the observed SOC trend. The observed SOC trajectory and
+the observed litter trajectory are, jointly, incompatible with a
+steady-state $C(1985)$ at the level implied by the modern litter
+inputs.
 
-$$p(\boldsymbol{v}) = \prod_{k} \mathcal{N}(v_k;\; v_{k}^{*},\; \sigma_k^2)$$
+This is not a measurement artefact: it is a real signature that the
+forests in 1985 were not at steady state with respect to their then-
+recent productivity. They were either still recovering from earlier
+disturbance (less productive historically; SOC accumulating toward a
+higher steady state) or transitioning down from earlier higher
+productivity (more productive historically; SOC still decaying down).
+Either way, a calibration that enforces $C(1985) = J(\text{post-1985})
+/ (\alpha \xi)$ has no degree of freedom available to fit the SOC
+trend, and either rejects all models or absorbs the discrepancy into
+implausible kinetic parameters.
 
-Three parameter groups receive qualitatively different prior treatment:
+## The $\sigma_{\mathrm{init}}$ parameter
 
-1. **Climate and size modifier parameters (Yasso models):** informative priors
-   derived from the original global calibration datasets (Tuomi et al.
-   2008--2011) or from the published Yasso15/20 MCMC posteriors (FMI GitHub
-   repository, \url{https://github.com/YASSOmodel}). These parameters are
-   well-constrained by external data; tight priors prevent degenerate
-   compensation between parameters (particularly the $\gamma$--$\sigma_{\mathrm{input}}$
-   loop identified during initial runs) and prevent exploration of physically
-   invalid regions.
+We introduce a single multiplicative scaling parameter,
+$\sigma_{\mathrm{init}}$, applied to the litter inputs used to compute
+the initial state $C(1985)$:
 
-2. **Transfer fractions (Yasso models):** weakly informative. Prior width
-   $\sigma_k = 1.0$ in unconstrained stick-breaking space. The stick-breaking
-   transform already guarantees that fractions are non-negative and sum to at
-   most $B = 1 - p_H$ regardless of the prior width. Finnish data should
-   freely inform the pool flow structure --- the primary structural comparison
-   axis between Yasso model versions.
+$$C(1985) = C^*\bigl(\sigma_{\mathrm{init}} \cdot \sigma_{\mathrm{input}}
+  \cdot J^{\mathrm{ctr}}_{\mathrm{litter}},\;
+  \xi(\bar{\mathrm{climate}})\bigr),$$
 
-3. **Kinetic parameters and climate response (SP1 and TP2):** weakly
-   informative, with sigma on the log scale. No external calibration datasets
-   are available for SP1 or TP2; the Finnish data alone informs these parameters.
-   Prior centres for climate parameters ($\beta_1$, $\beta_2$, $\gamma$) are
-   set to Yasso07's published values as a physically plausible starting point.
-   The kinetic rate $\alpha$ (SP1) is centred at $\alpha = 0.09\;\mathrm{yr}^{-1}$,
-   giving $C^* \approx 76\;\mathrm{tC/ha}$ at Finnish conditions ($J \approx
-   2.4\;\mathrm{tC/ha/yr}$, $\xi \approx 0.35$). For TP2, $\alpha_A$ and
-   $\alpha_H$ are centred at the Yasso07 published values (0.73 and 0.0015
-   yr$^{-1}$ respectively), and $p_H$ at the Yasso07 value (0.028).
+where $C^*(\cdot)$ is the model's analytical (or numerical) steady-state
+operator, $J^{\mathrm{ctr}}_{\mathrm{litter}}$ is the AWEN-fractionated
+litter vector over the first 20-year window (1985--2004), and
+$\xi(\bar{\mathrm{climate}})$ is the climate modifier evaluated at the
+mean climate over the same window. $\sigma_{\mathrm{input}}$ continues to
+act on all subsequent litter inputs (1985 onward); $\sigma_{\mathrm{init}}$
+acts *only* on the steady-state computation, so its physical effect is
+restricted to the initial pool state. The transient simulation then
+evolves $C(t)$ from $C(1985)$ under the actual time-varying litter and
+climate, with $\sigma_{\mathrm{input}}$ scaling those inputs but
+$\sigma_{\mathrm{init}}$ no longer entering.
 
-4. **Auxiliary uncertainty parameters ($\sigma_{\mathrm{init}}$,
-   $\sigma_{\mathrm{input}}$):** moderately informative, with prior width 0.5
-   in log space for all models. $\sigma_{\mathrm{init}}$ is centred at 0.10
-   (10\% initial-condition uncertainty); $\sigma_{\mathrm{input}}$ at 1.00
-   (no a priori litter scaling).
+The interpretation of the posterior of $\sigma_{\mathrm{init}}$ is:
 
-## Prior Centres --- Yasso07
+* $\sigma_{\mathrm{init}} \approx 1$: forests in 1985 were at steady
+  state with respect to contemporary productivity;
+* $\sigma_{\mathrm{init}} > 1$: forests were *historically more
+  productive* (old growth, pre-intensification), and 1985 SOC reflects
+  that higher equilibrium;
+* $\sigma_{\mathrm{init}} < 1$: forests were *historically less
+  productive* (post-disturbance recovery), and 1985 SOC is correspondingly
+  lower.
 
-Prior centres are the published parameter values from Tuomi et al.\ (2009,
-2011), confirmed to agree with `YASSO07_DEFAULT_PARAMS` in the wrapper to
-within numerical precision. Decomposition rates in `y07par_gui.csv` are stored
-as positive absolute values; the wrapper correctly uses them with a negative
-sign in the transfer matrix. The parameter $r$ is stored as $-0.307$ in
-`YASSO07_DEFAULT_PARAMS` (following the Fortran sign convention) but the log
-transform requires a positive prior centre; `abs(r)` is applied before
-constructing `best_x`.
+The prior on $\sigma_{\mathrm{init}}$ is log-normal with centre 1 and
+unconstrained-space SD 0.5, giving a 95\% physical-space prior interval
+of approximately $[0.37, 2.72]$. This is wide enough to accommodate
+plausible historical productivity ranges in Finnish forests while
+remaining centred at the no-change null.
 
-## Prior Centres --- Yasso15
+## Implementation across models
 
-Prior centres for climate and size modifier parameters are the posterior means
-from the original Yasso15 global calibration (FMI repository, `Yasso15.dat`,
-10,000 thinned MCMC samples after dropping the MAP row). These agree with the
-published MAP values in `y15par.csv` to four significant figures after applying
-the column remapping (`ORIG_TO_LORENZO`).
+The pattern is uniform across all five models:
 
-## Prior Centres --- Yasso20
+* `*_transient_init(model_params, lm, xi_mean)`: a function in each
+  wrapper that takes the litter means `lm` (in particular,
+  `lm$nwl_mean`, `lm$fwl_mean`, `lm$cwl_mean` for Yasso models, or
+  `lm$J_total_mean` for SP1/TP2), multiplies them by
+  $\sigma_{\mathrm{input}} \cdot \sigma_{\mathrm{init}}$, and passes the
+  scaled litter to the model's existing steady-state routine.
+* The engine's likelihood function then runs the transient simulation
+  from this $C_{\mathrm{init}}$ over the full input time series with
+  the unscaled-by-$\sigma_{\mathrm{init}}$ contemporary inputs.
 
-Prior centres for climate and size modifier parameters are the MAP values from
-the official Ryassofortran R package (\url{https://github.com/YASSOmodel/Ryassofortran},
-file \texttt{data/sample\_parameters.rda}). These are used in preference to
-the posterior means from `Yasso20.dat` (10,000 samples) because the
-Ryassofortran package represents the FMI's current validated parameter set for
-Yasso20. Cross-validation against `ParY20.dat` (repository MAP file) confirms
-that the two sources agree to numerical precision for all parameters, and that
-`sample_parameters.rda` and `Yasso20.dat` posterior means differ by less than
-10\% for all climate/size parameters (largest difference: $\beta_1 = 0.158$
-vs.\ $0.167$ from posterior mean).
+The likelihood is also adjusted (see §6). In the *non-transient*
+calibration (the pre-existing pipeline, retained as a revert option in
+the engine), $\sigma_{\mathrm{init}}$ instead inflated the observation
+standard deviation $\sigma_{\mathrm{obs}}$ at the first observation per
+plot --- effectively absorbing the initial-state uncertainty into the
+likelihood. With transient initialisation, $\sigma_{\mathrm{init}}$ has
+already entered the model dynamics; if it were also kept in the
+likelihood it would be double-counted. The engine flag
+`transient_init = TRUE` removes the patch.
 
-## Prior Widths --- Yasso07
+## Steady-state computation as the initial-state operator
 
-No MCMC posterior samples are available from the Yasso07 original calibration.
-Prior widths are set from two sources: (a) published 95\% credible intervals
-from Tuomi et al.\ 2010 Table 4 for the size modifier parameters; (b) physical
-range arguments for the climate parameters.
+We use the model's analytical (or Fortran-based) steady-state operator,
+not a Fortran pre-run, to compute $C(1985)$. For SP1, TP2 and the Yasso
+family, the steady state under constant inputs and constant $\xi$ is
+mathematically well-defined and computable in closed form (SP1/TP2) or
+via a matrix solve (Yasso). A pre-run alternative would be to integrate
+the model from some earlier date (e.g. 1917, Finland's independence) at
+constant pre-1985 forcing. The analytical steady state is preferred
+because:
 
-| Parameter | Prior width | Space | Basis |
-|---|---|---|---|
-| Flow fractions | 1.0 | unconstrained | Weakly informative |
-| $\beta_1$ | 0.20 | log | Physical range: $\exp(0.2 \times 10) \approx 7\times$ modifier at $T=10^{\circ}$C |
-| $\beta_2$ | 0.05 | physical | Prevents implausible modifier curvature |
-| $\gamma$ | 0.30 | physical | Keeps precip.\ modifier in $[0.3, 0.6]$ at Finnish $P$ |
-| $\delta_1$ | 0.15 | physical | Tuomi et al.\ 2010 Table 4: $\pm 0.16$ cm$^{-1}$ |
-| $\delta_2$ | 0.10 | log | Tuomi et al.\ 2010 Table 4: $\pm 0.10$ cm$^{-2}$ |
-| $r$ | 0.015 | log | Tuomi et al.\ 2010 Table 4: $\pm 0.013$ |
-| $\sigma_{\mathrm{init}}$ | 0.5 | log | Physical 95\% CI $\approx [0.04, 0.27]$ |
-| $\sigma_{\mathrm{input}}$ | 0.5 | log | Physical 95\% CI $\approx [0.37, 2.72]$ |
+1. It is exact under the assumed forcing.
+2. It avoids the choice of an arbitrary pre-run start date and an
+   arbitrary pre-1985 productivity scenario.
+3. For the fast AWEN pools (mean residence times 1--10 yr), any
+   reasonable pre-run converges to the steady state within a decade,
+   so the pre-run only retains information about H (MRT $\sim 600$ yr);
+   but H also barely changes over 68 yr of pre-run, so the approximation
+   error is negligible.
+4. The Fortran `yasso07_run` aggregates the 15-element per-cohort state
+   into 5 summed pools in its output; reconstructing a 15-element
+   $C_{\mathrm{init}}$ from this output causes numerical pathologies.
+   The analytical steady-state routine returns the full 15-element
+   state correctly.
 
-## Prior Widths --- Yasso15 and Yasso20
+## Jensen's inequality correction
 
-For Yasso15/20, prior widths for climate and size modifier parameters are
-derived from the standard deviations of the published MCMC posterior samples
-from the FMI GitHub repository (`Yasso15.dat` and `Yasso20.dat`, 10,000
-thinned samples each). For log-transformed parameters ($\beta_1$, $\beta_{N1}$,
-$\beta_{H1}$, $\delta_2$, $r$) the width is $\mathrm{SD}(\log \theta)$ across
-posterior samples; for unconstrained parameters it is $\mathrm{SD}(\theta)$.
-
-The $\gamma_H$ prior width is capped at 1.5 in both models. At Finnish
-precipitation ($P \approx 600$ mm), $1 - \exp(\gamma_H \times 0.6) \approx 1$
-for any $\gamma_H < -5$, meaning the H pool climate modifier is near its
-maximum regardless of $\gamma_H$. The large posterior SD for $\gamma_H$ (3.99
-for Yasso15, 1.39 for Yasso20) is consistent with this near-unidentifiability.
-The cap of 1.5 uses the better-constrained Yasso20 posterior as a reference.
-
-\small
-| Parameter | Yasso15 $\sigma_k$ | Yasso20 $\sigma_k$ | Space | Note |
-|---|---|---|---|---|
-| Flow fractions | 1.0 | 1.0 | unconstrained | Weakly informative |
-| $\beta_1$ | 0.046 | 0.104 | log | SD(log $\beta_1$) from posterior |
-| $\beta_2$ | 0.00014 | 0.00054 | physical | Very tight; well-identified |
-| $\gamma$ | 0.070 | 0.146 | physical | SD($\gamma$) from posterior |
-| $\beta_{N1}$ | 0.105 | 0.062 | log | SD(log $\beta_{N1}$) |
-| $\beta_{N2}$ | 0.00008 | 0.00041 | physical | |
-| $\gamma_N$ | 0.155 | 0.035 | physical | |
-| $\beta_{H1}$ | 0.135 | 0.091 | log | SD(log $\beta_{H1}$) |
-| $\beta_{H2}$ | 0.00016 | 0.00009 | physical | |
-| $\gamma_H$ | **1.50** | 1.391 | physical | Capped (near-unidentifiable at Finnish $P$) |
-| $\delta_1$ | 0.328 | 0.435 | physical | SD($\delta_1$) |
-| $\delta_2$ | 0.286 | 0.211 | log | SD(log $\delta_2$) |
-| $r$ | 0.055 | 0.054 | log | SD(log $r$) |
-| $\sigma_{\mathrm{init}}$ | 0.5 | 0.5 | log | Fixed |
-| $\sigma_{\mathrm{input}}$ | 0.5 | 0.5 | log | Fixed |
-\normalsize
-
-## Prior Widths --- SP1 and TP2
-
-| Parameter | Prior width | Space | Basis |
-|---|---|---|---|
-| $\alpha$ (SP1) | 0.50 | log | Wide; MRT 4--30 yr spanned |
-| $\alpha_A$ (TP2) | 0.50 | log | Centred at Yasso07 value |
-| $\alpha_H$ (TP2) | 0.50 | log | Centred at Yasso07 value |
-| $p_H$ (TP2) | 1.00 | logit | Weakly informative |
-| $\beta_1$ | 0.20 | log | Same as Yasso07 for comparability |
-| $\beta_2$ | 0.05 | physical | Same as Yasso07 |
-| $\gamma$ | 0.30 | physical | Same as Yasso07 |
-| $\sigma_{\mathrm{init}}$ | 0.50 | log | Same as Yasso |
-| $\sigma_{\mathrm{input}}$ | 0.50 | log | Same as Yasso |
-
-## Physical Sign Constraints
-
-Several parameters must satisfy sign constraints from physical or mathematical
-requirements. These are enforced via log transforms rather than prior bounds,
-which would introduce hard edges incompatible with the Gaussian prior assumption.
-
-| Constraint | Parameters | Basis |
-|---|---|---|
-| $> 0$ | $\beta_1, \beta_{N1}, \beta_{H1}$ | Decomposition increases with temperature in boreal Finland. |
-| $> 0$ | $\delta_2$ | Size modifier $h_S(d) > 0$ for all Finnish diameters requires positive quadratic. Negative $\delta_2$ causes NaN in Fortran for $d \gtrsim 0.4$ cm. |
-| $> 0$ | $r$ | Only $-|r|$ enters Fortran. Sign is irrelevant; log transform avoids wasting prior support. |
-| $> 0$ | $\alpha$, $\alpha_A$, $\alpha_H$ | Decomposition rates must be positive. |
-| $< 0$ | $\gamma, \gamma_N, \gamma_H$ | $1 - \exp(\gamma P/1000) > 0$ requires $\gamma < 0$. Enforced by tight prior centred on negative published values. |
-
-## Published Parameter Values at Prior Centres
-
-**Yasso07** (from `y07par_gui.csv`; Tuomi et al.\ 2009, 2011; $r$ shown as
-$|r|$ --- the prior centre):
-
-| Parameter | Value |
-|---|---|
-| $\beta_1$ | 0.09873 |
-| $\beta_2$ | $-$0.00157 |
-| $\gamma$ | $-$1.2717 |
-| $\delta_1$ | $-$1.7084 |
-| $\delta_2$ | $+$0.8586 |
-| $r$ | $+$0.3068 |
-
-**Yasso15** (posterior means from `Yasso15.dat`; agree with `y15par.csv`
-to four significant figures):
-
-| Parameter | Value |
-|---|---|
-| $\beta_1$ | 0.0906 |
-| $\beta_2$ | $-$0.000215 |
-| $\gamma$ | $-$1.8090 |
-| $\beta_{N1}$ | 0.04878 |
-| $\beta_{N2}$ | $-$0.0000792 |
-| $\gamma_N$ | $-$1.1729 |
-| $\beta_{H1}$ | 0.03518 |
-| $\beta_{H2}$ | $-$0.000208 |
-| $\gamma_H$ | $-$12.541 |
-| $\delta_1$ | $-$0.4388 |
-| $\delta_2$ | $+$1.2684 |
-| $r$ | $+$0.2569 |
-
-**Yasso20** (MAP from Ryassofortran `sample_parameters.rda`;
-\url{https://github.com/YASSOmodel/Ryassofortran}):
-
-| Parameter | Value |
-|---|---|
-| $\beta_1$ | 0.1580 |
-| $\beta_2$ | $-$0.00200 |
-| $\gamma$ | $-$1.4400 |
-| $\beta_{N1}$ | 0.17000 |
-| $\beta_{N2}$ | $-$0.00500 |
-| $\gamma_N$ | $-$2.0000 |
-| $\beta_{H1}$ | 0.06700 |
-| $\beta_{H2}$ | $+$0.00000 |
-| $\gamma_H$ | $-$6.9000 |
-| $\delta_1$ | $-$2.5500 |
-| $\delta_2$ | $+$1.2400 |
-| $r$ | $+$0.2500 |
+The steady-state climate modifier $\xi$ is computed as
+$\xi(\bar{\mathrm{climate}})$, *not* as $\overline{\xi(\mathrm{climate}_t)}$.
+Because $\xi$ is convex in temperature (via $\exp(\beta_1 T + \beta_2 T^2)$)
+and concave in precipitation (via $1 - \exp(\gamma P/1000)$), Jensen's
+inequality gives $\overline{\xi(\mathrm{climate}_t)} \geq
+\xi(\bar{\mathrm{climate}})$ for typical Finnish inter-annual variability.
+The bias is 5--15\% in boreal conditions; large enough to materially
+affect $C_{\mathrm{init}}$. Each wrapper provides a
+`compute_xi_mean_*` function that takes the steady-state climate window,
+averages each climate variable, and calls the main $\xi$ function once
+with these scalar mean inputs.
 
 ---
 
 # Likelihood
 
-## Observation Model
+## Form
 
-A multiplicative-normal (proportional-error) model is used:
+Conditional on parameters, observations are modelled as
 
-$$\mathrm{SOC}_{\mathrm{obs},t} \sim \mathcal{N}\bigl(\hat{C}_t,\; s_t^2\bigr)$$
+$$y_{p,t} \sim \mathcal{N}\!\bigl(\hat{C}_{p,t},\;
+  \hat{C}_{p,t} \cdot \sigma_{\mathrm{obs}}\bigr),$$
 
-where the standard deviation scales with the predicted SOC:
+where $y_{p,t}$ is the observed SOC stock (t C ha$^{-1}$) at plot $p$
+in observation year $t$, and $\hat{C}_{p,t}$ is the predicted total SOC.
+This is a multiplicative-normal observation model: the standard deviation
+of the error scales with the prediction, so the relative observation
+error is constant across the SOC magnitude range.
 
-$$s_t = \begin{cases}
-  \hat{C}_t \, \sqrt{\sigma_{\mathrm{obs}}^2 + \sigma_{\mathrm{init}}^2}
-    & \text{first observation per plot (1985)} \\[4pt]
-  \hat{C}_t \, \sigma_{\mathrm{obs}}
-    & \text{subsequent observations (2006, 2024)}
-\end{cases}$$
+## Fixed $\sigma_{\mathrm{obs}}$
 
-**Rationale for multiplicative-normal:** A log-normal error model was used
-during a period when the data contained a $\times10$ litter overestimate (since
-corrected in `Data_work.R`). With litter inputs in the correct boreal range
-(median $\approx 2.4\;\mathrm{tC/ha/yr}$), a multiplicative-normal model is
-appropriate.
+$\sigma_{\mathrm{obs}}$ is *not* sampled. It is held at the empirical
+coefficient of variation of the SOC observations across all calibration
+plots and observation years, $\sigma_{\mathrm{obs}} = \mathrm{SD}(y) /
+\mathrm{mean}(y)$. This is approximately 0.45--0.50 on the Finnish
+dataset.
 
-## Fixed Observation Error
+This is a deliberate methodological choice. If $\sigma_{\mathrm{obs}}$
+were sampled, a structurally inadequate model could inflate it to
+absorb its own residual variance, hiding the inadequacy. By fixing
+$\sigma_{\mathrm{obs}}$ at the empirical CV, the same observation-error
+budget is enforced across all five models, and structural differences
+have nowhere to hide except in the residuals --- which is exactly where
+the intercomparison wants them to appear. The same value is used in all
+five calibrations.
 
-$\sigma_{\mathrm{obs}}$ is **fixed** at the observed coefficient of variation
-of SOC across all calibration plots:
+## Per-plot log-likelihood
 
-$$\sigma_{\mathrm{obs}} = \frac{\mathrm{sd}(\mathrm{SOC}_{\mathrm{obs}})}
-  {\mathrm{mean}(\mathrm{SOC}_{\mathrm{obs}})} = 0.472$$
+For each plot $p$ with observations at years $\{t_1, \ldots, t_{n_p}\}$,
+the per-plot log-likelihood is
 
-This value is **identical across all five models**. Fixing $\sigma_{\mathrm{obs}}$
-ensures structural differences appear in residuals rather than being absorbed
-into the error term, which is critical for the intercomparison.
+$$\log L_p = \sum_{k=1}^{n_p} \log \mathcal{N}\!\bigl(y_{p,t_k}\,;\,
+  \hat{C}_{p,t_k},\; \hat{C}_{p,t_k} \cdot \sigma_{\mathrm{obs}}\bigr).$$
 
-## Log-Likelihood
-
-For each plot $i$ with $n_i$ observations:
-
-$$\ell_i(\boldsymbol{\theta}) = \sum_{k=1}^{n_i}
-  \log \mathcal{N}\bigl(\mathrm{SOC}_{i,k};\; \hat{C}_{i,t_{ik}},\; s_{i,k}^2\bigr)$$
-
-Total log-posterior in unconstrained space:
-
-$$\mathcal{L}(\boldsymbol{v}) = \sum_i \ell_i\bigl(\mathrm{to\_original}(\boldsymbol{v})\bigr)
-  + \log \left|\frac{\partial \boldsymbol{\theta}}{\partial \boldsymbol{v}}\right|$$
-
-If any plot returns $-\infty$, the entire proposal is rejected. The inner
-per-plot function is byte-compiled with `cmpfun()` for a ~10--20\% speedup
-at the R level.
-
----
-
-# Per-Plot Likelihood Evaluation
-
-Each likelihood evaluation executes three stages per plot in parallel via
+The total log-likelihood is $\sum_p \log L_p$, plus the log-Jacobian of
+the parameter transforms. Plots are evaluated in parallel via
 `mclapply`.
 
-## Stage 1: Environmental Modifier Time Series
+## Rejection logic
 
-For each year $t$ in 1985--2023, `compute_xi()` computes the scalar modifier
-$\xi_t$ from annual climate summaries (mean temperature, temperature amplitude,
-annual precipitation). The modifier is applied multiplicatively to all
-decomposition rates. For SP1 and TP2, the same `compute_xi_yasso07()` R
-function is used directly (no separate implementation), ensuring that any
-difference in fitted climate response reflects genuine structural differences
-between models, not formula discrepancies.
+Three hard rejections (return $-\infty$) are applied, all required for
+arithmetic validity:
 
-## Stage 2: Steady-State Initialisation
+1. $\hat{C}_{p,t}$ is non-finite (NaN or $\pm\infty$) at any observation
+   year --- $\log \mathcal{N}$ undefined.
+2. $\hat{C}_{p,t} \leq 0$ at any observation year --- undefined in the
+   multiplicative-error model.
+3. The model run itself returned NULL (Fortran crash or wrapper-level
+   `tryCatch` exception).
 
-The initial SOC pool distribution $\boldsymbol{C}^{\ast}$ is computed
-analytically from the closed-form steady state. For the Yasso models this is
-a matrix inversion $\boldsymbol{C}^{\ast} = -A(\boldsymbol{\theta},\;
-\xi_{\mathrm{ss}})^{-1} \, \boldsymbol{b}(\boldsymbol{\theta})$; for SP1 and
-TP2 the steady states are explicit scalar/vector formulas.
+No physical-ceiling guard (e.g. "reject if predicted SOC $> 1000$
+t C ha$^{-1}$") is applied. Such a ceiling would asymmetrically penalise
+models with recycling architectures that explore wider parameter regions
+during MCMC exploration. Physically implausible predictions yield very
+large negative log-likelihoods and are rejected by MCMC sampling
+naturally. The behaviour matches Viskari (2022).
 
-The climate scalar used is $\xi_{\mathrm{ss}} = \xi(\bar{T}, \bar{P})$,
-computed from mean climate over the **20-year steady-state window** (1985--2004).
-
-**Jensen's inequality correction.** Because $\xi$ is nonlinear in $T$ and $P$:
-
-$$\xi(\bar{T}, \bar{P}) \neq \overline{\xi(T_t, P_t)}$$
-
-Using the average of annual modifiers instead of the modifier at average
-climate introduces a 5--15\% systematic bias in boreal conditions. The correct
-approach is enforced through the `compute_xi_mean()` interface: it averages
-$T$, $T_{\mathrm{amp}}$, and $P$ over the steady-state window and calls
-`compute_xi()` once.
-
-**Litter scaling.** $\sigma_{\mathrm{input}}$ is applied to litter inputs in
-both the steady-state initialisation and the transient run, so the calibrated
-multiplier affects the initial condition and the trajectory consistently.
-
-## Stage 3: Transient Simulation
-
-Starting from $\boldsymbol{C}^{\ast}$, the model runs forward 1985--2023 using
-the annual $\xi_t$ time series and actual annual litter inputs. Yasso models
-use a single Fortran call per plot; SP1 and TP2 use exact analytical solutions
-in R. Predicted SOC at observation years (1985, 2006, 2024) is extracted and
-compared to observations.
+The likelihood evaluates $\hat{C}_{p,t}$ only at observation years.
+Post-1985 trajectory values *between* observation years are computed
+(the simulation runs the full time series) but not entered into the
+likelihood. The full trajectory --- including any structural divergence
+beyond the calibration window --- is then examined in the predictive
+stage.
 
 ---
 
-# MCMC Sampling
+# MCMC sampling
 
-## Sampler
-
-DEzs (Differential Evolution with snooker updates; ter Braak \& Vrugt 2008),
-implemented in `BayesianTools` (Hartig et al. 2023). Selected for:
-
-- No gradient requirements (black-box model functions).
-- Robust performance on correlated, moderately high-dimensional posteriors.
-- Population-based proposals that efficiently explore posterior ridges from
-  compositional constraints.
+The Differential Evolution with snooker update sampler (DEzs) is used,
+via the `BayesianTools` R package (Hartig et al. 2023). DEzs is a
+population-based sampler that proposes new states by taking weighted
+differences between current chain states, then accepts/rejects via the
+standard Metropolis ratio. It mixes well in moderate-dimensional
+problems (10--50 parameters) and handles correlated posteriors better
+than random-walk Metropolis.
 
 ## Settings
 
-| Setting | Test (Mac) | Production (Puhti) |
-|---|---|---|
-| Chains | 4 | 4 |
-| Iterations | 10,000 | 50,000 |
-| Burn-in | 2,000 | 10,000 |
-| DEzs jitter $\varepsilon$ | 0.001 | 0.001 |
-| Random seed | 2025 | 2025 |
+Shared across all five models, defined in `calib_config.R`:
 
-Burn-in fraction: 20\%. Four chains give meaningfully tighter Gelman--Rubin
-bounds than three chains for negligible extra cost.
+| Setting     | Value     | Note                                 |
+|-------------|-----------|--------------------------------------|
+| Chains      | 5         | Sufficient for Gelman--Rubin $\hat{R}$ |
+| Iterations  | 50\,000   | Per chain                            |
+| Burn-in     | 5\,000    | 10\% of iterations                   |
+| Thinning    | None      | Full chain retained                  |
+| Initial state | $x = \text{best\_x}$ | All chains seeded at prior centre |
+
+DEzs initialises its internal population from small random perturbations
+around the seed point and then explores via differential-evolution
+proposals. `parallel = FALSE` is passed to `createBayesianSetup()` to
+suppress BayesianTools' internal parallelism; per-plot evaluation is
+already parallelised at the likelihood level.
 
 ## Parallelisation
 
-**Sequential-chains (current):** chains run one after another (`lapply`),
-each using all available cores for the `mclapply` per-plot loop. On Puhti:
-39 cores per chain (`parallelly::availableCores()`). On Mac:
-`detectCores() - 1`. SP1 and TP2 use the same architecture; because their
-per-plot evaluation is pure R (no Fortran call), individual evaluations are
-faster but the wallclock savings are modest given the R-level overhead.
+Two-level parallelism is available:
 
-**Hybrid (future Puhti production):** outer `lapply` replaced by
-`mclapply(mc.cores = 4)` with `CORES_PER_CHAIN = 90`, giving
-$4 \times 90 = 360$ of 384 cores. Nested forking is supported on Linux but
-not macOS, so sequential is mandatory for Mac development.
+* **Per-plot, within-chain**: each likelihood evaluation runs the
+  per-plot inner loop in parallel via `mclapply` with `CORES_PER_CHAIN`
+  workers.
+* **Across-chain (hybrid)**: chains can be launched in parallel on
+  Linux clusters, with each chain then running its own per-plot
+  parallelism.
 
-`parallel = FALSE` is passed to `createBayesianSetup()` so BayesianTools'
-built-in parallelism is suppressed.
-
-## Starting Point
-
-All chains start from `best_x = to_unconstrained(free_defaults)`. DEzs
-initialises its population from small random perturbations around `best_x`
-and rapidly disperses via differential-evolution proposals.
+The within-chain mode is mandatory on macOS (nested forking in mclapply
+is unsafe). On Linux HPC, hybrid mode (chains $\times$ cores) gives
+roughly linear speedup up to the available core count.
 
 ---
 
-# Pre-MCMC Sanity Check
+# Sanity checks and diagnostics
 
-Before launching MCMC, a forward simulation at the prior centre (published
-defaults) is run for 4 randomly selected plots:
+## Pre-MCMC sanity check
 
-1. **Numerical stability:** all predicted SOC finite and positive.
-2. **Order-of-magnitude check:** predicted / observed $\in [0.1, 10]$
-   at all observation years.
-3. **Likelihood check:** `ll_fn(best_x)` finite across all calibration plots.
+Before launching MCMC, each calibration script performs a forward
+simulation at the prior centre ($x = $ best\_x) for four randomly
+selected plots. Three conditions must hold:
 
-Output: `{Model}_forward_at_defaults_{RUN_ID}.png` (2$\times$2 panel). If
-the sanity check fails, MCMC is not launched.
+1. All predicted SOC values are finite and positive.
+2. The predicted-to-observed ratio lies in $[0.1, 10]$ at every
+   observation year.
+3. The likelihood `ll_fn(best_x)` is finite across all calibration
+   plots.
 
----
+A 2$\times$2 diagnostic PNG is written
+(`{Model}_forward_at_defaults_{RUN_ID}.png`). If condition 1 or 3 fails,
+the calibration is aborted; condition 2 produces a warning but does not
+abort.
 
-# Convergence Diagnostics
+A complementary set of *input* diagnostics (`diagnostics_inputs.R`,
+run separately) confirms that the per-plot litter inputs are not so low
+that the implied mean residence time (MRT = mean SOC / mean litter)
+exceeds 100 yr, which would prevent the model from producing positive
+SOC at any parameter setting. Plots failing this test are excluded
+upstream via `calib_ready = FALSE`.
 
-All diagnostics computed on post-burnin samples. $\hat{R}$ and ESS computed
-in unconstrained space; posterior summaries reported in physical space via
-`to_original()`.
+## Convergence diagnostics
 
-## Gelman--Rubin $\hat{R}$
+Computed on post-burnin samples in *unconstrained* (sampling) space:
 
-| $\hat{R}$ | Interpretation |
-|---|---|
-| $< 1.05$ | Good convergence |
-| $1.05$--$1.10$ | Marginal; extend chains |
-| $> 1.10$ | Poor convergence; run not usable |
+| Diagnostic | Threshold       | Interpretation                       |
+|------------|-----------------|--------------------------------------|
+| $\hat{R}$ (univariate, per parameter) | $< 1.05$ | Good convergence       |
+| $\hat{R}$ (multivariate)              | $< 1.05$ | Joint convergence      |
+| Effective sample size                  | $> 200$ | Adequate independent draws |
+| Acceptance rate                        | 0.2--0.4 | Reasonable DEzs mixing |
 
-Computed both per-parameter (univariate, `coda::gelman.diag()`) and jointly
-(multivariate $\hat{R}$).
+$\hat{R} > 1.10$ is treated as poor convergence; the run is not used
+for downstream analysis. Per-chain divergence and post-warmup means
+are also tracked.
 
-## Effective Sample Size
+## Diagnostic outputs
 
-`coda::effectiveSize()`. Values $< 200$ indicate poor mixing.
+All written to `Calibration_real_data_transient/diagnostics/{Model}/`:
 
-## Diagnostic Outputs
+| File                            | Content                                       |
+|---------------------------------|-----------------------------------------------|
+| `*_traces_*.png`                | Trace plots, one panel per parameter         |
+| `*_marginals_*.png`             | Prior vs posterior KDE (shared x-grid)       |
+| `*_rhat_barplot_*.png`          | $\hat{R}$ per parameter, coloured by zone    |
+| `*_kl_divergence_*.png`         | KL divergence posterior $\|$ prior           |
+| `*_report_*.txt`                | Tabular $\hat{R}$, ESS, quantile summaries   |
+| `*_forward_at_defaults_*.png`   | Pre-MCMC sanity check (4 plots)              |
 
-All files written to `Calibration_real_data/diagnostics/{Model}/`:
-
-| File | Content |
-|---|---|
-| `*_traces_*.png` | Trace plots per parameter, one line per chain |
-| `*_marginals_fractions_*.png` | Prior vs posterior KDE for the flow fractions |
-| `*_marginals_climate_aux_*.png` | Prior vs posterior KDE for climate and auxiliary parameters |
-| `*_rhat_barplot_*.png` | $\hat{R}$ per parameter, coloured by convergence zone |
-| `*_kl_divergence_*.png` | KL(posterior $\|$ prior) per parameter |
-| `*_report_*.txt` | $\hat{R}$, ESS, posterior quantile table, chain health |
-
-Prior and posterior KDEs are evaluated on the same x-grid derived from the
-prior's support to avoid misleading compression.
-
----
-
-# Output Files
-
-Written to `Calibration_real_data/runs/`:
-
-| File | Content | Used by |
-|---|---|---|
-| `{Model}_chains_{RUN_ID}.rds` | Raw BayesianTools chain objects (unconstrained) | Chain extension, re-diagnostics |
-| `{Model}_posterior_{RUN_ID}.rds` | Post-burnin samples in **physical space** | Predictive script, downstream analysis |
-| `{Model}_metadata_{RUN_ID}.rds` | Run config, R version, wallclock, summary stats | Reproducibility |
-| `{Model}_inputs_{RUN_ID}.rds` | Per-plot structures: `climate_by_plot`, `inputs_by_plot`, `litter_means`, `obs_meta`, `plot_info` | Predictive script |
-
-The inputs RDS ensures exact provenance: the predictive script reads the same
-per-plot structures the calibration used, even if `Data_work.R` is
-subsequently updated.
+Prior and posterior KDE are evaluated on the same x-grid derived from
+the prior's 99th-percentile range. This is essential: tight priors
+otherwise appear artificially flat (compressed off-grid) when the x-axis
+is chosen from the posterior range, masking the actual prior--posterior
+displacement.
 
 ---
 
-# Key Design Decisions
+# Output files
 
-Architectural decisions locked in after discussion (April--May 2026):
+Written to `Calibration_real_data_transient/runs/`:
 
-1. **Multiplicative-normal likelihood.** Reverted from a log-normal workaround
-   added when litter inputs had a $\times10$ overestimate. With correct litter
-   magnitudes, multiplicative-normal is the appropriate model.
+| File                          | Content                                                | Used by             |
+|-------------------------------|--------------------------------------------------------|---------------------|
+| `{Model}_chains_{RUN_ID}.rds`    | BayesianTools chain objects (unconstrained space)   | Re-diagnostics, extension |
+| `{Model}_posterior_{RUN_ID}.rds` | Post-burnin samples in physical space               | Predictive scripts  |
+| `{Model}_metadata_{RUN_ID}.rds`  | Run configuration, wallclock, $\hat{R}$, ESS        | Reproducibility     |
+| `{Model}_inputs_{RUN_ID}.rds`    | Per-plot input structures used by this calibration  | Predictive scripts  |
 
-2. **Fixed $\sigma_{\mathrm{obs}} = 0.472$ across all models.** Ensures
-   structural differences appear in residuals. A poorly fitting model cannot
-   mask its inadequacy by calibrating a larger error variance.
+The inputs RDS contains `climate_by_plot`, `inputs_by_plot`,
+`litter_means`, `obs_meta`, `plot_info`, `plots_real`, `sigma_obs_fixed`,
+`sigma_ppm`, and `STEADY_STATE_YEARS`. It provides exact provenance: the
+predictive script reads the same per-plot structures the calibration
+used, regardless of subsequent updates to `Data_work.R`.
 
-3. **$\xi(\bar{T}, \bar{P})$, not $\overline{\xi(T_t, P_t)}$, for steady
-   state.** Jensen's inequality correction; 5--15\% bias in boreal conditions.
-   Fixed at the `compute_xi_mean` interface level.
+---
 
-4. **STEADY\_STATE\_YEARS = 20.** Uses 1985--2004 climate for the steady-state
-   scalar, pre-dating accelerated boreal warming.
+# Key design decisions
 
-5. **Fixed decomposition rates (Yasso models).** $\alpha_A, \alpha_W,
-   \alpha_E, \alpha_N, p_H, \alpha_H$ fixed at published values. SP1 and TP2
-   have no published global calibrations, so all parameters are free.
+The following architectural choices are locked in across the pipeline:
 
-6. **Log transform on $\delta_2$ and $r$.** Enforces $\delta_2 > 0$ to prevent
-   NaN in the Fortran size modifier and eliminates sign-redundancy in $r$.
+1. **Transient initialisation via $\sigma_{\mathrm{init}}$.** The 1985
+   SOC trajectory is incompatible with a steady-state initial condition
+   under the observed litter inputs; $\sigma_{\mathrm{init}}$ gives the
+   model freedom to start above or below the litter-implied steady
+   state. Uniform across all five models.
 
-7. **Informative priors for climate/size parameters (Yasso models).** Derived
-   from published posteriors (Yasso15/20) or calibration confidence intervals
-   (Yasso07). Yasso20 prior centres use the FMI Ryassofortran package MAP
-   values (\texttt{sample\_parameters.rda}) as the authoritative source,
-   preferred over the `Yasso20.dat` posterior means.
+2. **Multiplicative-normal likelihood.** Reverted from an earlier
+   log-normal workaround that had been added when litter inputs were
+   over-estimated by an order of magnitude; with correctly-scaled litter,
+   multiplicative-normal is the appropriate model.
 
-8. **Yasso20 structural zeros fixed.** Eleven parameters with SD $= 0$ in the
-   original Yasso20 calibration are fixed rather than sampled. Sampling near
-   a hard boundary degrades DEzs mixing.
+3. **Fixed $\sigma_{\mathrm{obs}}$** at the empirical CV of the SOC
+   observations, identical across all five models. Forces structural
+   inadequacy into residuals rather than into the error term.
 
-9. **SP1 and TP2 replace RothC.** RothC introduces conceptual differences
-   (clay partitioning, moisture deficit, IOM) beyond pool count that confound
-   the structural comparison. SP1 and TP2 provide a clean complexity spectrum
-   (1 pool $\to$ 2 pools $\to$ 5 pools) in which each step adds one structural
-   element while keeping all other modelling choices identical.
+4. **$\xi(\bar{\mathrm{climate}})$ rather than
+   $\overline{\xi(\mathrm{climate}_t)}$** for steady-state
+   initialisation. Jensen's-inequality correction; 5--15\% bias in
+   boreal conditions otherwise. Implemented uniformly via
+   `compute_xi_mean_*` functions in each wrapper.
 
-10. **SP1 and TP2 share the Yasso07 xi formula.** The same
-    `compute_xi_yasso07()` R function is called directly in all three simple
-    models. This ensures climate response comparisons are not confounded by
+5. **Steady-state climate window = 20 years.** 1985--2004 climate is
+   used for the steady-state $\xi$, pre-dating the accelerated boreal
+   warming of the 2010s.
+
+6. **Decomposition rates fixed at published defaults** for the Yasso
+   family ($\alpha_A, \alpha_W, \alpha_E, \alpha_N, p_H, \alpha_H$).
+   Keeps the intercomparison clean and reduces free-parameter count.
+   SP1 and TP2 have no published global calibrations, so all their
+   parameters are free.
+
+7. **Log transforms on $\delta_2$ and $r$.** Enforces $\delta_2 > 0$ to
+   avoid Fortran NaN at $d > 0.4$ cm and eliminates sign-redundancy in
+   $|r|$.
+
+8. **Informative priors on climate and size parameters** (Yasso15/20
+   from FMI posterior SDs, Yasso07 from literature CIs). Prevents the
+   $\gamma$/$\sigma_{\mathrm{input}}$ compensation loop and the
+   $\delta_2$ NaN pathology.
+
+9. **Weakly informative priors on transfer fractions**
+   ($\sigma_{\mathrm{ppm}} = 1$ in unconstrained space). Finnish data
+   drives pool-flow structure --- the primary structural-comparison
+   axis.
+
+10. **All 12 transfer fractions free in all three Yasso models.** The
+    Viskari (2022) structural zeros and derived fractions in the
+    original Yasso20 are *not* imposed; doing so would give Yasso20
+    fewer degrees of freedom than Yasso07/15 and make the structural
+    intercomparison uninterpretable.
+
+11. **Stick-breaking parameterisation** with budget $B = 1 - p_H$ for
+    transfer fractions. Exact simplex constraint, well-conditioned
+    Jacobian, exchangeable across donor columns.
+
+12. **Three SOC observation years** (1985, 2006, 2024). The Komeetta
+    campaign (2024) provides a third calibration target; the
+    2006--2024 quasi-stability constrains long-term decomposition
+    rates independently of the 1985--2006 accumulation dynamics.
+
+13. **No physical-ceiling rejection** in the likelihood. Implausible
+    predictions are rejected via the log-likelihood, not via a hard
+    cap. Matches Viskari (2022).
+
+14. **SP1 and TP2 share the Yasso07 $\xi$ formula.** Climate-response
+    comparison across the complexity ladder is not confounded by
     approximation-scheme differences.
 
-11. **ICBM topology for TP2.** All litter inputs enter the active pool A; H
-    receives transfers only. This eliminates one free parameter (no input
-    partitioning fraction) and is standard in Nordic forestry SOC models.
+15. **ICBM topology for TP2**: all litter enters $A$; $H$ receives only
+    transferred mass. Eliminates a weakly-constrained input-partitioning
+    parameter and is standard in Nordic forestry SOC models.
 
-12. **Sequential chains.** Mandatory on macOS. Hybrid strategy ($4 \times 39$
-    cores) available on Puhti.
-
-13. **Global $\sigma_{\mathrm{input}}$.** Single litter scaling multiplier.
-    Per-species stratification is a possible extension.
-
-14. **Three SOC observation years (1985, 2006, 2024).** The Komeetta campaign
-    (2024) provides a third calibration target. The 2006--2024 stability
-    constrains equilibrium decomposition rates independently of the 1985--2006
-    accumulation dynamics.
+16. **Global $\sigma_{\mathrm{input}}$.** A single multiplicative litter
+    scaling per plot. Per-species or per-region stratification is a
+    possible extension but is not used in the current pipeline.
 
 ---
 
 # Software
 
-| Component | Details |
-|---|---|
-| R | $\geq$ 4.3; Puhti: 4.5.2 (`r-env` Apptainer) |
-| `BayesianTools` | Hartig et al. (2023); DEzs sampler |
-| `coda` | Gelman--Rubin $\hat{R}$, ESS |
-| `compiler` | `cmpfun()` byte-compilation |
-| `parallel` | `mclapply()` per-plot parallelism |
-| Fortran model cores | `R CMD SHLIB`; `.Fortran()` interface (Yasso07/15/20 only) |
-| SP1 / TP2 | Pure R; no Fortran compilation required |
-| HPC | CSC Puhti; `small` partition; 1 node, 40 cores, 2 GB/core |
+| Component              | Details                                                 |
+|------------------------|---------------------------------------------------------|
+| R                      | $\geq$ 4.3                                              |
+| `BayesianTools`        | Hartig et al. (2023); DEzs sampler                      |
+| `coda`                 | Gelman--Rubin $\hat{R}$, ESS                            |
+| `compiler`             | `cmpfun()` byte-compilation of likelihood               |
+| `parallel`             | `mclapply()` per-plot parallelism                       |
+| Fortran 90 cores       | `R CMD SHLIB`; `.Fortran()` interface (Yasso family)    |
+| SP1, TP2               | Pure R; no Fortran compilation                          |
 
-Random seed: `set.seed(2025)` before chain initialisation (consistent across
-all model scripts). Mac test plot subsampling: `set.seed(42)`.
+Random seed: `set.seed(2025)` before chain initialisation, consistent
+across all models. Test plot subsampling (when `N_PLOTS_TEST` is set):
+`set.seed(42)`.
+
+---
+
+# References
+
+* Andrén, O. \& Kätterer, T. (1997). ICBM: The introductory carbon
+  balance model for exploration of soil carbon balances.
+  *Ecological Applications* 7, 1226--1236.
+* Hartig, F. et al. (2023). BayesianTools: General-purpose MCMC and SMC
+  samplers and tools for Bayesian statistics. R package.
+* Tuomi, M. et al. (2008--2011). Yasso07 calibration and the leaf
+  litter decomposition model. *Ecological Modelling* and
+  *Global Change Biology*.
+* Viskari, T. et al. (2022). Calibrating the soil organic carbon model
+  Yasso20 with multiple Finnish datasets. *Geoscientific Model
+  Development* 15, 1735--1752.
+
