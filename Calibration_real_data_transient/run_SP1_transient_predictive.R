@@ -78,6 +78,7 @@ litter_means       <- inputs_pkg$litter_means
 obs_meta           <- inputs_pkg$obs_meta
 plot_info          <- inputs_pkg$plot_info
 plots_real         <- inputs_pkg$plots_real
+holdout_plots      <- inputs_pkg$holdout_plots   # loaded for validation subsetting
 sigma_obs_fixed    <- inputs_pkg$sigma_obs_fixed
 STEADY_STATE_YEARS <- inputs_pkg$STEADY_STATE_YEARS
 
@@ -313,6 +314,9 @@ residuals_df <- posterior_summary %>%
          residual_log, residual_abs, is_first) %>%
   left_join(site_raw, by = "plot_id")
 
+# --- Tag holdout rows (used by residual analysis and multimodel) ---
+residuals_df$is_holdout <- residuals_df$plot_id %in% holdout_plots
+
 residuals_csv <- file.path(DIR_DIAG,
                            sprintf("%s_residuals_%s.csv", MODEL_NAME, RUN_ID))
 write.csv(residuals_df, residuals_csv, row.names = FALSE)
@@ -343,6 +347,31 @@ message(sprintf("  RMSE (median): %.2f tC/ha", RMSE_med))
 message(sprintf("  Bias (median): %+.2f tC/ha", bias_med))
 message(sprintf("  95%% coverage:  %.3f", coverage_95))
 
+# --- Split calibration / holdout and compute metrics for each ---
+res_calib   <- residuals_df[!residuals_df$is_holdout, ]
+res_holdout <- residuals_df[ residuals_df$is_holdout, ]
+
+compute_metrics <- function(df) {
+  obs <- df$soc_obs_tCha; hat <- df$soc_mean; hat_med <- df$soc_median
+  list(R2          = cor(obs, hat, use = "complete.obs")^2,
+       RMSE_mean   = sqrt(mean((obs - hat)^2,     na.rm = TRUE)),
+       bias_mean   = mean(hat - obs,              na.rm = TRUE),
+       RMSE_median = sqrt(mean((obs - hat_med)^2, na.rm = TRUE)),
+       bias_median = mean(hat_med - obs,          na.rm = TRUE),
+       coverage_95 = mean(obs >= df$soc_q025 & obs <= df$soc_q975, na.rm = TRUE))
+}
+
+metrics_calib   <- compute_metrics(res_calib)
+metrics_holdout <- compute_metrics(res_holdout)
+
+message("\nCalibration metrics:")
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
+                metrics_calib$R2, metrics_calib$RMSE_median,
+                metrics_calib$bias_median, metrics_calib$coverage_95))
+message("Holdout (independent validation) metrics:")
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
+                metrics_holdout$R2, metrics_holdout$RMSE_median,
+                metrics_holdout$bias_median, metrics_holdout$coverage_95))
 
 # =============================================================================
 # 8.  Plots
@@ -462,20 +491,124 @@ dev.off()
 message(sprintf("Plot saved: %s", traj_png))
 
 
+# --- Holdout: obs vs predicted (mirrors Section 8 scatter, holdout subset) ---
+holdout_pred_png <- file.path(DIR_DIAG,
+                              sprintf("%s_obs_vs_pred_holdout_%s.png", MODEL_NAME, RUN_ID))
+ktp_vals_h <- as.character(res_holdout$kasvup_tyyppi)
+ktp_col_h  <- ktp_palette[ktp_vals_h]; ktp_col_h[is.na(ktp_col_h)] <- "grey60"
+png(holdout_pred_png, width = 7L * PX_PER_IN, height = 7L * PX_PER_IN, res = PX_PER_IN)
+par(mar = c(4.5, 4.5, 3, 1))
+ax_lim_h <- c(0, max(c(res_holdout$soc_obs_tCha, res_holdout$soc_q975),
+                     na.rm = TRUE) * 1.05)
+plot(NA, xlim = ax_lim_h, ylim = ax_lim_h,
+     xlab = "Observed SOC (tC/ha)",
+     ylab = "Predicted SOC -- posterior median (tC/ha)",
+     main = sprintf("%s  |  Independent validation  |  %s", MODEL_NAME, RUN_ID))
+abline(0, 1, lty = 2, col = "grey40", lwd = 1.5)
+segments(res_holdout$soc_obs_tCha, res_holdout$soc_q025,
+         res_holdout$soc_obs_tCha, res_holdout$soc_q975,
+         col = adjustcolor(ktp_col_h, 0.3), lwd = 0.8)
+points(res_holdout$soc_obs_tCha, res_holdout$soc_median,
+       pch = 16, cex = 0.9, col = adjustcolor(ktp_col_h, 0.7))
+legend("topleft",
+       legend = c(sprintf("R² = %.3f",           metrics_holdout$R2),
+                  sprintf("RMSE = %.1f tC/ha",   metrics_holdout$RMSE_median),
+                  sprintf("Bias = %+.1f tC/ha",  metrics_holdout$bias_median),
+                  sprintf("95%% coverage = %.2f", metrics_holdout$coverage_95),
+                  sprintf("n holdout = %d",       length(holdout_plots))),
+       bty = "n", cex = 0.85)
+ktp_present_h <- sort(unique(na.omit(ktp_vals_h)))
+ktp_present_h <- ktp_present_h[ktp_present_h %in% names(ktp_palette)]
+if (length(ktp_present_h) > 0)
+  legend("bottomright", legend = ktp_labels[ktp_present_h],
+         col = ktp_palette[ktp_present_h], pch = 16, bty = "n", cex = 0.75,
+         title = "kasvup_tyyppi")
+dev.off()
+message(sprintf("Holdout obs vs pred: %s", holdout_pred_png))
+
+# --- Holdout: ΔSOC trajectory (mirrors Section 8 trajectory, holdout subset) ---
+pp_holdout <- posterior_predictions[
+  posterior_predictions$plot_id %in% holdout_plots, ]
+pp_h <- pp_holdout %>%
+  group_by(plot_id, draw) %>% arrange(year, .by_group = TRUE) %>%
+  mutate(first_soc   = first(total_soc), first_year = first(year),
+         annual_rate = (total_soc - first_soc) / (year - first_year)) %>%
+  filter(year != first_year) %>% ungroup()
+traj_summary_h <- pp_h %>%
+  group_by(draw, year) %>%
+  summarise(mean_annual_rate = mean(annual_rate, na.rm = TRUE), .groups = "drop") %>%
+  group_by(year) %>%
+  summarise(median_delta = median(mean_annual_rate, na.rm = TRUE),
+            q025 = quantile(mean_annual_rate, 0.025, na.rm = TRUE),
+            q250 = quantile(mean_annual_rate, 0.250, na.rm = TRUE),
+            q750 = quantile(mean_annual_rate, 0.750, na.rm = TRUE),
+            q975 = quantile(mean_annual_rate, 0.975, na.rm = TRUE),
+            .groups = "drop") %>% arrange(year)
+obs_delta_h <- posterior_summary %>%
+  filter(!is.na(soc_obs_tCha), plot_id %in% holdout_plots) %>%
+  group_by(plot_id) %>% arrange(year, .by_group = TRUE) %>%
+  summarise(delta_obs  = (last(soc_obs_tCha) - first(soc_obs_tCha)) /
+              (last(year) - first(year)),
+            year_first = first(year), year_last = last(year), .groups = "drop") %>%
+  filter(year_first != year_last)
+obs_mean_delta_h <- mean(obs_delta_h$delta_obs, na.rm = TRUE)
+obs_se_delta_h   <- sd(obs_delta_h$delta_obs,   na.rm = TRUE) / sqrt(nrow(obs_delta_h))
+traj_holdout_png <- file.path(DIR_DIAG,
+                              sprintf("%s_delta_soc_trajectory_holdout_%s.png", MODEL_NAME, RUN_ID))
+png(traj_holdout_png, width = 12L * PX_PER_IN, height = 7L * PX_PER_IN, res = PX_PER_IN)
+par(mar = c(4, 4, 3, 1))
+ylim_h <- range(c(traj_summary_h$q025, traj_summary_h$q975,
+                  obs_mean_delta_h + 1.96*obs_se_delta_h,
+                  obs_mean_delta_h - 1.96*obs_se_delta_h, 0), na.rm = TRUE)
+ylim_h <- ylim_h + c(-0.05, 0.05) * diff(ylim_h)
+plot(NA, xlim = range(traj_summary_h$year), ylim = ylim_h,
+     xlab = "Year", ylab = "Mean annual ΔSOC since first year (tC/ha/yr)",
+     main = sprintf("Mean annual ΔSOC — independent validation  |  %s  |  %s",
+                    MODEL_NAME, RUN_ID))
+polygon(c(traj_summary_h$year, rev(traj_summary_h$year)),
+        c(traj_summary_h$q025, rev(traj_summary_h$q975)),
+        col = adjustcolor("steelblue", 0.15), border = NA)
+polygon(c(traj_summary_h$year, rev(traj_summary_h$year)),
+        c(traj_summary_h$q250, rev(traj_summary_h$q750)),
+        col = adjustcolor("steelblue", 0.35), border = NA)
+lines(traj_summary_h$year, traj_summary_h$median_delta, col = "steelblue", lwd = 2)
+abline(h = 0, lty = 3, col = "grey40")
+abline(h = obs_mean_delta_h, col = "firebrick", lwd = 2.5, lty = 2)
+rect(xleft   = min(obs_delta_h$year_first), xright  = max(obs_delta_h$year_last),
+     ybottom = obs_mean_delta_h - 1.96*obs_se_delta_h,
+     ytop    = obs_mean_delta_h + 1.96*obs_se_delta_h,
+     col = adjustcolor("firebrick", 0.12), border = NA)
+legend("topleft",
+       legend = c("Posterior median", "50% CI", "95% CI",
+                  sprintf("Holdout observed ΔSOC ± 95%% CI  (n = %d)",
+                          nrow(obs_delta_h))),
+       col    = c("steelblue", adjustcolor("steelblue",0.35),
+                  adjustcolor("steelblue",0.15), "firebrick"),
+       lwd    = c(2,NA,NA,2.5), pch = c(NA,15,15,NA), lty = c(1,NA,NA,2),
+       pt.cex = c(NA,2,2,NA), bty = "n", cex = 0.9)
+dev.off()
+message(sprintf("Holdout ΔSOC trajectory: %s", traj_holdout_png))
+
 # =============================================================================
 # 9.  Save
 # =============================================================================
 
+# --- Updated bundle: adds holdout slots alongside existing calibration metrics ---
 pp_output <- list(
   posterior_predictions  = posterior_predictions,
   projection_predictions = projection_predictions,
   posterior_summary      = as.data.frame(posterior_summary),
-  residuals_df           = residuals_df,
-  metrics = list(R2 = R2, RMSE_mean = RMSE, bias_mean = bias,
-                 RMSE_median = RMSE_med, bias_median = bias_med,
-                 coverage_95 = coverage_95),
+  residuals_df           = residuals_df,       # now includes is_holdout column
+  holdout_plots          = holdout_plots,
+  metrics         = list(                      # calibration — kept for backward compat
+    R2 = R2, RMSE_mean = RMSE, bias_mean = bias,
+    RMSE_median = RMSE_med, bias_median = bias_med, coverage_95 = coverage_95),
+  metrics_calib   = metrics_calib,
+  metrics_holdout = metrics_holdout,
   config  = list(model = MODEL_NAME, run_id = RUN_ID,
-                 n_draws = N_PP_DRAWS, n_plots = length(plots_real),
+                 n_draws = N_PP_DRAWS, n_plots_total = length(plots_real),
+                 n_calib_plots   = length(plots_real) - length(holdout_plots),
+                 n_holdout_plots = length(holdout_plots),
                  proj_years = PROJ_YEARS, recycle_years = RECYCLE_YEARS,
                  transient_init = TRUE, timestamp = Sys.time())
 )

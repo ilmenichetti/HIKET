@@ -42,9 +42,10 @@
 #
 #   [on Puhti, from /scratch/project_2019134/HIKET/]
 #
-#   # Submit all five calibration jobs simultaneously
+#   # Submit all six calibration jobs simultaneously
 #   sbatch Calibration_real_data/hiket_sp1.sh
 #   sbatch Calibration_real_data/hiket_tp2.sh
+#   sbatch Calibration_real_data/hiket_tp3.sh
 #   sbatch Calibration_real_data/hiket_yasso07.sh
 #   sbatch Calibration_real_data/hiket_yasso15.sh
 #   sbatch Calibration_real_data/hiket_yasso20.sh
@@ -100,7 +101,7 @@
 SCRIPT_DIR <- "./Calibration_real_data_transient"
 RUNS_DIR   <- "./Calibration_real_data_transient/runs"
 
-MODELS <- c("SP1", "TP2", "Yasso07", "Yasso15", "Yasso20")
+MODELS <- c("SP1", "TP2", "TP3", "Yasso07", "Yasso15", "Yasso20")
 
 # Parse --skip-calibration flag
 args <- commandArgs(trailingOnly = TRUE)
@@ -140,7 +141,7 @@ if (!SKIP_CALIBRATION) {
   message("\n=============================================================")
   message("  STAGE 1: Calibration (MCMC)")
   message("=============================================================")
-  message("NOTE: Running all three models sequentially. On Mac this will")
+  message("NOTE: Running all six models sequentially. On Mac this will")
   message("  take ~1.5-3 hours. On Roihu, use --skip-calibration and")
   message("  submit calibration scripts as separate SLURM jobs instead.")
   

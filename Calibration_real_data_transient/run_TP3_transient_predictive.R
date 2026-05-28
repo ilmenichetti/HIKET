@@ -1,19 +1,23 @@
 # =============================================================================
-# run_Yasso07_transient_predictive.R
+# run_TP3_transient_predictive.R
 #
-# Posterior predictive stage for Yasso07 transient calibration.
-# Differs from run_Yasso07_predictive.R in:
-#   - Sources yasso07_wrapper_transient.R
-#   - DIR_RUNS / DIR_DIAG point to Calibration_real_data_transient/
-#   - steady_state engine wrapper calls yasso07_transient_init
-#   - assemble_model_params includes sigma_init (needed by transient_init)
+# Posterior predictive stage for TP3 transient calibration.
+# Differs from run_TP2_transient_predictive.R only in:
+#   - Sources tp3_wrapper_transient.R
+#   - POOL_COLS = c("A", "S", "H")
+#   - data.frame output includes A, S, H pool columns
+#   - steady_state engine wrapper calls tp3_transient_init
+#
+# USAGE:
+#   Rscript run_TP3_transient_predictive.R <RUN_ID>
 # =============================================================================
 
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper_transient.R")
-source("./Model_functions_real_data/input_compatibility_layer.R")
-
-dyn.load("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07.so")
+# No dyn.load: only the pure-R xi functions are used (compute_xi_yasso07,
+# compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
+source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/tp3_wrapper_transient.R")
+source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 
 library(dplyr)
 library(parallel)
@@ -29,23 +33,23 @@ if (length(args) >= 1) {
 } else {
   rns <- list.files(
     "./Calibration_real_data_transient/runs/",
-    pattern = "^Yasso07_posterior_[0-9]{8}_[0-9]{6}\\.rds$"
+    pattern = "^TP3_posterior_[0-9]{8}_[0-9]{6}\\.rds$"
   )
   if (length(rns) == 0)
-    stop("No Yasso07 transient posterior found.")
+    stop("No TP3 transient posterior found in Calibration_real_data_transient/runs/")
   rns    <- sort(rns, decreasing = TRUE)
-  RUN_ID <- sub("^Yasso07_posterior_(.+)\\.rds$", "\\1", rns[1])
+  RUN_ID <- sub("^TP3_posterior_(.+)\\.rds$", "\\1", rns[1])
   message(sprintf("Auto-detected RUN_ID: %s", RUN_ID))
 }
 
-MODEL_NAME      <- "Yasso07"
+MODEL_NAME      <- "TP3"
 N_PP_DRAWS      <- 100L
 CORES_PER_CHAIN <- parallel::detectCores() - 1L
 
 # Forward projection settings (Section 4b)
-PROJ_YEARS    <- 60L                        # years to project beyond last historical year
-RECYCLE_YEARS <- 20L                        # length of climate window to recycle
-POOL_COLS     <- c("A","W","E","N","H")     # Yasso07 five-pool state vector
+PROJ_YEARS    <- 60L              # years to project beyond last historical year
+RECYCLE_YEARS <- 20L              # length of climate window to recycle
+POOL_COLS     <- c("A", "S", "H") # TP3 has three carbon pools
 
 DIR_DIAG   <- file.path("./Calibration_real_data_transient/diagnostics", MODEL_NAME)
 DIR_RUNS   <- "./Calibration_real_data_transient/runs/"
@@ -65,9 +69,9 @@ message("=============================================================\n")
 # =============================================================================
 
 posterior_phys <- readRDS(file.path(DIR_RUNS,
-                                    sprintf("Yasso07_posterior_%s.rds", RUN_ID)))
+                                    sprintf("TP3_posterior_%s.rds", RUN_ID)))
 inputs_pkg     <- readRDS(file.path(DIR_INPUTS,
-                                    sprintf("Yasso07_inputs_%s.rds",    RUN_ID)))
+                                    sprintf("TP3_inputs_%s.rds",    RUN_ID)))
 
 climate_by_plot    <- inputs_pkg$climate_by_plot
 inputs_by_plot     <- inputs_pkg$inputs_by_plot
@@ -75,7 +79,7 @@ litter_means       <- inputs_pkg$litter_means
 obs_meta           <- inputs_pkg$obs_meta
 plot_info          <- inputs_pkg$plot_info
 plots_real         <- inputs_pkg$plots_real
-holdout_plots      <- inputs_pkg$holdout_plots   # loaded for validation subsetting
+holdout_plots      <- inputs_pkg$holdout_plots
 sigma_obs_fixed    <- inputs_pkg$sigma_obs_fixed
 STEADY_STATE_YEARS <- inputs_pkg$STEADY_STATE_YEARS
 
@@ -85,31 +89,17 @@ message(sprintf("Loaded plots:       %d", length(plots_real)))
 
 
 # =============================================================================
-# 2.  Parameter assembly
+# 2.  Parameter assembly (pass-through: all TP3 params free)
 # =============================================================================
-# TRANSIENT: sigma_init included so yasso07_transient_init can read it.
-# The posterior matrix has sigma_init as a column since it was a free param.
 
-FIXED_RATE_NAMES <- setdiff(YASSO07_PARAM_NAMES,
-                             setdiff(names(inputs_pkg$free_defaults),
-                                     c("sigma_init","sigma_input")))
-fixed_rates      <- YASSO07_DEFAULT_PARAMS[FIXED_RATE_NAMES]
-MODEL_FREE_NAMES <- setdiff(colnames(posterior_phys), c("sigma_init","sigma_input"))
-
-assemble_model_params <- function(p_free) {
-  yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
-  yasso_params <- yasso_params[YASSO07_PARAM_NAMES]
-  c(yasso_params,
-    sigma_input = unname(p_free["sigma_input"]),
-    sigma_init  = unname(p_free["sigma_init"]))
-}
+assemble_model_params <- function(p_free) p_free
 
 
 # =============================================================================
 # 3.  Model interface wrappers
 # =============================================================================
 
-compute_xi_yasso07_engine <- function(clim, model_params) {
+compute_xi_tp3_engine <- function(clim, model_params) {
   compute_xi_yasso07(
     temp_mean = clim$temp_mean,
     temp_amp  = clim$temp_amplitude,
@@ -120,7 +110,7 @@ compute_xi_yasso07_engine <- function(clim, model_params) {
   )
 }
 
-compute_xi_mean_yasso07_engine <- function(clim_ss, model_params) {
+compute_xi_mean_tp3_engine <- function(clim_ss, model_params) {
   compute_xi_mean_yasso07(
     clim_ss = clim_ss,
     beta1   = model_params["beta1"],
@@ -129,24 +119,13 @@ compute_xi_mean_yasso07_engine <- function(clim_ss, model_params) {
   )
 }
 
-# TRANSIENT: yasso07_transient_init replaces yasso07_steady_state
-steady_state_yasso07_engine <- function(model_params, lm, xi_mean) {
-  yasso07_transient_init(model_params, lm, xi_mean)
+# TRANSIENT: tp3_transient_init replaces tp3_steady_state
+steady_state_tp3_engine <- function(model_params, lm, xi_mean) {
+  tp3_transient_init(model_params, lm, xi_mean)
 }
 
-yasso07_run_engine <- function(inputs, model_params, C_init, xi_array) {
-  si <- model_params["sigma_input"]
-  input_scaled <- inputs
-  litter_cols  <- c("nwl_A","nwl_W","nwl_E","nwl_N",
-                    "fwl_A","fwl_W","fwl_E","fwl_N",
-                    "cwl_A","cwl_W","cwl_E","cwl_N")
-  input_scaled[, litter_cols] <- inputs[, litter_cols] * si
-  yasso07_run(
-    input_df = input_scaled,
-    params   = model_params[YASSO07_PARAM_NAMES],
-    C_init   = C_init,
-    xi_array = xi_array
-  )
+tp3_run_engine <- function(inputs, model_params, C_init, xi_array) {
+  tp3_run(inputs, model_params, C_init, xi_array)
 }
 
 
@@ -171,35 +150,32 @@ t_pp <- system.time({
       inputs <- inputs_by_plot[[pid]]
       lm     <- litter_means[[pid]]
 
-      xi_array <- tryCatch(compute_xi_yasso07_engine(clim, model_params),
+      xi_array <- tryCatch(compute_xi_tp3_engine(clim, model_params),
                            error = function(e) NULL)
       if (is.null(xi_array)) return(NULL)
 
       n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
       xi_for_ss <- tryCatch(
-        compute_xi_mean_yasso07_engine(
+        compute_xi_mean_tp3_engine(
           clim[seq_len(n_ss), , drop = FALSE], model_params),
         error = function(e) NULL)
-      if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(NULL)
+      if (is.null(xi_for_ss) || !is.finite(xi_for_ss) || xi_for_ss <= 0)
+        return(NULL)
 
-      C_init <- tryCatch(
-        steady_state_yasso07_engine(model_params, lm, xi_for_ss),
-        error = function(e) NULL)
+      C_init <- tryCatch(steady_state_tp3_engine(model_params, lm, xi_for_ss),
+                         error = function(e) NULL)
       if (is.null(C_init) || any(!is.finite(C_init)) || any(C_init < 0))
         return(NULL)
 
-      run_out <- tryCatch(
-        yasso07_run_engine(inputs, model_params, C_init, xi_array),
-        error = function(e) NULL)
+      run_out <- tryCatch(tp3_run_engine(inputs, model_params, C_init, xi_array),
+                          error = function(e) NULL)
       if (is.null(run_out)) return(NULL)
 
       data.frame(plot_id   = pid,
                  year      = run_out$year,
                  draw      = d,
                  A         = run_out$A,
-                 W         = run_out$W,
-                 E         = run_out$E,
-                 N         = run_out$N,
+                 S         = run_out$S,
                  H         = run_out$H,
                  total_soc = run_out$total_soc)
     }, mc.cores = CORES_PER_CHAIN))
@@ -221,10 +197,6 @@ message(sprintf("Posterior predictive complete: %.1f min  (%d rows)",
 # Climate: last RECYCLE_YEARS of observed climate recycled cyclically.
 # Litter:  constant at the last available annual value (last inputs row).
 # Initial state: terminal pool values from the repeated historical run.
-#
-# No SOC ceiling guard is applied: structurally unstable draws produce large
-# but finite total_soc and are visible in the projection envelope. This is
-# the intended behaviour for the cross-model instability comparison.
 # =============================================================================
 
 message(sprintf("\nGenerating %d-year forward projections (%d draws x %d plots)...",
@@ -241,54 +213,51 @@ t_proj <- system.time({
       lm     <- litter_means[[pid]]
 
       # -- Repeat historical run to recover terminal pool state ---------------
-      xi_array <- tryCatch(compute_xi_yasso07_engine(clim, model_params),
+      xi_array <- tryCatch(compute_xi_tp3_engine(clim, model_params),
                            error = function(e) NULL)
       if (is.null(xi_array)) return(NULL)
 
       n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
       xi_for_ss <- tryCatch(
-        compute_xi_mean_yasso07_engine(
+        compute_xi_mean_tp3_engine(
           clim[seq_len(n_ss), , drop = FALSE], model_params),
         error = function(e) NULL)
-      if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(NULL)
+      if (is.null(xi_for_ss) || !is.finite(xi_for_ss) || xi_for_ss <= 0)
+        return(NULL)
 
-      C_init <- tryCatch(
-        steady_state_yasso07_engine(model_params, lm, xi_for_ss),
-        error = function(e) NULL)
+      C_init <- tryCatch(steady_state_tp3_engine(model_params, lm, xi_for_ss),
+                         error = function(e) NULL)
       if (is.null(C_init) || any(!is.finite(C_init)) || any(C_init < 0))
         return(NULL)
 
-      run_hist <- tryCatch(
-        yasso07_run_engine(inputs, model_params, C_init, xi_array),
-        error = function(e) NULL)
+      run_hist <- tryCatch(tp3_run_engine(inputs, model_params, C_init, xi_array),
+                           error = function(e) NULL)
       if (is.null(run_hist)) return(NULL)
 
       # -- Build projection climate and litter --------------------------------
-      last_year   <- max(run_hist$year)
-      proj_yrs    <- seq(last_year + 1L, last_year + PROJ_YEARS)
+      last_year <- max(run_hist$year)
+      proj_yrs  <- seq(last_year + 1L, last_year + PROJ_YEARS)
 
       clim_recycle <- tail(clim, RECYCLE_YEARS)
       clim_proj    <- clim_recycle[
         ((seq_len(PROJ_YEARS) - 1L) %% RECYCLE_YEARS) + 1L, , drop = FALSE]
       clim_proj$year <- proj_yrs
+      rownames(clim_proj) <- NULL
 
       inputs_proj      <- tail(inputs, 1L)[rep(1L, PROJ_YEARS), , drop = FALSE]
       inputs_proj$year <- proj_yrs
+      rownames(inputs_proj) <- NULL
 
-      # -- Initial state: exact terminal per-cohort state from historical run -
-      # Fortran yasso07_run_r now returns C_final(15) = [C_nwl|C_fwl|C_cwl],
-      # the per-cohort pool state at the end of the last historical year.
-      # Attached as attr(run_hist, "C_final") by yasso07_run in the wrapper.
-      # Lossless chain: no steady-state approximation, no discontinuity.
-      C_proj_init <- attr(run_hist, "C_final")
-      
+      # -- Initial state: terminal pool values from historical run ------------
+      C_proj_init <- unlist(run_hist[nrow(run_hist), POOL_COLS])
+
       # -- Forward run --------------------------------------------------------
-      xi_proj <- tryCatch(compute_xi_yasso07_engine(clim_proj, model_params),
+      xi_proj <- tryCatch(compute_xi_tp3_engine(clim_proj, model_params),
                           error = function(e) NULL)
       if (is.null(xi_proj)) return(NULL)
 
       run_proj <- tryCatch(
-        yasso07_run_engine(inputs_proj, model_params, C_proj_init, xi_proj),
+        tp3_run_engine(inputs_proj, model_params, C_proj_init, xi_proj),
         error = function(e) NULL)
       if (is.null(run_proj)) return(NULL)
 
@@ -306,7 +275,7 @@ message(sprintf("Projection complete: %.1f min  (%d rows)",
 
 
 # =============================================================================
-# 5-9.  Summary, residuals, metrics, plots, save
+# 5.  Posterior summary
 # =============================================================================
 
 SOC_obs_all <- do.call(rbind, lapply(names(obs_meta), function(pid) {
@@ -328,6 +297,11 @@ posterior_summary <- posterior_predictions %>%
     n_draws    = n(), .groups = "drop") %>%
   left_join(SOC_obs_all, by = c("plot_id", "year"))
 
+
+# =============================================================================
+# 6.  Residuals CSV
+# =============================================================================
+
 site_raw <- read.csv("./Data/model_inputs/site_raw.csv")
 site_raw$plot_id <- as.character(site_raw$plot_id)
 
@@ -345,7 +319,7 @@ residuals_df <- posterior_summary %>%
          residual_log, residual_abs, is_first) %>%
   left_join(site_raw, by = "plot_id")
 
-# --- Tag holdout rows (used by residual analysis and multimodel) ---
+# --- Tag holdout rows ---
 residuals_df$is_holdout <- residuals_df$plot_id %in% holdout_plots
 
 residuals_csv <- file.path(DIR_DIAG,
@@ -353,9 +327,15 @@ residuals_csv <- file.path(DIR_DIAG,
 write.csv(residuals_df, residuals_csv, row.names = FALSE)
 message(sprintf("Residuals: [%s]  (%d rows)", residuals_csv, nrow(residuals_df)))
 
+
+# =============================================================================
+# 7.  Predictive metrics
+# =============================================================================
+
 obs     <- residuals_df$soc_obs_tCha
 hat     <- residuals_df$soc_mean
 hat_med <- residuals_df$soc_median
+
 R2          <- cor(obs, hat, use = "complete.obs")^2
 RMSE        <- sqrt(mean((obs - hat)^2,     na.rm = TRUE))
 bias        <- mean(hat - obs,              na.rm = TRUE)
@@ -365,8 +345,12 @@ coverage_95 <- mean(obs >= residuals_df$soc_q025 &
                     obs <= residuals_df$soc_q975, na.rm = TRUE)
 
 message("\nPredictive metrics:")
-message(sprintf("  R²: %.3f  |  RMSE: %.2f  |  Bias: %+.2f  |  Cov95: %.3f",
-                R2, RMSE_med, bias_med, coverage_95))
+message(sprintf("  R²:            %.3f", R2))
+message(sprintf("  RMSE (mean):   %.2f tC/ha", RMSE))
+message(sprintf("  Bias (mean):   %+.2f tC/ha", bias))
+message(sprintf("  RMSE (median): %.2f tC/ha", RMSE_med))
+message(sprintf("  Bias (median): %+.2f tC/ha", bias_med))
+message(sprintf("  95%% coverage:  %.3f", coverage_95))
 
 # --- Split calibration / holdout and compute metrics for each ---
 res_calib   <- residuals_df[!residuals_df$is_holdout, ]
@@ -394,9 +378,14 @@ message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
                 metrics_holdout$R2, metrics_holdout$RMSE_median,
                 metrics_holdout$bias_median, metrics_holdout$coverage_95))
 
+
+# =============================================================================
+# 8.  Plots
+# =============================================================================
+
 PX_PER_IN <- 150L
 
-# Obs vs predicted
+# --- Obs vs predicted ---
 obs_pred_png <- file.path(DIR_DIAG,
                           sprintf("%s_obs_vs_pred_%s.png", MODEL_NAME, RUN_ID))
 ktp_palette <- c("1"="#000000","2"="#E69F00","3"="#56B4E9","4"="#009E73",
@@ -415,7 +404,7 @@ ax_lim <- c(0, max(c(residuals_df$soc_obs_tCha, residuals_df$soc_q975),
 plot(NA, xlim = ax_lim, ylim = ax_lim,
      xlab = "Observed SOC (tC/ha)",
      ylab = "Predicted SOC -- posterior median (tC/ha)",
-     main = sprintf("%s transient  |  %s", MODEL_NAME, RUN_ID))
+     main = sprintf("%s  |  %s", MODEL_NAME, RUN_ID))
 abline(0, 1, lty = 2, col = "grey40", lwd = 1.5)
 segments(residuals_df$soc_obs_tCha, residuals_df$soc_q025,
          residuals_df$soc_obs_tCha, residuals_df$soc_q975,
@@ -437,14 +426,15 @@ if (length(ktp_present) > 0)
 dev.off()
 message(sprintf("Plot saved: %s", obs_pred_png))
 
-# Annual ΔSOC trajectory
+# --- Annual ΔSOC trajectory ---
 pp <- posterior_predictions %>%
   group_by(plot_id, draw) %>%
   arrange(year, .by_group = TRUE) %>%
   mutate(first_soc   = first(total_soc),
          first_year  = first(year),
          annual_rate = (total_soc - first_soc) / (year - first_year)) %>%
-  filter(year != first_year) %>% ungroup()
+  filter(year != first_year) %>%
+  ungroup()
 
 traj_summary <- pp %>%
   group_by(draw, year) %>%
@@ -455,7 +445,8 @@ traj_summary <- pp %>%
             q250 = quantile(mean_annual_rate, 0.250, na.rm = TRUE),
             q750 = quantile(mean_annual_rate, 0.750, na.rm = TRUE),
             q975 = quantile(mean_annual_rate, 0.975, na.rm = TRUE),
-            .groups = "drop") %>% arrange(year)
+            .groups = "drop") %>%
+  arrange(year)
 
 obs_delta_per_plot <- posterior_summary %>%
   filter(!is.na(soc_obs_tCha)) %>%
@@ -477,8 +468,9 @@ ylim_r <- range(c(traj_summary$q025, traj_summary$q975,
                   obs_mean_delta - 1.96*obs_se_delta, 0), na.rm = TRUE)
 ylim_r <- ylim_r + c(-0.05, 0.05) * diff(ylim_r)
 plot(NA, xlim = range(traj_summary$year), ylim = ylim_r,
-     xlab = "Year", ylab = "Mean annual ΔSOC since first year (tC/ha/yr)",
-     main = sprintf("Mean annual ΔSOC  |  %s transient  |  %s", MODEL_NAME, RUN_ID))
+     xlab = "Year",
+     ylab = "Mean annual ΔSOC since first year (tC/ha/yr)",
+     main = sprintf("Mean annual ΔSOC  |  %s  |  %s", MODEL_NAME, RUN_ID))
 polygon(c(traj_summary$year, rev(traj_summary$year)),
         c(traj_summary$q025, rev(traj_summary$q975)),
         col = adjustcolor("steelblue", 0.15), border = NA)
@@ -488,8 +480,8 @@ polygon(c(traj_summary$year, rev(traj_summary$year)),
 lines(traj_summary$year, traj_summary$median_delta, col = "steelblue", lwd = 2)
 abline(h = 0, lty = 3, col = "grey40")
 abline(h = obs_mean_delta, col = "firebrick", lwd = 2.5, lty = 2)
-rect(xleft = min(obs_delta_per_plot$year_first),
-     xright = max(obs_delta_per_plot$year_last),
+rect(xleft   = min(obs_delta_per_plot$year_first),
+     xright  = max(obs_delta_per_plot$year_last),
      ybottom = obs_mean_delta - 1.96*obs_se_delta,
      ytop    = obs_mean_delta + 1.96*obs_se_delta,
      col = adjustcolor("firebrick", 0.12), border = NA)
@@ -504,7 +496,7 @@ legend("topleft",
 dev.off()
 message(sprintf("Plot saved: %s", traj_png))
 
-# --- Holdout: obs vs predicted (mirrors Section 8 scatter, holdout subset) ---
+# --- Holdout: obs vs predicted ---
 holdout_pred_png <- file.path(DIR_DIAG,
                               sprintf("%s_obs_vs_pred_holdout_%s.png", MODEL_NAME, RUN_ID))
 ktp_vals_h <- as.character(res_holdout$kasvup_tyyppi)
@@ -539,7 +531,7 @@ if (length(ktp_present_h) > 0)
 dev.off()
 message(sprintf("Holdout obs vs pred: %s", holdout_pred_png))
 
-# --- Holdout: ΔSOC trajectory (mirrors Section 8 trajectory, holdout subset) ---
+# --- Holdout: ΔSOC trajectory ---
 pp_holdout <- posterior_predictions[
   posterior_predictions$plot_id %in% holdout_plots, ]
 pp_h <- pp_holdout %>%
@@ -602,14 +594,18 @@ legend("topleft",
 dev.off()
 message(sprintf("Holdout ΔSOC trajectory: %s", traj_holdout_png))
 
-# --- Updated bundle: adds holdout slots alongside existing calibration metrics ---
+
+# =============================================================================
+# 9.  Save
+# =============================================================================
+
 pp_output <- list(
   posterior_predictions  = posterior_predictions,
   projection_predictions = projection_predictions,
   posterior_summary      = as.data.frame(posterior_summary),
-  residuals_df           = residuals_df,       # now includes is_holdout column
+  residuals_df           = residuals_df,
   holdout_plots          = holdout_plots,
-  metrics         = list(                      # calibration — kept for backward compat
+  metrics         = list(
     R2 = R2, RMSE_mean = RMSE, bias_mean = bias,
     RMSE_median = RMSE_med, bias_median = bias_med, coverage_95 = coverage_95),
   metrics_calib   = metrics_calib,
@@ -621,16 +617,22 @@ pp_output <- list(
                  proj_years = PROJ_YEARS, recycle_years = RECYCLE_YEARS,
                  transient_init = TRUE, timestamp = Sys.time())
 )
-saveRDS(pp_output,
-        file.path(DIR_RUNS,
-                  sprintf("%s_posterior_predictive_%s.rds", MODEL_NAME, RUN_ID)))
-message("Saved posterior predictive bundle.")
+pp_file <- file.path(DIR_RUNS,
+                     sprintf("%s_posterior_predictive_%s.rds", MODEL_NAME, RUN_ID))
+saveRDS(pp_output, pp_file)
+message(sprintf("Saved: %s", pp_file))
 
 append_to_report(run_config, paste(c(
   "\n[5] Predictive performance (transient init)\n",
-  sprintf("    R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov95: %.3f\n",
-          R2, RMSE_med, bias_med, coverage_95),
+  sprintf("    Posterior draws:        %d\n",       N_PP_DRAWS),
+  sprintf("    Observations:           %d\n",       nrow(residuals_df)),
+  sprintf("    R²:                     %.3f\n",     R2),
+  sprintf("    RMSE (mean):            %.2f tC/ha\n", RMSE),
+  sprintf("    Bias (mean):            %+.2f tC/ha\n", bias),
+  sprintf("    RMSE (median):          %.2f tC/ha\n", RMSE_med),
+  sprintf("    Bias (median):          %+.2f tC/ha\n", bias_med),
+  sprintf("    95%% CI coverage:        %.3f\n",    coverage_95),
   sprintf("    Projection years:       %d\n",       PROJ_YEARS),
   sprintf("    Climate recycle window: %d years\n", RECYCLE_YEARS)), collapse=""))
 
-message("\nDone. Next: run_residual_analysis.R Yasso07 ", RUN_ID)
+message("\nDone. Next: run_residual_analysis.R TP3 ", RUN_ID)

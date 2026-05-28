@@ -1,25 +1,39 @@
 # =============================================================================
-# run_Yasso07_transient_calibration.R
+# run_TP3_transient_calibration.R
 #
-# Yasso07 calibration with transient pre-initialization (1917 pre-run).
-# Differs from run_Yasso07_calibration.R in the following sections only:
+# TP3 calibration with transient pre-initialization (1917 pre-run).
+# Structurally identical to run_TP2_transient_calibration.R with these changes:
 #
-#   1. Sources calibration_engine_transient.R and yasso07_wrapper_transient.R.
-#   2. PREINIT_YEAR, N_PREINIT_SMOOTH added to config.
-#   3. assemble_model_params: includes sigma_init in model_params so that
-#      yasso07_transient_init can read it (sigma_init was previously only
-#      extracted in the likelihood for sd_vec; it is now a model parameter).
-#   4. litter_means: gains nwl/fwl/cwl_full_mean and nwl/fwl/cwl_t0_mean fields.
-#   5. free_defaults["sigma_init"] = 1.00 (not 0.10).
-#   6. steady_state engine wrapper calls yasso07_transient_init.
-#   7. make_likelihood(..., transient_init = TRUE).
+#   1. Sources tp3_wrapper_transient.R (three-pool ASH cascade).
+#   2. Three decomposition rates (alpha_A, alpha_S, alpha_H) and two transfer
+#      fractions (p_S, p_H) are free, giving 10 free parameters total:
+#
+#        alpha_A     : Active pool decomposition rate             [log-transform]
+#        alpha_S     : Slow pool decomposition rate               [log-transform]
+#        alpha_H     : Humus pool decomposition rate              [log-transform]
+#        p_S         : Fraction of A decomp flux entering S       [logit-transform]
+#        p_H         : Fraction of S decomp flux entering H       [logit-transform]
+#        beta1       : Yasso07 climate param (temp effect)        [log-transform]
+#        beta2       : Yasso07 climate param (temp sq. effect)    [unconstrained]
+#        gamma       : Yasso07 climate param (precip effect)      [unconstrained]
+#        sigma_init  : Pre-run litter multiplier (1917)           [log-transform]
+#        sigma_input : Global litter multiplier                   [log-transform]
+#
+#   3. Prior centres taken from TP2 where parameters are shared;
+#      alpha_S = 0.10 (intermediate between alpha_A and alpha_H);
+#      p_S = 0.028 (matches TP2's p_H for the first cascade step);
+#      p_H = 0.50  (neutral centre for the second cascade step).
+#
+# Everything else — engine interface, litter_means, MCMC loop, diagnostics,
+# save logic — is structurally identical to run_TP2_transient_calibration.R.
 # =============================================================================
 
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper_transient.R")
+# No dyn.load: only the pure-R xi functions are used (compute_xi_yasso07,
+# compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
+source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/tp3_wrapper_transient.R")
 source("./Model_functions_real_data_transient/input_compatibility_layer.R")
-
-dyn.load("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07.so")
 
 library(dplyr)
 
@@ -28,12 +42,11 @@ library(dplyr)
 # 0.  Configuration
 # =============================================================================
 
-MODEL_NAME       <- "Yasso07"
-RUN_ID           <- format(Sys.time(), "%Y%m%d_%H%M%S")
+MODEL_NAME <- "TP3"
+RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
-# read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
+# Read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
 source("./Calibration_real_data_transient/calib_config.R")
-
 
 CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()[["nodename"]])) {
   parallelly::availableCores()
@@ -41,9 +54,9 @@ CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()[["nodename"]])) {
   parallel::detectCores() - 1L
 }
 
-STEADY_STATE_YEARS <- 20L
-PREINIT_YEAR       <- 1917L
-N_PREINIT_SMOOTH   <- 5L
+STEADY_STATE_YEARS <- 20L    # climate window for xi_mean (unchanged from TP2)
+PREINIT_YEAR       <- 1917L  # first year of pre-run (Finland independence)
+N_PREINIT_SMOOTH   <- 5L     # years averaged for J_t0_mean endpoint
 
 DIR_LOGS   <- "./Calibration_real_data_transient/progress_logs/"
 DIR_DIAG   <- file.path("./Calibration_real_data_transient/diagnostics", MODEL_NAME)
@@ -75,30 +88,21 @@ message("=============================================================\n")
 
 
 # =============================================================================
-# 1.  Parameter specification  (identical to non-transient Yasso07)
+# 1.  Parameter specification
 # =============================================================================
-
-p_default        <- YASSO07_DEFAULT_PARAMS
-FIXED_RATE_NAMES <- c("alpha_A","alpha_W","alpha_E","alpha_N","p_H","alpha_H")
-fixed_rates      <- p_default[FIXED_RATE_NAMES]
-B                <- 1.0 - fixed_rates["p_H"]
-
-FRAC_COL_A <- c("p_AW","p_AE","p_AN")
-FRAC_COL_W <- c("p_WA","p_WE","p_WN")
-FRAC_COL_E <- c("p_EA","p_EW","p_EN")
-FRAC_COL_N <- c("p_NA","p_NW","p_NE")
+# TP3 has 10 free parameters: the 8 from TP2 plus alpha_S (Slow pool rate) and
+# p_H (S-to-H transfer fraction). sigma_init and sigma_input are identical in
+# role to TP2.
 
 param_spec <- list(
-  list(names = FRAC_COL_A,    type = "stick_break",   budget = B),
-  list(names = FRAC_COL_W,    type = "stick_break",   budget = B),
-  list(names = FRAC_COL_E,    type = "stick_break",   budget = B),
-  list(names = FRAC_COL_N,    type = "stick_break",   budget = B),
+  list(names = "alpha_A",     type = "log"),
+  list(names = "alpha_S",     type = "log"),
+  list(names = "alpha_H",     type = "log"),
+  list(names = "p_S",         type = "logit"),
+  list(names = "p_H",         type = "logit"),
   list(names = "beta1",       type = "log"),
   list(names = "beta2",       type = "unconstrained"),
   list(names = "gamma",       type = "unconstrained"),
-  list(names = "delta1",      type = "unconstrained"),
-  list(names = "delta2",      type = "log"),
-  list(names = "r",           type = "log"),
   list(names = "sigma_init",  type = "log"),
   list(names = "sigma_input", type = "log")
 )
@@ -110,41 +114,43 @@ log_jacobian     <- transforms$log_jacobian
 FREE_NAMES       <- transforms$param_names
 N_FREE           <- transforms$n_params
 
-MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
-
+# Prior centres:
+#   alpha_A, alpha_H, beta1/beta2/gamma, sigma_init, sigma_input: identical to TP2.
+#   alpha_S = 0.10: intermediate between alpha_A (0.73) and alpha_H (0.0015).
+#   p_S     = 0.028: matches TP2's p_H (A-to-H fraction), applied here to A-to-S.
+#   p_H     = 0.50: neutral centre for the S-to-H transfer fraction.
 free_defaults <- c(
-  p_default[MODEL_FREE_NAMES],
-  sigma_init  = 1.00,   # CHANGED: prior centre = 1.0 (same productivity as today)
+  alpha_A     = 0.73,
+  alpha_S     = 0.10,
+  alpha_H     = 0.0015,
+  p_S         = 0.028,
+  p_H         = 0.50,
+  beta1       = 0.095,
+  beta2       = -0.00014,
+  gamma       = -1.21,
+  sigma_init  = 1.00,
   sigma_input = 1.00
 )
-free_defaults["r"] <- abs(free_defaults["r"])
 
 best_x <- to_unconstrained(free_defaults)
+
 stopifnot(
   max(abs(to_original(best_x)[FREE_NAMES] - free_defaults[FREE_NAMES])) < 1e-10)
 message("Transform round-trip: OK")
 
 
 # =============================================================================
-# 2.  Parameter assembly
+# 2.  Parameter assembly (pass-through; all TP3 params are free)
 # =============================================================================
-# CHANGED: sigma_init added to model_params so yasso07_transient_init can
-# read it. In the original script sigma_init was only in p_free (extracted
-# in the likelihood for sd_vec). In the transient version it must enter the
-# model to scale the 1917 litter anchor.
 
-assemble_model_params <- function(p_free) {
-  yasso_params <- c(fixed_rates, p_free[MODEL_FREE_NAMES])
-  yasso_params <- yasso_params[names(p_default)]
-  c(yasso_params,
-    sigma_input = unname(p_free["sigma_input"]),
-    sigma_init  = unname(p_free["sigma_init"]))   # NEW
-}
+assemble_model_params <- function(p_free) p_free
 
 
 # =============================================================================
 # 3.  Data preparation
 # =============================================================================
+# Identical to TP2: total litter J_total aggregated from AWEN fractions;
+# climate via Yasso07 mapping; litter_means extended for transient initialisation.
 
 message("Loading data...")
 
@@ -166,15 +172,19 @@ if (n_climate_na > 0) {
 
 n_lit_na <- sum(is.na(input_calib[, litter_cols]))
 if (n_lit_na > 0) {
-  bad_rows          <- !complete.cases(input_calib[, litter_cols])
+  bad_rows <- !complete.cases(input_calib[, litter_cols])
   plots_with_lit_na <- unique(input_calib$plot_id[bad_rows])
-  calib_plots       <- setdiff(calib_plots, plots_with_lit_na)
-  input_calib       <- input_calib[input_calib$plot_id %in% calib_plots, ]
+  calib_plots <- setdiff(calib_plots, plots_with_lit_na)
+  input_calib <- input_calib[input_calib$plot_id %in% calib_plots, ]
   message(sprintf("After litter filter: %d plots", length(calib_plots)))
 }
 
-Yasso07_climate <- map_climate_yasso07(input_calib)
-Yasso07_inputs  <- map_inputs_yasso07(input_calib)
+Yasso07_climate    <- map_climate_yasso07(input_calib)
+Yasso07_inputs_raw <- map_inputs_yasso07(input_calib)
+LITTER_COLS_AWEN   <- grep("^(nwl|fwl|cwl)_", names(Yasso07_inputs_raw), value = TRUE)
+TP3_inputs         <- Yasso07_inputs_raw
+TP3_inputs$J_total <- rowSums(Yasso07_inputs_raw[, LITTER_COLS_AWEN])
+TP3_inputs         <- TP3_inputs[, c("plot_id", "year", "J_total")]
 
 plots_real <- as.character(unique(Yasso07_climate$plot_id))
 message(sprintf("Plots after mapping: %d", length(plots_real)))
@@ -192,7 +202,7 @@ plots_all     <- plots
 is_holdout_fl <- as.logical(
   site_raw$is_holdout[match(plots_all, as.character(site_raw$plot_id))])
 is_holdout_fl[is.na(is_holdout_fl)] <- FALSE
-plots         <- plots_all[!is_holdout_fl]   # calibration set — name preserved
+plots         <- plots_all[!is_holdout_fl]   # calibration set
 holdout_plots <- plots_all[ is_holdout_fl]   # held out from likelihood
 message(sprintf("Holdout split: %d calibration | %d holdout",
                 length(plots), length(holdout_plots)))
@@ -207,40 +217,22 @@ SOC_obs_all <- input_calib %>%
 
 obs_cv          <- sd(SOC_obs_all$soc_obs_tCha) / mean(SOC_obs_all$soc_obs_tCha)
 sigma_obs_fixed <- obs_cv
-message(sprintf("SOC observations: %d  |  obs CV: %.3f  |  sigma_obs fixed: %.3f",
+
+message(sprintf("SOC obs: %d  |  obs CV: %.3f  |  sigma_obs fixed: %.3f",
                 nrow(SOC_obs_all), obs_cv, sigma_obs_fixed))
 
 climate_by_plot <- split(Yasso07_climate, Yasso07_climate$plot_id)
-inputs_by_plot  <- split(Yasso07_inputs,  Yasso07_inputs$plot_id)
+inputs_by_plot  <- split(TP3_inputs,      TP3_inputs$plot_id)
 
-AWEN_NWL <- c("nwl_A","nwl_W","nwl_E","nwl_N")
-AWEN_FWL <- c("fwl_A","fwl_W","fwl_E","fwl_N")
-AWEN_CWL <- c("cwl_A","cwl_W","cwl_E","cwl_N")
-
-# litter_means: EXTENDED for transient initialization.
-#   Original fields: nwl_mean, fwl_mean, cwl_mean (steady-state window means)
-#   New fields:
-#     *_full_mean : mean over full time series (1917 anchor)
-#     *_t0_mean   : mean over first N_PREINIT_SMOOTH years (1985 endpoint)
+# litter_means: identical structure to TP2 (same three fields).
 litter_means <- lapply(plots_real, function(pid) {
-  inp    <- Yasso07_inputs[as.character(Yasso07_inputs$plot_id) == pid, ]
-  n_ss   <- min(STEADY_STATE_YEARS,  nrow(inp))
-  n_t0   <- min(N_PREINIT_SMOOTH,    nrow(inp))
-  inp_ss <- inp[seq_len(n_ss), ]
-  inp_t0 <- inp[seq_len(n_t0), ]
+  inp  <- TP3_inputs[as.character(TP3_inputs$plot_id) == pid, ]
+  n_ss <- min(STEADY_STATE_YEARS, nrow(inp))
+  n_t0 <- min(N_PREINIT_SMOOTH,   nrow(inp))
   list(
-    # Original: steady-state window means
-    nwl_mean      = colMeans(inp_ss[, AWEN_NWL]),
-    fwl_mean      = colMeans(inp_ss[, AWEN_FWL]),
-    cwl_mean      = colMeans(inp_ss[, AWEN_CWL]),
-    # New: full-series means for 1917 anchor
-    nwl_full_mean = colMeans(inp[, AWEN_NWL]),
-    fwl_full_mean = colMeans(inp[, AWEN_FWL]),
-    cwl_full_mean = colMeans(inp[, AWEN_CWL]),
-    # New: first-N-year means for 1985 endpoint
-    nwl_t0_mean   = colMeans(inp_t0[, AWEN_NWL]),
-    fwl_t0_mean   = colMeans(inp_t0[, AWEN_FWL]),
-    cwl_t0_mean   = colMeans(inp_t0[, AWEN_CWL])
+    J_total_mean = mean(inp$J_total[seq_len(n_ss)]),
+    J_full_mean  = mean(inp$J_total),
+    J_t0_mean    = mean(inp$J_total[seq_len(n_t0)])
   )
 })
 names(litter_means) <- plots_real
@@ -268,8 +260,10 @@ run_config$n_plots <- length(plots)
 # =============================================================================
 # 4.  Model interface wrappers
 # =============================================================================
+# Same xi computation as TP2 (Yasso07-style, single scalar applied to all pools
+# except H). Transient init via tp3_transient_init.
 
-compute_xi_yasso07_engine <- function(clim, model_params) {
+compute_xi_tp3_engine <- function(clim, model_params) {
   compute_xi_yasso07(
     temp_mean = clim$temp_mean,
     temp_amp  = clim$temp_amplitude,
@@ -280,7 +274,7 @@ compute_xi_yasso07_engine <- function(clim, model_params) {
   )
 }
 
-compute_xi_mean_yasso07_engine <- function(clim_ss, model_params) {
+compute_xi_mean_tp3_engine <- function(clim_ss, model_params) {
   compute_xi_mean_yasso07(
     clim_ss = clim_ss,
     beta1   = model_params["beta1"],
@@ -289,49 +283,40 @@ compute_xi_mean_yasso07_engine <- function(clim_ss, model_params) {
   )
 }
 
-# CHANGED: yasso07_transient_init replaces yasso07_steady_state
-steady_state_yasso07_engine <- function(model_params, lm, xi_mean) {
-  yasso07_transient_init(model_params, lm, xi_mean)
+steady_state_tp3_engine <- function(model_params, lm, xi_mean) {
+  tp3_transient_init(model_params, lm, xi_mean)
 }
 
-yasso07_run_engine <- function(inputs, model_params, C_init, xi_array) {
-  si <- model_params["sigma_input"]
-  input_scaled        <- inputs
-  input_scaled[, c("nwl_A","nwl_W","nwl_E","nwl_N",
-                   "fwl_A","fwl_W","fwl_E","fwl_N",
-                   "cwl_A","cwl_W","cwl_E","cwl_N")] <-
-    inputs[, c("nwl_A","nwl_W","nwl_E","nwl_N",
-               "fwl_A","fwl_W","fwl_E","fwl_N",
-               "cwl_A","cwl_W","cwl_E","cwl_N")] * si
-  yasso07_run(
-    input_df = input_scaled,
-    params   = model_params[YASSO07_PARAM_NAMES],
-    C_init   = C_init,
-    xi_array = xi_array
-  )
+tp3_run_engine <- function(inputs, model_params, C_init, xi_array) {
+  tp3_run(inputs, model_params, C_init, xi_array)
 }
 
 
 # =============================================================================
 # 5.  Prior specification
 # =============================================================================
+# sigma_ppm widths follow TP2 for shared parameters.
+# alpha_S and p_H receive the same widths as their analogues (alpha_A/alpha_H
+# and p_S respectively).
+# 95% CI for sigma_init: exp(log(1.0) ± 2*0.5) = [0.37, 2.72] (same as TP2).
 
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
+sigma_ppm["alpha_A"]     <- 0.50
+sigma_ppm["alpha_S"]     <- 0.50
+sigma_ppm["alpha_H"]     <- 0.50
+sigma_ppm["p_S"]         <- 1.00
+sigma_ppm["p_H"]         <- 1.00
 sigma_ppm["beta1"]       <- 0.20
 sigma_ppm["beta2"]       <- 0.05
 sigma_ppm["gamma"]       <- 0.30
-sigma_ppm["delta1"]      <- 0.15
-sigma_ppm["delta2"]      <- 0.10
-sigma_ppm["r"]           <- 0.015
-sigma_ppm["sigma_init"]  <- 0.50   # physical 95% CI ~[0.37, 2.72] around 1.0
+sigma_ppm["sigma_init"]  <- 0.50
 sigma_ppm["sigma_input"] <- 0.50
 
 stopifnot(length(sigma_ppm) == N_FREE, all(sigma_ppm > 0),
           all(names(sigma_ppm) == FREE_NAMES))
 
 message("\nPrior widths (unconstrained space):")
-print(round(sigma_ppm[c("beta1","beta2","gamma","delta1","delta2","r",
-                         "sigma_init","sigma_input")], 4))
+print(round(sigma_ppm, 3))
 
 
 # =============================================================================
@@ -349,17 +334,16 @@ sanity_results <- lapply(sanity_pids, function(pid) {
   clim   <- climate_by_plot[[pid]]
   inputs <- inputs_by_plot[[pid]]
   lm     <- litter_means[[pid]]
-  meta   <- obs_meta[[pid]]
 
-  xi_array  <- compute_xi_yasso07_engine(clim, sanity_params)
+  xi_array  <- compute_xi_tp3_engine(clim, sanity_params)
   n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
-  xi_for_ss <- compute_xi_mean_yasso07_engine(
+  xi_for_ss <- compute_xi_mean_tp3_engine(
     clim[seq_len(n_ss), , drop = FALSE], sanity_params)
-  C_init    <- steady_state_yasso07_engine(sanity_params, lm, xi_for_ss)
-  run_out   <- yasso07_run_engine(inputs, sanity_params, C_init, xi_array)
+  C_init    <- steady_state_tp3_engine(sanity_params, lm, xi_for_ss)
+  run_out   <- tp3_run_engine(inputs, sanity_params, C_init, xi_array)
 
-  list(pid = pid, run_out = run_out, meta = meta, xi_for_ss = xi_for_ss,
-       C_init_total = sum(C_init))
+  list(pid = pid, run_out = run_out, meta = obs_meta[[pid]],
+       xi_for_ss = xi_for_ss, C_init_total = sum(C_init))
 })
 
 forward_run_pass <- TRUE
@@ -382,9 +366,11 @@ sanity_png <- file.path(DIR_DIAG,
 png(sanity_png, width = 10L * PX_PER_IN, height = 8L * PX_PER_IN, res = PX_PER_IN)
 par(mfrow = c(2, 2), mar = c(4, 4, 3, 1), oma = c(0, 0, 2, 0))
 for (sr in sanity_results) {
-  yr  <- sr$run_out$year;  soc <- sr$run_out$total_soc
-  obs_yr  <- yr[sr$meta$idx];  obs_soc <- sr$meta$soc_obs
-  ylim_r <- range(c(soc, obs_soc), na.rm = TRUE)
+  yr      <- sr$run_out$year
+  soc     <- sr$run_out$total_soc
+  obs_yr  <- yr[sr$meta$idx]
+  obs_soc <- sr$meta$soc_obs
+  ylim_r  <- range(c(soc, obs_soc), na.rm = TRUE)
   plot(yr, soc, type = "l", col = "steelblue", lwd = 2, ylim = ylim_r,
        xlab = "Year", ylab = "SOC (tC/ha)",
        main = sprintf("Plot %s (defaults)", sr$pid))
@@ -416,7 +402,7 @@ save_inputs(
     plot_info          = plot_info,
     plots              = plots,
     plots_real         = plots_real,
-    holdout_plots      = holdout_plots,   # carried to predictive for validation
+    holdout_plots      = holdout_plots,
     obs_cv             = obs_cv,
     sigma_obs_fixed    = sigma_obs_fixed,
     sigma_ppm          = sigma_ppm,
@@ -439,10 +425,10 @@ ll_fn <- make_likelihood(
   to_original     = to_original,
   log_jacobian    = log_jacobian,
   assemble_params = assemble_model_params,
-  compute_xi      = compute_xi_yasso07_engine,
-  compute_xi_mean = compute_xi_mean_yasso07_engine,
-  steady_state    = steady_state_yasso07_engine,
-  run_model       = yasso07_run_engine,
+  compute_xi      = compute_xi_tp3_engine,
+  compute_xi_mean = compute_xi_mean_tp3_engine,
+  steady_state    = steady_state_tp3_engine,
+  run_model       = tp3_run_engine,
   sigma_obs_fixed = sigma_obs_fixed,
   plots           = plots,
   climate_by_plot = climate_by_plot,
@@ -450,7 +436,7 @@ ll_fn <- make_likelihood(
   litter_means    = litter_means,
   obs_meta        = obs_meta,
   steady_state_n  = STEADY_STATE_YEARS,
-  transient_init  = TRUE              # NEW
+  transient_init  = TRUE
 )
 
 ll_check <- ll_fn(best_x)
@@ -466,34 +452,8 @@ pre_mcmc_sanity <- list(
   forward_run_pass   = forward_run_pass
 )
 
-# Thermodynamic recycling constraint: carbon flow from a pool back toward
-# faster pools must be a minority flux (< 0.5). Column A has no constraint
-# as it is the fastest labile pool. Column N is not constrained because the
-# published Yasso07 default (p_NA = 0.97) suggests the model structurally
-# relies on strong N->A recycling -- applying < 0.5 here would override
-# model structure rather than exclude physically unreasonable draws.
-# Both p_EA and p_EW are free in Yasso07 so the E column is checked as sum.
-# Revisit after inspecting posterior behaviour.
-check_recycling_fractions <- function(p_phys) {
-  (p_phys["p_WA"]                   <= 0.5) &&
-    (p_phys["p_EA"] + p_phys["p_EW"] <= 0.5)
-}
-
 prior <- createPrior(
-  density = function(x) {
-    p_phys <- to_original(x)
-    if (!check_recycling_fractions(p_phys)) return(-Inf)
-    # Simplex backstop: total outflow per pool <= 1.
-    # Redundant here -- stick-breaking with budget B = 1-p_H already
-    # guarantees it -- but kept for documentation and cross-model consistency.
-    if (with(as.list(p_phys), {
-          (p_AW + p_AE + p_AN + fixed_rates["p_H"] > 1) ||
-          (p_WA + p_WE + p_WN + fixed_rates["p_H"] > 1) ||
-          (p_EA + p_EW + p_EN + fixed_rates["p_H"] > 1) ||
-          (p_NA + p_NW + p_NE + fixed_rates["p_H"] > 1)
-        })) return(-Inf)
-    sum(dnorm(x, mean = best_x, sd = sigma_ppm, log = TRUE))
-  },
+  density = function(x) sum(dnorm(x, mean = best_x, sd = sigma_ppm, log = TRUE)),
   sampler = function(n = 1) {
     m <- matrix(0, nrow = n, ncol = N_FREE)
     for (j in seq_len(N_FREE))
@@ -529,10 +489,9 @@ message(sprintf("\nAll chains complete. Wallclock: %.1f min\n", t_run / 60))
 # 10.  Diagnostics, save, report
 # =============================================================================
 
-HIGHLIGHT <- c("beta1","beta2","gamma","delta1","delta2","r",
-               "sigma_init","sigma_input")
-GROUP1    <- c(FRAC_COL_A, FRAC_COL_W, FRAC_COL_E, FRAC_COL_N)
-GROUP2    <- HIGHLIGHT
+HIGHLIGHT <- FREE_NAMES
+GROUP1    <- c("alpha_A", "alpha_S", "alpha_H", "p_S", "p_H")
+GROUP2    <- c("beta1", "beta2", "gamma", "sigma_init", "sigma_input")
 
 diag_out <- run_diagnostics(
   chain_results    = chain_results,
@@ -579,4 +538,4 @@ message(sprintf("  Wallclock: %.1f min", t_run / 60))
 message(sprintf("  Pre-run:   %d yr  |  sigma_init centre: %.2f",
                 1985L - PREINIT_YEAR, free_defaults["sigma_init"]))
 message("=============================================================\n")
-message("Next: run_Yasso07_transient_predictive.R with RUN_ID=", RUN_ID)
+message("Next: run_TP3_transient_predictive.R with RUN_ID=", RUN_ID)

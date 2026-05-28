@@ -29,7 +29,7 @@
 
 library(dplyr)
 
-MODELS <- c("SP1", "TP2", "Yasso07", "Yasso15", "Yasso20")
+MODELS <- c("SP1", "TP2", "TP3", "Yasso07", "Yasso15", "Yasso20")
 DIR_RUNS <- "./Calibration_real_data_transient/runs/"
 DIR_OUT  <- "./Calibration_real_data_transient/diagnostics/multimodel"
 dir.create(DIR_OUT, showWarnings = FALSE, recursive = TRUE)
@@ -38,11 +38,12 @@ DIR_DIAG <- "./Calibration_real_data_transient/diagnostics"
 PX_PER_IN <- 150L
 
 # Model colours used consistently across all comparison plots.
-# SP1/TP2 use brown tones to visually distinguish the simpler benchmark
+# SP1/TP2/TP3 use brown tones to visually distinguish the simpler benchmark
 # models from the three YASSO variants (blue/red/green).
 MODEL_COLS <- c(
   SP1     = "#8c510a",   # brown  -- 1-pool baseline
   TP2     = "#bf812d",   # tan    -- 2-pool intermediate
+  TP3     = "#e0a824",   # amber  -- 3-pool intermediate
   Yasso07 = "#2166ac",   # blue
   Yasso15 = "#d6604d",   # red
   Yasso20 = "#1a9641"    # green
@@ -155,6 +156,34 @@ sink()
 message(sprintf("Metrics table: %s", metrics_txt))
 print(metrics_df[, c("Model","R2","RMSE_median","Bias_median","Coverage_95")])
 
+# --- Holdout metrics table (mirrors Section 2, independent validation subset) ---
+has_holdout <- all(sapply(MODELS, function(m) !is.null(pp[[m]]$metrics_holdout)))
+if (has_holdout) {
+  metrics_holdout_df <- do.call(rbind, lapply(MODELS, function(m) {
+    mt <- pp[[m]]$metrics_holdout
+    data.frame(Model = m, R2 = mt$R2, RMSE_median = mt$RMSE_median,
+               Bias_median = mt$bias_median, Coverage_95 = mt$coverage_95,
+               N_obs = nrow(pp[[m]]$residuals_df[pp[[m]]$residuals_df$is_holdout, ]),
+               stringsAsFactors = FALSE)
+  }))
+  holdout_txt <- file.path(DIR_OUT, sprintf("multimodel_metrics_holdout_%s.txt", COMP_ID))
+  sink(holdout_txt)
+  cat("HIKET Multi-Model Comparison — Independent Validation Metrics\n")
+  cat(sprintf("Generated: %s\n\n", format(Sys.time())))
+  cat(sprintf("%-10s  %6s  %10s  %10s  %10s\n", "Model","R²","RMSE (med)","Bias (med)","95% cov"))
+  cat(strrep("-", 54), "\n")
+  for (i in seq_len(nrow(metrics_holdout_df)))
+    cat(sprintf("%-10s  %6.3f  %10.2f  %+10.2f  %10.3f\n",
+                metrics_holdout_df$Model[i], metrics_holdout_df$R2[i],
+                metrics_holdout_df$RMSE_median[i], metrics_holdout_df$Bias_median[i],
+                metrics_holdout_df$Coverage_95[i]))
+  sink()
+  message(sprintf("Holdout metrics table: %s", holdout_txt))
+  print(metrics_holdout_df[, c("Model","R2","RMSE_median","Bias_median","Coverage_95")])
+} else {
+  message("[holdout] metrics_holdout not in bundles -- skipping holdout outputs")
+  metrics_holdout_df <- NULL
+}
 
 # =============================================================================
 # 3.  Plot A: Obs vs predicted — 2x3 grid (5 model panels + bias barplot)
@@ -171,10 +200,10 @@ ax_max <- max(all_obs_vals, na.rm = TRUE) * 1.50   # 50% headroom for CI bars
 ax_lim <- c(0, ax_max)
 
 png(obs_pred_png,
-    width  = 18L * PX_PER_IN,
+    width  = 24L * PX_PER_IN,
     height = 14L * PX_PER_IN,
     res    = PX_PER_IN)
-par(mfrow = c(2, 3), mar = c(4.5, 4.5, 3.5, 1))
+par(mfrow = c(2, 4), mar = c(4.5, 4.5, 3.5, 1))
 
 for (m in MODELS) {
   rd <- pp[[m]]$residuals_df
@@ -229,6 +258,49 @@ mtext("HIKET — Observed vs Predicted SOC (posterior median)",
 dev.off()
 message(sprintf("Obs vs pred: %s", obs_pred_png))
 
+# --- Holdout obs vs pred (mirrors Plot A, independent validation subset) ---
+if (has_holdout) {
+  holdout_pred_png <- file.path(DIR_OUT,
+                                sprintf("multimodel_obs_vs_pred_holdout_%s.png", COMP_ID))
+  all_holdout_obs <- do.call(c, lapply(MODELS, function(m) {
+    rd <- pp[[m]]$residuals_df; rd$soc_obs_tCha[rd$is_holdout] }))
+  ax_lim_h <- c(0, max(all_holdout_obs, na.rm = TRUE) * 1.50)
+  png(holdout_pred_png, width = 24L * PX_PER_IN, height = 14L * PX_PER_IN, res = PX_PER_IN)
+  par(mfrow = c(2, 4), mar = c(4.5, 4.5, 3.5, 1))
+  for (m in MODELS) {
+    rd <- pp[[m]]$residuals_df[pp[[m]]$residuals_df$is_holdout, ]
+    mt <- pp[[m]]$metrics_holdout
+    ka_col <- c("1"="#2166ac","2"="#74add1","3"="#f4a582","4"="#d6604d")[as.character(rd$KA)]
+    ka_col[is.na(ka_col)] <- "grey60"
+    plot(NA, xlim = ax_lim_h, ylim = ax_lim_h,
+         xlab = "Observed SOC (tC/ha)", ylab = "Predicted SOC — posterior median (tC/ha)",
+         main = sprintf("%s — independent validation", m))
+    abline(0, 1, lty = 2, col = "grey40", lwd = 1.5)
+    segments(rd$soc_obs_tCha, rd$soc_q025, rd$soc_obs_tCha, rd$soc_q975,
+             col = adjustcolor(ka_col, 0.25), lwd = 0.7)
+    points(rd$soc_obs_tCha, rd$soc_median, pch = 16, cex = 0.8,
+           col = adjustcolor(ka_col, 0.65))
+    legend("topleft",
+           legend = c(sprintf("R² = %.3f", mt$R2), sprintf("RMSE = %.1f", mt$RMSE_median),
+                      sprintf("Bias = %+.1f", mt$bias_median),
+                      sprintf("Cov = %.2f", mt$coverage_95)),
+           bty = "n", cex = 0.8)
+  }
+  bias_vals_h <- sapply(MODELS, function(m) pp[[m]]$metrics_holdout$bias_median)
+  ylim_bh <- c(min(bias_vals_h,0), max(bias_vals_h,0)) *
+    c(ifelse(min(bias_vals_h)<0,1.25,1), ifelse(max(bias_vals_h)>0,1.25,1))
+  bp_h <- barplot(bias_vals_h, col = MODEL_COLS[MODELS], names.arg = MODELS,
+                  ylab = "Bias — posterior median  log(obs/pred)",
+                  main = "Systematic bias — independent validation",
+                  border = "white", ylim = ylim_bh, las = 1)
+  abline(h = 0, lty = 2, col = "grey40", lwd = 1.5)
+  text(bp_h, bias_vals_h + sign(bias_vals_h)*diff(ylim_bh)*0.04,
+       sprintf("%+.3f", bias_vals_h), cex = 0.9, font = 2)
+  mtext("HIKET — Independent Validation: Observed vs Predicted SOC",
+        side = 3, outer = TRUE, line = -1.5, cex = 1.1, font = 2)
+  dev.off()
+  message(sprintf("Holdout obs vs pred: %s", holdout_pred_png))
+}
 
 # =============================================================================
 # 4.  Plot B: ΔSOC trajectories overlaid
@@ -458,16 +530,16 @@ for (m in MODELS) {
 legend("topright", legend = MODELS, col = MODEL_COLS[MODELS],
        lwd = 2, bty = "n", cex = 0.85)
 
-# Panel 4: RMSE barplot across all five models
+# Panel 4: RMSE barplot across all models
 rmse_vals <- sapply(MODELS, function(m) pp[[m]]$metrics$RMSE_median)
-barplot(rmse_vals,
+bp_rmse <- barplot(rmse_vals,
         col    = MODEL_COLS[MODELS],
         names.arg = MODELS,
         ylab   = "RMSE — posterior median (tC/ha)",
         main   = "RMSE comparison",
         border = "white",
         ylim   = c(0, max(rmse_vals) * 1.2))
-text(x   = seq(0.7, by = 1.2, length.out = length(MODELS)),
+text(x   = bp_rmse,
      y   = rmse_vals + max(rmse_vals) * 0.03,
      labels = sprintf("%.2f", rmse_vals), cex = 0.9)
 
@@ -476,7 +548,84 @@ mtext(sprintf("HIKET multi-model residuals  |  comp %s", COMP_ID),
 dev.off()
 message(sprintf("Residual comparison: %s", resid_png))
 
-
+# --- Holdout residual distributions (mirrors Plot C, independent validation subset) ---
+if (has_holdout) {
+  holdout_resid_png <- file.path(DIR_OUT,
+                                 sprintf("multimodel_residuals_holdout_%s.png", COMP_ID))
+  png(holdout_resid_png, width = 14L * PX_PER_IN, height = 10L * PX_PER_IN, res = PX_PER_IN)
+  par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+  # Panel 1: density curves
+  finite_resids_h <- lapply(MODELS, function(m) {
+    rd <- pp[[m]]$residuals_df; r <- rd$residual_log[rd$is_holdout]; r[is.finite(r)] })
+  names(finite_resids_h) <- MODELS
+  x_range_h <- c(max(min(unlist(finite_resids_h), na.rm=TRUE), -3),
+                 min(max(unlist(finite_resids_h), na.rm=TRUE),  3))
+  y_max_h <- 0
+  dens_h  <- lapply(MODELS, function(m) {
+    d <- density(finite_resids_h[[m]], from=x_range_h[1], to=x_range_h[2])
+    y_max_h <<- max(y_max_h, max(d$y)); d })
+  plot(NA, xlim=x_range_h, ylim=c(0, y_max_h*1.1),
+       xlab="Residual  log(obs) - log(pred)", ylab="Density",
+       main="Holdout residual distributions")
+  abline(v=0, lty=2, col="grey40")
+  for (m in MODELS) lines(dens_h[[which(MODELS==m)]], col=MODEL_COLS[m], lwd=2)
+  legend("topright", legend=sprintf("%s  (mean=%+.3f)", MODELS, sapply(finite_resids_h, mean)),
+         col=MODEL_COLS[MODELS], lwd=2, bty="n", cex=0.85)
+  # Panel 2: by KA
+  resid_h_combined <- do.call(rbind, lapply(MODELS, function(m) {
+    rd <- pp[[m]]$residuals_df[pp[[m]]$residuals_df$is_holdout, ]
+    data.frame(model=m, KA=rd$KA, residual_log=rd$residual_log, stringsAsFactors=FALSE) }))
+  resid_h_combined <- resid_h_combined[is.finite(resid_h_combined$residual_log), ]
+  ka_lev <- sort(unique(na.omit(resid_h_combined$KA)))
+  if (length(ka_lev) > 0) {
+    n_mod <- length(MODELS); w <- 0.14
+    xc <- seq_len(length(ka_lev))
+    off <- seq(-(n_mod-1)/2,(n_mod-1)/2,length.out=n_mod)*w*1.5
+    plot(NA, xlim=c(0.5,length(ka_lev)+0.5),
+         ylim=range(resid_h_combined$residual_log,na.rm=TRUE),
+         xlab="Cajander class (KA)", ylab="Residual (log)",
+         main="Holdout residuals by KA", xaxt="n")
+    axis(1, at=xc, labels=paste("KA",ka_lev)); abline(h=0,lty=2,col="grey40")
+    for (j in seq_along(MODELS)) for (i in seq_along(ka_lev)) {
+      vals <- resid_h_combined$residual_log[resid_h_combined$model==MODELS[j] &
+                                              resid_h_combined$KA==ka_lev[i]]
+      if (length(vals)<3) next
+      boxplot(vals, at=xc[i]+off[j], add=TRUE, boxwex=w,
+              col=adjustcolor(MODEL_COLS[MODELS[j]],0.6),
+              border=MODEL_COLS[MODELS[j]], outline=FALSE, axes=FALSE) }
+    legend("topright", legend=MODELS, fill=adjustcolor(MODEL_COLS[MODELS],0.6),
+           border=MODEL_COLS[MODELS], bty="n", cex=0.85)
+  } else { plot.new(); title("KA not available") }
+  # Panel 3: residuals vs fitted
+  fit_rng_h <- range(unlist(lapply(MODELS, function(m) {
+    rd <- pp[[m]]$residuals_df[pp[[m]]$residuals_df$is_holdout,]
+    rd$log_hat_mean[is.finite(rd$log_hat_mean)] })), na.rm=TRUE)
+  plot(NA, xlim=fit_rng_h, ylim=x_range_h,
+       xlab="log(SOC predicted)", ylab="Residual (log)",
+       main="Holdout residuals vs fitted")
+  abline(h=0,lty=2,col="grey40")
+  for (m in MODELS) {
+    rd <- pp[[m]]$residuals_df[pp[[m]]$residuals_df$is_holdout,]
+    mask <- is.finite(rd$log_hat_mean) & is.finite(rd$residual_log)
+    points(rd$log_hat_mean[mask], rd$residual_log[mask],
+           pch=16, cex=0.5, col=adjustcolor(MODEL_COLS[m],0.3))
+    if (sum(mask)>10) {
+      lo <- loess(rd$residual_log[mask]~rd$log_hat_mean[mask])
+      ord <- order(rd$log_hat_mean[mask])
+      lines(rd$log_hat_mean[mask][ord], predict(lo)[ord], col=MODEL_COLS[m], lwd=2) } }
+  legend("topright", legend=MODELS, col=MODEL_COLS[MODELS], lwd=2, bty="n", cex=0.85)
+  # Panel 4: RMSE barplot
+  rmse_h <- sapply(MODELS, function(m) pp[[m]]$metrics_holdout$RMSE_median)
+  bp_rmse_h <- barplot(rmse_h, col=MODEL_COLS[MODELS], names.arg=MODELS, border="white",
+          ylab="Holdout RMSE — posterior median (tC/ha)",
+          main="RMSE — independent validation", ylim=c(0,max(rmse_h)*1.2))
+  text(bp_rmse_h, rmse_h+max(rmse_h)*0.03,
+       sprintf("%.2f",rmse_h), cex=0.9)
+  mtext(sprintf("HIKET holdout residuals  |  comp %s", COMP_ID),
+        side=3, outer=TRUE, line=-1.5, cex=1.0, font=2)
+  dev.off()
+  message(sprintf("Holdout residual comparison: %s", holdout_resid_png))
+}
 
 # =============================================================================
 # 6.  Plot D: RF importance heatmap (cross-model residual structure)
@@ -597,7 +746,50 @@ if (length(ok_models) == 0) {
   message(sprintf("[heatmap] Written: %s", heat_png))
 }
 
-
+# --- Holdout RF heatmap (mirrors Plot D, reads *_rf_importance_holdout_*.csv) ---
+if (has_holdout) {
+  imp_list_h <- setNames(vector("list", length(MODELS)), MODELS)
+  oob_r2_h   <- setNames(rep(NA_real_,  length(MODELS)), MODELS)
+  for (m in MODELS) {
+    csv_h <- file.path(DIR_DIAG, m,
+                       sprintf("%s_rf_importance_holdout_%s.csv", m, run_ids[[m]]))
+    rds_h <- file.path(DIR_DIAG, m,
+                       sprintf("%s_rf_summary_holdout_%s.rds",   m, run_ids[[m]]))
+    if (!file.exists(csv_h)) {
+      warning(sprintf("[heatmap holdout] CSV not found for %s", m)); next }
+    imp_list_h[[m]] <- read.csv(csv_h, stringsAsFactors = FALSE)
+    if (file.exists(rds_h)) oob_r2_h[m] <- readRDS(rds_h)$oob_r2
+  }
+  ok_h <- MODELS[!sapply(imp_list_h, is.null)]
+  if (length(ok_h) >= 2) {
+    rel_h <- lapply(ok_h, function(m) {
+      df <- imp_list_h[[m]]; df$rel <- df$importance/max(df$importance,na.rm=TRUE); df })
+    names(rel_h) <- ok_h
+    top_h <- unique(unlist(lapply(ok_h, function(m)
+      head(rel_h[[m]]$variable[order(rel_h[[m]]$importance,decreasing=TRUE)], TOP_N))))
+    mat_h <- matrix(0, nrow=length(top_h), ncol=length(ok_h),
+                    dimnames=list(top_h, ok_h))
+    for (m in ok_h) {
+      idx <- match(top_h, rel_h[[m]]$variable)
+      mat_h[,m] <- ifelse(is.na(idx), 0, rel_h[[m]]$rel[idx]) }
+    mat_h <- mat_h[order(rowMeans(mat_h), decreasing=FALSE), , drop=FALSE]
+    heat_h_png <- file.path(DIR_OUT,
+                            sprintf("multimodel_rf_heatmap_holdout_%s.png", COMP_ID))
+    png(heat_h_png, width=10L*300L,
+        height=max(7L, round(nrow(mat_h)*0.45+4L))*300L, res=300L)
+    heatmap(mat_h, Rowv=NA, Colv=NA, scale="none",
+            col=colorRampPalette(c("white","#deebf7","#9ecae1","#3182bd","#08306b"))(100),
+            labCol=sapply(ok_h, function(m)
+              if(!is.na(oob_r2_h[m])) sprintf("%s (OOB R2=%.2f)",m,oob_r2_h[m]) else m),
+            margins=c(8,14),
+            main="RF residual predictor importance — independent validation (relative)",
+            cexRow=0.85, cexCol=0.80)
+    dev.off()
+    message(sprintf("[heatmap holdout] Written: %s", heat_h_png))
+  } else {
+    message("[heatmap holdout] Fewer than 2 models with holdout RF data -- skipping")
+  }
+}
 
 # =============================================================================
 # 6b.  Plot E: 60-year SOC projection by NFI region
@@ -729,10 +921,10 @@ if (!is.null(site_raw_proj) && "nfi_region" %in% names(site_raw_proj)) {
   proj_png <- file.path(DIR_OUT,
                         sprintf("multimodel_projection_%s.png", COMP_ID))
   png(proj_png,
-      width  = 20L * PX_PER_IN,
+      width  = 24L * PX_PER_IN,
       height =  7L * PX_PER_IN,
       res    = PX_PER_IN)
-  par(mfrow = c(1, 5),
+  par(mfrow = c(1, 6),
       mar   = c(4, 4, 3.5, 0.5),
       oma   = c(0, 0, 2.5, 0))
   
@@ -869,11 +1061,13 @@ if (!is.null(site_raw_proj) && "nfi_region" %in% names(site_raw_proj)) {
 # 7.  Save summary bundle + print metrics
 # =============================================================================
 
+# --- Updated save bundle: adds holdout metrics alongside calibration ---
 summary_out <- list(
-  run_ids    = run_ids,
-  comp_id    = COMP_ID,
-  metrics    = metrics_df,
-  timestamp  = Sys.time()
+  run_ids          = run_ids,
+  comp_id          = COMP_ID,
+  metrics          = metrics_df,
+  metrics_holdout  = metrics_holdout_df,   # NULL if holdout not available
+  timestamp        = Sys.time()
 )
 summary_rds <- file.path(DIR_OUT,
                          sprintf("multimodel_summary_%s.rds", COMP_ID))

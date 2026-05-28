@@ -306,6 +306,16 @@ if (!is.na(N_PLOTS_TEST) && N_PLOTS_TEST < length(plots_real)) {
 }
 plots <- as.character(plots)
 
+# --- Holdout split: rename, flag, reassign (is_holdout from site_raw.csv) ---
+plots_all     <- plots
+is_holdout_fl <- as.logical(
+  site_raw$is_holdout[match(plots_all, as.character(site_raw$plot_id))])
+is_holdout_fl[is.na(is_holdout_fl)] <- FALSE
+plots         <- plots_all[!is_holdout_fl]   # calibration set — name preserved
+holdout_plots <- plots_all[ is_holdout_fl]   # held out from likelihood
+message(sprintf("Holdout split: %d calibration | %d holdout",
+                length(plots), length(holdout_plots)))
+
 SOC_obs_all <- input_calib %>%
   filter(!is.na(soc_obs_tCha)) %>%
   select(plot_id, year, month, soc_obs_tCha) %>%
@@ -533,7 +543,7 @@ sanity_png <- file.path(DIR_DIAG,
                         sprintf("%s_forward_at_defaults_%s.png",
                                 MODEL_NAME, RUN_ID))
 png(sanity_png, width = 10L * PX_PER_IN, height = 8L * PX_PER_IN, res = PX_PER_IN)
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+par(mfrow = c(2, 2), mar = c(4, 4, 3, 1), oma = c(0, 0, 2, 0))
 for (sr in sanity_results) {
   yr  <- sr$run_out$year
   soc <- sr$run_out$total_soc
@@ -574,6 +584,7 @@ save_inputs(
     plot_info          = plot_info,
     plots              = plots,
     plots_real         = plots_real,
+    holdout_plots      = holdout_plots,   # carried to predictive for validation
     obs_cv             = obs_cv,
     sigma_obs_fixed    = sigma_obs_fixed,
     sigma_ppm          = sigma_ppm,
