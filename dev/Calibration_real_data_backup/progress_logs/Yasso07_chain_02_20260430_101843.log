@@ -1,0 +1,62 @@
+==========================================================
+  Yasso07  Chain 2 / 4
+  Run ID:  20260430_101843
+  Started: 2026-04-30 10:55:14.007575
+  Plots:   20 | Iter: 10000 | Cores: 11
+==========================================================
+
+Initial ll at best_x: -292.380
+
+[10:55:57]  eval   200  |  ll:   -309.379  |  4.63 eval/s  |  0.7 min  |  -Inf: 1
+[10:56:39]  eval   400  |  ll:   -297.290  |  4.67 eval/s  |  1.4 min  |  -Inf: 2
+[10:57:22]  eval   600  |  ll:   -292.131  |  4.69 eval/s  |  2.1 min  |  -Inf: 3
+[10:58:03]  eval   800  |  ll:   -292.220  |  4.72 eval/s  |  2.8 min  |  -Inf: 9
+[10:58:40]  eval  1000  |  ll:   -294.985  |  4.84 eval/s  |  3.4 min  |  -Inf: 24
+[10:59:18]  eval  1200  |  ll:   -349.148  |  4.92 eval/s  |  4.1 min  |  -Inf: 38
+[10:59:57]  eval  1400  |  ll:   -287.900  |  4.94 eval/s  |  4.7 min  |  -Inf: 54
+[11:00:35]  eval  1600  |  ll:   -282.522  |  4.98 eval/s  |  5.4 min  |  -Inf: 59
+[11:01:15]  eval  1800  |  ll:   -296.380  |  4.99 eval/s  |  6.0 min  |  -Inf: 74
+[11:01:55]  eval  2000  |  ll:   -305.773  |  4.99 eval/s  |  6.7 min  |  -Inf: 101
+[11:02:33]  eval  2200  |  ll:   -286.718  |  5.01 eval/s  |  7.3 min  |  -Inf: 130
+[11:03:11]  eval  2400  |  ll:   -306.202  |  5.02 eval/s  |  8.0 min  |  -Inf: 148
+[11:03:50]  eval  2600  |  ll:   -294.618  |  5.04 eval/s  |  8.6 min  |  -Inf: 183
+[11:04:28]  eval  2800  |  ll:  -1349.001  |  5.05 eval/s  |  9.2 min  |  -Inf: 201
+[11:05:07]  eval  3000  |  ll:   -277.502  |  5.06 eval/s  |  9.9 min  |  -Inf: 205
+[11:05:46]  eval  3200  |  ll:   -283.479  |  5.06 eval/s  |  10.5 min  |  -Inf: 209
+[11:06:24]  eval  3400  |  ll:       -Inf  |  5.08 eval/s  |  11.2 min  |  -Inf: 224
+[11:07:00]  eval  3600  |  ll:   -289.374  |  5.09 eval/s  |  11.8 min  |  -Inf: 238
+[11:07:38]  eval  3800  |  ll:       -Inf  |  5.11 eval/s  |  12.4 min  |  -Inf: 244
+[11:08:15]  eval  4000  |  ll:       -Inf  |  5.12 eval/s  |  13.0 min  |  -Inf: 258
+[11:08:52]  eval  4200  |  ll:   -329.264  |  5.14 eval/s  |  13.6 min  |  -Inf: 283
+[11:09:28]  eval  4400  |  ll:   -296.212  |  5.15 eval/s  |  14.2 min  |  -Inf: 291
+[11:10:07]  eval  4600  |  ll:       -Inf  |  5.15 eval/s  |  14.9 min  |  -Inf: 310
+[11:10:46]  eval  4800  |  ll:   -292.276  |  5.15 eval/s  |  15.5 min  |  -Inf: 335
+[11:11:25]  eval  5000  |  ll:   -286.262  |  5.15 eval/s  |  16.2 min  |  -Inf: 369
+[11:12:04]  eval  5200  |  ll:   -289.729  |  5.15 eval/s  |  16.8 min  |  -Inf: 389
+[11:12:42]  eval  5400  |  ll:   -283.493  |  5.15 eval/s  |  17.5 min  |  -Inf: 408
+[11:13:21]  eval  5600  |  ll:   -283.007  |  5.15 eval/s  |  18.1 min  |  -Inf: 412
+[11:14:00]  eval  5800  |  ll:   -359.097  |  5.15 eval/s  |  18.8 min  |  -Inf: 425
+[11:14:39]  eval  6000  |  ll:   -285.764  |  5.15 eval/s  |  19.4 min  |  -Inf: 440
+[11:15:18]  eval  6200  |  ll:   -283.230  |  5.15 eval/s  |  20.1 min  |  -Inf: 460
+[11:15:58]  eval  6400  |  ll:   -307.026  |  5.14 eval/s  |  20.7 min  |  -Inf: 482
+[11:16:37]  eval  6600  |  ll:       -Inf  |  5.14 eval/s  |  21.4 min  |  -Inf: 523
+[11:17:16]  eval  6800  |  ll:   -282.382  |  5.14 eval/s  |  22.0 min  |  -Inf: 545
+[11:17:56]  eval  7000  |  ll:   -288.763  |  5.14 eval/s  |  22.7 min  |  -Inf: 554
+[11:18:33]  eval  7200  |  ll:  -1267.953  |  5.14 eval/s  |  23.3 min  |  -Inf: 562
+[11:19:11]  eval  7400  |  ll:   -274.539  |  5.15 eval/s  |  23.9 min  |  -Inf: 591
+[11:19:48]  eval  7600  |  ll:   -276.023  |  5.15 eval/s  |  24.6 min  |  -Inf: 629
+[11:20:27]  eval  7800  |  ll:   -285.436  |  5.16 eval/s  |  25.2 min  |  -Inf: 664
+[11:21:05]  eval  8000  |  ll:       -Inf  |  5.16 eval/s  |  25.8 min  |  -Inf: 708
+[11:21:42]  eval  8200  |  ll:       -Inf  |  5.16 eval/s  |  26.5 min  |  -Inf: 729
+[11:22:21]  eval  8400  |  ll:       -Inf  |  5.16 eval/s  |  27.1 min  |  -Inf: 744
+[11:22:58]  eval  8600  |  ll:   -364.962  |  5.17 eval/s  |  27.7 min  |  -Inf: 757
+[11:23:35]  eval  8800  |  ll:   -283.111  |  5.17 eval/s  |  28.4 min  |  -Inf: 773
+[11:24:13]  eval  9000  |  ll:   -281.298  |  5.17 eval/s  |  29.0 min  |  -Inf: 792
+[11:24:50]  eval  9200  |  ll:   -291.788  |  5.18 eval/s  |  29.6 min  |  -Inf: 816
+[11:25:28]  eval  9400  |  ll:   -292.786  |  5.18 eval/s  |  30.2 min  |  -Inf: 849
+[11:26:06]  eval  9600  |  ll:       -Inf  |  5.18 eval/s  |  30.9 min  |  -Inf: 892
+[11:26:44]  eval  9800  |  ll:       -Inf  |  5.19 eval/s  |  31.5 min  |  -Inf: 939
+[11:27:21]  eval 10000  |  ll:   -267.070  |  5.19 eval/s  |  32.1 min  |  -Inf: 989
+
+Chain 2 finished: 2026-04-30 11:27:21.894806  (32.1 min)
+Total evaluations: 10002  |  -Inf rejects: 989 (9.89%)
