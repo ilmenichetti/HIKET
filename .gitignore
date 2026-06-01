@@ -25,4 +25,5 @@ Data/
 
 # logs and stored objects
 *.rds
-*.log
+*.log.RDataTmp
+.DS_Store

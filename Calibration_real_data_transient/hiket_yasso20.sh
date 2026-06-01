@@ -4,11 +4,11 @@
 #SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/yasso20_%j.out
 #SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/yasso020_%j.err
 #SBATCH --partition=small
-#SBATCH --time=48:00:00
+#SBATCH --time=36:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=2000
+#SBATCH --mem-per-cpu=400
 module load r-env
 if test -f ~/.Renviron; then
     sed -i '/TMPDIR/d' ~/.Renviron

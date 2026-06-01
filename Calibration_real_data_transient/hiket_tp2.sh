@@ -4,11 +4,11 @@
 #SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/tp2_%j.out
 #SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/tp2_%j.err
 #SBATCH --partition=small
-#SBATCH --time=48:00:00
+#SBATCH --time=36:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=2000
+#SBATCH --mem-per-cpu=400
 # TP2 is pure R; no Fortran. 18h wallclock: slightly more than SP1 (8 free
 # params vs 6, two-pool update loop somewhat slower), well under Yasso07's 36h.
 module load r-env
