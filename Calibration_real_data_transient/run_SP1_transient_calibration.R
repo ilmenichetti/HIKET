@@ -26,6 +26,7 @@ source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yass
 # compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
 source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/sp1_wrapper_transient.R")
 source("./Model_functions_real_data/input_compatibility_layer.R")
+source("./Prior_specs/SP1_priors.R")
 
 library(dplyr)
 
@@ -108,14 +109,7 @@ N_FREE           <- transforms$n_params
 #   Here: sigma_init = 1.0 means "1917 litter was the same as today's mean".
 #   sigma_init > 1 -> historically more productive (old growth before
 #     intensive forestry). sigma_init < 1 -> less productive.
-free_defaults <- c(
-  alpha       = 0.09,
-  beta1       = 0.095,
-  beta2       = -0.00014,
-  gamma       = -1.21,
-  sigma_init  = 1.00,   # CHANGED from 0.10 -- prior centre: same as contemporary
-  sigma_input = 1.00
-)
+free_defaults <- SP1_FREE_DEFAULTS
 
 best_x <- to_unconstrained(free_defaults)
 
@@ -286,13 +280,7 @@ sp1_run_engine <- function(inputs, model_params, C_init, xi_array) {
 # That is: 1917 litter was between 37% and 272% of today's mean.
 # This covers a reasonable range of historical forest productivity change.
 
-sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm["alpha"]       <- 0.50
-sigma_ppm["beta1"]       <- 0.20
-sigma_ppm["beta2"]       <- 0.05
-sigma_ppm["gamma"]       <- 0.30
-sigma_ppm["sigma_init"]  <- 0.50   # same width; new centre = 1.0
-sigma_ppm["sigma_input"] <- 0.50
+sigma_ppm <- setNames(SP1_SIGMA_PPM[FREE_NAMES], FREE_NAMES)
 
 stopifnot(length(sigma_ppm) == N_FREE, all(sigma_ppm > 0),
           all(names(sigma_ppm) == FREE_NAMES))

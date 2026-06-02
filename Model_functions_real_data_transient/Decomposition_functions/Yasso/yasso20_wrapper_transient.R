@@ -189,20 +189,56 @@ yasso20_run <- function(climate_df, inputs_df, params, C_init,
 }
 # =============================================================================
 # yasso20_transient_init
-# See yasso07_transient_init for full rationale.
-# Yasso20 shares the same 15-element per-cohort C_init structure.
+#
+# 68-year pre-run (1917 -> 1985), same structure as yasso15_transient_init.
+# Calls yasso15_run directly (yasso20_run recomputes xi from monthly climate,
+# which is unavailable before 1985; here xi is already pre-computed).
 # =============================================================================
 
 yasso20_transient_init <- function(model_params, lm, xi_mean, ...) {
   sigma_init  <- unname(model_params["sigma_init"])
   sigma_input <- unname(model_params["sigma_input"])
-  
-  yasso20_steady_state(
-    params      = model_params[YASSO20_PARAM_NAMES],
-    nwl_mean    = lm$nwl_mean * sigma_input * sigma_init,
-    fwl_mean    = lm$fwl_mean * sigma_input * sigma_init,
-    cwl_mean    = lm$cwl_mean * sigma_input * sigma_init,
-    xi_ss       = xi_mean,
-    precip_mean = lm$precip_mean
-  )
+  params      <- model_params[YASSO20_PARAM_NAMES]
+
+  # Fully-scaled AWEN litter endpoints
+  nwl_1917 <- lm$nwl_full_mean * sigma_init * sigma_input
+  fwl_1917 <- lm$fwl_full_mean * sigma_init * sigma_input
+  cwl_1917 <- lm$cwl_full_mean * sigma_init * sigma_input
+  nwl_1985 <- lm$nwl_t0_mean   * sigma_input
+  fwl_1985 <- lm$fwl_t0_mean   * sigma_input
+  cwl_1985 <- lm$cwl_t0_mean   * sigma_input
+
+  # Start at steady state under 1917 litter (15-element per-cohort state)
+  C_init <- yasso20_steady_state(params      = params,
+                                 nwl_mean    = nwl_1917,
+                                 fwl_mean    = fwl_1917,
+                                 cwl_mean    = cwl_1917,
+                                 xi_ss       = xi_mean,
+                                 precip_mean = lm$precip_mean)
+
+  # Build 68-row input_df with linearly interpolated AWEN columns
+  n_pre <- 68L
+  fracs <- (seq_len(n_pre) - 1L) / (n_pre - 1L)
+  nwl_mat <- outer(1 - fracs, nwl_1917) + outer(fracs, nwl_1985)
+  fwl_mat <- outer(1 - fracs, fwl_1917) + outer(fracs, fwl_1985)
+  cwl_mat <- outer(1 - fracs, cwl_1917) + outer(fracs, cwl_1985)
+  input_df <- data.frame(year = seq_len(n_pre), nwl_mat, fwl_mat, cwl_mat)
+  names(input_df) <- c("year",
+                       "nwl_A","nwl_W","nwl_E","nwl_N",
+                       "fwl_A","fwl_W","fwl_E","fwl_N",
+                       "cwl_A","cwl_W","cwl_E","cwl_N")
+
+  # Constant xi and precip arrays (no pre-1985 climate observations)
+  xi_const     <- list(xi_awe = rep(xi_mean$xi_awe, n_pre),
+                       xi_n   = rep(xi_mean$xi_n,   n_pre),
+                       xi_h   = rep(xi_mean$xi_h,   n_pre))
+  precip_const <- rep(lm$precip_mean, n_pre)
+
+  # Run pre-run via yasso15_run; C_final carries the full 15-element terminal state
+  pre_out <- yasso15_run(input_df  = input_df,
+                         params    = params,
+                         C_init    = C_init,
+                         xi_arrays = xi_const,
+                         precip    = precip_const)
+  attr(pre_out, "C_final")
 }

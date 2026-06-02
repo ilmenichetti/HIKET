@@ -174,34 +174,54 @@ compute_xi_mean_yasso07 <- function(clim_ss, beta1, beta2, gamma) {
 # =============================================================================
 # yasso07_transient_init
 #
-# Transient-initialization replacement for yasso07_steady_state.
-# sigma_init scales the litter level at which the steady state is computed,
-# replacing the original likelihood patch (sigma_init added in sd_vec).
-#   sigma_init = 1.0 : initial SOC at steady state under contemporary litter
-#   sigma_init > 1   : historically more productive -> larger initial C stock
-#   sigma_init < 1   : historically less productive -> smaller initial C stock
-#
-# The analytical steady state is used (not a Fortran pre-run) because
-# yasso07_run aggregates NWL/FWL/CWL into 5 summed pools in its output,
-# losing the per-cohort structure. yasso07_run expects a 15-element C_init
-# (5 pools x 3 cohorts); reconstructing 5 elements from run output and
-# passing them back causes NaN in the Fortran. The analytical steady state
-# returns the full 15-element vector correctly.
-# For fast AWEN pools (MRT 1-10 yr) the steady state is equivalent to any
-# realistic pre-run; only H (MRT ~600 yr) retains long memory, but it barely
-# moves over 68 years and the approximation is equally defensible.
+# 68-year pre-run (1917 -> 1985) with linearly interpolated AWEN litter.
+# yasso07_run returns C_final (full 15-element per-cohort terminal state),
+# which is used directly as C_init for the calibration period.
+#   *_full_mean * sigma_init * sigma_input  ->  1917 AWEN anchor
+#   *_t0_mean   * sigma_input               ->  1985 AWEN endpoint
+# Climate held constant at xi_mean (no pre-1985 observations available).
 # =============================================================================
 
 yasso07_transient_init <- function(model_params, lm, xi_mean, ...) {
   xi_mean     <- unname(xi_mean)
   sigma_init  <- unname(model_params["sigma_init"])
   sigma_input <- unname(model_params["sigma_input"])
+  params      <- model_params[YASSO07_PARAM_NAMES]
 
-  yasso07_steady_state(
-    params   = model_params[YASSO07_PARAM_NAMES],
-    nwl_mean = lm$nwl_mean * sigma_input * sigma_init,
-    fwl_mean = lm$fwl_mean * sigma_input * sigma_init,
-    cwl_mean = lm$cwl_mean * sigma_input * sigma_init,
-    xi_mean  = xi_mean
-  )
+  # Fully-scaled AWEN litter endpoints (4-element named vectors)
+  nwl_1917 <- lm$nwl_full_mean * sigma_init * sigma_input
+  fwl_1917 <- lm$fwl_full_mean * sigma_init * sigma_input
+  cwl_1917 <- lm$cwl_full_mean * sigma_init * sigma_input
+  nwl_1985 <- lm$nwl_t0_mean   * sigma_input
+  fwl_1985 <- lm$fwl_t0_mean   * sigma_input
+  cwl_1985 <- lm$cwl_t0_mean   * sigma_input
+
+  # Start at steady state under 1917 litter (15-element per-cohort state)
+  C_init <- yasso07_steady_state(params   = params,
+                                 nwl_mean = nwl_1917,
+                                 fwl_mean = fwl_1917,
+                                 cwl_mean = cwl_1917,
+                                 xi_mean  = xi_mean)
+
+  # Build 68-row input_df: linearly interpolated AWEN columns, dummy years
+  n_pre <- 68L
+  fracs <- (seq_len(n_pre) - 1L) / (n_pre - 1L)
+  nwl_mat <- outer(1 - fracs, nwl_1917) + outer(fracs, nwl_1985)
+  fwl_mat <- outer(1 - fracs, fwl_1917) + outer(fracs, fwl_1985)
+  cwl_mat <- outer(1 - fracs, cwl_1917) + outer(fracs, cwl_1985)
+  input_df <- data.frame(year = seq_len(n_pre), nwl_mat, fwl_mat, cwl_mat)
+  names(input_df) <- c("year",
+                       "nwl_A","nwl_W","nwl_E","nwl_N",
+                       "fwl_A","fwl_W","fwl_E","fwl_N",
+                       "cwl_A","cwl_W","cwl_E","cwl_N")
+
+  # Constant xi array: no pre-1985 climate observations
+  xi_array <- rep(xi_mean, n_pre)
+
+  # Run pre-run; C_final carries the full 15-element terminal state
+  pre_out <- yasso07_run(input_df = input_df,
+                         params   = params,
+                         C_init   = C_init,
+                         xi_array = xi_array)
+  attr(pre_out, "C_final")
 }

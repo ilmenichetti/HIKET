@@ -20,6 +20,7 @@ source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yass
 source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 
 dyn.load("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07.so")
+source("./Prior_specs/Yasso07_priors.R")
 
 library(dplyr)
 
@@ -112,12 +113,7 @@ N_FREE           <- transforms$n_params
 
 MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
 
-free_defaults <- c(
-  p_default[MODEL_FREE_NAMES],
-  sigma_init  = 1.00,   # CHANGED: prior centre = 1.0 (same productivity as today)
-  sigma_input = 1.00
-)
-free_defaults["r"] <- abs(free_defaults["r"])
+free_defaults <- YASSO07_FREE_DEFAULTS
 
 best_x <- to_unconstrained(free_defaults)
 stopifnot(
@@ -317,14 +313,7 @@ yasso07_run_engine <- function(inputs, model_params, C_init, xi_array) {
 # =============================================================================
 
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm["beta1"]       <- 0.20
-sigma_ppm["beta2"]       <- 0.05
-sigma_ppm["gamma"]       <- 0.30
-sigma_ppm["delta1"]      <- 0.15
-sigma_ppm["delta2"]      <- 0.10
-sigma_ppm["r"]           <- 0.015
-sigma_ppm["sigma_init"]  <- 0.50   # physical 95% CI ~[0.37, 2.72] around 1.0
-sigma_ppm["sigma_input"] <- 0.50
+sigma_ppm[names(YASSO07_SIGMA_PPM)] <- YASSO07_SIGMA_PPM
 
 stopifnot(length(sigma_ppm) == N_FREE, all(sigma_ppm > 0),
           all(names(sigma_ppm) == FREE_NAMES))

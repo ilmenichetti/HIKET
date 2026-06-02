@@ -280,23 +280,36 @@ sp1_run <- function(inputs, model_params, C_init, xi_array) {
 # =============================================================================
 # sp1_transient_init
 #
-# Transient-initialization replacement for sp1_steady_state.
-# sigma_init scales the litter level used for the steady-state computation,
-# replacing the original likelihood patch (sigma_init in sd_vec).
-#   sigma_init = 1.0 : initial SOC at steady state under contemporary litter
-#   sigma_init > 1   : historically more productive -> larger initial C stock
-#   sigma_init < 1   : historically less productive -> smaller initial C stock
+# 68-year pre-run (1917 -> 1985) with linearly interpolated litter:
+#   J_1917 = J_full_mean * sigma_init * sigma_input  (historical anchor)
+#   J_1985 = J_t0_mean   * sigma_input               (observed-period start)
+# Starts at analytical steady state under J_1917; returns terminal pool state.
+# sigma_init encodes historical productivity relative to the contemporary mean.
+# Inline loop: sigma_input already folded into J endpoints (not applied again).
 # =============================================================================
 
 sp1_transient_init <- function(model_params, lm, xi_mean, ...) {
-  # Prevent name propagation from compute_xi_yasso07() arithmetic chain
-  xi_mean <- unname(xi_mean)
-
+  xi_mean     <- unname(xi_mean)
   alpha       <- unname(model_params["alpha"])
   sigma_init  <- unname(model_params["sigma_init"])
   sigma_input <- unname(model_params["sigma_input"])
 
-  J    <- lm$J_total_mean * sigma_input * sigma_init
-  C_ss <- J / (alpha * xi_mean)
-  c(C = unname(C_ss))
+  # Fully-scaled litter endpoints
+  J_1917 <- lm$J_full_mean * sigma_init * sigma_input
+  J_1985 <- lm$J_t0_mean   * sigma_input
+
+  # Start at analytical steady state under 1917 litter
+  k <- alpha * xi_mean
+  C <- unname(J_1917 / k)
+
+  # 68-year pre-run: linearly interpolated J, constant xi (no pre-1985 climate)
+  n_pre <- 68L
+  for (i in seq_len(n_pre)) {
+    frac <- (i - 1L) / (n_pre - 1L)
+    J    <- J_1917 + (J_1985 - J_1917) * frac
+    C_ss <- J / k
+    C    <- C_ss + (C - C_ss) * exp(-k)   # exact annual step
+  }
+
+  c(C = C)
 }

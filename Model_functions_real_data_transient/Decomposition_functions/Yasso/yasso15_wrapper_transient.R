@@ -23,11 +23,10 @@
 # producing three separate xi arrays passed to Fortran.
 #
 # Precision note:
-#   All inputs to .Fortran() are cast to single precision (as.single) to
-#   match the original Järvenpää reference implementation, which uses
-#   as.single() at the R-Fortran boundary. Outputs are cast back to double
-#   for R-side use. The xi computation in R stays in double precision,
-#   again matching the reference (xi is computed in R in both cases).
+#   Despite REAL(dp) declarations throughout the source, dp is defined as
+#   SELECTED_REAL_KIND(6, 37) = REAL(4) (single precision) in yasso15_mod.
+#   All .Fortran() calls use as.single() / single() accordingly.
+#   Outputs are cast back to double for R-side use.
 #
 # Steady-state xi note:
 #   The reference (mod5c with steady=TRUE) computes xi internally from the
@@ -248,7 +247,7 @@ yasso15_run <- function(input_df, params, C_init, xi_arrays,
                      C_init        = as.single(C_init),
                      C_out         = single(n_years * 5),
                      resp_out      = single(n_years),
-                     C_final       = single(15)       # terminal per-cohort state
+                     C_final       = single(15)        # terminal per-cohort state
   )
   
   C_mat <- matrix(as.double(result$C_out), nrow = n_years, ncol = 5)
@@ -266,22 +265,56 @@ yasso15_run <- function(input_df, params, C_init, xi_arrays,
 
 # =============================================================================
 # yasso15_transient_init
-# See yasso07_transient_init for full rationale.
-# Yasso15 shares the same 15-element per-cohort C_init structure.
+#
+# 68-year pre-run (1917 -> 1985), same structure as yasso07_transient_init.
+# xi_mean is the list (xi_awe, xi_n, xi_h) from compute_xi_mean_yasso15.
+# precip held constant at lm$precip_mean (inactive leaching term, leac = 0).
 # =============================================================================
 
 yasso15_transient_init <- function(model_params, lm, xi_mean, ...) {
-  # xi_mean here is the list returned by compute_xi_mean_yasso15
-  # (xi_awe, xi_n, xi_h scalars). precip_mean extracted from lm.
   sigma_init  <- unname(model_params["sigma_init"])
   sigma_input <- unname(model_params["sigma_input"])
-  
-  yasso15_steady_state(
-    params      = model_params[YASSO15_PARAM_NAMES],
-    nwl_mean    = lm$nwl_mean * sigma_input * sigma_init,
-    fwl_mean    = lm$fwl_mean * sigma_input * sigma_init,
-    cwl_mean    = lm$cwl_mean * sigma_input * sigma_init,
-    xi_ss       = xi_mean,
-    precip_mean = lm$precip_mean
-  )
+  params      <- model_params[YASSO15_PARAM_NAMES]
+
+  # Fully-scaled AWEN litter endpoints
+  nwl_1917 <- lm$nwl_full_mean * sigma_init * sigma_input
+  fwl_1917 <- lm$fwl_full_mean * sigma_init * sigma_input
+  cwl_1917 <- lm$cwl_full_mean * sigma_init * sigma_input
+  nwl_1985 <- lm$nwl_t0_mean   * sigma_input
+  fwl_1985 <- lm$fwl_t0_mean   * sigma_input
+  cwl_1985 <- lm$cwl_t0_mean   * sigma_input
+
+  # Start at steady state under 1917 litter (15-element per-cohort state)
+  C_init <- yasso15_steady_state(params      = params,
+                                 nwl_mean    = nwl_1917,
+                                 fwl_mean    = fwl_1917,
+                                 cwl_mean    = cwl_1917,
+                                 xi_ss       = xi_mean,
+                                 precip_mean = lm$precip_mean)
+
+  # Build 68-row input_df with linearly interpolated AWEN columns
+  n_pre <- 68L
+  fracs <- (seq_len(n_pre) - 1L) / (n_pre - 1L)
+  nwl_mat <- outer(1 - fracs, nwl_1917) + outer(fracs, nwl_1985)
+  fwl_mat <- outer(1 - fracs, fwl_1917) + outer(fracs, fwl_1985)
+  cwl_mat <- outer(1 - fracs, cwl_1917) + outer(fracs, cwl_1985)
+  input_df <- data.frame(year = seq_len(n_pre), nwl_mat, fwl_mat, cwl_mat)
+  names(input_df) <- c("year",
+                       "nwl_A","nwl_W","nwl_E","nwl_N",
+                       "fwl_A","fwl_W","fwl_E","fwl_N",
+                       "cwl_A","cwl_W","cwl_E","cwl_N")
+
+  # Constant xi and precip arrays (no pre-1985 climate observations)
+  xi_const     <- list(xi_awe = rep(xi_mean$xi_awe, n_pre),
+                       xi_n   = rep(xi_mean$xi_n,   n_pre),
+                       xi_h   = rep(xi_mean$xi_h,   n_pre))
+  precip_const <- rep(lm$precip_mean, n_pre)
+
+  # Run pre-run; C_final carries the full 15-element terminal state
+  pre_out <- yasso15_run(input_df  = input_df,
+                         params    = params,
+                         C_init    = C_init,
+                         xi_arrays = xi_const,
+                         precip    = precip_const)
+  attr(pre_out, "C_final")
 }

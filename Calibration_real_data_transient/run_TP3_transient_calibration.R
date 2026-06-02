@@ -34,6 +34,7 @@ source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yass
 # compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
 source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/tp3_wrapper_transient.R")
 source("./Model_functions_real_data_transient/input_compatibility_layer.R")
+source("./Prior_specs/TP3_priors.R")
 
 library(dplyr)
 
@@ -119,18 +120,7 @@ N_FREE           <- transforms$n_params
 #   alpha_S = 0.10: intermediate between alpha_A (0.73) and alpha_H (0.0015).
 #   p_S     = 0.028: matches TP2's p_H (A-to-H fraction), applied here to A-to-S.
 #   p_H     = 0.50: neutral centre for the S-to-H transfer fraction.
-free_defaults <- c(
-  alpha_A     = 0.73,
-  alpha_S     = 0.10,
-  alpha_H     = 0.0015,
-  p_S         = 0.028,
-  p_H         = 0.50,
-  beta1       = 0.095,
-  beta2       = -0.00014,
-  gamma       = -1.21,
-  sigma_init  = 1.00,
-  sigma_input = 1.00
-)
+free_defaults <- TP3_FREE_DEFAULTS
 
 best_x <- to_unconstrained(free_defaults)
 
@@ -300,17 +290,7 @@ tp3_run_engine <- function(inputs, model_params, C_init, xi_array) {
 # and p_S respectively).
 # 95% CI for sigma_init: exp(log(1.0) ± 2*0.5) = [0.37, 2.72] (same as TP2).
 
-sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm["alpha_A"]     <- 0.50
-sigma_ppm["alpha_S"]     <- 0.50
-sigma_ppm["alpha_H"]     <- 0.50
-sigma_ppm["p_S"]         <- 1.00
-sigma_ppm["p_H"]         <- 1.00
-sigma_ppm["beta1"]       <- 0.20
-sigma_ppm["beta2"]       <- 0.05
-sigma_ppm["gamma"]       <- 0.30
-sigma_ppm["sigma_init"]  <- 0.50
-sigma_ppm["sigma_input"] <- 0.50
+sigma_ppm <- setNames(TP3_SIGMA_PPM[FREE_NAMES], FREE_NAMES)
 
 stopifnot(length(sigma_ppm) == N_FREE, all(sigma_ppm > 0),
           all(names(sigma_ppm) == FREE_NAMES))

@@ -26,10 +26,10 @@
 #   H_ss = p_H * p_S * J / alpha_H
 #
 # Transient initialisation (tp3_transient_init):
-#   Mirrors tp2_transient_init exactly.  A 68-year pre-run (1917 → 1985)
-#   is conducted at constant litter J_pre = J_full_mean * sigma_init * sigma_input
-#   starting from the analytical steady state at J_pre.  The terminal pool
-#   state is returned as C_init for the calibration period run.
+#   68-year pre-run (1917 → 1985) with linearly interpolated litter:
+#     J_1917 = J_full_mean * sigma_init * sigma_input  (historical anchor)
+#     J_1985 = J_t0_mean   * sigma_input               (observed-period start)
+#   Starts at analytical steady state under J_1917; returns terminal pool state.
 #
 #   sigma_init = 1.0  →  1917 litter equal to the contemporary series mean.
 #   sigma_init > 1.0  →  historically more productive (old-growth / unmanaged).
@@ -40,8 +40,6 @@
 #   tp3_transient_init (model_params, lm, xi_mean)       → named numeric(3) [A,S,H]
 #   tp3_run            (inputs, model_params, C_init, xi_array) → data.frame
 # =============================================================================
-
-N_TP3_PREINIT <- 68L   # 1985 - 1917: years of pre-run before observed data
 
 
 # -----------------------------------------------------------------------------
@@ -63,34 +61,38 @@ tp3_steady_state <- function(model_params, lm, xi_mean) {
 # -----------------------------------------------------------------------------
 # tp3_transient_init
 #
-# Pre-runs the model for N_TP3_PREINIT years under constant litter and constant
-# xi_mean (climate data not available before the observed period), starting from
-# the analytical steady state at that litter level.  Returns the terminal pool
-# state as C_init for the calibration period run beginning in 1985.
-#
-# Pre-run litter: J_pre = J_full_mean * sigma_init * sigma_input.
-# J_full_mean is the mean litter over the full observed series, serving as the
-# best estimate of long-run productivity before observation.
+# 68-year pre-run (1917 → 1985): litter linearly interpolated from
+# J_1917 (J_full_mean * sigma_init * sigma_input) to J_1985 (J_t0_mean *
+# sigma_input). Climate constant at xi_mean (no pre-1985 observations).
+# Starts at analytical steady state under J_1917; returns terminal state.
 # -----------------------------------------------------------------------------
 tp3_transient_init <- function(model_params, lm, xi_mean) {
-  J_pre <- lm$J_full_mean * model_params["sigma_init"] * model_params["sigma_input"]
+  xi_mean     <- unname(xi_mean)
+  alpha_A     <- unname(model_params["alpha_A"])
+  alpha_S     <- unname(model_params["alpha_S"])
+  alpha_H     <- unname(model_params["alpha_H"])
+  p_S         <- unname(model_params["p_S"])
+  p_H         <- unname(model_params["p_H"])
+  sigma_init  <- unname(model_params["sigma_init"])
+  sigma_input <- unname(model_params["sigma_input"])
 
-  # Analytical steady state at J_pre as starting point for the pre-run
-  A_ss  <- J_pre / (model_params["alpha_A"] * xi_mean)
-  S_ss  <- model_params["p_S"] * J_pre / (model_params["alpha_S"] * xi_mean)
-  H_ss  <- model_params["p_H"] * model_params["p_S"] * J_pre / model_params["alpha_H"]
-  C     <- c(A = unname(A_ss), S = unname(S_ss), H = unname(H_ss))
+  # Fully-scaled litter endpoints
+  J_1917 <- lm$J_full_mean * sigma_init * sigma_input
+  J_1985 <- lm$J_t0_mean   * sigma_input
 
-  alpha_A <- unname(model_params["alpha_A"])
-  alpha_S <- unname(model_params["alpha_S"])
-  alpha_H <- unname(model_params["alpha_H"])
-  p_S     <- unname(model_params["p_S"])
-  p_H     <- unname(model_params["p_H"])
+  # Start at analytical steady state under 1917 litter
+  C <- c(A = unname(J_1917 / (alpha_A * xi_mean)),
+         S = unname(p_S * J_1917 / (alpha_S * xi_mean)),
+         H = unname(p_H * p_S * J_1917 / alpha_H))
 
-  for (i in seq_len(N_TP3_PREINIT)) {
+  # 68-year pre-run: linearly interpolated J, constant xi
+  n_pre <- 68L
+  for (i in seq_len(n_pre)) {
+    frac   <- (i - 1L) / (n_pre - 1L)
+    J      <- J_1917 + (J_1985 - J_1917) * frac
     flux_A <- alpha_A * xi_mean * C["A"]
     flux_S <- alpha_S * xi_mean * C["S"]
-    C["A"] <- C["A"] - flux_A + J_pre
+    C["A"] <- C["A"] - flux_A + J
     C["S"] <- C["S"] + p_S * flux_A - flux_S
     C["H"] <- C["H"] + p_H * flux_S - alpha_H * C["H"]
   }

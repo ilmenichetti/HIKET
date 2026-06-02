@@ -60,11 +60,8 @@
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
 source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15_wrapper_transient.R")
-dyn.load("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so")
-# Load authoritative DEFAULT_PARAMS from source files (y15par.csv).
-DEFAULTS_ONLY <- TRUE
-source("./Model_functions_real_data/Study/Priors_model_matching.R")
-rm(DEFAULTS_ONLY)
+dyn.load("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15.so")
+source("./Prior_specs/Yasso15_priors.R")
 
 library(dplyr)
 
@@ -188,25 +185,7 @@ MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
 # samples after dropping MAP row; confirmed to match y15par.csv to 4 sig. fig.
 # after column remapping -- see Priors_model_matching.R).
 # Fractions: Yasso15 published defaults (p_default).
-free_defaults <- c(
-  p_default[MODEL_FREE_NAMES],
-  sigma_init  = 1.00,   # CHANGED: prior centre = 1.0 (same productivity as today)
-  sigma_input = 1.00
-)
-
-# Override climate/size centres with Yasso15 posterior means
-free_defaults["beta1"]   <-   0.09062
-free_defaults["beta2"]   <-  -0.000215
-free_defaults["gamma"]   <-  -1.80897
-free_defaults["betaN1"]  <-   0.04878
-free_defaults["betaN2"]  <-  -0.0000792
-free_defaults["gammaN"]  <-  -1.17294
-free_defaults["betaH1"]  <-   0.03518
-free_defaults["betaH2"]  <-  -0.000208
-free_defaults["gammaH"]  <- -12.54094
-free_defaults["delta1"]  <-  -0.43883
-free_defaults["delta2"]  <-   1.26838
-free_defaults["r"]       <-   0.25687
+free_defaults <- YASSO15_FREE_DEFAULTS
 
 best_x <- to_unconstrained(free_defaults)
 
@@ -343,14 +322,24 @@ inputs_by_plot  <- split(Yasso15_inputs,  Yasso15_inputs$plot_id)
 litter_means <- lapply(plots_real, function(pid) {
   inp  <- Yasso15_inputs[as.character(Yasso15_inputs$plot_id) == pid, ]
   clim <- Yasso15_climate[as.character(Yasso15_climate$plot_id) == pid, ]
-  n_ss    <- min(STEADY_STATE_YEARS, nrow(inp))
+  n_ss <- min(STEADY_STATE_YEARS, nrow(inp))
+  n_t0 <- min(N_PREINIT_SMOOTH,  nrow(inp))
   inp_ss  <- inp[seq_len(n_ss), ]
+  inp_t0  <- inp[seq_len(n_t0), ]
   clim_ss <- clim[seq_len(n_ss), ]
   list(
-    nwl_mean    = colMeans(inp_ss[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
-    fwl_mean    = colMeans(inp_ss[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
-    cwl_mean    = colMeans(inp_ss[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
-    precip_mean = mean(clim_ss$precip)   # for Fortran leaching term
+    # Steady-state window means (xi computation and sigma_obs)
+    nwl_mean      = colMeans(inp_ss[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_mean      = colMeans(inp_ss[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_mean      = colMeans(inp_ss[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+    precip_mean   = mean(clim_ss$precip),   # for Fortran leaching term
+    # Pre-run endpoints: full-series mean (1917 anchor) and first-5yr mean (1985)
+    nwl_full_mean = colMeans(inp[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_full_mean = colMeans(inp[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_full_mean = colMeans(inp[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+    nwl_t0_mean   = colMeans(inp_t0[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_t0_mean   = colMeans(inp_t0[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_t0_mean   = colMeans(inp_t0[, c("cwl_A","cwl_W","cwl_E","cwl_N")])
   )
 })
 names(litter_means) <- plots_real
@@ -470,20 +459,7 @@ yasso15_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 # [1-exp(gammaH*0.6)] ~ 1 for any gammaH < -5; large SD is an artefact.
 # Transfer fractions remain at 1.0 (Finnish data informs pool structure).
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm["beta1"]       <- 0.04593  # log space
-sigma_ppm["beta2"]       <- 0.00014  # physical space
-sigma_ppm["gamma"]       <- 0.07022  # physical space
-sigma_ppm["betaN1"]      <- 0.10502  # log space
-sigma_ppm["betaN2"]      <- 0.00008  # physical space
-sigma_ppm["gammaN"]      <- 0.15543  # physical space
-sigma_ppm["betaH1"]      <- 0.13477  # log space
-sigma_ppm["betaH2"]      <- 0.00016  # physical space
-sigma_ppm["gammaH"]      <- 1.50000  # physical space (capped; see above)
-sigma_ppm["delta1"]      <- 0.32810  # physical space
-sigma_ppm["delta2"]      <- 0.28643  # log space
-sigma_ppm["r"]           <- 0.05504  # log space
-sigma_ppm["sigma_init"]  <- 0.5
-sigma_ppm["sigma_input"] <- 0.5
+sigma_ppm[names(YASSO15_SIGMA_PPM)] <- YASSO15_SIGMA_PPM
 
 stopifnot(length(sigma_ppm) == N_FREE)
 stopifnot(all(sigma_ppm > 0))
@@ -506,6 +482,8 @@ message("Pre-MCMC sanity: forward run at defaults...")
 set.seed(2025)
 sanity_pids   <- sort(sample(plots, min(4, length(plots))))
 sanity_params <- assemble_model_params(free_defaults)
+
+
 
 sanity_results <- lapply(sanity_pids, function(pid) {
   clim   <- climate_by_plot[[pid]]

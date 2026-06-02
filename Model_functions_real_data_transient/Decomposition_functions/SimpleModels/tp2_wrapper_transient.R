@@ -338,22 +338,39 @@ tp2_run <- function(inputs, model_params, C_init, xi_array) {
 # =============================================================================
 # tp2_transient_init
 #
-# Transient-initialization replacement for tp2_steady_state.
-# Same rationale as sp1_transient_init: sigma_init scales litter at the
-# steady-state computation rather than patching the likelihood sd_vec.
+# 68-year pre-run (1917 -> 1985) identical in structure to sp1_transient_init.
+# Uses tp2_step for the exact per-year A/H analytical update.
 # =============================================================================
 
 tp2_transient_init <- function(model_params, lm, xi_mean, ...) {
-  xi_mean <- unname(xi_mean)
-
+  xi_mean     <- unname(xi_mean)
   alpha_A     <- unname(model_params["alpha_A"])
   alpha_H     <- unname(model_params["alpha_H"])
   p_H         <- unname(model_params["p_H"])
   sigma_init  <- unname(model_params["sigma_init"])
   sigma_input <- unname(model_params["sigma_input"])
 
-  J   <- lm$J_total_mean * sigma_input * sigma_init
-  A_ss <- unname(J / (alpha_A * xi_mean))
-  H_ss <- unname(p_H * J / (alpha_H * xi_mean))
-  c(A = A_ss, H = H_ss)
+  # Fully-scaled litter endpoints
+  J_1917 <- lm$J_full_mean * sigma_init * sigma_input
+  J_1985 <- lm$J_t0_mean   * sigma_input
+
+  # Effective decay rates (constant xi throughout pre-run)
+  k_A <- alpha_A * xi_mean
+  k_H <- alpha_H * xi_mean
+
+  # Start at analytical steady state under 1917 litter
+  A <- unname(J_1917 / k_A)
+  H <- unname(p_H * J_1917 / k_H)
+
+  # 68-year pre-run: linearly interpolated J, constant xi
+  n_pre <- 68L
+  for (i in seq_len(n_pre)) {
+    frac   <- (i - 1L) / (n_pre - 1L)
+    J      <- J_1917 + (J_1985 - J_1917) * frac
+    new_AH <- tp2_step(A, H, J, k_A, k_H, p_H)
+    A      <- unname(new_AH["A"])
+    H      <- unname(new_AH["H"])
+  }
+
+  c(A = A, H = H)
 }

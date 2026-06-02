@@ -71,13 +71,8 @@ source("./Model_functions_real_data_transient/input_compatibility_layer.R")
 # yasso20_wrapper.R aliases YASSO15_PARAM_NAMES and calls yasso15_run().
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15_wrapper_transient.R")
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso20_wrapper_transient.R")
-dyn.load("./Model_functions_real_data/Decomposition_functions/Yasso/yasso15.so")
-# Load authoritative DEFAULT_PARAMS from source files (Viskari 2022 / FMI).
-# DEFAULTS_ONLY=TRUE skips wrapper re-sourcing and posterior loading;
-# only MAP values are read (y15par.csv + Yasso20_sample_parameters.rda).
-DEFAULTS_ONLY <- TRUE
-source("./Model_functions_real_data/Study/Priors_model_matching.R")
-rm(DEFAULTS_ONLY)
+dyn.load("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso15.so")
+source("./Prior_specs/Yasso20_priors.R")
 
 library(dplyr)
 
@@ -100,7 +95,7 @@ CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()["nodename"])) parallelly:
 # when passed to make_likelihood, because climate_by_plot is monthly format.
 STEADY_STATE_YEARS <- 20L
 PREINIT_YEAR       <- 1917L  # Finland independence -- start of conceptual pre-run
-N_PREINIT_SMOOTH   <- 5L     # years averaged for t0 litter endpoint (not used in steady-state approach)
+N_PREINIT_SMOOTH   <- 5L     # years averaged for 1985 litter endpoint of the pre-run
 
 DIR_LOGS   <- "./Calibration_real_data_transient/progress_logs/"
 DIR_DIAG   <- file.path("./Calibration_real_data_transient/diagnostics", MODEL_NAME)
@@ -201,25 +196,7 @@ MODEL_FREE_NAMES <- FREE_NAMES[!FREE_NAMES %in% c("sigma_init", "sigma_input")]
 # samples; confirmed to match ParY20.dat MAP after column remapping --
 # see Priors_model_matching.R).
 # Fractions: Yasso20 published defaults (p_default).
-free_defaults <- c(
-  p_default[MODEL_FREE_NAMES],
-  sigma_init  = 1.00,   # CHANGED: prior centre = 1.0 (same productivity as today)
-  sigma_input = 1.00
-)
-
-# Override climate/size centres with Yasso20 posterior means
-free_defaults["beta1"]   <-  0.158000
-free_defaults["beta2"]   <- -0.002000
-free_defaults["gamma"]   <- -1.440000
-free_defaults["betaN1"]  <-  0.170000
-free_defaults["betaN2"]  <- -0.005000
-free_defaults["gammaN"]  <- -2.000000
-free_defaults["betaH1"]  <-  0.067000
-free_defaults["betaH2"]  <-  0.000000
-free_defaults["gammaH"]  <- -6.900000
-free_defaults["delta1"]  <- -2.550000
-free_defaults["delta2"]  <-  1.240000
-free_defaults["r"]       <-  0.250000
+free_defaults <- YASSO20_FREE_DEFAULTS
 
 best_x <- to_unconstrained(free_defaults)
 
@@ -379,14 +356,25 @@ litter_means <- lapply(plots_real, function(pid) {
   clim <- Yasso20_monthly[as.character(Yasso20_monthly$plot_id) == pid, ]
   n_ss_rows <- min(STEADY_STATE_YEARS * 12L, nrow(clim))
   clim_ss   <- clim[seq_len(n_ss_rows), ]
-  # Use years appearing in clim_ss to subset litter inputs consistently.
+  # Use years in clim_ss to subset litter inputs consistently
   ss_years <- unique(clim_ss$year)
   inp_ss   <- inp[inp$year %in% ss_years, ]
+  # First N_PREINIT_SMOOTH years of annual litter (1985 endpoint for pre-run)
+  t0_years <- sort(unique(inp$year))[seq_len(min(N_PREINIT_SMOOTH, length(unique(inp$year))))]
+  inp_t0   <- inp[inp$year %in% t0_years, ]
   list(
-    nwl_mean    = colMeans(inp_ss[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
-    fwl_mean    = colMeans(inp_ss[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
-    cwl_mean    = colMeans(inp_ss[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
-    precip_mean = sum(tapply(clim_ss$precip, clim_ss$month, mean, na.rm = TRUE))
+    # Steady-state window means (xi computation and sigma_obs)
+    nwl_mean      = colMeans(inp_ss[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_mean      = colMeans(inp_ss[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_mean      = colMeans(inp_ss[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+    precip_mean   = sum(tapply(clim_ss$precip, clim_ss$month, mean, na.rm = TRUE)),
+    # Pre-run endpoints: full-series mean (1917 anchor) and first-5yr mean (1985)
+    nwl_full_mean = colMeans(inp[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_full_mean = colMeans(inp[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_full_mean = colMeans(inp[, c("cwl_A","cwl_W","cwl_E","cwl_N")]),
+    nwl_t0_mean   = colMeans(inp_t0[, c("nwl_A","nwl_W","nwl_E","nwl_N")]),
+    fwl_t0_mean   = colMeans(inp_t0[, c("fwl_A","fwl_W","fwl_E","fwl_N")]),
+    cwl_t0_mean   = colMeans(inp_t0[, c("cwl_A","cwl_W","cwl_E","cwl_N")])
   )
 })
 names(litter_means) <- plots_real
@@ -497,20 +485,7 @@ yasso20_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 # Log-transformed params: sigma = SD(log(samples)); physical params: SD(samples).
 # gammaH not capped (SD=1.39, within acceptable range for Yasso20).
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm["beta1"]       <- 0.10355  # log space
-sigma_ppm["beta2"]       <- 0.00054  # physical space
-sigma_ppm["gamma"]       <- 0.14583  # physical space
-sigma_ppm["betaN1"]      <- 0.06246  # log space
-sigma_ppm["betaN2"]      <- 0.00041  # physical space
-sigma_ppm["gammaN"]      <- 0.03532  # physical space
-sigma_ppm["betaH1"]      <- 0.09118  # log space
-sigma_ppm["betaH2"]      <- 0.00009  # physical space
-sigma_ppm["gammaH"]      <- 1.39056  # physical space
-sigma_ppm["delta1"]      <- 0.43530  # physical space
-sigma_ppm["delta2"]      <- 0.21098  # log space
-sigma_ppm["r"]           <- 0.05446  # log space
-sigma_ppm["sigma_init"]  <- 0.5
-sigma_ppm["sigma_input"] <- 0.5
+sigma_ppm[names(YASSO20_SIGMA_PPM)] <- YASSO20_SIGMA_PPM
 
 stopifnot(length(sigma_ppm) == N_FREE)
 stopifnot(all(sigma_ppm > 0))
