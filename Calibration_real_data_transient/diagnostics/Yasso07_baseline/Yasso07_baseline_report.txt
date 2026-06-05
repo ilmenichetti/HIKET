@@ -1,0 +1,57 @@
+=========================================================
+  Yasso07 Published-Defaults Baseline Report
+  Generated: 2026-06-03 09:47:57
+=========================================================
+
+[1] Configuration
+    Plots simulated:           447
+    Plot-year predictions:     17880
+    Observations matched:      1121
+    Steady-state window (yr):  20
+    sigma_input:               1.00 (no scaling)
+
+[2] Predictive performance at defaults
+    R²:    0.021
+    RMSE:  54.08 tC/ha
+    Bias:  -1.14 tC/ha
+    MAPE:  50.2%
+
+[3] Bias by stratum (median residual_log; positive => obs > pred)
+    kasvup_tyyppi:
+        1           n=15    median_resid_log = +0.075
+        2           n=167   median_resid_log = +0.135
+        3           n=505   median_resid_log = -0.110
+        4           n=355   median_resid_log = +0.141
+        5           n=68    median_resid_log = -0.166
+        7           n=3     median_resid_log = +0.148
+        8           n=4     median_resid_log = -1.147
+        NA          n=4     median_resid_log = +0.342
+    KA:
+        1           n=883   median_resid_log = +0.005
+        2           n=102   median_resid_log = -0.094
+        3           n=84    median_resid_log = -0.113
+        4           n=52    median_resid_log = +0.048
+    species_code:
+        1           n=542   median_resid_log = -0.005
+        2           n=465   median_resid_log = -0.017
+        3           n=114   median_resid_log = +0.020
+    temp_zone:
+        cold        n=353   median_resid_log = -0.003
+        intermediate  n=380   median_resid_log = -0.070
+        warm        n=388   median_resid_log = +0.057
+
+[4] Residual analysis (Random Forest)
+    Observations:          195
+    Covariates:            56
+    RF OOB R²:             0.504
+    Top 10 covariates:
+        woody_share                0.0456
+        SandContent                0.0343
+        mean_height_85_dm          0.0291
+        ofh_weight_kgm2            0.0289
+        stand_age_2006_est         0.0250
+        basal_area_85              0.0238
+        stand_age_85               0.0227
+        CoarseFragments            0.0220
+        mean_precip_annual         0.0209
+        SiltContent                0.0207

@@ -1,0 +1,296 @@
+---
+title: "A pool-level mass-balance inconsistency in the published Yasso20 parameter set"
+subtitle: "Working note for discussion with the Yasso development team (FMI)"
+author: "Lorenzo Menichetti (HIKET project)"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  pdf_document:
+    toc: false
+    number_sections: true
+    latex_engine: xelatex
+    extra_dependencies: ["booktabs", "amsmath", "array"]
+geometry: margin=2.5cm
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+# All paths relative to this file's directory (documentation/)
+FMI_RDA  <- "../../Model_functions_real_data_transient/Decomposition_functions/Yasso_original/Yasso20_sample_parameters.rda"
+FMI_DAT  <- "../../Model_functions_real_data_transient/Decomposition_functions/Yasso_original/ParY20.dat"
+```
+
+# Summary
+
+Using the published Yasso20 model code and the published Yasso20 calibration
+parameters --- both taken directly from the FMI/Ryassofortran distribution --- the
+inter-pool transfer matrix violates carbon conservation at the level of two individual
+donor pools. For the acid-soluble pool **A** and the non-soluble pool **N**, the fractions
+of decomposed carbon redistributed to other pools plus the humification fraction sum
+to **1.0042**, implying a respired (CO$_2$) fraction of **$-$0.0042** for each.
+
+Cross-checking with Viskari et al. (2022) confirms that this arises from two deliberate
+calibration decisions made independently, without enforcing a joint per-column budget
+constraint. Every numerical result in this note is computed live from the FMI source
+files at document-render time.
+
+---
+
+# Sources
+
+All inputs trace directly to FMI sources. No HIKET code or re-derivations are used.
+
+| Role | Source |
+|------|--------|
+| Calibration methodology, model equations | Viskari et al. (2022), *Geosci.\ Model Dev.* **15**, 1735--1752, doi:10.5194/gmd-15-1735-2022 |
+| Parameter values (named) | `Yasso20_sample_parameters.rda`, FMI/Ryassofortran repository |
+| Parameter values (raw index order) | `ParY20.dat`, same repository |
+| Model code (R) | `Yasso20.r`, copyright 2020 FMI / Janne Pusa, GPL-3.0, same repository |
+| Model code (Fortran) | `yassofortran.f90`, subroutine `mod5c20`, same copyright |
+
+The two parameter files are numerically identical (verified below).
+
+---
+
+# The published parameters
+
+```{r load-params}
+# Load from the FMI .rda file
+e <- new.env()
+load(FMI_RDA, envir = e)
+theta <- e$sample_parameters   # named numeric vector, length 35
+
+# Cross-check against the raw ParY20.dat
+raw_dat <- scan(FMI_DAT, quiet = TRUE)
+stopifnot(length(raw_dat) == 35)
+stopifnot(all(raw_dat == as.numeric(theta)))
+message("ParY20.dat and Yasso20_sample_parameters.rda are identical: verified.")
+```
+
+```{r param-table, echo=FALSE}
+# Parameters relevant to mass balance (transfer fractions + p_H)
+# Indices and names follow the rda file; meaning from Viskari et al. Table 1
+frac_idx  <- c(5:16, 31)
+frac_name <- c("pWA","pEA","pNA","pAW","pEW","pNW",
+                "pAE","pWE","pNE","pAN","pWN","pEN","pH")
+frac_mean <- c("W→A","E→A","N→A","A→W","E→W","N→W",
+               "A→E","W→E","N→E","A→N","W→N","E→N","AWEN→H")
+frac_val  <- as.numeric(theta[frac_idx])
+
+df_params <- data.frame(
+  Index   = frac_idx,
+  Name    = frac_name,
+  Meaning = frac_mean,
+  Value   = frac_val
+)
+
+knitr::kable(df_params, booktabs = TRUE, linesep = "",
+             caption = "Transfer fractions and humification fraction from Yasso20\\_sample\\_parameters.rda. Highlighted rows are the source of the budget violation.",
+             col.names = c("idx", "rda name", "Meaning", "Value"))
+```
+
+---
+
+# The model structure
+
+The transfer matrix is built in `Yasso20.r` exactly as follows (copied verbatim;
+indices refer to the FMI parameter vector `theta`):
+
+```{r build-Ap}
+# Verbatim from FMI Yasso20.r (Janne Pusa, FMI, GPL-3.0)
+row1 <- c(-1,         theta[5],  theta[6],  theta[7],  0)
+row2 <- c(theta[8],  -1,         theta[9],  theta[10], 0)
+row3 <- c(theta[11], theta[12], -1,         theta[13], 0)
+row4 <- c(theta[14], theta[15], theta[16], -1,         0)
+row5 <- c(theta[31], theta[31], theta[31], theta[31], -1)
+A_p  <- matrix(c(row1, row2, row3, row4, row5), 5, 5, byrow = TRUE)
+colnames(A_p) <- rownames(A_p) <- c("A","W","E","N","H")
+```
+
+The Fortran subroutine `mod5c20` in `yassofortran.f90` builds the same matrix
+by equivalent index-based assignments (e.g.\ `A(2,1) = theta(8)*ABS(A(1,1))`).
+Both implementations agree exactly.
+
+# The conservation criterion
+
+For a donor-controlled linear compartment model $d\mathbf{x}/dt = M(\theta,c)\,\mathbf{x} +
+b(t)$ (Viskari et al. 2022, Eq.\ 1), carbon is conserved at every pool if and only if each
+column of the structural matrix $F(\theta)$ sums to $\leq 0$, equivalently:
+
+$$\sum_{i \neq j} p_{ij} + p_H \;\leq\; 1 \qquad \forall\, j \in \{A,W,E,N\}$$
+
+where the sum is over all fractions leaving donor pool $j$ to the other AWEN pools,
+and $p_H$ is the humification fraction (same for all donors, row 5 of $F$). The
+remainder $1 - \sum p_{ij} - p_H$ is the fraction respired as CO$_2$. A negative value
+implies carbon creation at that pool.
+
+---
+
+# Result
+
+```{r colsums}
+cs <- colSums(A_p)
+round(cs, 6)
+```
+
+```{r budget-table, echo=FALSE}
+pools <- c("A","W","E","N")
+transfers <- c(
+  theta[8]  + theta[11] + theta[14],   # out of A: pAW + pAE + pAN
+  theta[5]  + theta[12] + theta[15],   # out of W: pWA + pWE + pWN
+  theta[6]  + theta[9]  + theta[16],   # out of E: pEA + pEW + pEN
+  theta[7]  + theta[10] + theta[13]    # out of N: pNA + pNW + pNE
+)
+pH_val   <- as.numeric(theta[31])
+redis    <- transfers + pH_val
+respired <- 1 - redis
+
+df_budget <- data.frame(
+  Pool       = pools,
+  Transfers  = round(transfers, 4),
+  pH         = pH_val,
+  Total      = round(redis, 4),
+  Respired   = round(respired, 4)
+)
+
+knitr::kable(df_budget, booktabs = TRUE, linesep = "",
+             caption = "Per-donor-pool carbon budget (FMI parameters). Redistributed total = transfers + p\\_H. A negative Respired fraction indicates carbon creation.",
+             col.names = c("Donor pool", "Σ transfers out",
+                           "+ p_H", "Redistributed total", "Respired fraction"))
+```
+
+Columns **A** and **N** have a redistributed total of
+`r round(redis[1], 4)`,
+implying a respired fraction of
+`r round(respired[1], 4)`:
+a pool-level violation of carbon conservation.
+
+---
+
+# Cause: two independent calibration decisions without a joint constraint
+
+The origin is precisely documented in Viskari et al. (2022). Two passages, read
+together, explain the inconsistency.
+
+**Decision 1 --- p_AW and p_NA fixed at 1 (Sect. 2.3, p. 1741):**
+
+> *"if the estimated parameter values for the p terms in Eq. (3) were within
+> three decimals from either 0 or 1, they were set to the nearest limit value
+> of 0 or 1, after which the calibration was redone \ldots Parameters p_AW and
+> p_NA were set to 1 and the other AWEN-related p values were set to 0."*
+
+During the iterative calibration protocol, p_AW and p_NA converged to within 0.001 of
+1.0 and were deliberately fixed at exactly **1** for the final calibration run.
+
+**Decision 2 --- p_H calibrated independently from a separate dataset (Sect. 2.2, p. 1739):**
+
+> *"p_H (transfer fraction from AWEN pools to pool H) could have non-zero values
+> only with the Oak Ridge global SOC dataset."*
+
+The humification fraction p_H was estimated exclusively from the Oak Ridge global SOC
+measurements --- a dataset entirely separate from the litter-bag data that drove the
+AWEN transfer fractions. The MAP value is p_H = `r theta["pH"]`.
+
+**The combination:** once p_AW and p_NA were fixed at 1, the subsequent independent
+calibration of p_H from different data had no mechanism to enforce the joint constraint
+p_AW + p_H $\leq$ 1. The excess is exactly p_H:
+
+```{r excess}
+cat(sprintf("p_AW + p_H = %.4f + %.4f = %.4f  (excess = %.4f)\n",
+            as.numeric(theta["pAW"]), as.numeric(theta["pH"]),
+            as.numeric(theta["pAW"]) + as.numeric(theta["pH"]),
+            as.numeric(theta["pAW"]) + as.numeric(theta["pH"]) - 1))
+```
+
+# The paper's stated design intent
+
+The paper makes the design intent explicit (Sect. 2.3, p. 1741):
+
+> *"since we assumed that only decomposition in the W pool results in CO$_2$,
+> we estimated only p_EW and set p_EA to be the E pool remnant from 1 with
+> p_EN set to 0."*
+
+Under this assumption pools A, E, and N pass all decomposed carbon onward; only W
+respires. This is a biologically defensible modelling choice. The algebraically
+consistent implementation of this assumption requires, for any donor pool $j$ where
+all outflow fractions except one are zero:
+
+$$p_{jk} = 1 - p_H$$
+
+so that the column sum equals exactly 1. With p_H = `r theta["pH"]`, the
+conserving values would be:
+
+```{r conserving-values}
+pH <- as.numeric(theta["pH"])
+cat(sprintf("p_AW* = 1 - p_H = 1 - %.4f = %.4f  (stored: %.4f)\n",
+            pH, 1-pH, as.numeric(theta["pAW"])))
+cat(sprintf("p_NA* = 1 - p_H = 1 - %.4f = %.4f  (stored: %.4f)\n",
+            pH, 1-pH, as.numeric(theta["pNA"])))
+```
+
+The difference between the stored value (1.0000) and the conserving value
+(`r round(1-pH, 4)`) is exactly p_H = `r pH` --- the amount by which each
+column exceeds the budget.
+
+---
+
+# Why it was not detected
+
+The violation is **local** (confined to pools A and N) and small
+(`r round(respired[1]*-1*100, 2)` % excess). In a full simulation the carbon
+erroneously retained in A and N flows onward to W, which strongly respires
+(`r round(respired[2]*100, 1)` % of its outflow). The system as a whole
+remains numerically stable: a total-stock run with zero litter input and unit
+carbon in any AWEN pool shows declining total carbon throughout, because
+downstream respiration from W masks the local source. The inconsistency is
+only apparent from the column-level budget check shown above.
+
+---
+
+# Possible resolution
+
+The joint constraint can be restored without altering the model's structural
+intent by replacing the fixed limit values with the algebraically consistent
+expressions:
+
+$$p_{AW}^* = 1 - p_H \qquad p_{NA}^* = 1 - p_H$$
+
+This sets the respired fraction of columns A and N to exactly zero, preserving
+the design assumption that "only W respires." The numerical change is
+`r round(pH*100, 2)` % --- negligible for simulation results. The same logic
+applies to any future calibration where a transfer fraction converges to 1
+while p_H is calibrated independently.
+
+We would welcome the development team's view on whether this is the intended
+resolution, and whether the distributed parameter files should be updated.
+
+---
+
+# Appendix: full parameter table
+
+```{r full-param-table, echo=FALSE}
+all_names <- c(
+  "aA","aW","aE","aN",
+  "pWA","pEA","pNA","pAW","pEW","pNW","pAE","pWE","pNE","pAN","pWN","pEN",
+  "w1","w2","w3","w4","w5",
+  "b1","b2","bN1","bN2","bH1","bH2","g","gN","gH",
+  "pH","aH","th1","th2","r"
+)
+df_all <- data.frame(
+  Index = seq_along(all_names),
+  Name  = all_names,
+  Value = round(as.numeric(theta), 6)
+)
+knitr::kable(df_all, booktabs = TRUE, linesep = "",
+             caption = "Complete Yasso20 MAP parameter vector from Yasso20\\_sample\\_parameters.rda (identical to ParY20.dat).",
+             col.names = c("Index", "rda name", "Value"))
+```
+
+---
+
+# Reference
+
+Viskari, T., Pusa, J., Fer, I., Repo, A., Vira, J., and Liski, J. (2022).
+Calibrating the soil organic carbon model Yasso20 with multiple datasets.
+*Geoscientific Model Development*, **15**, 1735--1752.
+https://doi.org/10.5194/gmd-15-1735-2022

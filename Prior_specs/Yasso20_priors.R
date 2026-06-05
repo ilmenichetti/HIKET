@@ -41,6 +41,44 @@ YASSO20_FREE_DEFAULTS <- c(
   sigma_input = 1.00
 )
 
+# Published Viskari 2022 parameter vector — used by run_yasso20_baseline.R only.
+# Fractions: from Yasso20_sample_parameters.rda MAP (Ryassofortran / FMI).
+#   Structural zeros (SD=0 in posterior): p_NW, p_AE, p_WE, p_NE, p_AN, p_EN.
+#   p_EA = 0 at MAP: algebraically derived fraction whose constraint evaluates to 0.
+# Climate/size: identical to YASSO20_FREE_DEFAULTS (same rda source).
+# Do NOT use for calibration — YASSO20_FREE_DEFAULTS is the correct prior centre.
+YASSO20_PUBLISHED_DEFAULTS <- c(
+  # Transfer fractions — rda MAP values
+  p_WA = 0.500,
+  p_EA = 0.000,
+  p_NA = 1.000,
+  p_AW = 1.000,
+  p_EW = 0.990,
+  p_NW = 0.000,
+  p_AE = 0.000,
+  p_WE = 0.000,
+  p_NE = 0.000,
+  p_AN = 0.000,
+  p_WN = 0.163,
+  p_EN = 0.000,
+  # Climate/size — rda MAP (same as YASSO20_FREE_DEFAULTS)
+  beta1  = 0.158000,
+  beta2  = -0.002000,
+  gamma  = -1.440000,
+  betaN1 = 0.170000,
+  betaN2 = -0.005000,
+  gammaN = -2.000000,
+  betaH1 = 0.067000,
+  betaH2 =  0.000000,
+  gammaH = -6.900000,
+  delta1 = -2.550000,
+  delta2 =  1.240000,
+  r      =  0.250000,
+  # Auxiliary uncertainty parameters
+  sigma_init  = 1.00,
+  sigma_input = 1.00
+)
+
 # sigma_ppm overrides: only non-1.0 values listed.
 # Transfer fractions default to 1.0 (weakly informative).
 YASSO20_SIGMA_PPM <- c(

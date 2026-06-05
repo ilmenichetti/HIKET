@@ -1,0 +1,58 @@
+=========================================================
+  Yasso20 Published-Defaults Baseline Report
+  Generated: 2026-06-03 10:10:44
+=========================================================
+
+[1] Configuration
+    Plots simulated:           447
+    Plot-year predictions:     17880
+    Observations matched:      1121
+    Steady-state window (yr):  20
+    Climate:                   monthly (12 rows/yr)
+    sigma_input:               1.00 (no scaling)
+
+[2] Predictive performance at defaults
+    R²:    0.023
+    RMSE:  60.87 tC/ha
+    Bias:  -40.83 tC/ha
+    MAPE:  45.9%
+
+[3] Bias by stratum (median residual_log; positive => obs > pred)
+    kasvup_tyyppi:
+        1           n=15    median_resid_log = +0.655
+        2           n=167   median_resid_log = +0.709
+        3           n=505   median_resid_log = +0.481
+        4           n=355   median_resid_log = +0.687
+        5           n=68    median_resid_log = +0.372
+        7           n=3     median_resid_log = +0.714
+        8           n=4     median_resid_log = -0.399
+        NA          n=4     median_resid_log = +0.931
+    KA:
+        1           n=883   median_resid_log = +0.601
+        2           n=102   median_resid_log = +0.486
+        3           n=84    median_resid_log = +0.490
+        4           n=52    median_resid_log = +0.572
+    species_code:
+        1           n=542   median_resid_log = +0.591
+        2           n=465   median_resid_log = +0.580
+        3           n=114   median_resid_log = +0.620
+    temp_zone:
+        cold        n=353   median_resid_log = +0.605
+        intermediate  n=380   median_resid_log = +0.487
+        warm        n=388   median_resid_log = +0.640
+
+[4] Residual analysis (Random Forest)
+    Observations:          195
+    Covariates:            56
+    RF OOB R²:             0.502
+    Top 10 covariates:
+        woody_share                0.0397
+        SandContent                0.0318
+        ofh_weight_kgm2            0.0306
+        stand_age_2006_est         0.0244
+        CoarseFragments            0.0237
+        mean_height_85_dm          0.0234
+        SiltContent                0.0219
+        stand_age_85               0.0208
+        basal_area_85              0.0201
+        EstimatedBulkDensity       0.0164

@@ -165,3 +165,107 @@ Option B (documentation first): write the methods section while code changes are
 then add baseline results when available.
 Recommendation: Option A — the baselines are needed for a complete document, and
 writing the uncalibrated baseline section without those results means writing placeholders.
+
+---
+
+## 2026-06-03 — Baseline scripts, Yasso20 mass-balance discovery, full documentation rewrite
+
+### Context
+Calibration jobs submitted on Puhti (status unknown — queued/running). This session:
+built the Yasso baseline scripts, discovered a mass-balance issue in the published
+Yasso20 parameters, and rewrote both documentation files. Decision taken: baselines
+first (Option A), but most of the session went to documentation + the Yasso20 finding.
+
+### Baseline scripts (DONE)
+- `run_yasso07_baseline.R` — full rewrite of the legacy `run_published_yasso07_baseline.R`
+  (legacy file left untouched on disk; can be deleted when ready).
+- `run_yasso15_baseline.R`, `run_yasso20_baseline.R` — new.
+- `hiket_baselines.sh` — single SLURM job running all three sequentially (4h, 40 cpus).
+- Output dirs renamed `*_published/` → `*_baseline/` (both transient and non-transient
+  diagnostics trees; folders were empty).
+- New plots vs legacy: **mean absolute SOC trajectory** (predicted ±1 SE + observed
+  campaign means) and **mean annual ΔSOC** (tC/ha/yr, matches calibrated predictive
+  form). Colour scheme switched KA → `kasvup_tyyppi` to match calibrated outputs.
+- Init: steady-state (at published defaults σ_init=σ_input=1, so SS ≡ pre-run endpoint).
+- SP1/TP2/TP3 baselines NOT written (no published global params; would use prior centres).
+
+### Yasso20 mass-balance discovery (IMPORTANT)
+Investigating why the Yasso20 baseline "explodes" at the tail, we traced it to the
+**published Viskari (2022) Yasso20 parameters violating pool-level mass conservation**:
+- Donor pools A and N each redistribute `Σp_ij + p_H = 1.0042` (> 1) → respired
+  fraction −0.0042. Root cause: `pAW` and `pNA` are fixed at exactly 1.0, and
+  `p_H = 0.0042` is applied on top.
+- Verified using **FMI sources only**: `ParY20.dat` ≡ `Yasso20_sample_parameters.rda`
+  (identical 35-vectors), matrix code from FMI `Yasso20.r` / `yassofortran.f90`.
+- Our HIKET Fortran has a diagonal-dominance guard (a 2025 addition, not in FMI code)
+  that flags this and falls back to Euler+clamp, which then accumulates error over the
+  ~20-yr run → the "explosion". FMI code just runs `expm` and tolerates it; the
+  violation is LOCAL (per-pool) and masked system-wide by W's strong respiration, so a
+  total-stock run still shows carbon DECREASING — which is why it was never noticed.
+- Report written for FMI: `documentation/Yasso20_mass_balance_note.md` — bombproof,
+  every input linked to an FMI source, neutral tone, ends asking the dev team whether
+  `pAW`/`pNA` should be re-normalised to `1 − p_H`. **Caveat to check before sending:**
+  confirm with Toni that `ParY20.dat`/`.rda` IS the parameter set from the 2022 GMD paper.
+
+### Yasso20 baseline parameter decision (OPEN)
+- `Prior_specs/Yasso20_priors.R`: added `YASSO20_PUBLISHED_DEFAULTS` (Viskari fractions
+  incl. the 6 structural zeros + p_EA=0) — kept for reference but **reverted the baseline
+  script to use `YASSO20_FREE_DEFAULTS`** (Yasso15 fractions) so it runs stably.
+- User wants to decide later whether the Yasso20 baseline should instead reproduce the
+  original FMI result using the unmodified FMI code+params. Left provisional; documented
+  as such in both the data... no, in `HIKET_calibration.Rmd` baseline section ("Status").
+
+### Documentation rewrite (DONE)
+**`HIKET_calibration.Rmd`** — full rewrite based on the code:
+- 5→6 models (TP3 added everywhere: 3-pool A→S→H sequential cascade, Euler stepping,
+  10 free params, Yasso07 xi form).
+- New: Data section, Uncalibrated baselines section, Yasso-family overview with a
+  **TikZ pool diagram** (all 12 p_ij arrows + humification + respiration + litter) and a
+  parameter summary table.
+- Rewrote §Transient initialisation as the central story: 68-yr pre-run 1917→1985,
+  σ_init = historical productivity ratio, why steady-state init fails the observed SOC
+  trend. Storyline confirmed with user (see below).
+- New §"Fortran implementation: differences from the FMI reference code" — documents all
+  7 HIKET modifications (diagonal-dominance guard, matrixexp scaling cap, Taylor 10→20,
+  C_final output, xi precompute in R, single vs double precision, param ordering, r sign).
+- "nuisance" → "auxiliary uncertainty parameters" throughout.
+
+**Code-vs-docs review findings (corrected in the Rmd):**
+- **Free-param counts were wrong** (stick_break gives K free params per column, not K−1;
+  sum strictly < B). Yasso07 18→**20**, Yasso15/20 28→**26**. Fixed in all locations.
+  NB: the Yasso15 calibration SCRIPT's own header comment ("28 total") is also wrong —
+  left for the user to fix in code (out of scope this session).
+- Stick-breaking description corrected (was K−1 "third determined").
+- **Holdout split** (present in all 6 calibration scripts, excluded from likelihood,
+  separate predictive metrics) was undocumented — added a subsection.
+
+**`HIKET_data_preparation.Rmd`** — updated stale parts from `Data/Data_work.R`:
+- Komeetta 2024 now INTEGRATED (was "pending"): section 1.0b details — layer mapping,
+  `KOM_ORGANIC_ALL_SUBLAYERS=TRUE`, 58 Mg/ha QC check, >150 Mg/ha per-layer filter
+  (plots 55652/3314/71471), input_monthly extended to 2024 with copied 2023 litter.
+- Model list → all six; SOC "two campaigns" → three; month-count 39→40 yr.
+- Left PLACEHOLDERs for counts needing a fresh `Data_work.R` run (input_raw_monthly
+  rows, site_raw total/calib_ready, which OFH sublayers 1985/2006 measured).
+
+Both Rmd files render to PDF cleanly (tikz fixed via header-includes load order).
+
+### Storyline (confirmed with user)
+Finnish forest SOC accumulates 1985→2006 and Komeetta 2024 overall still saturating
+(layer-level nuances aside); the saturation is real and politically relevant (Sweden etc.
+don't report it). Transient init is what lets the models track the initial trend rather
+than predicting flat SOC from a wrong steady-state start. Conclusions come from the
+ENSEMBLE; Yasso20 is less reliable and not over-weighted. Plot-level litter (Tupek) is
+fairly flat, unlike older NFI inputs which rose — to be discussed in the data doc.
+
+### Run status as of end of session
+Unchanged from 2026-06-02 (existing posteriors predate the proper pre-run; calibration
+re-runs submitted on Puhti, outcome pending).
+
+### Recommended next session agenda
+1. Check Puhti calibration job status (`squeue -u menichet`); pull results if done.
+2. Launch the baseline job on Puhti: `sbatch Calibration_real_data_transient/hiket_baselines.sh`
+   (after `git pull` + Fortran recompile if any .f90 changed — none did this session).
+3. Then either: debug whatever the runs surface, OR start assembling a draft report.
+4. Decide the Yasso20 baseline parameterisation (Yasso15 fractions vs original FMI code).
+5. Optional: send `Yasso20_mass_balance_note.md` to Toni (after confirming the param-file
+   provenance caveat).

@@ -29,9 +29,12 @@ produces three output files in `Data/model_inputs/`:
 | `climate_monthly.csv` | Climate normals | plot × year × month |
 | `site_raw.csv` | Site attributes + `calib_ready` flag | plot |
 
-The models calibrated are Yasso07, Yasso15, and Yasso20 (RothC forthcoming).
-All use the same calibration plot set, defined by the `calib_ready` filter
-described in Section 5.
+The same prepared data feed all six calibrated models (SP1, TP2, TP3,
+Yasso07, Yasso15, Yasso20; RothC forthcoming). The data preparation is
+model-agnostic: the simple models (SP1/TP2/TP3) consume the summed litter
+input, while the Yasso family consumes the AWEN-fractionated inputs, but
+all draw from the same `input_raw_monthly.csv`, `site_raw.csv`, and the
+same calibration plot set defined by the `calib_ready` filter (Section 5).
 
 ---
 
@@ -39,10 +42,11 @@ described in Section 5.
 
 ## SOC Observations
 
-The SOC data (`Data/SOC/soilC1985_2006.csv`) compiles measurements from two
-national soil C campaigns conducted on the Finnish NFI permanent plot network
-(3,009 plots established in 1985--86 as part of VMI, the Finnish National
-Forest Inventory):
+The SOC data comprise three national soil C campaigns on the Finnish NFI
+permanent plot network (3,009 plots established in 1985--86 as part of VMI,
+the Finnish National Forest Inventory). The first two campaigns are read from
+`Data/SOC/soilC1985_2006.csv`; the third (Komeetta, 2024) is appended from a
+separate source file in `Data_work.R` section 1.0b (see below):
 
 **Campaign 1 --- VMI8, 1985--86.**
 The first Finnish national forest inventory permanent plot network, including
@@ -56,17 +60,47 @@ the same NFI permanent plots (linked via `bio_soil_id` in the NFI plot
 records). Mineral layer protocol: 0--10 cm and 10--20 cm (different
 aggregation from 1985), plus 20--40 cm. Same 414 plots as the 1985 campaign.
 
-**Campaign 3 --- Komeetta (pending).**
-A new Finnish national soil C campaign on the same permanent plot network.
-Data not yet received; when available, it will extend the calibration to a
-third observation year and increase the power of the temporal
-model--observation comparison.
+**Campaign 3 --- Komeetta, 2024.**
+A new Finnish national soil C campaign on the same permanent plot network,
+now integrated as the third observation year (`Data_work.R` section 1.0b,
+source `Data/Komeetta/Komeetta_mitatut hiilet.xlsx`). Plot identifiers are
+the `koealatunnus_BIOSOIL` codes directly --- no key lookup is needed
+(627/630 unique VMI codes matched the BIOSOIL key). Layers follow the
+standard Finnish NFI coding: 101 = H (humus), 102 = F (fermentation),
+103 = L (litter) for the organic layer; 201 = 0--5 cm, 202 = 5--20 cm,
+203 = 20--40 cm, 204 = 40--60 cm for the mineral layers.
 
-**File structure:** `soilC1985_2006.csv` contains 414 unique plots × 2
-years × multiple layers. Each plot appears in both years (perfectly
-symmetric: 1,695 rows per year). The layer name difference between campaigns
-(0--5/5--20 cm in 1985 vs 0--10/10--20 cm in 2006) is handled in
-`Data_work.R` by accepting both aggregation conventions.
+Processing decisions:
+
+- **Organic layer aggregation:** `KOM_ORGANIC_ALL_SUBLAYERS = TRUE` sums
+  the three OFH sublayers (101 + 102 + 103) into a single organic stock.
+  [PLACEHOLDER: confirm with colleagues which sublayers were measured in
+  the 1985/2006 campaigns; the flag switches to H-only (101) if needed to
+  match the earlier protocol.]
+- **40--60 cm layer (204):** ingested and stored but not currently used in
+  the 1-m depth extrapolation (which covers 0--40 cm only). Flagged as a
+  possible future constraint on the pooled-$\lambda$ fit.
+- **Quality control:** a weighted-mean SOC check targets the coauthor-reported
+  value of 58 Mg ha$^{-1}$ (northern plots, $y \geq$ 7{,}317{,}805 m
+  ETRS-TM35FIN, weighted $\times 3$ per sampling design). A per-layer
+  plausibility filter drops any single layer exceeding 150 Mg ha$^{-1}$ as a
+  likely data-entry error; three plots are affected (55652, 3314, 71471),
+  each handled individually (partial-layer retention or exclusion via the
+  organic-missing / single-mineral-layer guards).
+- **Anomalous rows:** three rows with non-integer layer codes are dropped.
+
+Komeetta observations are placed at year 2024 (June). Because the MUSTIKKA
+litter series ends in 2023, `input_raw_monthly.csv` is extended to 2024 by
+copying each plot's 2023 litter row (litter is approximately flat
+inter-annually, so the error is negligible); this keeps the 2024 SOC
+observation at its correct year label rather than displacing it to 2023.
+
+**File structure:** after the Komeetta append, `SOC_dedup` spans three
+observation years (1985, 2006, 2024). The 1985/2006 records come from
+`soilC1985_2006.csv` (414 plots × 2 years; each plot in both years). The
+layer-name difference between the 1985 (0--5/5--20 cm) and 2006
+(0--10/10--20 cm) campaigns is handled in `Data_work.R` by accepting both
+aggregation conventions.
 
 - **Layers accepted:** organic (OFH), 0--5 cm, 5--20 cm, 0--10 cm,
   10--20 cm, 20--40 cm.
@@ -333,8 +367,12 @@ signal rather than model residual structure.
 
 ## input_raw_monthly.csv
 
-Monthly time series, one row per (plot_id, year, month). Coverage: 405 plots
-with full climate data, 1985–2023, 12 months/year = 189,540 rows.
+Monthly time series, one row per (plot_id, year, month). Coverage spans
+1985–2024 (litter 1985–2023 from MUSTIKKA, plus a 2024 row copied from 2023
+to host the Komeetta observation), 12 months/year. [PLACEHOLDER: exact plot
+count and total row count after the Komeetta extension — re-run
+`Data_work.R` to confirm; pre-Komeetta this was 405 plots × 39 years × 12 =
+189,540 rows.]
 
 Litter inputs in t C ha⁻¹ month⁻¹ (annual values divided by 12, i.e. assuming
 uniform within-year distribution). SOC observations placed in June of the
@@ -348,10 +386,13 @@ Standalone monthly climate per plot, deduplicated. Same plot coverage as
 
 ## site_raw.csv
 
-Comprehensive per-plot attributes. 419 total plots; 351 with `calib_ready =
-TRUE`. Columns cover all covariates listed in Section 6 plus all raw Biosoil,
-GTK, and kuvio variables, exclusion flags (`peatland`, `organic_missing`,
-`organic_zero`, `high_mrt`), and the `calib_ready` flag.
+Comprehensive per-plot attributes. Columns cover all covariates listed in
+Section 6 plus all raw Biosoil, GTK, and kuvio variables, exclusion flags
+(`peatland`, `organic_missing`, `organic_zero`, `high_mrt`), and the
+`calib_ready` flag. [PLACEHOLDER: total plot count and `calib_ready` count
+after Komeetta integration — pre-Komeetta these were 419 total / 351
+calib-ready; the Komeetta append adds a third observation year and may shift
+the organic-layer flags and final counts. Re-run `Data_work.R` to confirm.]
 
 ---
 
@@ -362,7 +403,8 @@ calibration:
 
 - No duplicate plot–year–month rows
 - No NA in climate fields
-- All plots have the same month count (468 rows = 39 years × 12 months)
+- All plots have the same month count (the check is generic; with the
+  1985–2024 span this is 40 years × 12 = 480 rows per plot)
 - No negative litter values
 - SOC observations placed only in June
 - SOC count consistent between `input_raw_monthly` and `SOC_agg`
