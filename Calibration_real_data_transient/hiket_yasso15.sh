@@ -2,7 +2,7 @@
 #SBATCH --job-name=hiket_yasso15
 #SBATCH --account=project_2019134
 #SBATCH --output=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/yasso15_%j.out
-#SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/yasso015_%j.err
+#SBATCH --error=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/yasso15_%j.err
 #SBATCH --partition=small
 #SBATCH --time=36:00:00
 #SBATCH --ntasks=1

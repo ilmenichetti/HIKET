@@ -9,8 +9,8 @@
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
 #SBATCH --mem-per-cpu=400
-# TP2 is pure R; no Fortran. 18h wallclock: slightly more than SP1 (8 free
-# params vs 6, two-pool update loop somewhat slower), well under Yasso07's 36h.
+# TP2 is pure R; no Fortran. 8 free params (two-pool update loop), slightly
+# more than SP1; finishes well inside the 36h walltime.
 module load r-env
 if test -f ~/.Renviron; then
     sed -i '/TMPDIR/d' ~/.Renviron
