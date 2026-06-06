@@ -159,6 +159,58 @@ underprediction is a known consequence — noted in methods.
 With ~19 free parameters and only 2 SOC observations per plot, poor R-hat for
 flow fractions is **structural non-identifiability**, not a bug.
 
+### Prior homogenization across models — ✅ IMPLEMENTED (2026-06-06)
+A three-tier prior scheme, now **applied to all six `Prior_specs/*_priors.R`** —
+see `Prior_specs/PRIOR_HOMOGENIZATION_PLAN.md` for full tables, rationale, and
+decision record. Summary:
+- **Tier 1 (climate & size):** per-model centre & width, each from that model's
+  *own* published calibration (Yasso07 ← Tuomi 2009 Table 3 [climate] + Tuomi
+  2011 Table 4 [woody]; Yasso15/20 ← `Yasso15.dat`/`Yasso20.dat`). Homogeneous
+  in *method + scale*, not in raw number.
+- **Tier 2 (12 transfer fractions):** common weakly-informative logit prior,
+  SD **0.4**, identical across models; per-model published centres. Wired by
+  **explicit per-fraction listing** in each `*_SIGMA_PPM` (decision #5).
+  Guardrail: fraction R-hat must stay poor — we are not forcing convergence.
+- **Tier 3 (`sigma_init`, `sigma_input`):** identical log SD 0.50 everywhere.
+
+Concept: priors are homogeneous in *construction method, scale, constraints,
+and degrees of freedom* — **not** identical numbers (identical numbers is what
+broke Yasso07). Any residual divergence is then attributable to structure/data,
+not prior asymmetry.
+
+**Decisions (locked 2026-06-05; #5 settled 2026-06-06):** published "±" limits
+read as **1σ** (conservative); **GUI centres** kept; woody widths from Tuomi
+2011 Table 4; fraction logit SD **0.4**; fraction-width mechanism = **explicit
+per-fraction listing**.
+
+**Bug fixed:** Yasso07 (and SP1/TP2/TP3) carried a hand-set `beta2` prior SD of
+**0.05**, ~100–360× looser than the empirical Yasso15/20 widths. Since `beta2`
+multiplies T² (~600 in boreal climate), this detonated the climate modifier
+`xi`, giving 25–46 % `-Inf` proposal rates and R-hat up to 38 in run `Yasso07
+20260603_053323`. Applied fix (1σ reading): `beta2` 0.05→**0.00065**, `beta1`
+0.20→**0.26**, `gamma` 0.30→**0.20**, `delta1` 0.15→**0.16**, `delta2`
+0.10→**0.12**, `r` 0.015→**0.042**.
+
+**Local de-risk complete (2026-06-06):** a faithful prior-pushforward pre-flight
+(`Calibration_real_data_transient/preflight_prior_pushforward.R`) sources each
+model's real calibration script up to the MCMC launch and pushes prior draws
+through the genuine `ll_fn` at full N — no Puhti, no fairshare. Result: the
+`beta2` detonation is eliminated in all six models. A `beta2` sweep through the
+real `ll_fn` shows the failure is *prior-driven, not engine-driven* (positive
+`beta2` excursions give ll ≤ −10⁹, → −Inf only past +0.12; the matrix-exp cap
+catches only the extreme tail). OLD `beta2~N(−0.0016,0.05)` puts ~40 % of draws
+in fatal territory (reproduces the 25–46 % failure); NEW `~N(−0.0016,0.00065)`
+≈0 %. NEW-prior forward-blowup rates: SP1/TP2/Yasso15/Yasso20 **0 %**, Yasso07
+~2–3 % (`delta2`/`sigma` baseline, not `beta2`), TP3 ~10–12 % — and the TP3
+residual is **genuine under-constraint** (`alpha` log SD 0.50, ~5 %; climate
+~3 %; fractions & `sigma` **0 %**), a finding left untouched, confirmed to run
+acceptably on Puhti. The methods-doc parameter-class × prior-criteria table is
+done (`…/documentation/HIKET_calibration.Rmd`, §"Priors").
+
+**Still pending:** one production run on Puhti (all 6, full N, full iter, in
+parallel) — the only thing local testing cannot show is the MCMC convergence
+behaviour (climate R-hat should *improve* while fraction R-hat *stays poor*).
+
 ---
 
 ## Parameter conventions
@@ -205,8 +257,12 @@ multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
 
 ## Known outstanding items
 
-- Stale `sigma_init` 95% CI comment in `run_Yasso15_transient_calibration.R`
-  (shows `[0.04, 0.27]`, correct is `[0.37, 2.72]`)
+- **Prior homogenization applied + locally de-risked (2026-06-06)** — all six
+  `*_priors.R` edited; methods-doc table done; the `preflight_prior_pushforward.R`
+  pre-flight confirms the `beta2` detonation is gone in all six models at full N
+  (see Prior-homogenization design note above). **One follow-up remains:** the
+  production run on Puhti (all 6, full N, full iter, parallel) to confirm MCMC
+  convergence behaviour (climate R-hat improves; fraction R-hat stays poor).
 - Hard dependency in `calibration_engine_transient.R` on original non-transient
   engine file existing in project
 - `rownames(inputs_proj) <- NULL` / `rownames(clim_proj) <- NULL` not yet
@@ -230,6 +286,14 @@ multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
 - Documentation (`HIKET_calibration.Rmd`): rationale over implementation;
   "auxiliary uncertainty parameters" not "nuisance parameters";
   Puhti infrastructure details excluded
+- **FUNDAMENTAL doc element:** the general calibration documentation
+  (`HIKET_calibration.Rmd`) **must** contain a *parameter-class × prior-criteria*
+  table — for each class of parameter (climate, size, transfer fractions,
+  auxiliary), the criteria used to set its prior (centre source, width source,
+  transform/constraint, and whether it was consistently calibrated across the
+  original models). This table is the backbone of the homogenization argument;
+  the worked version lives in `Prior_specs/PRIOR_HOMOGENIZATION_PLAN.md` §2 and
+  must be mirrored (rationale form) into the Rmd.
 
 ---
 

@@ -445,7 +445,7 @@ yasso15_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 #     as Yasso07. All three groups tightened equally -- the intercomparison
 #     treats the pool groups symmetrically at the prior level.
 #
-#   sigma_init (= 0.5): log-scale. Physical 95% CI ~[0.04, 0.27].
+#   sigma_init (= 0.5): log-scale. Physical 95% CI ~[0.37, 2.72].
 #   sigma_input (= 0.5): log-scale. Physical 95% CI ~[0.37, 2.72].
 #
 # Note: gamma / gammaN / gammaH left at 1.0. The precipitation response is

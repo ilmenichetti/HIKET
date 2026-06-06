@@ -736,6 +736,53 @@ unconstrained space, and $\log J$ is the log-Jacobian of the transforms.
 Prior specifications are stored in `Prior_specs/{Model}_priors.R` and
 sourced at the top of each calibration script.
 
+## Homogenization across models
+
+The scientific question --- whether divergent SOC projections reflect genuine
+structural differences or calibration artefacts --- requires that the
+calibration setup itself inject no asymmetry that confounds structure with
+calibration choice. Priors are therefore homogenized in their
+\emph{construction method, scale, constraints, and degrees of freedom} ---
+\textbf{not} in their raw numbers. Identical numbers would in fact be wrong,
+because the parameters live on model-specific scales; forcing the same number
+is precisely what produced the Yasso07 $\beta_2$ pathology. Each parameter
+class is assigned to a tier by a single criterion: \emph{was it consistently
+and freely calibrated across the original models?}
+
+\begin{small}
+\begin{longtable}{p{2.6cm} p{2.4cm} p{2.4cm} p{2.0cm} p{2.4cm}}
+\toprule
+Parameter class & Centre source & Width source & Transform & Consistently calibrated across originals? \\
+\midrule
+\textbf{Tier 1} climate \& size ($\beta$'s, $\gamma$'s, $\delta$'s, $r$) &
+each model's own published MAP &
+each model's own published posterior/limit (1$\sigma$) &
+log or unconstrained &
+yes --- free in every original $\Rightarrow$ per-model widths kept \\
+\textbf{Tier 2} 12 transfer fractions &
+each model's own published structure &
+\emph{common} logit SD = 0.4 (identical) &
+logit (stick-break) &
+no --- Viskari 2022 fixed/derived 9 of 12 $\Rightarrow$ common prior restores symmetry \\
+\textbf{Tier 3} auxiliary ($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$) &
+1.0 &
+\emph{common} log SD = 0.50 (identical) &
+log &
+HIKET-only $\Rightarrow$ identical everywhere \\
+\bottomrule
+\end{longtable}
+\end{small}
+
+Tier 1 keeps each model's own published uncertainty because coverage is
+consistent across the original calibrations. Tier 2 overrides the published
+fractions with a single common prior precisely because they were \emph{not}
+consistently calibrated --- applying the Tier-1 recipe would freeze Yasso20's
+nine fixed fractions (zero posterior spread) while Yasso15's stay free,
+re-introducing the very asymmetry the design exists to remove. What
+legitimately differs between models --- Tier-1 centres and widths, and the
+parameter set itself (Yasso07 has no separate N/H climate response) --- is
+genuine structure, not a calibration choice.
+
 ## Sources
 
 \begin{small}
@@ -743,10 +790,10 @@ sourced at the top of each calibration script.
 \toprule
 Model & Source for prior centres & Source for prior widths \\
 \midrule
-SP1   & Hand-set (no published global calib.) & Weakly informative \\
-TP2   & Hand-set ICBM-style defaults          & Weakly informative \\
-TP3   & Hand-set; extends TP2 with Slow pool  & Weakly informative \\
-Yasso07 & \texttt{y07par\_gui.csv} (Tuomi et al.) & Literature CIs \\
+SP1   & Hand-set (no published global calib.) & Climate on Yasso07 scale; rest weak \\
+TP2   & Hand-set ICBM-style defaults          & Climate on Yasso07 scale; rest weak \\
+TP3   & Hand-set; extends TP2 with Slow pool  & Climate on Yasso07 scale; rest weak \\
+Yasso07 & \texttt{y07par\_gui.csv} (Tuomi et al. 2011) & Tuomi 2009 T3 (climate), 2011 T4 (woody) \\
 Yasso15 & \texttt{Yasso15.dat} posterior mean (FMI) & \texttt{Yasso15.dat} posterior SD \\
 Yasso20 & \texttt{Yasso20\_sample\_parameters.rda} (FMI) & \texttt{Yasso20.dat} posterior SD \\
 \bottomrule
@@ -761,17 +808,45 @@ ordering in the FMI files differs from HIKET's parameter ordering;
 remapping is performed and verified in `Priors_model_matching.R`.
 
 For Yasso07, no posterior file is publicly available; $\sigma_{\mathrm{ppm}}$
-is derived from the confidence intervals reported in Tuomi et al.
-(2008--2010). For SP1, TP2, and TP3, priors are hand-set to plausible
-starting values and wide enough to let the Finnish data dominate.
+is derived from the published posterior confidence limits --- climate
+parameters from Tuomi et al. (2009) Table 3, woody-size parameters from
+Tuomi et al. (2011) Table 4. These ``$\pm$'' limits are read conservatively
+as $1\sigma$ (not divided by 1.96), giving broader, less-informative priors;
+for log-transformed parameters the relative SD is the limit divided by the
+paper MAP (delta method). For SP1, TP2, and TP3 the climate widths are placed
+on this same Yasso07 empirical scale --- their climate centres were already
+borrowed from the Yasso07 MAP --- while their remaining structural parameters
+stay weakly informative so the Finnish data dominates.
+
+This replaces an earlier hand-set $\sigma_{\mathrm{ppm}}(\beta_2) = 0.05$
+shared by Yasso07/SP1/TP2/TP3, which was $\sim$100--360$\times$ looser than
+the empirical Yasso15/20 widths. Because $\beta_2$ multiplies $T^2$
+($\sim$600 at boreal seasonal extremes), that width let the climate modifier
+$\xi$ span tens of orders of magnitude, producing 25--46\,\% non-finite MCMC
+proposals under the all-or-nothing likelihood. The $1\sigma$ value
+($6.5\times10^{-4}$) keeps the prior-predictive temperature factor bounded
+(99th percentile $\approx 9$ rather than $\sim$$10^{31}$).
 
 ## Transfer-fraction priors
 
 For all three Yasso models the prior standard deviation on every transfer
-fraction is $\sigma_{\mathrm{ppm}} = 1.0$ in unconstrained (stick-breaking)
-space. This is deliberately weakly informative: pool-flow structure is the
-primary structural-comparison axis, and the Finnish data should drive it.
-Prior centres for the fractions use the published Yasso15 defaults for
+fraction is $\sigma_{\mathrm{ppm}} = 0.4$ in unconstrained (stick-breaking
+logit) space, identical across models. This is the only prior class given a
+literally identical width everywhere: pool-flow structure is the primary
+structural-comparison axis, and no single model's published structure should
+be allowed to dominate --- six of Yasso20's fractions were structural zeros in
+Viskari et al. (2022), and the homogenization deliberately lets the Finnish
+data, not the original warm-site constraints, decide the flow architecture.
+The logit scale gives every fraction the same \emph{relative} exploration
+window regardless of whether its centre is near zero or near one. The chosen
+width of 0.4 keeps a small fraction (centre 0.01) within $\sim$2.2$\times$ of
+its centre at $+2\sigma$, versus $\sim$7$\times$ under the previous
+$\sigma_{\mathrm{ppm}} = 1.0$; this stops the chains from wandering into
+forward-model-exploding regions without manufacturing convergence. The
+fractions remain genuinely non-identifiable (only two SOC observations per
+plot constrain $\sim$12 flows), so their $R$-hat is expected to stay poor ---
+that poor identifiability is a scientific finding, not a defect to be tuned
+away. Prior centres for the fractions use the published Yasso15 defaults for
 all three Yasso models (Yasso20 included, since the previously-fixed zeros
 are now free parameters and Yasso15 defaults are the closest available
 nonzero prior centres from the same chemical-fractionation framework).
@@ -779,8 +854,8 @@ nonzero prior centres from the same chemical-fractionation framework).
 ## Climate-response and size-modifier priors
 
 Climate and size parameters receive \emph{informative} priors, derived
-from the FMI posterior (Yasso15/20) or from literature CIs (Yasso07).
-This prevents two pathologies:
+from the FMI posterior (Yasso15/20) or from the Tuomi 2009/2011 published
+posterior limits (Yasso07). This prevents two pathologies:
 
 1. **The $\gamma$\,/\,$\sigma_{\mathrm{input}}$ compensation loop.** Both
    parameters scale total decomposition; without an informative prior on
@@ -801,20 +876,20 @@ reflects a flat likelihood surface, not genuine uncertainty.
 
 | Parameter | $x^{\mathrm{ctr}}$ (physical) | $\sigma_{\mathrm{ppm}}$ | Space |
 |-----------|------------------------------:|------------------------:|-------|
-| $p_{ij}$ (12) | published defaults | 1.0 | unconstrained |
-| $\beta_1$ | 0.0987 | 0.20 | log |
-| $\beta_2$ | $-0.00157$ | 0.05 | physical |
-| $\gamma$ | $-1.272$ | 0.30 | physical |
-| $\delta_1$ | $-1.708$ | 0.15 | physical |
-| $\delta_2$ | 0.859 | 0.10 | log |
-| $r$ | 0.307 | 0.015 | log |
+| $p_{ij}$ (12) | published defaults | 0.4 | logit (stick-break) |
+| $\beta_1$ | 0.0987 | 0.26 | log |
+| $\beta_2$ | $-0.00157$ | $6.5 \times 10^{-4}$ | physical |
+| $\gamma$ | $-1.272$ | 0.20 | physical |
+| $\delta_1$ | $-1.708$ | 0.16 | physical |
+| $\delta_2$ | 0.859 | 0.12 | log |
+| $r$ | 0.307 | 0.042 | log |
 | $\sigma_{\mathrm{init}}, \sigma_{\mathrm{input}}$ | 1.00 | 0.50 | log |
 
 \textbf{Yasso15}
 
 | Parameter | $x^{\mathrm{ctr}}$ | $\sigma_{\mathrm{ppm}}$ | Space |
 |-----------|-------------------:|------------------------:|-------|
-| $p_{ij}$ (12) | published defaults | 1.0 | unconstrained |
+| $p_{ij}$ (12) | published defaults | 0.4 | logit (stick-break) |
 | $\beta_1$ | 0.0906 | 0.0459 | log |
 | $\beta_2$ | $-2.15 \times 10^{-4}$ | $1.4 \times 10^{-4}$ | physical |
 | $\gamma$ | $-1.809$ | 0.0702 | physical |
@@ -833,7 +908,7 @@ reflects a flat likelihood surface, not genuine uncertainty.
 
 | Parameter | $x^{\mathrm{ctr}}$ | $\sigma_{\mathrm{ppm}}$ | Space |
 |-----------|-------------------:|------------------------:|-------|
-| $p_{ij}$ (12) | Yasso15 defaults | 1.0 | unconstrained |
+| $p_{ij}$ (12) | Yasso15 defaults | 0.4 | logit (stick-break) |
 | $\beta_1$ | 0.158 | 0.104 | log |
 | $\beta_2$ | $-0.002$ | $5.4 \times 10^{-4}$ | physical |
 | $\gamma$ | $-1.440$ | 0.146 | physical |
@@ -854,15 +929,15 @@ reflects a flat likelihood surface, not genuine uncertainty.
 |-----------|-------------------:|------------------------:|-------|
 | \textit{SP1} | | | |
 | $\alpha$ | 0.09 | 0.50 | log |
-| $\beta_1, \beta_2, \gamma$ | 0.095, $-0.00014$, $-1.21$ | 0.20, 0.05, 0.30 | log, phys., phys. |
+| $\beta_1, \beta_2, \gamma$ | 0.095, $-0.00014$, $-1.21$ | 0.26, $6.5\times10^{-4}$, 0.20 | log, phys., phys. |
 | \textit{TP2} | | | |
 | $\alpha_A, \alpha_H$ | 0.73, 0.0015 | 0.50, 0.50 | log |
-| $p_H$ | 0.028 | 1.00 | logit |
-| $\beta_1, \beta_2, \gamma$ | 0.095, $-0.00014$, $-1.21$ | 0.20, 0.05, 0.30 | log, phys., phys. |
+| $p_H$ | 0.028 | 0.40 | logit |
+| $\beta_1, \beta_2, \gamma$ | 0.095, $-0.00014$, $-1.21$ | 0.26, $6.5\times10^{-4}$, 0.20 | log, phys., phys. |
 | \textit{TP3} | | | |
 | $\alpha_A, \alpha_S, \alpha_H$ | 0.73, 0.10, 0.0015 | 0.50, 0.50, 0.50 | log |
-| $p_S, p_H$ | 0.028, 0.50 | 1.00, 1.00 | logit |
-| $\beta_1, \beta_2, \gamma$ | 0.095, $-0.00014$, $-1.21$ | 0.20, 0.05, 0.30 | log, phys., phys. |
+| $p_S, p_H$ | 0.028, 0.50 | 0.40, 0.40 | logit |
+| $\beta_1, \beta_2, \gamma$ | 0.095, $-0.00014$, $-1.21$ | 0.26, $6.5\times10^{-4}$, 0.20 | log, phys., phys. |
 | \textit{All three} | | | |
 | $\sigma_{\mathrm{init}}, \sigma_{\mathrm{input}}$ | 1.00 | 0.50 | log |
 
@@ -1338,15 +1413,18 @@ calibration used, regardless of any subsequent updates to `Data_work.R`.
     Guarantees the per-column mass-budget constraint exactly; the remainder
     of each pool's outflow is respired as CO$_2$.
 
-11. **Weakly informative priors on transfer fractions**
-    ($\sigma_{\mathrm{ppm}} = 1.0$ in unconstrained space). Finnish data
-    drives pool-flow structure, which is the primary structural-comparison
-    axis.
+11. **Common weakly informative prior on transfer fractions**
+    ($\sigma_{\mathrm{ppm}} = 0.4$, identical across models, in unconstrained
+    logit space). Finnish data drives pool-flow structure --- the primary
+    structural-comparison axis --- and an identical width removes any
+    model-to-model asymmetry in how freely the flows are explored.
 
 12. **Informative priors on climate and size parameters** (Yasso15/20
-    from FMI posterior SDs; Yasso07 from literature CIs). Prevents the
+    from FMI posterior SDs; Yasso07 from the Tuomi 2009/2011 published
+    posterior limits, read as $1\sigma$). Prevents the
     $\gamma$\,/\,$\sigma_{\mathrm{input}}$ compensation loop and the
-    $\delta_2$ NaN pathology.
+    $\delta_2$ NaN pathology, and removes the $\beta_2$ climate-modifier
+    detonation that the earlier hand-set width caused.
 
 13. **Three SOC observation years (1985, 2006, 2024).** The Komeetta
     campaign (2024) provides a third calibration target. The

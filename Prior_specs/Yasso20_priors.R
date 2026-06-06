@@ -3,7 +3,8 @@
 # Prior centres (transfer fractions): same as Yasso15 (YASSO15_DEFAULT_PARAMS)
 # Prior centres (climate/size): Yasso20_sample_parameters.rda MAP, FMI Ryassofortran
 # Prior widths: posterior SDs, Yasso20.dat, FMI Ryassofortran
-# Transfer fraction widths: 1.0 (weakly informative — Finnish data drives structure)
+# Transfer fraction widths: logit SD 0.4 (Tier-2 common weak prior — Finnish
+#   data drives structure; see Prior_specs/PRIOR_HOMOGENIZATION_PLAN.md §4.2)
 
 # Complete physical-space prior centres for all free parameters.
 YASSO20_FREE_DEFAULTS <- c(
@@ -79,9 +80,14 @@ YASSO20_PUBLISHED_DEFAULTS <- c(
   sigma_input = 1.00
 )
 
-# sigma_ppm overrides: only non-1.0 values listed.
-# Transfer fractions default to 1.0 (weakly informative).
+# sigma_ppm in unconstrained (transformed) space. All free params listed
+# explicitly (decision #5: explicit per-fraction listing for traceability).
 YASSO20_SIGMA_PPM <- c(
+  # Transfer fractions (12) — Tier-2 common logit SD 0.4
+  p_WA = 0.4, p_EA = 0.4, p_NA = 0.4, p_AW = 0.4,
+  p_EW = 0.4, p_NW = 0.4, p_AE = 0.4, p_WE = 0.4,
+  p_NE = 0.4, p_AN = 0.4, p_WN = 0.4, p_EN = 0.4,
+  # Climate & size (posterior SDs, Yasso20.dat — Tier-1 unchanged)
   beta1       = 0.10355,
   beta2       = 0.00054,
   gamma       = 0.14583,
