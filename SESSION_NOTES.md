@@ -442,3 +442,23 @@ integrator run syncs from Puhti. SOC levels change negligibly. See [[tp3-forcing
 - **Diagnostic:** `diagnostic_semivariogram.R` (outside deposit) shows the ~88% nugget.
 - **Zenodo:** zip `HIKET_SOC_maps_Finland_v1.zip` (~112 MB, gitignored); description
   drafted (credits HIKET + NextGenC; CC-BY; attributes Luke + SYKE). Upload pending user.
+
+### Reprojection to EPSG:3035 (ETRS89-LAEA Europe), EEA-snapped (2026-07-01)
+NextGenC SOC maps deliverable re-projected from EPSG:3067 (ETRS-TM35FIN) to **EPSG:3035**
+at the user's request, for EEA/INSPIRE compatibility. **Re-kriged natively in 3035**
+(not a post-hoc raster warp): `build_soc_maps.R` now sets `EPSG<-3035L`, `SRC_EPSG<-3067L`;
+plot coords + maakunta boundary + peat/water masks reprojected via terra `project()`
+(`to_grid()` helper = project-or-resample). Grid **snapped to the EEA reference grid**
+(cell edges on multiples of 2 km from the LAEA origin) → 330×589, origin 4744000/4130000
+(both divisible by 2000, verified). `make_thumbnails.R`/`make_delta_map.R` project the
+fin outline + peat overlay onto the raster CRS instead of assuming 3067.
+- **Values preserved:** mask fractions (peat 9.1% / water 3.4%) and delta stats
+  (+0.13 tC/ha/yr, 76% gaining) identical to the 3067 run.
+- **Source data stays native 3067** (Luke/SYKE); only deliverables are 3035. The two
+  remaining "3067" doc mentions correctly describe source-data CRS.
+- Regenerated: 14 SOC GeoTIFFs + delta + 15 thumbnails (all EPSG:3035). PDF rebuilt; docs
+  updated (`SOC_maps/README.md`, `SOC_maps_README.tex`). Zip repackaged, **filename
+  unchanged** `HIKET_SOC_maps_Finland_v1.zip` (47 files, ~108 MB; gitignored).
+- Zenodo description saved as tracked `Reporting/NextgenC_report/ZENODO_description.md`.
+- TP3 Euler caveat still stands — TP3 refresh when the exact run syncs is now a clean
+  3035-pipeline rerun.

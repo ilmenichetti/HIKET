@@ -48,8 +48,9 @@ HIKET/
 ├── Reporting/
 │   └── NextgenC_report/                      # NextGenC deliverables
 │       ├── build_soc_matrices.R              # per-plot SOC mean/sd matrices (CSV+ODS)
-│       ├── build_soc_maps.R                  # kriged 2 km SOC maps (GeoTIFF, +ensemble)
+│       ├── build_soc_maps.R                  # kriged 2 km SOC maps, EPSG:3035 EEA-snapped (GeoTIFF, +ensemble)
 │       ├── make_thumbnails.R                 # time-averaged PNG previews
+│       ├── ZENODO_description.md             # paste-ready Zenodo deposit description
 │       ├── SOC_maps_README.{tex,pdf}         # maps methods note
 │       └── SOC_maps/                          # Zenodo deposit (maps gitignored; CC-BY-4.0)
 ├── Data_work.R                               # upstream data preparation

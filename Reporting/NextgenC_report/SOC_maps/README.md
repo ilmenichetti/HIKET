@@ -62,9 +62,9 @@ on zero. In all thumbnails **peat = black, water/sea = white**.
 
 | Property | Value |
 |---|---|
-| CRS | ETRS-TM35FIN (EPSG:3067) |
+| CRS | ETRS89-LAEA Europe (EPSG:3035) |
 | Resolution | 2000 m (2 km) |
-| Grid | 360 × 600 cells (bounding box); masked to Finnish land |
+| Grid | 330 × 589 cells (bounding box), aligned to the EEA reference grid; masked to Finnish land |
 | Data type | Float32 |
 | Compression | DEFLATE (horizontal predictor) |
 | NoData | sea / outside-Finland cells |

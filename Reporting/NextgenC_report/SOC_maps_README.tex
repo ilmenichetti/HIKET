@@ -56,8 +56,12 @@ band $n$ of the matching mean stack (same year, grid, and land mask).
 \section{Grid and storage}
 
 \begin{itemize}
-\item \textbf{CRS:} ETRS-TM35FIN (EPSG:3067), metres.
-\item \textbf{Resolution:} 2\,km. Grid $360\times600$ ($\sim$216\,k cells, of which $\sim$42\,\% land).
+\item \textbf{CRS:} ETRS89-LAEA Europe (EPSG:3035), metres; equal-area. The grid is
+snapped to the EEA reference grid (cell edges on multiples of the 2\,km resolution
+from the LAEA origin). Kriging is performed natively in this projection; source
+inputs (plot coordinates, boundary, peat/water masks) are reprojected from
+ETRS-TM35FIN (EPSG:3067).
+\item \textbf{Resolution:} 2\,km. Grid $330\times589$ ($\sim$194\,k cells, of which $\sim$44\,\% land).
 \item \textbf{Mask:} clipped to the Finland boundary from \code{maakunta\_sf.rds}.
 \item \textbf{Format:} GeoTIFF, DEFLATE-compressed, float32.
 \item \textbf{Footprint:} $\sim$0.12\,GB for all 560 maps (14 files).

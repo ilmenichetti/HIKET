@@ -44,12 +44,13 @@ for (f in tifs) {
        mar = c(2, 2, 3, 4), plg = list(title = "tC/ha"))
   # left-aligned title over the map panel only (avoids the legend column)
   mtext(ttl, side = 3, line = 0.6, adj = 0, font = 2, cex = 1.05)
-  # overlay peat-masked cells in black (water/sea stay white)
+  # overlay peat-masked cells in black (water/sea stay white). peat cache + fin are
+  # in 3067; project() onto the map raster (now EPSG:3035) — handles either CRS.
   if (!is.null(peat_r)) {
-    pk <- resample(peat_r, tavg, method = "bilinear") > 0.5
+    pk <- project(peat_r, tavg, method = "bilinear") > 0.5
     plot(ifel(pk, 1, NA), col = "black", legend = FALSE, axes = FALSE, add = TRUE)
   }
-  if (!is.null(fin)) lines(fin, col = "grey30", lwd = 0.4)
+  if (!is.null(fin)) lines(project(fin, crs(tavg)), col = "grey30", lwd = 0.4)
   dev.off()
 
   cat(sprintf("  %-26s %d x %d px  %.0f KB\n", paste0(base, ".png"), W, H,

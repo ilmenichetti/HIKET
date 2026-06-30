@@ -51,10 +51,11 @@ plot(ddisp, col = pal, range = c(-lim, lim) * 1.002, axes = FALSE, main = "",
      mar = c(2, 2, 3, 4), plg = list(title = "tC/ha/yr"))
 mtext(ttl, side = 3, line = 0.6, adj = 0, font = 2, cex = 1.05)
 if (!is.null(peat_r)) {                                    # peat black; water white
-  pk <- resample(peat_r, delta, method = "bilinear") > 0.5
+  # peat cache + fin are in 3067; project onto the delta raster (now EPSG:3035).
+  pk <- project(peat_r, delta, method = "bilinear") > 0.5
   plot(ifel(pk, 1, NA), col = "black", legend = FALSE, axes = FALSE, add = TRUE)
 }
-if (!is.null(fin)) lines(fin, col = "grey30", lwd = 0.4)
+if (!is.null(fin)) lines(project(fin, crs(delta)), col = "grey30", lwd = 0.4)
 dev.off()
 
 cat(sprintf("delta %d-%d: mean %.3f, median %.3f tC/ha/yr; %.0f%% gaining\n",

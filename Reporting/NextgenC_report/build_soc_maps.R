@@ -26,7 +26,13 @@ set.seed(2025)
 # --- config ---
 RES_M <- 2000L                 # grid resolution (m); storage ~ 1/res^2
 NMAX  <- 50L                   # local kriging neighbourhood (points)
-EPSG  <- 3067L                 # ETRS-TM35FIN
+EPSG  <- 3035L                 # ETRS89-LAEA Europe (EEA standard reference)
+SRC_EPSG <- 3067L              # native CRS of source inputs (ETRS-TM35FIN):
+                               #   plot coords, maakunta boundary, peat/water masks.
+                               # Everything is reprojected to EPSG below; kriging is
+                               # done natively in 3035 (equal-area) and the grid is
+                               # SNAPPED to the EEA reference grid (cell edges on
+                               # multiples of RES_M from the LAEA false origin).
 
 # --- peatland exclusion (Luke MS-NFI 'paatyyppi'; see Data/Peat_extension/) ---
 PEAT_CUTOFF   <- 0.50          # mask a 2 km cell if peat fraction exceeds this
@@ -57,20 +63,31 @@ bundles <- c(
 )
 MODELS <- names(bundles)
 
-# --- plot coordinates (EPSG:3067) + peat/water plots to exclude from input ---
+# --- plot coordinates + peat/water plots to exclude from input ---
+# x_ETRS/y_ETRS are stored in SRC_EPSG (3067); reproject to the working CRS (3035)
+# so kriging happens natively in LAEA. Column names kept (still ETRS89-based).
 site <- read.csv(file.path(PROJ, "Data", "model_inputs", "site_raw.csv"),
                  stringsAsFactors = FALSE)
 coords <- site[, c("plot_id", "x_ETRS", "y_ETRS")]
 coords <- coords[stats::complete.cases(coords), ]
+.pts <- terra::project(terra::vect(coords, geom = c("x_ETRS", "y_ETRS"),
+                                   crs = paste0("EPSG:", SRC_EPSG)),
+                       paste0("EPSG:", EPSG))
+.xy  <- terra::crds(.pts)
+coords$x_ETRS <- .xy[, 1]; coords$y_ETRS <- .xy[, 2]   # now LAEA (EPSG:3035)
 excl_plots <- site$plot_id[site$soil_code %in% PEAT_SOILCODE]
 cat(sprintf("Excluding %d peat/water plots from kriging input (soil_code %s)\n",
             length(excl_plots), paste(PEAT_SOILCODE, collapse = "/")))
 
-# --- Finland land mask + 2 km prediction grid ---
+# --- Finland land mask + 2 km prediction grid (EEA-snapped, EPSG:3035) ---
 fin     <- readRDS(file.path(PROJ, "Data", "model_inputs", "maakunta_sf.rds"))
-fin_v   <- vect(sf::st_union(fin))                       # dissolved boundary
-templ   <- rast(fin_v, resolution = RES_M)               # bbox grid, 2 km
-crs(templ) <- paste0("EPSG:", EPSG)
+fin_v   <- project(vect(sf::st_union(fin)), paste0("EPSG:", EPSG))  # dissolve -> LAEA
+# Snap the extent to the EEA reference grid: cell edges fall on multiples of RES_M
+# measured from the LAEA false origin (i.e. floor/ceil of the 3035 coords / RES_M).
+e       <- ext(fin_v)
+snap_e  <- ext(floor(e$xmin / RES_M) * RES_M, ceiling(e$xmax / RES_M) * RES_M,
+               floor(e$ymin / RES_M) * RES_M, ceiling(e$ymax / RES_M) * RES_M)
+templ   <- rast(snap_e, resolution = RES_M, crs = paste0("EPSG:", EPSG))
 mask_r  <- rasterize(fin_v, templ)                       # 1 = land, NA = sea
 land    <- which(!is.na(values(mask_r)))                 # land cell indices
 gxy     <- xyFromCell(mask_r, land)
@@ -81,6 +98,13 @@ blank   <- mask_r; values(blank) <- NA_real_             # empty land-shaped lay
 # vector over land cells -> one raster layer
 to_layer <- function(vals) { r <- blank; r[land] <- vals; r }
 
+# auxiliary fraction rasters live in SRC_EPSG (3067); bring them onto the 3035
+# grid by projection (CRS differs) or resampling (already aligned).
+to_grid  <- function(r) {
+  if (terra::same.crs(r, mask_r)) resample(r, mask_r, method = "bilinear")
+  else                            project(r, mask_r, method = "bilinear")
+}
+
 # --- peat fraction on the 2 km grid (Luke MS-NFI 16 m -> aggregate; cached) ---
 # Mask cells where peat (classes 2/3/4) exceeds PEAT_CUTOFF. The 16 m -> 2 km
 # aggregation is heavy, so cache it; resample-on-load guarantees grid alignment.
@@ -88,19 +112,20 @@ PEAT_RAST  <- file.path(PROJ, "Data", "Peat_extension", "paatyyppi_vmi1x_1519.ti
 PEAT_CACHE <- file.path(PROJ, "Data", "Peat_extension",
                         sprintf("peat_fraction_%dm.tif", RES_M))
 if (file.exists(PEAT_CACHE)) {
-  peat_frac <- resample(rast(PEAT_CACHE), mask_r, method = "bilinear")
+  peat_frac <- to_grid(rast(PEAT_CACHE))
 } else if (file.exists(PEAT_RAST)) {
   cat("Building peat fraction from 16 m MS-NFI (one-off, ~minutes)...\n")
-  pr   <- rast(PEAT_RAST)
+  pr   <- rast(PEAT_RAST)                                 # native SRC_EPSG (3067)
   fct  <- round(RES_M / res(pr)[1])
   # peat = classes 2/3/4 (mires) -> 1; everything else (mineral, non-forest) -> 0;
   # water is NaN. Fraction = peat pixels / TOTAL block pixels (fct^2), so the
   # denominator includes water -> lake-dominated cells do NOT read as ~100% peat.
+  # Aggregate in the source CRS (cheap), cache, then project onto the 3035 grid.
   peat1   <- classify(pr, matrix(c(2,1, 3,1, 4,1), ncol = 2, byrow = TRUE), others = 0)
   pcoarse <- aggregate(peat1, fact = fct, fun = "sum", na.rm = TRUE) / (fct * fct)
   writeRaster(pcoarse, PEAT_CACHE, overwrite = TRUE,
               gdal = c("COMPRESS=DEFLATE"))
-  peat_frac <- resample(pcoarse, mask_r, method = "bilinear")
+  peat_frac <- to_grid(pcoarse)
 } else {
   stop("Peat raster missing: run Data/Peat_extension/fetch_peatland_mask.R first")
 }
@@ -110,15 +135,16 @@ peat_drop <- peat_frac > PEAT_CUTOFF                      # TRUE = mask this cel
 WATER_CACHE <- file.path(PROJ, "Data", "Water_extension",
                          sprintf("water_fraction_%dm.tif", RES_M))
 if (file.exists(WATER_CACHE)) {
-  water_frac <- resample(rast(WATER_CACHE), mask_r, method = "bilinear")
+  water_frac <- to_grid(rast(WATER_CACHE))
 } else if (file.exists(file.path(PROJ, "Data", "Water_extension", "Jarvi10.shp"))) {
   cat("Building water fraction from Ranta10 lakes (one-off, ~minute)...\n")
-  lk   <- vect(file.path(PROJ, "Data", "Water_extension", "Jarvi10.shp"))
+  lk   <- project(vect(file.path(PROJ, "Data", "Water_extension", "Jarvi10.shp")),
+                  paste0("EPSG:", EPSG))               # lakes -> LAEA grid CRS
   fine <- rast(ext(mask_r), resolution = 200, crs = paste0("EPSG:", EPSG))
   wf   <- aggregate(rasterize(lk, fine, field = 1, background = 0),
                     fact = round(RES_M / 200), fun = "mean")
   writeRaster(wf, WATER_CACHE, overwrite = TRUE, gdal = c("COMPRESS=DEFLATE"))
-  water_frac <- resample(wf, mask_r, method = "bilinear")
+  water_frac <- to_grid(wf)
 } else {
   stop("Water raster missing: run Data/Water_extension/fetch_water_mask.R first")
 }
