@@ -103,6 +103,20 @@ Variogram: \textbf{one pooled model per model}, reused for all 40 years (the
 spatial structure of SOC is essentially static year-to-year; this is stable and
 avoids per-year auto-fit failures). \code{set.seed(2025)} as elsewhere in HIKET.
 
+\paragraph{Peat \& water exclusion.} The maps target \textbf{mineral-soil forest
+SOC}. Peat/water calibration plots (\code{site\_raw} soil codes \code{Tu}/\code{Ve})
+are dropped from the kriging \emph{input} so they do not pull the interpolated
+surface, and grid cells are masked to NoData where they are \textbf{$>$50\,\%
+peatland} or \textbf{$>$50\,\% water}. Peat: Luke MS-NFI site-main-class raster
+(\code{paatyyppi}, 16\,m, EPSG:3067; spruce/pine mire + treeless peatland),
+aggregated to the 2\,km grid as a peat fraction \emph{of the whole cell} (water in
+the denominator, so lake-dominated cells do not read as peat). This site-type
+definition captures drained peatland forest (\emph{turvekangas}), which land-cover
+products miss ($\sim$10\,\% of land masked). Water: SYKE Ranta10 lake polygons
+(the sea is outside the land polygon). See \code{Data/Peat\_extension/} and
+\code{Data/Water\_extension/}. In the thumbnail figures peat renders \textbf{black}
+and water/sea \textbf{white}.
+
 \section{Ensemble (six-model) product}
 
 The ensemble is formed \emph{on the grid}, after each model has been kriged ---

@@ -14,6 +14,10 @@ fin <- tryCatch(vect(sf::st_union(readRDS(
   file.path(PROJ, "Data", "model_inputs", "maakunta_sf.rds")))),
   error = function(e) NULL)
 
+# peat fraction (rendered BLACK); water/sea are NA in the data -> render white
+peat_cache <- file.path(PROJ, "Data", "Peat_extension", "peat_fraction_2000m.tif")
+peat_r <- if (file.exists(peat_cache)) rast(peat_cache) else NULL
+
 tifs <- list.files(MAPDIR, pattern = "_SOC_(mean|sd)[.]tif$", full.names = TRUE)
 
 H <- 2000L                                   # target height (px)
@@ -24,8 +28,8 @@ for (f in tifs) {
   base  <- sub("[.]tif$", "", basename(f))
   is_sd <- grepl("_sd$", base)
   model <- sub("_SOC_(mean|sd)$", "", base)
-  pal   <- if (is_sd) hcl.colors(100, "Inferno")
-           else        hcl.colors(100, "YlGnBu", rev = TRUE)
+  pal   <- if (is_sd) hcl.colors(100, "Purples", rev = TRUE)   # calm sequential
+           else        hcl.colors(100, "YlGnBu",  rev = TRUE)
   lab   <- if (is_sd) "uncertainty (SD)" else "mean SOC"
   ttl   <- sprintf("%s — %s, 1985–2024 avg", model, lab)
 
@@ -40,6 +44,11 @@ for (f in tifs) {
        mar = c(2, 2, 3, 4), plg = list(title = "tC/ha"))
   # left-aligned title over the map panel only (avoids the legend column)
   mtext(ttl, side = 3, line = 0.6, adj = 0, font = 2, cex = 1.05)
+  # overlay peat-masked cells in black (water/sea stay white)
+  if (!is.null(peat_r)) {
+    pk <- resample(peat_r, tavg, method = "bilinear") > 0.5
+    plot(ifel(pk, 1, NA), col = "black", legend = FALSE, axes = FALSE, add = TRUE)
+  }
   if (!is.null(fin)) lines(fin, col = "grey30", lwd = 0.4)
   dev.off()
 

@@ -16,7 +16,7 @@ Calibration_real_data/runs/
 Calibration_real_data/progress_logs/
 
 #Data
-Data/
+Data/*
 .positai
 
 # Compiled Fortran binaries (platform-specific, recompile on each system)
@@ -34,3 +34,19 @@ Data/
 Reporting/NextgenC_report/SOC_maps/*.tif
 Reporting/NextgenC_report/SOC_maps/*.csv
 Reporting/NextgenC_report/SOC_maps/*.ods
+
+# Peat extension: Data/ is ignored, but track the fetch script + readme here
+# (the downloaded Luke MS-NFI raster stays ignored — large + redownloadable)
+!Data/Peat_extension/
+Data/Peat_extension/*
+!Data/Peat_extension/*.R
+!Data/Peat_extension/*.md
+
+# Water extension: same — track script + readme, ignore the Ranta10 lakes data
+!Data/Water_extension/
+Data/Water_extension/*
+!Data/Water_extension/*.R
+!Data/Water_extension/*.md
+
+# Zenodo deposit archive (build artifact)
+Reporting/NextgenC_report/*.zip

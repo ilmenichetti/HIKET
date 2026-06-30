@@ -28,6 +28,16 @@ RES_M <- 2000L                 # grid resolution (m); storage ~ 1/res^2
 NMAX  <- 50L                   # local kriging neighbourhood (points)
 EPSG  <- 3067L                 # ETRS-TM35FIN
 
+# --- peatland exclusion (Luke MS-NFI 'paatyyppi'; see Data/Peat_extension/) ---
+PEAT_CUTOFF   <- 0.50          # mask a 2 km cell if peat fraction exceeds this
+PEAT_SOILCODE <- c("Tu", "Ve") # site_raw soil_codes dropped from kriging input
+                               #   Tu = peat (Turvekerrostuma), Ve = water (Vesistö)
+
+# --- water exclusion (SYKE Ranta10 lakes; see Data/Water_extension/) ---
+# Lakes masked to NA (no forest soil under water); the sea is already outside the
+# land polygon. Peat renders black, water white (see make_thumbnails/make_delta).
+WATER_CUTOFF  <- 0.50          # mask a 2 km cell if lake fraction exceeds this
+
 PROJ   <- "/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling"
 RUNS   <- file.path(PROJ, "Calibration_real_data_transient", "runs")
 INDIR  <- file.path(PROJ, "Reporting", "NextgenC_report")
@@ -47,11 +57,14 @@ bundles <- c(
 )
 MODELS <- names(bundles)
 
-# --- plot coordinates (EPSG:3067) ---
+# --- plot coordinates (EPSG:3067) + peat/water plots to exclude from input ---
 site <- read.csv(file.path(PROJ, "Data", "model_inputs", "site_raw.csv"),
                  stringsAsFactors = FALSE)
 coords <- site[, c("plot_id", "x_ETRS", "y_ETRS")]
 coords <- coords[stats::complete.cases(coords), ]
+excl_plots <- site$plot_id[site$soil_code %in% PEAT_SOILCODE]
+cat(sprintf("Excluding %d peat/water plots from kriging input (soil_code %s)\n",
+            length(excl_plots), paste(PEAT_SOILCODE, collapse = "/")))
 
 # --- Finland land mask + 2 km prediction grid ---
 fin     <- readRDS(file.path(PROJ, "Data", "model_inputs", "maakunta_sf.rds"))
@@ -68,8 +81,54 @@ blank   <- mask_r; values(blank) <- NA_real_             # empty land-shaped lay
 # vector over land cells -> one raster layer
 to_layer <- function(vals) { r <- blank; r[land] <- vals; r }
 
-cat(sprintf("Grid: %d x %d @ %d m | %d land cells | %d models\n",
-            ncol(mask_r), nrow(mask_r), RES_M, length(land), length(MODELS)))
+# --- peat fraction on the 2 km grid (Luke MS-NFI 16 m -> aggregate; cached) ---
+# Mask cells where peat (classes 2/3/4) exceeds PEAT_CUTOFF. The 16 m -> 2 km
+# aggregation is heavy, so cache it; resample-on-load guarantees grid alignment.
+PEAT_RAST  <- file.path(PROJ, "Data", "Peat_extension", "paatyyppi_vmi1x_1519.tif")
+PEAT_CACHE <- file.path(PROJ, "Data", "Peat_extension",
+                        sprintf("peat_fraction_%dm.tif", RES_M))
+if (file.exists(PEAT_CACHE)) {
+  peat_frac <- resample(rast(PEAT_CACHE), mask_r, method = "bilinear")
+} else if (file.exists(PEAT_RAST)) {
+  cat("Building peat fraction from 16 m MS-NFI (one-off, ~minutes)...\n")
+  pr   <- rast(PEAT_RAST)
+  fct  <- round(RES_M / res(pr)[1])
+  # peat = classes 2/3/4 (mires) -> 1; everything else (mineral, non-forest) -> 0;
+  # water is NaN. Fraction = peat pixels / TOTAL block pixels (fct^2), so the
+  # denominator includes water -> lake-dominated cells do NOT read as ~100% peat.
+  peat1   <- classify(pr, matrix(c(2,1, 3,1, 4,1), ncol = 2, byrow = TRUE), others = 0)
+  pcoarse <- aggregate(peat1, fact = fct, fun = "sum", na.rm = TRUE) / (fct * fct)
+  writeRaster(pcoarse, PEAT_CACHE, overwrite = TRUE,
+              gdal = c("COMPRESS=DEFLATE"))
+  peat_frac <- resample(pcoarse, mask_r, method = "bilinear")
+} else {
+  stop("Peat raster missing: run Data/Peat_extension/fetch_peatland_mask.R first")
+}
+peat_drop <- peat_frac > PEAT_CUTOFF                      # TRUE = mask this cell
+
+# --- water fraction on the 2 km grid (SYKE Ranta10 lakes; cached) ---
+WATER_CACHE <- file.path(PROJ, "Data", "Water_extension",
+                         sprintf("water_fraction_%dm.tif", RES_M))
+if (file.exists(WATER_CACHE)) {
+  water_frac <- resample(rast(WATER_CACHE), mask_r, method = "bilinear")
+} else if (file.exists(file.path(PROJ, "Data", "Water_extension", "Jarvi10.shp"))) {
+  cat("Building water fraction from Ranta10 lakes (one-off, ~minute)...\n")
+  lk   <- vect(file.path(PROJ, "Data", "Water_extension", "Jarvi10.shp"))
+  fine <- rast(ext(mask_r), resolution = 200, crs = paste0("EPSG:", EPSG))
+  wf   <- aggregate(rasterize(lk, fine, field = 1, background = 0),
+                    fact = round(RES_M / 200), fun = "mean")
+  writeRaster(wf, WATER_CACHE, overwrite = TRUE, gdal = c("COMPRESS=DEFLATE"))
+  water_frac <- resample(wf, mask_r, method = "bilinear")
+} else {
+  stop("Water raster missing: run Data/Water_extension/fetch_water_mask.R first")
+}
+water_drop <- water_frac > WATER_CUTOFF                   # lakes -> mask to NA (white)
+drop_mask  <- peat_drop | water_drop                      # union: both masked to NA
+
+cat(sprintf("Grid: %d x %d @ %d m | %d land cells | %d models | peat %.1f%% + water %.1f%% masked\n",
+            ncol(mask_r), nrow(mask_r), RES_M, length(land), length(MODELS),
+            100 * global(peat_drop,  "mean", na.rm = TRUE)[1, 1],
+            100 * global(water_drop, "mean", na.rm = TRUE)[1, 1]))
 
 # --- accumulators for the ensemble (per-model linear-space stacks) ---
 mean_stacks <- vector("list", length(MODELS)); names(mean_stacks) <- MODELS
@@ -81,6 +140,7 @@ for (m in MODELS) {
   s  <- pp$posterior_summary[, c("plot_id", "year", "soc_mean", "soc_sd")]
   s  <- merge(s, coords, by = "plot_id")
   s  <- s[is.finite(s$soc_mean) & s$soc_mean > 0, ]
+  s  <- s[!(s$plot_id %in% excl_plots), ]                 # drop peat/water plots
 
   # log-space fields: mean and a multiplicative (log) model SD
   s$zlog <- log(s$soc_mean)
@@ -142,6 +202,10 @@ for (m in MODELS) {
 
   mean_stk <- rast(mean_lyrs); sd_stk <- rast(sd_lyrs)
   names(mean_stk) <- paste0("y", years); names(sd_stk) <- paste0("y", years)
+
+  # mask peat- and water-dominated cells to NA in both stacks
+  mean_stk <- mask(mean_stk, drop_mask, maskvalues = TRUE)
+  sd_stk   <- mask(sd_stk,   drop_mask, maskvalues = TRUE)
 
   writeRaster(mean_stk, file.path(OUTDIR, sprintf("%s_SOC_mean.tif", m)),
               overwrite = TRUE, gdal = c("COMPRESS=DEFLATE", "PREDICTOR=3"))
