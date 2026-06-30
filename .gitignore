@@ -28,3 +28,9 @@ Data/
 *.rds
 *.log.RDataTmp
 .DS_Store
+
+# NextGenC map products: large GeoTIFFs + assembled-deposit duplicates
+# (regenerable via build_soc_maps.R; published to Zenodo, not tracked in git)
+Reporting/NextgenC_report/SOC_maps/*.tif
+Reporting/NextgenC_report/SOC_maps/*.csv
+Reporting/NextgenC_report/SOC_maps/*.ods

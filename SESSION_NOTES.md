@@ -269,3 +269,161 @@ re-runs submitted on Puhti, outcome pending).
 4. Decide the Yasso20 baseline parameterisation (Yasso15 fractions vs original FMI code).
 5. Optional: send `Yasso20_mass_balance_note.md` to Toni (after confirming the param-file
    provenance caveat).
+
+---
+
+## 2026-06-12 — Production-run inspection (all 6), local downstream pipeline, coverage finding
+
+### Context
+The full post-homogenization production calibration finished: SP1/TP2/TP3 `20260608_*`
+(Jun 8) and Yasso07/15/20 re-run `20260611_*` (Jun 11, after the stale-`.so` fix). User
+flagged that R-hat looked "surprisingly good." Session: verify that's real not a trap,
+run Stages 2–4, look at headline results.
+
+### Convergence inspection — all 6
+- **Yasso07/15/20:** all params R-hat < 1.05, ESS 1265–2369, inf_rate ~0%, forward sanity
+  PASS, distinct non-degenerate ll-at-defaults (−4868/−5083/−7497) → NOT the stale-`.so`
+  trap. The 12 fractions converged in R-hat BUT stay non-identified by the right measures:
+  prior-pinned (13–17/26 within 0.5σ of prior centre), ridge anti-correlations ≈ −0.98
+  (`p_EN↔p_EA`, `p_NE↔p_NA`), KL < 1 nat. **Key correction:** the old guardrail "fraction
+  R-hat must stay poor" conflated non-identifiability with poor *mixing*; the old bad R-hat
+  was the `beta2` detonation freezing the sampler. Fixed → good R-hat + intact
+  non-identifiability. CLAUDE.md §"Convergence expectations" rewritten.
+- **SP1/TP2/TP3:** TP2 clean (max R-hat 1.006). TP3 R-hat clean but ENTIRE 3-pool kinetics
+  gain ~0 nats — `sigma_input` (KL ≈ 21) absorbs everything; fits by rescaling inputs, not
+  learning rates (8–17% forward-blowup, documented, tolerable). SP1 `alpha` R-hat 1.09 /
+  ESS 208 = the lone genuine R-hat signal, but it's the MOST identified param (KL ≈ 19),
+  just heavy-right-tailed (97.5% ~6× median) → hard to sample, benign.
+- **Yasso20 chain-2 `final_ll` WARN (945):** single-last-draw artifact. Loaded posterior
+  (chain-major rbind, 5×45006), per-chain param means agree to <2.5% → not displaced. (The
+  saved posterior is a params-only matrix; no `LL` column, so a fully ll-based check would
+  need re-evaluation — not worth it given param agreement.)
+
+### Downstream pipeline — RAN LOCALLY, end-to-end, zero errors (~12 min)
+- Fixed two known rough edges first: added `rownames(inputs_proj/clim_proj) <- NULL` to
+  SP1/TP2/Yasso07/Yasso15 predictive scripts (TP3/Yasso20 already had it); added
+  `nrow/ncol(imp_mat) < 2` guard around the multimodel RF heatmap. All parse-checked.
+- `Rscript run_hiket_pipeline.R --skip-calibration` auto-picked correct RUN_IDs, ran
+  predictive (100 draws/model) + residuals (with 897/224 calib/holdout split, RF OOB R²
+  ~0.42) + multimodel. **Local is the right venue** — SLURM queue would dwarf the compute.
+- **Sync gotcha hit:** predictive hard-loads `Data/model_inputs/<MODEL>_inputs_<RUN_ID>.rds`
+  (no fallback). Had to sync `Data/model_inputs/` from Puhti in addition to `runs/`+
+  `diagnostics/`.
+
+### Headline results (447 plots)
+All models R² 0.05–0.11 (calib) / 0.02–0.05 (holdout), RMSE ~50–62, slight + bias.
+**TP3 best, Yasso20 worst, spread small** — on-thesis (structure → modest skill diffs vs
+generally low SOC predictability).
+
+### PAUSED — open methods decision
+"95% cov" ≈0.05 is a methods artifact: predictive interval = 100-draw spread of the model
+**mean**, omits the multiplicative-normal obs error (`sigma_obs` ≈ 0.4723, loaded but never
+injected). NOT under-dispersion; R²/RMSE/bias/rankings unaffected. **Recommended (option 1,
+not applied):** add true posterior-predictive coverage to all 6 predictive scripts —
+`total_soc * exp(rnorm(0, sigma_obs))` before quantiles, keep both numbers. See memory
+[[predictive-coverage-artifact]].
+
+### Uncommitted
+All this session's edits (CLAUDE.md, 4 predictive scripts, multimodel script,
+SESSION_NOTES.md) are uncommitted, on top of pre-existing staged changes. Nothing committed.
+
+### Next steps
+1. Decide on the coverage fix (option 1 vs relabel), then rerun pipeline.
+2. Commit the session's code + doc changes (CLAUDE.md doc update can be its own commit).
+3. Inspect multimodel figures (obs-vs-pred, residuals, ΔSOC, RF heatmaps) for structure.
+4. Surface the `sigma_input` cross-model contrast (TP3 ≈21 nats; Yasso20 inputs ↑3×; SP1
+   inputs ↓3×) in the writeup — it's a structural-intercomparison result.
+
+---
+
+## 2026-06-16 — Results+Discussion writing; doc figures/sections; revision workflow
+
+### Discussion findings (now in `HIKET_calibration.Rmd`)
+- **Over-prediction = likelihood artifact.** All 6 models over-predict slightly because
+  the multiplicative-normal error scales SD on the prediction (penalty on fractional error
+  δ ~ δ²/(1+δ)², asymmetric → hedges upward). Log-scale re-scoring of the `*_residuals_*.csv`:
+  mean log-residual −0.10..−0.16 (≈10–16% multiplicative offset), ~identical for mean vs
+  median predictor, tracks R² inversely (TP3/TP2 least, Yasso20 most). Only the bias is
+  likelihood-sensitive; rankings + KL/identifiability invariant. → Rmd §`sec:biasdisc`.
+  Memory [[over-prediction-likelihood-artifact]].
+- **TP3 forcing oscillation.** TP3 (mildly TP2) rings year-to-year in mean-SOC (fig:meansoc);
+  source is climate not litter — the new driver plot shows T/precip oscillatory, litter
+  smooth. Low-pass-filter argument: fast prior-set pools + inflated σ_input (≈13) → cutoff
+  above annual forcing → transmits ξ. One non-identifiability, three faces (KL / ringing /
+  invalid-proposal 8–17%). → Rmd §`sec:tp3osc`. Memory [[tp3-forcing-oscillation]].
+- **Residual RF.** `basal_area_85` is the #1 residual driver in 5/6 models (#2 TP3); soil
+  chem + climate next; diffuse (<~5–9% each), shared ordering across models; OOB R²
+  0.34–0.52; `dev_class_85` weak; no direct age var. Stand-age reading OPEN. → Rmd
+  §`sec:residuals` + fig:rfheat + OOB table. Memory [[residual-rf-basal-area]].
+
+### Doc/code changes
+- New **3-panel driver figure** (T, precip, total litter; cross-plot mean ±95% CI, 1985
+  dropped). Wired into `run_multimodel_comparison.R` §4b "Plot B2" → regenerates every run
+  (`multimodel_drivers_<COMPID>.png`); chunk `fig:drivers` added to the Rmd.
+- Reworded the Yasso pre-run "genuine Fortran run, not an analytical approximation" sentence
+  — it's the SAME analytical (matrix) solver as runtime; the real point is `C_final`
+  per-cohort bookkeeping. (User caught this; their mental model "analytical SS then transient"
+  is correct.)
+- PDF re-rendered cleanly (exit 0, no undefined refs).
+- **Placeholders left in the Rmd to decide together:** stand-age reading; TP3 genuine-vs-
+  Euler-artifact; residual Yasso over-accumulation (lognormal refit).
+
+### Revision workflow established (next step)
+- User does a full read-pass on a COPY: `documentation/HIKET_calibration_annotated.pdf`,
+  highlight+Note in Preview. Extract with **PyMuPDF (installed this session)** —
+  `page.annots()`, highlight rect → anchor text, nearest same-page Text annot → comment.
+  Verified on 12 notes. Never render to `_annotated.pdf`.
+- **Open contradiction flagged by the user (note #8):** the doc says litter is
+  "approximately flat over the observation period", but fig:drivers panel (c) shows it
+  rising ~2.1→3.0 to a mid-2000s peak then plateauing. Must reconcile — load-bearing for the
+  flat-vs-rising tension in [[transient-phase-open-question]].
+- Memory [[revision-pass-workflow]] holds the 12-note snapshot + themes.
+
+### Next steps
+1. **New session:** re-extract all annotations from `_annotated.pdf`, build a numbered
+   agenda, work through them one at a time (edit → confirm → re-render at breakpoints).
+2. Resolve the flat-vs-rising litter contradiction.
+3. Still pending from prior session: coverage fix decision; commit the uncommitted edits.
+
+---
+
+## 2026-06-30 — NextGenC gridded SOC maps (kriging) deliverable
+
+### Context
+New deliverable for the NextGenC report: interpolated Finland SOC maps (one per year)
+from the per-plot posterior-predictive output, destined for a Zenodo deposit. Spun off
+from [[nextgenc-soc-report]] (which had the per-plot matrices + trajectory plot).
+
+### What was built (all in `Reporting/NextgenC_report/`)
+- **`build_soc_maps.R`** — ordinary kriging in log space of per-plot SOC → 2 km grid
+  (EPSG:3067), masked to Finland. Per model + 6-model ensemble; multiband GeoTIFF
+  (`_mean.tif` / `_sd.tif`, 40 bands = years 1985–2024). One pooled variogram/model.
+  Per-model SD = kriging var + interpolated model SD (option C); ensemble SD = within +
+  between-model (law of total variance). 14 GeoTIFFs (~99 MB), ~25 min runtime.
+- **`make_thumbnails.R`** — 14 PNG previews (time-averaged layers, 2040×2000 px, 300 dpi,
+  ~320 KB each), `SOC_maps/thumbnails/`.
+- **`SOC_maps/`** = self-contained Zenodo deposit: GeoTIFFs + copied tabular matrices
+  (CSV/ODS) + thumbnails + `README.md` + `LICENSE` (**CC-BY-4.0**).
+- **`SOC_maps_README.{tex,pdf}`** — 2-page methods note (procedural).
+
+### Key finding (documented in memory + READMEs)
+Temporal-mean log-SOC is **~85–90 % nugget** at the ~27.5 km plot spacing → SOC is
+spatially weakly autocorrelated at the network scale. Maps are plot-anchored "bullseyes"
+reverting to the national mean, NOT smooth regional gradients — the spatial echo of HIKET's
+low point-predictability (R² ~0.05–0.11). Nugget ~identical across models → property of
+sites + single-pit sampling, not the model. SD layer honestly inflates between plots.
+Discussed (not implemented): this is NOT detectable "spatial chaos" (low-dim determinism);
+the defensible framing is high-dimensional/path-dependent determinism, or multifractal
+heterogeneity below the sampling scale. Upgrade path if wanted: external-drift kriging on
+gridded climate. Also: between-model structural spread is SMALL vs within-model SD for SOC
+*stock level* (model means 90.6–95.4 tC/ha) — models agree on level, differ on dynamics.
+
+### Git / repo hygiene
+`.gitignore` now excludes `Reporting/NextgenC_report/SOC_maps/*.{tif,csv,ods}` (large +
+regenerable + Zenodo-bound; canonical CSV/ODS kept in the parent folder). Committed:
+scripts, docs, README, LICENSE, thumbnails, parent matrices.
+
+### Caveat carried forward
+TP3 maps use the pre-fix (Euler) posterior; regenerate all 3 TP3 products
+(`build_soc_matrices.R` → `build_soc_maps.R` → `make_thumbnails.R`) when the exact-
+integrator run syncs from Puhti. SOC levels change negligibly. See [[tp3-forcing-oscillation]].

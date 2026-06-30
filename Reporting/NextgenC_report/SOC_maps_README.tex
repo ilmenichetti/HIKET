@@ -1,0 +1,168 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue]{hyperref}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.4em}
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{1.1ex}{0.6ex}
+\titlespacing*{\subsection}{0pt}{0.9ex}{0.4ex}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5ex}
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\title{\vspace{-1.4cm}\textbf{NextGenC --- Gridded SOC maps of Finland}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-2.2em}
+
+Procedural note for the kriged SOC map products that accompany the NextGenC
+report. Companion to \code{build\_soc\_matrices.R} (point matrices) and
+\code{build\_soc\_maps.R} (this product).
+
+\section{What this produces}
+
+For each of the 6 models (SP1, TP2, TP3, Yasso07, Yasso15, Yasso20), the
+posterior-predictive SOC at the $\sim$447 calibration plots is interpolated to
+a regular grid covering Finland, \textbf{one layer per year, 1985--2024
+(40 years)}. Two multiband GeoTIFFs per model, plus a multi-model
+\textbf{ensemble} pair (\textbf{14 files total}):
+
+\begin{center}
+\begin{tabular}{@{}lcl@{}}
+\toprule
+\textbf{File} & \textbf{Bands} & \textbf{Content} \\
+\midrule
+\code{<MODEL>\_SOC\_mean.tif} & 40 & Kriged mean total SOC (tC/ha), band $n$ = year $1984{+}n$ \\
+\code{<MODEL>\_SOC\_sd.tif}   & 40 & Total uncertainty SD (tC/ha), same grid/year as mean band \\
+\code{ENSEMBLE\_SOC\_mean.tif} & 40 & Six-model ensemble mean SOC (tC/ha) \\
+\code{ENSEMBLE\_SOC\_sd.tif}   & 40 & Ensemble total SD (within + between-model + spatial) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Band names carry the year (e.g.\ \code{y1985}), written into GeoTIFF metadata so
+labels travel with the file. Band $n$ of every SD stack is the uncertainty for
+band $n$ of the matching mean stack (same year, grid, and land mask).
+
+\section{Grid and storage}
+
+\begin{itemize}
+\item \textbf{CRS:} ETRS-TM35FIN (EPSG:3067), metres.
+\item \textbf{Resolution:} 2\,km. Grid $360\times600$ ($\sim$216\,k cells, of which $\sim$42\,\% land).
+\item \textbf{Mask:} clipped to the Finland boundary from \code{maakunta\_sf.rds}.
+\item \textbf{Format:} GeoTIFF, DEFLATE-compressed, float32.
+\item \textbf{Footprint:} $\sim$0.12\,GB for all 560 maps (14 files).
+\end{itemize}
+
+The 2\,km choice is a deliberate compromise: the $\sim$447 plots have a
+\textbf{mean spacing of $\sim$27.5\,km}, so 2\,km already oversamples the
+information content --- finer grids render smoother but add no real spatial
+detail. Disk budget (1--2\,GB) is not the binding constraint; data density is.
+
+\section{Method}
+
+Kriging is done \textbf{in log space} and back-transformed, because SOC is
+positive and right-skewed and HIKET's error model is multiplicative --- this
+keeps the map uncertainty multiplicative and consistent with the calibration.
+Per model $\times$ year:
+
+\begin{enumerate}
+\item \textbf{Inputs.} Plot mean and SD come from the posterior-predictive
+  bundles (the same \code{soc\_mean}\,/\,\code{soc\_sd} columns used by
+  \code{build\_soc\_matrices.R}); plot coordinates (\code{x\_ETRS},
+  \code{y\_ETRS}) come from \code{Data/model\_inputs/site\_raw.csv}, joined on
+  \code{plot\_id}.
+\item \textbf{Krige the mean.} Ordinary kriging of $\log(\texttt{soc\_mean})$
+  over the grid $\rightarrow$ interpolated mean surface plus the \textbf{kriging
+  prediction variance} $v_{\text{krige}}$ (small near plots, large in
+  data-sparse areas, e.g.\ Lapland).
+\item \textbf{Krige the model uncertainty.} Ordinary kriging of
+  $\log(\texttt{soc\_sd})$ $\rightarrow$ a surface of the model's own
+  posterior-predictive uncertainty.
+\item \textbf{Combine (option C).} Total uncertainty fuses both sources,
+  \[
+    \text{sd}_{\text{total}} \;=\; \sqrt{\,v_{\text{krige}} \;+\; \text{kriged\_modelSD}^{2}\,}
+  \]
+  (combined in log space, then back-transformed). This propagates \textbf{model
+  uncertainty} \emph{and} \textbf{spatial-coverage uncertainty} into a single SD
+  layer --- neither source is silently dropped.
+\item \textbf{Back-transform \& mask.} Exponentiate to tC/ha, clip to the land
+  mask, write the two stacks.
+\end{enumerate}
+
+Variogram: \textbf{one pooled model per model}, reused for all 40 years (the
+spatial structure of SOC is essentially static year-to-year; this is stable and
+avoids per-year auto-fit failures). \code{set.seed(2025)} as elsewhere in HIKET.
+
+\section{Ensemble (six-model) product}
+
+The ensemble is formed \emph{on the grid}, after each model has been kriged ---
+i.e.\ the per-model mean and total-SD stacks above are combined cell-by-cell,
+equal-weighted ($w_i = 1/6$). With $M=6$ model mean surfaces $m_i$ and total-SD
+surfaces $s_i$ (each $s_i$ already folds in that model's kriging variance and
+posterior uncertainty, \S3 step~4):
+
+\[
+  m_{\text{ens}} = \frac{1}{M}\sum_i m_i,
+  \qquad
+  s_{\text{ens}} = \sqrt{\;
+    \underbrace{\tfrac{1}{M}\textstyle\sum_i s_i^{2}}_{\text{within-model}}
+    \;+\;
+    \underbrace{\tfrac{1}{M-1}\textstyle\sum_i (m_i - m_{\text{ens}})^{2}}_{\text{between-model (structural)}}
+  \;}.
+\]
+
+This is the law of total variance: the ensemble deviation fuses \textbf{(i)}
+each model's own predictive uncertainty (which already carries \textbf{(iii)}
+the spatial/kriging uncertainty) with \textbf{(ii)} the \emph{structural spread}
+between models --- the among-model disagreement that is the central HIKET
+question. The between-model term is the scientifically interesting one: where it
+dominates, the map is uncertain because the models \emph{disagree}, not because
+the data are sparse. Combination is done in the same (log/back-transformed)
+space as the per-model SDs for consistency.
+
+\textbf{Note:} the between-model term is also informative on its own; if a
+structural-disagreement map is wanted later, export $\sqrt{\tfrac{1}{M-1}\sum_i
+(m_i-m_{\text{ens}})^2}$ as a separate stack --- one extra line in the script.
+
+\section{How to run}
+
+\begin{verbatim}
+# from the project root
+Rscript Reporting/NextgenC_report/build_soc_maps.R
+\end{verbatim}
+
+Reads the same \code{bundles <- c(...)} RUN\_ID map as
+\code{build\_soc\_matrices.R}. Writes the 12 GeoTIFFs into
+\code{Reporting/NextgenC\_report/}.
+
+\textbf{Dependencies:} \code{terra}, \code{gstat}, \code{sf} (and \code{sp}).
+Posterior-predictive bundles must be present in
+\code{Calibration\_real\_data\_transient/runs/}, and
+\code{Data/model\_inputs/\{site\_raw.csv, maakunta\_sf.rds\}} must exist.
+
+\section{Maintenance notes}
+
+\begin{itemize}
+\item \textbf{TP3 RUN\_ID is provisional.} As in \code{build\_soc\_matrices.R},
+  the TP3 bundle is the pre-fix (Euler) predictive. Swap the TP3 RUN\_ID to the
+  exact-integrator re-calibration when it is synced from Puhti, then re-run.
+\item \textbf{Adding years / plots.} No code change --- the script reads year
+  columns and plot rows from the bundles directly.
+\item \textbf{Changing resolution.} Edit the single \code{RES\_M <- 2000}
+  constant. Storage scales as $1/\text{res}^2$: 1\,km $\approx$ 0.4\,GB, 5\,km
+  $\approx$ 0.02\,GB (all 560 maps, compressed).
+\item \textbf{Reading the output.} \code{terra::rast("SP1\_SOC\_mean.tif")} gives
+  a 40-layer SpatRaster; layer names are the years. Same for the \code{\_sd} file.
+\end{itemize}
+
+\end{document}
