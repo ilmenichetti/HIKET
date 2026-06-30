@@ -427,3 +427,18 @@ scripts, docs, README, LICENSE, thumbnails, parent matrices.
 TP3 maps use the pre-fix (Euler) posterior; regenerate all 3 TP3 products
 (`build_soc_matrices.R` → `build_soc_maps.R` → `make_thumbnails.R`) when the exact-
 integrator run syncs from Puhti. SOC levels change negligibly. See [[tp3-forcing-oscillation]].
+
+### Extension (same day, commit dfffae2): peat/water masking + delta map
+- **Peat mask** (`Data/Peat_extension/`): Luke MS-NFI `paatyyppi` 16 m, INSPIRE-Atom
+  fetch. 2 km peat fraction = peat / **whole cell** (water in denom). *Bug fixed:*
+  dividing by classified-land-only made Saimaa lakeland read as ~100% peat (water in
+  `paatyyppi` is **NaN**, not 32766). Mask >50% peat (~9%); drop Tu/Ve input plots.
+- **Water mask** (`Data/Water_extension/`): SYKE Ranta10 lakes (direct URL), 2 km water
+  fraction, mask >50% (~3%). MS-NFI has no water; Natural Earth far too coarse.
+- **Rendering:** thumbnails show **peat black, water/sea white**. SD palette → Purples.
+- **Delta map** (`make_delta_map.R`): ensemble SOC change 2015–2024 (OLS slope), RdYlBu.
+  *Bug fixed:* extreme cells rendered white (terra clips at `range=` edge) → looked like
+  holes; fix = clamp + pad range. ~76% gaining, SW loss hotspot.
+- **Diagnostic:** `diagnostic_semivariogram.R` (outside deposit) shows the ~88% nugget.
+- **Zenodo:** zip `HIKET_SOC_maps_Finland_v1.zip` (~112 MB, gitignored); description
+  drafted (credits HIKET + NextGenC; CC-BY; attributes Luke + SYKE). Upload pending user.
