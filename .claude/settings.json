@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if hostname 2>/dev/null | grep -qi roihu && [ ! -f .claude/.roihu_input_bounds_done ] && [ -f .claude/ROIHU_REMINDER.txt ]; then cat .claude/ROIHU_REMINDER.txt; fi 2>/dev/null || true",
+            "statusMessage": "Checking Roihu first-session reminder"
+          }
+        ]
+      }
+    ]
+  }
+}

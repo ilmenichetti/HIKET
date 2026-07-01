@@ -1,0 +1,474 @@
+% =====================================================================
+%  HIKET — manuscript STORY-STRUCTURE outline (scaffold only)
+%  Placeholders + brief notes. Headings to be collapsed/merged later.
+%
+%  PUBLIC narrative schema = Schimel OCAR (Opening / Challenge / Action /
+%  Resolution), used as the four \part divisions below.
+%
+%  PRIVATE scaffold (NEVER surfaced in the text — author reference only):
+%    Shadow      = the observed accumulation->saturation is precisely what a
+%                  steady-state start CANNOT produce (an equilibrium start is
+%                  already "saturated"); this triggered transient init
+%    Persona     = good R-hat / physical-looking bias masking artefacts
+%    Mentor      = published priors/lineage: real but boreal-blind, then freed
+%    Trickster   = sigma_input, the shape-shifter that reveals the real
+%                  treasure (input/history uncertainty)
+%    Unconscious = the unrecoverable pre-observation history; the humus pool
+%                  that "remembers" equilibrium (deep time made physical)
+%    Self        = the fair, equal-DoF, exactly-integrated, homogenized frame
+%    Boon        = a method + a relocated question, not a verdict on Finland
+%
+%  Protagonist (held constant): the INITIALIZATION PROBLEM — how to start a
+%  non-equilibrium simulation with no history — with transient init as the move.
+%
+%  RECURRING THREAD — Bayesian inference (tagged % [Bayes] at each touchpoint):
+%  state of the art, routinely applied, only mildly novel here — but it is the
+%  machinery that MAKES the solution possible: it turns the unknown initial
+%  state from a fixed assumption into a CALIBRATED parameter (sigma_init) whose
+%  uncertainty propagates into both the initial state and the forward run.
+%  Surfaces 4x: Challenge (fixed-value trap vs. calibrate-it), Action (the
+%  enabling machinery + anchor propagation), Resolution (the lens that makes
+%  non-identifiability/sigma_input visible), Outlook (priors from reconstructed
+%  history). Keep it a thread, not a section — it must not crowd the protagonist.
+%
+%  RECURRING THREAD — historical perspective (tagged % [History]): a quick
+%  history of (Finnish) forest management is what PHYSICALLY justifies the
+%  non-equilibrium — the violation of the equilibrium assumption. General mention
+%  in the Intro (own small subsubsection) -> detailed examination in the
+%  Discussion -> closes the Conclusions (refinement needs historical data).
+% =====================================================================
+
+\documentclass[11pt]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{titlesec}
+
+% Number and list every heading level down to subparagraph.
+\setcounter{secnumdepth}{5}
+\setcounter{tocdepth}{5}
+
+% Make \paragraph and \subparagraph display as block headings (outline view).
+\titleformat{\paragraph}[block]
+  {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titleformat{\subparagraph}[block]
+  {\normalfont\normalsize\bfseries\itshape}{\thesubparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{\baselineskip}{0.3\baselineskip}
+\titlespacing*{\subparagraph}{0pt}{\baselineskip}{0.3\baselineskip}
+
+\title{[PLACEHOLDER TITLE]\\
+  \large Starting from the past: transient initialization and the
+  input-history problem in soil carbon models}
+\author{Lorenzo Menichetti \and [co-authors TBD]}
+\date{Draft outline --- \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent[PLACEHOLDER ABSTRACT.] One paragraph: steady-state initialization
+is a near-universal but rarely examined convention; an equilibrium start is
+already at its saturated end-state, so it cannot reproduce an accumulating
+sink that is only now beginning to saturate --- the very dynamic observed in
+Finnish forest soils. We test a transient alternative across six models under
+one fair frame; it captures the accumulation-then-saturation as a proof of
+concept, but relocates the binding uncertainty onto litter inputs ---
+especially their unknown history --- pointing to historical, interdisciplinary
+reconstruction as the real frontier.
+\end{abstract}
+
+\tableofcontents
+
+% =====================================================================
+\part{Opening}
+% Schimel O: broad context + stakes. Lead with the GENERAL convention;
+% Finland arrives as the vivid instance. (Generalization-first, confirmed.)
+% =====================================================================
+
+\section{Introduction}
+
+\subsection{The convention: steady state at $t_0$}
+A near-universal default in SOC modelling. State it plainly as common
+practice, not yet as a problem.
+
+\subsubsection{What the assumption actually claims}
+That the system's past equals its present equilibrium (inputs $\approx$
+outputs at the start). Make the hidden content of the convention explicit.
+
+\paragraph{Why it is attractive}
+Convenient, analytically clean, needs no historical forcing. The reasons it
+became default.
+
+\paragraph{Why it is rarely examined}
+It is invisible precisely because it is standard. Set up the reader to
+recognize their own practice.
+
+\subsubsection{The non-equilibrium reality}
+Real ecosystems are transient; they carry the imprint of disturbance,
+land-use and productivity history.
+
+\paragraph{An equilibrium start is already at the end}
+A steady-state start sits at zero net change --- by construction already at
+its saturated end-state. It forecloses the accumulation phase before the
+simulation begins. Foreshadow the capture-failure without resolving it.
+
+\subsubsection{Managed landscapes are rarely at equilibrium}
+% [History] — general statement here; Finnish forest history is the worked
+% example, examined in detail in the Discussion.
+Land-use and management histories keep soils in transient states; equilibrium
+is the exception, not the rule. Flag Finnish forest history as the concrete
+case that justifies the violated assumption --- stated generally here, examined
+in detail in the Discussion.
+
+\subsection{Why this matters}
+
+\subsubsection{Scientific stakes}
+Initialization choices propagate into every downstream projection and into
+model intercomparison.
+
+\subsubsection{Policy stakes: the motivating case}
+Finland reports its forest soil as a sink; climate policy leans on it.
+Introduce Finland as the instance, not the subject.
+
+\paragraph{The observed dynamic}
+Accumulation (VMI8$\to$Biosoil), then recent hints of saturation (Komeetta,
+under review). A sink caught in the act of saturating. State the phenomenon
+the model must reproduce.
+
+\subsection{Scope and contribution (preview)}
+One short paragraph previewing the move: a transient initialization, tested
+fairly across a model ladder. Keep it a promise, not the argument.
+
+% =====================================================================
+\part{Challenge}
+% Schimel C: the knowledge gap and the question. The Shadow lives here.
+% =====================================================================
+
+\section{The gap and the question}
+
+\subsection{The saturation an equilibrium start cannot show}
+The triggering insight: to reproduce a sink that is saturating, the model must
+first reproduce the accumulation it is the tail of --- and an equilibrium
+start, already saturated, cannot. This is what motivated transient init.
+
+\subsubsection{Why this generalizes beyond Finland}
+Any non-equilibrium system started at steady state forecloses its own
+transient. Lift the problem off the case study.
+
+\subsubsection{Artefact or structure?}
+Do divergent saturation projections reflect genuine model structure, or the
+initialization and calibration convention? The question the fair frame will
+answer.
+
+\subsection{The methodological gap}
+No established, calibratable way to initialize a transient run when
+historical forcing data are absent.
+
+\subsubsection{The fixed-value trap}
+% [Bayes]
+Treating the unknown initial state as a single fixed number (equilibrium, or a
+guessed value) hides a strong, untested assumption inside the result.
+
+\subsubsection{Calibrate it, do not assume it}
+% [Bayes] — first appearance of the thread; the gap is what Bayes will close
+The alternative: make the historical start a parameter with a prior and let
+the data and its uncertainty speak. Plant the thread; pay it off in Methods.
+
+\subsection{Objectives and hypotheses}
+\begin{itemize}
+  \item[H1] Transient initialization lets the models reproduce the
+        accumulation-then-saturation a steady-state start cannot. [placeholder]
+  \item[H2] Residual model differences under a fair frame are structural and
+        modest. [placeholder]
+  \item[H3] The binding uncertainty migrates to inputs, not kinetics.
+        [placeholder]
+\end{itemize}
+
+% =====================================================================
+\part{Action}
+% Schimel A: methods + results. The Self (fair, whole frame) is built here.
+% =====================================================================
+
+\section{Materials and methods}
+
+\subsection{Study system and data}
+
+\subsubsection{Plots and SOC campaigns}
+Finnish NFI plots; three temporally separated SOC campaigns as targets.
+Brief.
+
+\subsubsection{Litter inputs}
+Plot-level AWEN-fractionated inputs; note the population-mean rise then
+plateau (load-bearing later).
+
+\subsubsection{Climate forcing}
+Gridded daily climate; per-model temporal aggregation.
+
+\subsection{The model ladder}
+Six models on two crossed axes (pool complexity; climate integration), so no
+conclusion rests on one structure.
+
+\subsubsection{Pool-complexity axis}
+SP1 $\to$ TP2 $\to$ TP3 $\to$ Yasso07. One sentence each. [placeholder]
+
+\subsubsection{Climate-integration axis}
+Yasso07 $\to$ Yasso15 $\to$ Yasso20. One sentence each. [placeholder]
+
+\subsection{Bayesian calibration: the enabling machinery}
+% [Bayes] — the thread's payoff. State of the art, routinely applied; here it
+% is what makes transient init possible. Implementation detail, but fundamental.
+The inference framework that lets the unknown start be calibrated rather than
+assumed. Keep it brief and matter-of-fact; its role is enabling, not headline.
+
+\subsubsection{Why a Bayesian frame is the natural fit}
+Priors encode what little is known about the past; the posterior carries
+uncertainty forward instead of collapsing it to a point.
+
+\subsubsection{Uncertainty that propagates, not a likelihood patch}
+$\sigma_{\mathrm{init}}$ is a prior on the historical state; its spread flows
+into both the initial condition and the forward dynamics. Distinguish from a
+mere error term added at the end.
+
+\subsection{Transient initialization (the protagonist)}
+
+\subsubsection{Pushing the equilibrium assumption back in time}
+Initialize at analytical steady state in the past, run transiently forward to
+$t_0$ so the imprint dissipates and the model arrives at $t_0$ still
+accumulating.
+
+\paragraph{The fast/slow relaxation argument}
+Fast pools fully relax; only the slow humus pool retains memory --- it
+``remembers'' the equilibrium start. Why the pre-run works, and where its
+memory lives.
+
+\subsubsection{Calibrating the historical anchor}
+% [Bayes]
+$\sigma_{\mathrm{init}}$ as a Bayesian-calibrated strength on the historical
+start, not a fixed choice --- the concrete place the thread meets the
+protagonist.
+
+\subsection{A fair frame for intercomparison}
+The design principle: any residual difference must be attributable to
+structure alone.
+
+\subsubsection{Shared data, likelihood, forcing, filtering}
+Brief enumeration.
+
+\subsubsection{Exact integration in every model}
+All six integrate their linear system exactly; differences are structural,
+not numerical.
+
+\subsubsection{Homogenized priors: method, not number}
+Tiered scheme; identical in construction/scale/DoF, not in raw values.
+
+\subsubsection{Equal degrees of freedom}
+All transfer fractions free in every Yasso variant. One sentence on why.
+
+\subsection{Calibration and inference}
+
+\subsubsection{Error model}
+Multiplicative-normal likelihood. Flag the asymmetry briefly (paid back in
+Discussion).
+
+\subsubsection{Sampler and diagnostics}
+MCMC settings; convergence and identifiability diagnostics used.
+
+\subsection{Predictive and residual analysis}
+Posterior-predictive trajectories; residual analysis against site covariates.
+
+\section{Results}
+
+\subsection{Capturing accumulation-then-saturation}
+The headline: transiently-initialized models reproduce the rise and its
+incipient bend-over; the equilibrium-started flat/declining shape was the
+start, not the structure.
+
+\subsubsection{Trajectory shape vs.\ level}
+Shape change, not just offset. [placeholder figure]
+
+\subsubsection{Match to campaign means}
+2006 and 2024 means tracked. [placeholder]
+
+\subsection{Structural differences under the fair frame}
+Real but modest skill spread across the six. [placeholder table]
+
+\subsubsection{Where simple beats complex}
+TP2/TP3 track shape best; stiffer Yasso family worst. Brief.
+
+\subsection{What the data can and cannot constrain}
+Set up the Discussion: kinetics weakly constrained; inputs do the work.
+
+\subsubsection{Convergence vs.\ identifiability}
+Good R-hat coexisting with non-identified fractions. State the apparent
+paradox, resolve in Discussion.
+
+\subsubsection{Input multiplier behaviour}
+$\sigma_{\mathrm{input}}$ does different work in different models. The hinge
+result.
+
+\subsection{Residual structure}
+RF importance; stand basal area as the leading, diffuse, shared driver.
+[placeholder figure]
+
+% =====================================================================
+\part{Resolution}
+% Schimel R: discussion + significance + the opened frontier. The Boon.
+% =====================================================================
+
+\section{Discussion}
+
+\subsection{Capturing saturation requires remembering the accumulation}
+Resolve the Challenge: the difficulty was the equilibrium start, not the soil;
+a transient start lets every model represent the observed dynamic. The central
+payoff.
+
+\subsubsection{Proof of concept, not a verdict on Finland}
+What the result does and does not license. Calibrate the claim.
+
+\subsubsection{Generalization to the model class}
+Wherever steady-state init meets a non-equilibrium system, it forecloses the
+transient the data demand. Lift off Finland.
+
+\subsection{The binding uncertainty is the inputs (the $\sigma_{\mathrm{input}}$ reveal)}
+% Distinct beat (chosen: clearer over woven). Trickster pays off here.
+The data cannot resolve kinetics; the input multiplier absorbs what structure
+cannot. So the frontier is inputs, not soil chemistry.
+
+\subsubsection{The multiplier crosses a physical line (quantitative payoff)}
+% The Trickster's tell: sigma_input is not a nuisance, it has a physical referent.
+% Effective flux = sigma_input * raw litter (raw ~2.5 tC/ha/yr, shared by all six).
+% Spread: SP1 0.8, Yasso07 3.5, Yasso15 4.8, Yasso20 7.5 (all physical, <= ~9 NPP
+% ceiling) BUT TP2 34, TP3 50 tC/ha/yr -- 13-20x, above boreal NPP -> IMPOSSIBLE.
+% The good R^2 of TP2/TP3 is bought by manufacturing carbon. Same finding as the
+% TP3 oscillation (fast pool force-fed). Reframe: sigma_input distance from ~1 is a
+% STRUCTURAL-ADEQUACY GAUGE, interpretable only once the prior encodes the physical
+% litter bound. Homogenizing sigma_input as a weak Tier-3 nuisance (log-SD 0.5)
+% threw away external litter information -- the one prior class that HAS a referent.
+
+\subsubsection{Historical inputs: the unrecoverable past}
+No forcing data pre-observation; $\sigma_{\mathrm{init}}$ stands in for an
+entire history, held in the slow pool that remembers it. The deepest
+uncertainty.
+
+\subsubsection{Belowground inputs and other ramifications}
+Root/rhizodeposition inputs poorly known; a further axis of the same problem.
+
+\subsection{A short excursus: why this class of models is non-identifiable}
+% ~1/3 page. Side story that connects to the sigma_input reveal.
+
+\subsubsection{The structural argument}
+First-order kinetics (and richer topologies) let parameters interact so the
+data constrain net fluxes out of a pool, not the individual splits.
+
+\paragraph{Sketch}
+For a linear pool system the observable stocks depend on the parameters only
+through lumped combinations; distinct parameter sets give identical
+predictions (parameter-space ridges). Two equations of placeholder math.
+[placeholder]
+
+\paragraph{Signature in practice}
+% [Bayes] — the lens: the Bayesian frame makes non-identifiability visible and
+% honest (posterior vs prior, KL) rather than hiding it in a point estimate.
+Prior-pinning, near-perfect anti-correlation ridges between same-pool
+fractions, low information gain (KL of posterior vs prior). The Bayesian frame
+is what lets us see this rather than hide it in a fitted point. Tie to Results.
+
+\paragraph{Why it is not a defect to be ``fixed''}
+It is intrinsic to the model class and the data content (few observations per
+plot); it bounds what calibration can ever claim.
+
+\subsection{The over-prediction is a property of the likelihood}
+% Persona/candor beat.
+Slight, systematic over-prediction follows from the multiplicative-normal
+error model, not from biogeochemistry. Only the bias is likelihood-sensitive;
+rankings are not.
+
+\subsection{Limitations}
+
+\subsubsection{The coarse pre-observation phase}
+Linear litter interpolation under constant climate; high, deliberate
+uncertainty.
+
+\subsubsection{The flat-vs-rising litter tension}
+Plot-level inputs vs.\ national reconstructions; present data cannot settle
+it. State openly.
+
+\subsection{A managed landscape out of equilibrium: Finnish forest history}
+% [History] — the detailed examination promised in the Intro; justifies the
+% non-equilibrium and the rising-input trajectory; feeds the reconstruction call.
+The concrete history behind the violated equilibrium assumption: why Finnish
+forest soils were accumulating, not at steady state, across the observation
+period. Pays off the Intro's general statement.
+
+\subsubsection{From exploitation to managed growth}
+A sketch of the management eras --- heavy historical use, then regeneration and
+intensified management, rising growing stock through the 20th century.
+[placeholder --- sources to add]
+
+\subsubsection{The imprint on litter inputs and stocks}
+Rising biomass and shifting management make the input history non-stationary
+--- precisely the signal an equilibrium start erases. Connect to the
+$\sigma_{\mathrm{input}}$ reveal and the flat-vs-rising litter tension.
+
+\subsubsection{Why this is the rule, not a Finnish peculiarity}
+Most managed and recovering landscapes carry comparable histories; the lesson
+generalizes. Tie back to the Intro's general statement.
+
+\subsection{Outlook: toward a historical perspective on inputs}
+The forward call. The real next step is reconstructing historical (and
+belowground) input regimes.
+
+\subsubsection{Physically-bounded input priors (the method refinement)}
+% Concrete methodological Boon, ready to state. Put a PHYSICAL bound on the
+% effective litter FLUX (not the abstract multiplier), homogeneous across models:
+% sigma_input*J_raw and sigma_init*sigma_input*J_full in ~[0.5, 9] tC/ha/yr
+% (NPP-bounded). Removes TP2/TP3's escape hatch -> forces the misfit onto the
+% (currently prior-pinned) rates or into a VISIBLE R^2 hit, i.e. converts hidden
+% input inflation into an exposed structural-adequacy signal. Sharpens the
+% intercomparison. Caveat: full 6-model re-calibration + mixing check (a leveraged
+% parameter clamped near a boundary). Planned for the Roihu compute phase.
+
+\subsubsection{An interdisciplinary, source-diverse effort}
+Reconstruction needs evidence beyond the usual datasets --- grey literature
+and non-traditional historical sources. Frame as a research program.
+
+\subsubsection{Initialization as a calibratable, evidence-based step}
+% [Bayes] — the thread closes: reconstructed history becomes the prior.
+Replace the equilibrium default with priors grounded in reconstructed history,
+calibrated under uncertainty. The thread closes here: better history $\to$
+sharper prior $\to$ a start that is assumed less and inferred more. The
+generalizable recommendation.
+
+\section{Conclusions}
+% Written LAST; author shapes. Closes on: success -> Bayesian enabling ->
+% refine with historical data collection.
+
+\subsection{The experiment succeeded}
+Transient, calibrated initialization let a model ladder reproduce the observed
+accumulation and its incipient saturation --- the dynamic an equilibrium start
+forecloses. State the proof of concept plainly.
+
+\subsection{The Bayesian approach made it possible}
+% [Bayes]
+Treating the historical start as a calibrated parameter, with uncertainty
+propagated into state and dynamics, is what turned the idea into a working
+implementation. Credit the machinery without overclaiming novelty.
+
+\subsection{Refinement needs historical data}
+% [History]
+The approach can go much further once the pre-observation history is
+reconstructed from data rather than left to calibration --- the open frontier,
+and the natural successor study. Close here.
+
+% ---------------------------------------------------------------------
+\section*{Notes for collapsing (remove before submission)}
+\begin{itemize}
+  \item \textbf{Parts} = OCAR acts; will dissolve into standard
+        Intro/Methods/Results/Discussion at cleanup.
+  \item Many heading levels are intentional scaffolding; merge aggressively
+        once the story is fixed.
+  \item Keep the protagonist (initialization problem) constant; do not let
+        $\sigma_{\mathrm{input}}$ or non-identifiability take over the spine.
+\end{itemize}
+
+\end{document}

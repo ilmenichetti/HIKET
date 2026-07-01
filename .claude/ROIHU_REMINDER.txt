@@ -1,0 +1,12 @@
+🚩 ROIHU FIRST-SESSION TASK (auto-reminder) 🚩
+Before any new calibration, re-parameterize the litter-input priors with PHYSICAL
+bounds on the effective flux. Require  sigma_input*J_raw  AND
+sigma_init*sigma_input*J_full  to lie in ~[0.5, 9] tC/ha/yr (NPP ceiling).
+Current priors (log-SD 0.5, effectively unbounded) let TP2/TP3 fit via 13-20x
+physically-impossible litter (34-50 tC/ha/yr, above boreal NPP). sigma_init is
+already physical (0.19-0.72, < 1) -> light guardrail only; sigma_input is the fix.
+This is a full 6-model re-calibration + mixing check (leveraged param near a bound).
+Full details: CLAUDE.md 'Known outstanding items' (first bullet) + memory
+'sigma-input-physical-bounds'. Verify: doublechecks/sigma_input_spread.R,
+doublechecks/effective_litter_flux_vs_physical.R.
+Silence this reminder once addressed:  touch .claude/.roihu_input_bounds_done

@@ -9,7 +9,7 @@ output:
     toc_depth: 3
     number_sections: true
     latex_engine: xelatex
-    extra_dependencies: ["booktabs", "amsmath", "longtable", "array", "siunitx"]
+    extra_dependencies: ["booktabs", "amsmath", "longtable", "array", "siunitx", "float"]
 header-includes:
   - \usepackage{tikz}
   - \usetikzlibrary{arrows.meta, positioning, shapes.geometric}
@@ -25,16 +25,24 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 ## Research question
 
-Finnish forest soils show a positive trend in mineral SOC stocks from the
-first systematic measurement campaign (VMI8, 1985--86) through Biosoil
-(2006) and into the Komeetta campaign (2024). The trend is modest but
-consistent, and its attribution is politically consequential: Finland
-reports it as a genuine sink, whereas comparable northern countries do not.
+Finnish forest soils showed a positive trend in mineral SOC stocks across
+the first two systematic measurement campaigns --- VMI8 (1985--86) and
+Biosoil (2006). This accumulation is what the forest-sink assumptions were
+built on, and its attribution is politically consequential: Finland reports
+the soil as a genuine sink, whereas comparable northern countries do not. The
+most recent campaign (Komeetta, 2024) --- still under review during HIKET ---
+appears to corroborate a \emph{saturation} of this sink: the increase seen
+between the first two campaigns does not continue at the same rate.
 
-Existing SOC decomposition models, when run with published parameter
-sets or calibrated with standard steady-state assumptions, tend to
-predict SOC saturation or decline that is difficult to reconcile with
-the observed accumulation. This raises the central question of HIKET:
+Yasso --- the model family underpinning Finland's soil carbon reporting ---
+tends, when run with published parameter sets or calibrated under standard
+steady-state assumptions, to predict a saturation of the soil sink that is
+difficult to reconcile with the accumulation observed between the first two
+campaigns. (Other models would plausibly behave similarly, though this has
+not been tested here.) Because Finland's climate policy is built on the
+forest sink, the prospect that this sink is saturating is consequential ---
+and motivates testing whether the predicted saturation is genuine or a
+calibration artefact. This raises the central question of HIKET:
 
 \begin{quote}
 \emph{Do divergent model projections of Finnish forest SOC --- including
@@ -43,14 +51,28 @@ models, or artefacts of how the models are calibrated?}
 \end{quote}
 
 HIKET addresses this by calibrating six models against the same Finnish
-data under identical likelihood, error, filtering, and --- crucially ---
-initialisation assumptions. Residual differences among models are then
-attributable to structure rather than to parametric choices. A key
-innovation is the \emph{transient initialisation} approach (§\ref{transient}),
-which gives all models a physically grounded, calibrated initial state
-in 1985, rather than the analytically-imposed steady state traditionally
-assumed. This single change substantially improves each model's ability
-to track the observed SOC trajectory.
+data under identical likelihood, error, and filtering assumptions, the same
+litter-input estimates and climate forcing, and --- crucially --- the same
+initialisation protocol. (Yasso20 differs slightly in how the climate forcing
+is integrated intra-annually, but the functional form is unchanged; it simply
+has the freedom to apply separate parameters to each pool group.) Residual
+differences among models are then attributable to structure rather than to
+parametric choices.
+
+A key innovation is the \emph{transient initialisation} approach
+(§\ref{transient}). The analytical steady state is not abandoned but
+\emph{pushed back in time}: instead of imposing equilibrium at the start of
+the observation period (1985), each model is initialised at its analytical
+steady state in 1917 and then run transiently forward to 1985. Over this
+68-year pre-run the imprint of the 1917 equilibrium assumption largely
+dissipates --- the fast pools fully relax and only the slow humus pool retains
+appreciable memory of it --- so the calibration begins from a dynamically
+reconstructed, physically grounded 1985 state rather than an equilibrium one.
+The strength of the historical anchor is itself a Bayesian-calibrated
+parameter ($\sigma_{\mathrm{init}}$), so the steady-state starting point
+carries a calibrated uncertainty rather than being fixed. This change
+substantially improves each model's ability to track the observed SOC
+trajectory.
 
 ## Models
 
@@ -73,7 +95,7 @@ response, isolating the effect of structural complexity on the
 calibrated SOC trajectory. Second, a \emph{climate-integration} axis:
 Yasso07 $\to$ Yasso15 $\to$ Yasso20 adds pool-group-specific climate
 responses and finer intra-annual temperature integration, isolating
-the effect of climate-coupling refinements.
+the effect of Yasso-specific climate-coupling refinements.
 
 All models share the same AWEN litter fractionation, observation error
 model, likelihood form, and transient initialisation protocol. Residual
@@ -129,9 +151,12 @@ penalised.
 
 Annual AWEN-fractionated litter inputs (tC ha$^{-1}$ yr$^{-1}$) come
 from the plot-level dataset of Tupek et al.
-(Zenodo, DOI: 10.5281/zenodo.19736499). These are plot-level estimates
-and are approximately flat over the observation period --- a key
-empirical constraint discussed in §\ref{transient}.
+(Zenodo, DOI: 10.5281/zenodo.19736499). Across the plot population the mean
+input is not static: it rises by roughly 40\% from the mid-1980s to a peak in
+the mid-2000s and then plateaus (Figure \ref{fig:drivers}c), with substantial
+between-plot heterogeneity --- growing stands rise as they accumulate biomass,
+while harvested stands fall. This input trajectory is an important constraint
+on the initialisation problem, discussed in §\ref{transient}.
 
 ## Climate
 
@@ -163,6 +188,23 @@ $\xi$ within each year):
 $$C(t+1) = C_{\mathrm{ss}}(t) + \bigl(C(t) - C_{\mathrm{ss}}(t)\bigr)
   \,e^{-\alpha \xi(t)}, \qquad C_{\mathrm{ss}}(t) = \frac{J(t)}{\alpha\, \xi(t)}.$$
 
+\begin{center}
+\begin{tikzpicture}[
+  box/.style = {rectangle, rounded corners=3pt, draw=black!80, thick,
+                minimum width=1.05cm, minimum height=0.85cm,
+                font=\sffamily\bfseries, fill=white},
+  inp/.style = {-{Stealth[length=5pt]}, thick, blue!65!black},
+  rsp/.style = {-{Stealth[length=4pt]}, thick, red!55!black, dotted},
+  lbl/.style = {font=\scriptsize\sffamily, fill=white, inner sep=1pt}]
+  \node[box] (C) at (0,0) {C};
+  \draw[inp] (-1.9,0) -- (C) node[midway, above, lbl] {$J$};
+  \draw[rsp] (C.south) -- +(0,-0.85)
+        node[below, font=\scriptsize\sffamily] {CO$_2$\,($\alpha\,\xi$)};
+\end{tikzpicture}\\[4pt]
+{\footnotesize Litter input (blue); respiration (dotted). A single pool
+decaying at rate $\alpha\,\xi$.}
+\end{center}
+
 Pure R; no Fortran.
 
 ## TP2 (two pools)
@@ -173,27 +215,88 @@ receives transferred mass from $A$ only:
 $$\frac{dA}{dt} = J(t) - \alpha_A \xi(t) A(t),
   \qquad \frac{dH}{dt} = p_H \alpha_A \xi(t) A(t) - \alpha_H \xi(t) H(t).$$
 
+\begin{center}
+\begin{tikzpicture}[
+  box/.style = {rectangle, rounded corners=3pt, draw=black!80, thick,
+                minimum width=1.05cm, minimum height=0.85cm,
+                font=\sffamily\bfseries, fill=white},
+  hbox/.style= {box, fill=gray!15},
+  inp/.style = {-{Stealth[length=5pt]}, thick, blue!65!black},
+  tr/.style  = {-{Stealth[length=4pt]}, thick, black!75},
+  rsp/.style = {-{Stealth[length=4pt]}, thick, red!55!black, dotted},
+  lbl/.style = {font=\scriptsize\sffamily, fill=white, inner sep=1pt}]
+  \node[box]  (A) at (0,0)   {A};
+  \node[hbox] (H) at (3.2,0) {H};
+  \draw[inp] (-1.9,0) -- (A) node[midway, above, lbl] {$J$};
+  \draw[tr]  (A) -- (H) node[midway, above, lbl] {$p_H$};
+  \draw[rsp] (A.south) -- +(0,-0.85)
+        node[below, font=\scriptsize\sffamily] {CO$_2$\,($\alpha_A\,\xi$)};
+  \draw[rsp] (H.south) -- +(0,-0.85)
+        node[below, font=\scriptsize\sffamily] {CO$_2$\,($\alpha_H\,\xi$)};
+\end{tikzpicture}\\[4pt]
+{\footnotesize Litter input (blue); humifying transfer $A\to H$ (solid,
+fraction $p_H$); respiration (dotted). $\xi$ modulates both decay rates.}
+\end{center}
+
 This is the ICBM topology (Andrén \& Kätterer 1997) with $\xi$
 multiplying both pool decay rates. Parameter naming follows Yasso07,
 making the TP2 parameter set a strict subset of Yasso07. The annual step
 is solved exactly (see §\ref{models-sp1}), not Euler-approximated. Pure R.
 
-## TP3 (three pools)
+## TP3 (three pools)\label{models-tp3}
 
 Three pools in a strict sequential cascade: Active ($A$) $\to$ Slow
 ($S$) $\to$ Humus ($H$). All litter enters $A$; a fraction $p_S$ of $A$
 decomposition transfers to $S$; a fraction $p_H$ of $S$ decomposition
 transfers to $H$. $H$ has no climate modifier (consistent with TP2 and
-Yasso conventions). The discrete annual dynamics are:
+Yasso conventions). The dynamics are a first-order linear cascade, with $J$ and
+$\xi$ held constant within each annual step:
 
-$$A(t+1) = A(t)\bigl(1 - \alpha_A\,\xi(t)\bigr) + J(t)$$
-$$S(t+1) = S(t)\bigl(1 - \alpha_S\,\xi(t)\bigr) + p_S\,\alpha_A\,\xi(t)\,A(t)$$
-$$H(t+1) = H(t)\bigl(1 - \alpha_H\bigr) + p_H\,\alpha_S\,\xi(t)\,S(t).$$
+$$\frac{dA}{dt} = J - \alpha_A\,\xi\,A, \qquad
+  \frac{dS}{dt} = p_S\,\alpha_A\,\xi\,A - \alpha_S\,\xi\,S, \qquad
+  \frac{dH}{dt} = p_H\,\alpha_S\,\xi\,S - \alpha_H\,H.$$
 
-The Euler stepping is intentional: it matches the stepping used in the
-runtime simulation, so the initialisation pre-run and the forward run
-are numerically consistent. Analytical steady states exist and are used
-as the starting point for the transient pre-run:
+\begin{center}
+\begin{tikzpicture}[
+  box/.style = {rectangle, rounded corners=3pt, draw=black!80, thick,
+                minimum width=1.05cm, minimum height=0.85cm,
+                font=\sffamily\bfseries, fill=white},
+  hbox/.style= {box, fill=gray!15},
+  inp/.style = {-{Stealth[length=5pt]}, thick, blue!65!black},
+  tr/.style  = {-{Stealth[length=4pt]}, thick, black!75},
+  rsp/.style = {-{Stealth[length=4pt]}, thick, red!55!black, dotted},
+  lbl/.style = {font=\scriptsize\sffamily, fill=white, inner sep=1pt}]
+  \node[box]  (A) at (0,0)   {A};
+  \node[box]  (S) at (3.0,0) {S};
+  \node[hbox] (H) at (6.0,0) {H};
+  \draw[inp] (-1.9,0) -- (A) node[midway, above, lbl] {$J$};
+  \draw[tr]  (A) -- (S) node[midway, above, lbl] {$p_S$};
+  \draw[tr]  (S) -- (H) node[midway, above, lbl] {$p_H$};
+  \draw[rsp] (A.south) -- +(0,-0.85)
+        node[below, font=\scriptsize\sffamily] {CO$_2$\,($\alpha_A\,\xi$)};
+  \draw[rsp] (S.south) -- +(0,-0.85)
+        node[below, font=\scriptsize\sffamily] {CO$_2$\,($\alpha_S\,\xi$)};
+  \draw[rsp] (H.south) -- +(0,-0.85)
+        node[below, font=\scriptsize\sffamily] {CO$_2$\,($\alpha_H$)};
+\end{tikzpicture}\\[4pt]
+{\footnotesize Sequential cascade $A\to S\to H$ (solid, fractions $p_S,p_H$);
+litter input (blue); respiration (dotted). $\xi$ modulates $A$ and $S$ decay;
+$H$ has no climate modifier.}
+\end{center}
+
+Each annual step is integrated \emph{exactly}, via the matrix exponential of
+the cascade generator evaluated in closed form (divided differences of its
+eigenvalues $-\alpha_A\xi,\,-\alpha_S\xi,\,-\alpha_H$). This is the same
+analytical treatment SP1 and TP2 apply to their pools, and that the Yasso family
+applies through its matrix-exponential solver: every model in the ensemble
+integrates its linear system exactly, so the differences between them are purely
+structural. (An earlier implementation used an explicit annual Euler step.
+Being the only approximate integrator in the ensemble, it \emph{inflated} TP3's
+interannual oscillation with numerical overshoot whenever the calibrated active
+pool turned over faster than the one-year step; the exact step above removes that
+artefact, though a smaller physical oscillation genuinely remains --- see
+§\ref{sec:tp3osc}.) Analytical steady states exist and start the transient
+pre-run:
 
 $$A^* = \frac{J}{\alpha_A\,\xi}, \qquad
   S^* = \frac{p_S J}{\alpha_S\,\xi}, \qquad
@@ -440,7 +543,7 @@ uses FMI prior-centre values, which satisfy mass conservation.
 
 ---
 
-# Fortran implementation: differences from the FMI reference code
+# Fortran implementation: differences from the FMI reference code\label{sec:fortran-diffs}
 
 The HIKET Fortran cores (`yasso07.f90`, `yasso15.f90`) derive from the
 FMI Yasso implementations (Järvenpää 2015 for Yasso15/20; Tuomi et al.
@@ -853,9 +956,10 @@ nonzero prior centres from the same chemical-fractionation framework).
 
 ## Climate-response and size-modifier priors
 
-Climate and size parameters receive \emph{informative} priors, derived
-from the FMI posterior (Yasso15/20) or from the Tuomi 2009/2011 published
-posterior limits (Yasso07). This prevents two pathologies:
+Climate and size parameters receive \emph{more informative} priors than the
+other parameter classes (though still relatively broad in absolute terms),
+derived from the FMI posterior (Yasso15/20) or from the Tuomi 2009/2011
+published posterior limits (Yasso07). This prevents two pathologies:
 
 1. **The $\gamma$\,/\,$\sigma_{\mathrm{input}}$ compensation loop.** Both
    parameters scale total decomposition; without an informative prior on
@@ -945,10 +1049,10 @@ reflects a flat likelihood surface, not genuine uncertainty.
 
 # Uncalibrated baselines
 
-Before examining what the Finnish data tells the models, it is useful
-to know what the models say \emph{without} any Finnish information ---
-that is, how well published global parameter sets predict Finnish SOC
-stocks. These uncalibrated baseline runs serve as both a diagnostic and
+Before examining what calibration against the new data tells the models,
+it is useful to know what the models say \emph{without} any such information
+--- that is, how well published global parameter sets predict the observed
+SOC stocks. These uncalibrated baseline runs serve as both a diagnostic and
 a narrative anchor: they show where calibration starts and how far it
 moves the predictions.
 
@@ -1031,30 +1135,42 @@ in the manuscript figures.
 ## Why initialisation matters for the Finnish data
 
 The observed Finnish SOC trajectory --- accumulating from 1985 through
-Biosoil (2006) and approximately stabilising toward Komeetta (2024) ---
-is not easily reproduced by a model that starts from an analytically-imposed
-steady state in 1985. The reason is straightforward. Under first-order
-kinetics with approximately flat litter inputs (as observed in the
-plot-level Tupek et al. dataset), a model at steady state in 1985 predicts
-approximately flat SOC from that point forward. But the data shows
-accumulation. The only way a model at steady state can produce an upward
-SOC trend is if litter inputs are also rising --- and the plot-level inputs
-do not show a rise of sufficient magnitude.
+Biosoil (2006), then approximately stabilising toward Komeetta (2024) ---
+is not easily reproduced by a model pinned to an analytically-imposed steady
+state with respect to its \emph{1985} litter inputs. Two features of the data
+shape the initialisation problem. First, litter inputs are not static: the
+cross-plot mean rises by roughly 40\% from the mid-1980s to a peak in the
+mid-2000s and then plateaus (Figure \ref{fig:drivers}c), though individual
+plots are heterogeneous --- some rise steeply as stands accumulate biomass,
+others stay flat or fall after harvest. Second, this input rise is of
+comparable magnitude to the observed SOC accumulation (mean stocks also rise
+by roughly 40\% between 1985 and 2006), and the stocks level off at about the
+same time the inputs peak.
 
-The implication is that Finnish forests in 1985 were \emph{not} at
-equilibrium with their recent litter inputs. Their SOC stocks were below
-what the contemporary productivity would sustain at steady state, and
-they have been accumulating toward that higher equilibrium ever since.
-This is consistent with the management history of Finnish forests: the
-post-war decades saw intensive management (clearcutting, drainage,
-fertilisation) that left many forest stands in a recovering state by
-1985, with carbon stocks still building up.
+These two facts have an important consequence. A rising litter supply is
+itself a candidate driver of the accumulation: even a soil initialised at
+equilibrium gains carbon while its inputs climb. But a model pinned to
+$C(1985) = C_{\mathrm{ss}}(\text{1985 litter})$ can express only this one
+mechanism --- the transient response to rising inputs --- and must fit the
+entire accumulation through it, with no freedom to represent a 1985 soil that
+was already \emph{below} the level its contemporary inputs would sustain. If
+the true 1985 state was sub-equilibrium --- as the management history of
+Finnish forests suggests, the post-war decades of intensive clearcutting,
+drainage and fertilisation having left many stands still rebuilding carbon by
+1985 --- that disequilibrium contribution is instead forced into implausible
+kinetic parameters, or the model is rejected outright.
 
-A calibration that forces $C(1985) = C_{\mathrm{ss}}(\text{contemporary litter})$
-has no degree of freedom to fit this accumulation signal. Either it
-rejects all models, or it absorbs the discrepancy into implausible
-kinetic parameters. The transient initialisation approach removes this
-constraint.
+The transient initialisation approach removes this restriction. By
+reconstructing the 1985 state from a calibrated pre-run (§\ref{transient})
+rather than fixing it at the contemporary equilibrium, it lets the data
+apportion the observed accumulation between the two mechanisms: the transient
+response to rising inputs, and recovery from a sub-equilibrium initial state.
+The free parameter $\sigma_{\mathrm{init}}$ controls this apportionment: it
+sets the 1985 stock relative to the contemporary-input equilibrium, so a
+posterior favouring $\sigma_{\mathrm{init}} < 1$ is direct evidence that the
+1985 soil was below equilibrium and that disequilibrium recovery contributes
+to the observed trend --- over and above the accumulation that the rising
+contemporary inputs alone would produce.
 
 ## The 68-year pre-run
 
@@ -1097,8 +1213,10 @@ steady state under $J_{1917}$ and constant climate.
 
 $\sigma_{\mathrm{init}}$ and $\sigma_{\mathrm{input}}$ are free
 parameters in every model, both log-transformed with a prior centred at
-1.0 (log-normal, unconstrained-space SD = 0.5, physical 95\% interval
-approximately [0.37, 2.72]).
+1.0 (log-normal, unconstrained-space SD = 0.5, giving a physical 95\% prior
+interval of approximately [0.37, 2.72] --- i.e. each multiplier lies between
+about $0.37\times$ and $2.72\times$ its nominal value with 95\% prior
+probability).
 
 \textbf{$\sigma_{\mathrm{input}}$} scales the entire contemporary litter
 time series (1985 onward). It absorbs uncertainty in the litter input
@@ -1153,26 +1271,35 @@ The pre-run protocol is uniform but adapted to each model's solver:
 | Model | Pre-run implementation |
 |-------|----------------------|
 | SP1, TP2 | Analytical 68-step R loop (exact per-step solution) |
-| TP3 | Euler 68-step R loop (matches the runtime stepping method) |
+| TP3 | Analytical 68-step R loop (exact per-step matrix exponential) |
 | Yasso07/15/20 | 68-row litter input fed to the Fortran solver; terminal per-cohort state extracted via `attr(run, "C_final")` |
 
-For the Yasso Fortran models, the pre-run is implemented as a genuine
-Fortran run, not an analytical approximation. The 15-element terminal
-state (5 pools $\times$ 3 litter cohorts) is returned via `C_final`,
-an output argument added specifically to support this chaining. Without
-it, only the 5 summed pool totals would be available, which is
-insufficient to correctly initialise the per-cohort bookkeeping for the
-forward simulation.
+For the Yasso models, the 1917--1985 propagation is advanced by the
+compiled Fortran solver itself --- the same solver used in the forward
+run, so the pre-run and the forward simulation share identical numerics.
+This is a consistency choice, not a question of accuracy: Yasso's annual
+step is analytical (matrix-based), exactly as the exact per-step solution
+used by the SP1/TP2 R loops. The reason for calling the real solver is
+faithful per-cohort bookkeeping: the 15-element terminal state (5 pools
+$\times$ 3 litter cohorts) is returned via `C_final`, an output argument
+added specifically to support this chaining. Without it, only the 5
+summed pool totals would be available, which is insufficient to correctly
+initialise the per-cohort bookkeeping for the forward simulation.
 
-## Likelihood adjustment
+## Likelihood adjustment under transient initialisation
 
-In the non-transient version of the engine (retained as a fallback),
-$\sigma_{\mathrm{init}}$ inflated the observation standard deviation at
-the first observation per plot, acting as a likelihood patch to absorb
-initial-state uncertainty. With transient initialisation,
-$\sigma_{\mathrm{init}}$ has already entered the model dynamics; retaining
-the likelihood patch would double-count its effect. The engine flag
-`transient_init = TRUE` removes this patch.
+The engine retains a non-transient code path (the original steady-state
+initialisation), kept only as a fallback; all six production calibrations
+reported here run with `transient_init = TRUE`. The two paths differ in how
+$\sigma_{\mathrm{init}}$ enters the likelihood. In the non-transient path,
+$\sigma_{\mathrm{init}}$ inflated the observation standard deviation at the
+first observation per plot --- a likelihood patch absorbing initial-state
+uncertainty. Under transient initialisation $\sigma_{\mathrm{init}}$ has
+already entered the model dynamics (it scales the 1917 litter anchor of the
+pre-run, §\ref{transient}), so retaining the patch would double-count its
+effect; the `transient_init = TRUE` flag therefore removes it. The
+non-transient path is documented here only for completeness --- it is legacy
+code, not part of the current results.
 
 ---
 
@@ -1215,7 +1342,14 @@ transforms. Plots are evaluated in parallel via `mclapply`.
 
 ## Rejection logic
 
-Three hard rejections (return $-\infty$) apply:
+Some parameter draws push a model into numerically invalid territory --- a
+non-finite or non-positive predicted stock, or an outright solver failure ---
+where the likelihood cannot be evaluated (the multiplicative-normal density is
+undefined for $\hat{C} \leq 0$). For these the log-likelihood returns $-\infty$
+and the proposal is rejected. This is a robustness guard, not an efficiency
+device or a tuning knob: it stops invalid proposals (and any NaN/Inf they would
+propagate) from contaminating the chains, while leaving the posterior shape in
+the valid region untouched. Three hard rejections (return $-\infty$) apply:
 
 1. $\hat{C}_{p,t}$ is non-finite at any observation year.
 2. $\hat{C}_{p,t} \leq 0$ at any observation year (undefined in the
@@ -1233,13 +1367,19 @@ the likelihood.
 Plots flagged `is_holdout` in `site_raw.csv` are excluded from the
 likelihood sum: the calibration is fit only to the non-holdout plots.
 The held-out plots are carried forward (via the inputs RDS) to the
-predictive stage, where prediction metrics (R$^2$, RMSE, bias, 95\%
-coverage) are computed separately for the calibration and holdout sets.
-This provides an out-of-sample check that the calibrated models
-generalise beyond the plots used to fit them, rather than only
-reproducing in-sample fit. The split is applied uniformly across all
-six models, using the same `is_holdout` plot assignment so that every
-model is validated against the same held-out plots.
+predictive stage, where the prediction metrics --- $R^2$, RMSE, median bias,
+and the parameter-CI coverage --- are computed \emph{separately} for the
+calibration plots and the held-out plots. The held-out figures are a genuine
+out-of-sample test: those plots never entered the likelihood, so they check
+that the calibrated models generalise beyond the plots used to fit them rather
+than only reproducing in-sample fit. Throughout the results, these
+independent-validation numbers are kept in their own holdout table
+(Table \ref{tab:holdout}), distinct from the calibration-sample table
+(Table \ref{tab:calib}), and the predictive figures are labelled with the
+sample they show, so it is always explicit whether a number is in-sample or
+independent. The split is applied uniformly across all six models, using the
+same `is_holdout` plot assignment so that every model is validated against the
+same held-out plots.
 
 ---
 
@@ -1310,9 +1450,16 @@ Computed on post-burnin samples in unconstrained (sampling) space:
 | Acceptance rate | 0.2--0.4 | Reasonable DEzs mixing |
 
 With 20--26 free parameters in the Yasso models and only two to three SOC
-observations per plot, poor $\hat{R}$ for individual transfer fractions is
-expected --- the fractions are weakly identified by the aggregate SOC
-likelihood. This is structural non-identifiability, not a sampler failure.
+observations per plot, most transfer fractions are weakly identified by the
+aggregate SOC likelihood. It is tempting to expect this to show up as poor
+$\hat{R}$, but that conflates non-identifiability with poor \emph{mixing}: once
+the sampler mixes cleanly, it traverses the non-identified ridge without
+difficulty and $\hat{R}$ can be excellent even for parameters the data does not
+constrain. The genuine signature of non-identifiability is therefore not
+$\hat{R}$ but (i) marginals pinned to the prior, (ii) near-perfect
+anti-correlation ridges between fractions leaving the same pool, and (iii) low
+KL divergence from prior to posterior. This distinction is borne out by the
+production run (§\ref{sec:results}) and is developed there.
 
 ## Diagnostic outputs
 
@@ -1353,6 +1500,604 @@ calibration used, regardless of any subsequent updates to `Data_work.R`.
 
 ---
 
+# Results\label{sec:results}
+
+```{r results-helpers, include=FALSE}
+# Locate the most recent diagnostic figures by pattern. Filenames embed the
+# per-model RUN_IDs, so we glob and pick the newest match rather than hard-code.
+diag_dir <- "../diagnostics"
+mm_dir   <- file.path(diag_dir, "multimodel")
+latest <- function(dir, pattern) {
+  f <- list.files(dir, pattern = pattern, full.names = TRUE)
+  if (length(f) == 0) return(NA_character_)
+  f[which.max(file.mtime(f))]
+}
+show_fig <- function(path) if (!is.na(path) && file.exists(path)) knitr::include_graphics(path)
+```
+
+This section reports the outcome of the homogenised, transient-initialised
+calibration. All six models were calibrated against the same Finnish dataset
+(\num{358} plots, \num{1121} SOC observations), with an independent holdout
+of \num{224} observations (\num{897} retained for the random-forest residual
+analysis) excluded from the likelihood and scored separately. The narrative
+proceeds from the figures to the numbers and closes with a short
+interpretation; the emphasis is on \emph{predictive skill of the ensemble},
+with convergence and information-gain treated as supporting evidence.
+
+## Uncalibrated baselines
+
+Before calibration, the three Yasso models were run at their published
+parameter sets with no input scaling ($\sigma_{\mathrm{input}}=1$), to
+establish what the literature defaults predict on Finnish data
+(Table \ref{tab:baseline}). All three explain almost none of the
+between-plot variance ($R^2 \approx 0.02$) and, more tellingly, all three
+\emph{under-predict} the observed stocks. The bias worsens monotonically with
+model complexity: Yasso07 is nearly unbiased ($-1.1$ tC ha$^{-1}$), Yasso15
+under-predicts by $13$ tC ha$^{-1}$, and Yasso20 by $41$ tC ha$^{-1}$ --- a
+gross under-prediction consistent with the per-pool mass-balance issue
+documented for the published Yasso20 parameter set (§\ref{sec:fortran-diffs}
+and the accompanying mass-balance note).
+
+Table: Uncalibrated baseline performance at published defaults (447 plots,
+1121 matched observations). Bias is mean predicted $-$ observed; negative =
+under-prediction. \label{tab:baseline}
+
+| Model    | $R^2$ | RMSE (tC ha$^{-1}$) | Bias (tC ha$^{-1}$) | MAPE |
+|----------|------:|--------------------:|--------------------:|-----:|
+| Yasso07  | 0.021 | 54.1 | $-1.1$  | 50.2\% |
+| Yasso15  | 0.026 | 52.5 | $-13.0$ | 44.9\% |
+| Yasso20  | 0.023 | 60.9 | $-40.8$ | 45.9\% |
+
+```{r fig-baseline-traj, fig.cap="Uncalibrated Yasso baselines at published defaults: cross-plot mean predicted SOC trajectories for Yasso07, Yasso15 and Yasso20 (lines) against the observed campaign means (points, $\\pm$1 SE). All three under-predict the 1985--2006 accumulation, and the under-prediction deepens with model complexity --- most severely for Yasso20, consistent with the published-parameter mass-balance issue (\\S\\ref{sec:fortran-diffs}). Yasso20 is shown alongside the other two, not interpreted alone. \\label{fig:baseline}", out.width="82%", fig.align="center", fig.pos="H"}
+ybase <- c("Yasso07", "Yasso15", "Yasso20")
+ycol  <- c(Yasso07 = "#1b9e77", Yasso15 = "#7570b3", Yasso20 = "#d95f02")
+traj  <- lapply(ybase, function(m) {
+  f <- file.path(diag_dir, paste0(m, "_baseline"), paste0(m, "_baseline_predictions.rds"))
+  aggregate(total_soc ~ year, readRDS(f), mean)
+})
+names(traj) <- ybase
+# observed campaign means (same for every model; read once)
+rb   <- read.csv(file.path(diag_dir, "Yasso07_baseline", "Yasso07_baseline_residuals.csv"))
+om   <- tapply(rb$soc_obs_tCha, rb$year, mean, na.rm = TRUE)
+ose  <- tapply(rb$soc_obs_tCha, rb$year, function(x) sd(x, na.rm = TRUE) / sqrt(sum(is.finite(x))))
+obs  <- data.frame(year = as.integer(names(om)), mean = as.numeric(om), se = as.numeric(ose))
+xr   <- range(unlist(lapply(traj, function(d) d$year)))
+yr   <- range(c(unlist(lapply(traj, function(d) d$total_soc)), obs$mean - obs$se, obs$mean + obs$se))
+par(mar = c(4, 4.4, 1, 1), mgp = c(2.5, 0.7, 0), las = 1)
+plot(NA, xlim = xr, ylim = yr, xlab = "Year",
+     ylab = expression("Cross-plot mean SOC (tC ha"^-1*")"))
+for (m in ybase) lines(traj[[m]]$year, traj[[m]]$total_soc, col = ycol[m], lwd = 2.2)
+arrows(obs$year, obs$mean - obs$se, obs$year, obs$mean + obs$se,
+       angle = 90, code = 3, length = 0.04, col = "black")
+points(obs$year, obs$mean, pch = 21, bg = "black", cex = 1.3)
+legend("topleft", bty = "n",
+       legend = c(ybase, "Observed campaign mean (±1 SE)"),
+       col = c(ycol[ybase], "black"),
+       lwd = c(2.2, 2.2, 2.2, NA),
+       pch = c(NA, NA, NA, 21), pt.bg = c(NA, NA, NA, "black"))
+```
+
+## Transient initialisation: evidence for a sub-equilibrium initial state
+
+The transient initialisation (§\ref{transient}) is the keystone methodological
+choice of the work described here, and the calibration provides a direct test
+of it. Rather than
+assuming the 1985 soil sits at steady state, each model reconstructs its 1985
+pool state from a 68-year pre-run whose historical litter anchor is scaled by
+the free parameter $\sigma_{\mathrm{init}}$ --- the ratio of 1917 to
+contemporary litter input. A value below 1 means the soil entered the
+observation period below equilibrium and still accumulating; a value of 1
+recovers a flat, steady-state-like history. Because $\sigma_{\mathrm{init}}$ is
+estimated rather than fixed, its posterior is itself an answer to the question
+\emph{does the data want a transient start?}
+
+The posteriors are unambiguous (Figure \ref{fig:siginit},
+Table \ref{tab:siginit-post}): \textbf{every model places the entire 95\%
+credible interval of $\sigma_{\mathrm{init}}$ below 1.} Medians range from
+$0.19$ (TP2) to $0.72$ (Yasso15), and no model's upper 97.5\% bound reaches
+unity (the highest, Yasso15, stops at $0.91$). This is a structure-independent
+result: regardless of pool count or climate form, the Finnish SOC data reject a
+steady-state 1985 start and require a sub-equilibrium, accumulating initial
+condition. The gradient across models is itself informative --- the single- and
+two-pool models infer the most extreme historical deficit (medians near
+$0.2$--$0.3$), leaning harder on the initial state because they have fewer
+internal degrees of freedom, whereas the Yasso family, with its slow humified
+pool, reaches the same observed stocks from a milder deficit (medians near
+$0.5$--$0.7$). This gradient is the mirror image of the litter-multiplier result
+(§\ref{sec:identifiability}): the models that infer the largest historical
+deficit also rescale contemporary inputs the hardest (TP2/TP3
+$\sigma_{\mathrm{input}}\approx 13$), because their fast pools store little
+carbon per unit flux and must be fed harder to reach the observed stocks. So
+$\sigma_{\mathrm{init}}$ and $\sigma_{\mathrm{input}}$ are not independent
+findings but two coordinates of a single structural compensation: each model
+reaches the same SOC by its own trade-off between how far below equilibrium it
+starts and how much it rescales the flux.
+
+Table: Posterior of the historical litter ratio $\sigma_{\mathrm{init}}$
+(median and 95\% CI). Every interval lies entirely below 1.
+\label{tab:siginit-post}
+
+| Model   | Median | 95\% CI         |
+|---------|-------:|:---------------:|
+| SP1     | 0.26   | [0.16, 0.37]    |
+| TP2     | 0.19   | [0.11, 0.31]    |
+| TP3     | 0.33   | [0.19, 0.57]    |
+| Yasso07 | 0.51   | [0.40, 0.64]    |
+| Yasso15 | 0.72   | [0.59, 0.91]    |
+| Yasso20 | 0.63   | [0.48, 0.85]    |
+
+```{r fig-siginit, fig.cap="Posterior of the historical litter ratio sigma-init across the six models (open circle = median, thick bar = 50\\%, thin bar = 95\\% interval). The dashed line marks the steady-state value of 1; every posterior lies entirely to its left, so all models independently infer a sub-equilibrium, accumulating 1985 state. \\label{fig:siginit}", out.width="80%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_sigma_init_[0-9].*\\.png"))
+```
+
+This bears directly on HIKET's motivating question. Studies that initialise SOC
+models at steady state start every model on a flat trajectory, which
+predisposes them to project saturation or decline; an apparent saturation may
+then be partly an artefact of the initial condition rather than a genuine
+structural property of the model. By estimating $\sigma_{\mathrm{init}}$ instead
+of fixing it, HIKET lets the data decide, and the data decide for accumulation:
+the same models that would relax to a flat trajectory from a steady-state start
+instead produce a rising, gradually saturating one once the initial state is
+freed (Figures \ref{fig:delta}, \ref{fig:meansoc}) --- the very behaviour HIKET
+sets out to study. The models match the 2006 and 2024 campaigns well; the
+residual is that they begin above the observed 1985 baseline and accumulate
+somewhat less steeply, which we treat as an open question tied to the coarse,
+data-free pre-1985 phase (see Discussion) rather than a model deficiency.
+Ecologically, $\sigma_{\mathrm{init}}<1$ is consistent
+with Finnish forest history --- lower mid-century litter inputs under younger,
+less productive, post-war and afforested stands building toward present-day
+levels --- though the parameter conflates that productivity history with any
+slow disequilibrium and should be read as a magnitude rather than a literal
+1917 flux.
+
+## Convergence and sampler health
+
+Sampling was healthy across all six models. Univariate $\hat{R}$ stayed below
+\num{1.05} for every parameter in every model with a single exception
+(SP1 `alpha`, $\hat{R}=1.092$, discussed below); multivariate $\hat{R}$ ranged
+\numrange{1.007}{1.067}, and effective sample sizes were comfortably above the
+\num{200} threshold (ESS \numrange{208}{3663}). Invalid-proposal rates were
+negligible for the well-behaved models ($<0.1\%$) and elevated only where the
+posterior has a genuinely heavy tail (SP1 chain 5 $12\%$; TP3 $8$--$17\%$;
+both traced to long right tails in `alpha`/kinetic parameters, not to displaced
+chains).
+
+The single notable $\hat{R}$ signal --- SP1 `alpha` --- is \emph{not} a
+non-identifiability symptom but its opposite: `alpha` is the most strongly
+\emph{identified} parameter in the entire study, with a heavy right tail
+(its \num{97.5}th percentile is $\sim 6\times$ the median) that is simply hard
+to sample. Crucially, every Yasso transfer fraction converged in $\hat{R}$
+despite being weakly identified by the data. Good $\hat{R}$ is thus the
+\emph{expected} result of a cleanly mixing sampler and says nothing about
+whether a parameter is informed; the identifiability question is taken up in
+§\ref{sec:identifiability}.
+
+## Predictive skill of the calibrated ensemble
+
+The calibrated models are compared in Table \ref{tab:calib} (calibration
+sample) and Table \ref{tab:holdout} (independent holdout), and visually in
+Figures \ref{fig:obspred}--\ref{fig:resid}. Three features stand out.
+
+\textbf{Skill at the level of individual plots is low, and similar across
+models.} Calibration $R^2$ ranges \numrange{0.05}{0.11} and holdout $R^2$
+\numrange{0.02}{0.05}; RMSE clusters near \num{50} tC ha$^{-1}$ (calibration)
+and \num{60} tC ha$^{-1}$ (holdout) for all six. This refers specifically to
+predicting the SOC stock of a \emph{single} plot from its litter and climate
+--- a genuinely hard target: the random-forest residual analysis
+(§\ref{sec:identifiability}) recovers an out-of-bag $R^2$ of only
+\numrange{0.34}{0.52} even with \num{54} site covariates, so the low ceiling is
+a property of the data, not of any one model. That none of the models comes
+close to that ceiling is itself informative --- it points to drivers of
+plot-level SOC that the litter--climate--kinetics structure does not capture,
+and the residual analysis (§\ref{sec:identifiability}) is where we ask what
+those drivers might be.
+
+\textbf{The ranking is consistent, but rests on small absolute differences.}
+TP3 is nominally the best model on both calibration ($R^2=0.109$) and holdout
+($R^2=0.052$) and Yasso20 the weakest ($R^2=0.049/0.016$), with the two- and
+three-pool transient models (TP2, TP3) edging out the full Yasso family. The
+ordering is stable across the calibration/holdout split --- so it is not simply
+in-sample overfitting --- but it should be read with care: at $R^2$ this low,
+the models are separated by a few percent of an already small explained-variance
+budget, and we would not claim any one of them is meaningfully ``better'' at
+predicting an individual plot. The ranking is useful as a \emph{structural}
+signal --- the simple transient models are at least as good as the full Yasso
+family on these data --- not as a performance verdict.
+
+\textbf{All calibrated models over-predict, but by structurally different
+amounts.} Median bias is positive for every model, and its size tracks the
+skill ranking: the simple transient models are closest to unbiased (TP2
+\num{+6.2}, TP3 \num{+6.2} tC ha$^{-1}$ in calibration; \num{+2.3} and
+\num{+1.3} on the holdout), whereas the Yasso family over-predicts more,
+increasing through Yasso07 (\num{+9.3}) and Yasso15 (\num{+8.8}) to Yasso20,
+the most biased (\num{+11.7} tC ha$^{-1}$ calibration, \num{+7.8} holdout).
+Across all six the calibration bias of \numrange{+6}{+12} tC ha$^{-1}$ shrinks
+to \numrange{+1}{+8} on the holdout --- a reversal of the baseline
+under-prediction. The `Param cov` column (fraction of observations
+inside the 95\% credible interval of the predicted \emph{mean}) is small by
+construction: this interval reflects parameter uncertainty in the model
+expectation only and deliberately excludes the multiplicative observation
+error, so it is a measure of how tightly the mean is pinned down, not a
+posterior-predictive coverage.
+
+\textbf{The absolute trajectory reproduces the rising--saturating shape, with a
+caveat at the 1985 baseline.} Plotting mean SOC over time
+(Figure \ref{fig:meansoc}) shows that all six calibrated models reproduce the
+behaviour at the heart of HIKET: a SOC stock that increases after 1985 and
+begins to level off toward the recent campaigns --- the incipient sink
+saturation that the Yasso family in particular projects --- and they match the
+2006 and 2024 campaign means closely. The one clear discrepancy is at the start:
+the observed mean rises from $63$ tC ha$^{-1}$ in 1985 to $102$ in 2006 and
+$105$ in 2024 (a $+42$ increase), whereas every model begins its 1985 trajectory
+above the observed baseline (predicted 1985 means $76$--$95$) and accumulates
+somewhat less steeply ($+11$ to $+31$). Within this common pattern the ranking
+is mechanistic: the simpler TP2/TP3 start lowest and accumulate most, tracking
+the \emph{shape} of the trend best, while the stiffer Yasso family starts
+highest and accumulates least. We do not read the 1985 offset as a model failure
+--- it is entangled with the deliberately coarse, data-free transient phase and
+with an unresolved tension in the litter inputs, taken up in the Discussion.
+
+\textbf{The starting increment encodes the same structural split.} The
+annual-increment view (Figure \ref{fig:delta}) shows this from a different
+angle: TP2 and TP3 begin with the steepest accumulation rate, SP1 with the
+shallowest, and the Yasso family in between. This is the dynamical fingerprint
+of the input/initial-state compensation above (§\ref{sec:identifiability}). TP2
+and TP3 hold carbon in fast pools, so reaching the observed stocks forces an
+order-of-magnitude input inflation ($\sigma_{\mathrm{input}}\approx 13$) and a
+deep initial deficit ($\sigma_{\mathrm{init}}\approx 0.2$--$0.3$); starting far
+below a high, fast-turning equilibrium produces a large early increment that
+decays as the deficit closes. SP1, with a single slow pool, instead reaches the
+stocks by \emph{lowering} inputs ($\sigma_{\mathrm{input}}\approx 0.3$) and
+turning over slowly: its target equilibrium is low and its approach gradual, so
+the increment is shallow and nearly flat. The spread in starting increments is
+therefore not noise but the same structural disagreement --- about \emph{how}
+each model reaches the stocks --- seen in the time derivative.
+
+\textbf{The forcing is strongly oscillatory in climate but smooth in litter.}
+Figure \ref{fig:drivers} summarises the three model drivers as cross-plot means
+over the observed period. Mean annual temperature and precipitation swing sharply
+from year to year ($\pm 1$--$2^\circ$C and $\pm 100$--$150$ mm), whereas the
+litter input rises smoothly to a mid-2000s peak and then plateaus, with no
+high-frequency component, so any interannual variation in SOC could only come
+from the climate modifier $\xi(T,P)$, not the inputs. TP3 shows a visible
+year-to-year oscillation in mean SOC (Figure \ref{fig:meansoc}) that the other
+models do not. An earlier TP3 run inflated it with a numerical artefact --- an
+explicit Euler integrator overshooting a sub-annual active pool --- which we
+removed by integrating TP3 exactly like the rest of the ensemble; but a bounded,
+\emph{physical} oscillation survives exact integration, because TP3's calibrated
+active pool genuinely turns over faster than a year and so tracks the climate
+modifier. The distinction, and why TP2 stays smooth despite an equally fast pool,
+is developed in §\ref{sec:tp3osc}.
+
+Table: Calibrated predictive performance (full calibration sample, 1121 obs,
+median-prediction metrics). \label{tab:calib}
+
+| Model    | $R^2$ | RMSE | Bias  | Param cov |
+|----------|------:|-----:|------:|----------:|
+| SP1      | 0.065 | 51.3 | $+8.2$  | 0.056 |
+| TP2      | 0.089 | 49.6 | $+6.2$  | 0.086 |
+| TP3      | **0.109** | 50.0 | $+6.2$  | 0.089 |
+| Yasso07  | 0.067 | 52.3 | $+9.3$  | 0.062 |
+| Yasso15  | 0.060 | 52.2 | $+8.8$  | 0.062 |
+| Yasso20  | 0.049 | 53.6 | $+11.7$ | 0.054 |
+
+Table: Calibrated predictive performance on the independent holdout (224 obs).
+\label{tab:holdout}
+
+| Model    | $R^2$ | RMSE | Bias  | Param cov |
+|----------|------:|-----:|------:|----------:|
+| SP1      | 0.027 | 60.4 | $+3.8$ | 0.071 |
+| TP2      | 0.036 | 59.1 | $+2.3$ | 0.071 |
+| TP3      | **0.052** | 58.4 | $+1.3$ | 0.098 |
+| Yasso07  | 0.027 | 61.9 | $+5.5$ | 0.062 |
+| Yasso15  | 0.026 | 60.5 | $+4.3$ | 0.080 |
+| Yasso20  | 0.016 | 62.3 | $+7.8$ | 0.062 |
+
+```{r fig-obspred, fig.cap="Observed vs predicted SOC across the six calibrated models (calibration sample). Points are plot-level posterior medians; the spread of predictive skill between models is small. \\label{fig:obspred}", out.width="100%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_obs_vs_pred_[0-9].*\\.png"))
+```
+
+```{r fig-resid, fig.cap="Residual structure across models (calibration sample). Residuals are broadly comparable in scale and share the same site-driven structure (Section \\ref{sec:identifiability}). \\label{fig:resid}", out.width="100%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_residuals_[0-9].*\\.png"))
+```
+
+```{r fig-drivers, fig.cap="The three model drivers over the observed period (cross-plot mean line, band = 95\\% CI of the mean; the 1985 initialisation year is omitted). Mean annual temperature (a) and precipitation (b) are strongly oscillatory year-to-year, whereas total litter input (c) rises smoothly and then plateaus. Interannual oscillations in a model's SOC trajectory (Figure \\ref{fig:meansoc}) therefore reflect the climate modifier, not the inputs. \\label{fig:drivers}", out.width="80%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_drivers_[0-9].*\\.png"))
+```
+
+```{r fig-delta, fig.cap="Mean annual SOC increment across models over the projection window. Transient initialisation yields a rising, gradually saturating trajectory; the modelled increment is somewhat lower than the observed accumulation rate (see the absolute levels in Figure \\ref{fig:meansoc}). \\label{fig:delta}", out.width="100%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_delta_soc_[0-9].*\\.png"))
+```
+
+```{r fig-meansoc, fig.cap="Mean absolute SOC across plots over time for each calibrated model (line = predicted cross-plot mean, band = +/-1 SE; red = observed campaign means +/-95\\% CI); the calibrated analogue of the published-defaults baseline trajectories. All models reproduce the rising-then-levelling shape and match the 2006 and 2024 campaigns closely, but begin above the observed 1985 baseline and accumulate somewhat less steeply; TP2/TP3 track the shape best, the Yasso family least. \\label{fig:meansoc}", out.width="100%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_mean_soc_[0-9].*\\.png"))
+```
+
+## Baseline versus calibrated
+
+Calibration changes the picture in three ways. First, it removes the
+structural under-prediction: the strongly negative baseline biases (Yasso15
+$-13$, Yasso20 $-41$ tC ha$^{-1}$) become small positive biases
+($+8.8$, $+11.7$). Second, it lifts $R^2$ from $\sim 0.02$ to
+\numrange{0.05}{0.11} --- a real but modest gain, reinforcing that the
+explainable between-plot variance is limited. Third, and most informative, the
+correction is achieved almost entirely through the litter-input multiplier
+$\sigma_{\mathrm{input}}$ rather than through the decomposition kinetics, which
+sets up the identifiability discussion below.
+
+## Residual structure\label{sec:residuals}
+
+Beyond the headline metrics, the residuals carry two further signals.
+
+\textbf{The over-prediction is a uniform multiplicative offset, not a reporting
+artefact.} Re-scoring the calibrated predictions on the log scale --- the natural
+scale of the multiplicative error model --- gives a mean log-residual
+($\log\mathrm{obs}-\log\widehat{\mathrm{SOC}}$) of $-0.10$ to $-0.16$ across the
+six models, i.e. predictions sit $\approx 10$--$16\%$ high in geometric-mean
+terms. The value is essentially identical whether the predictive mean or median
+is used (the predictive spread is narrow), so the bias is not an artefact of
+summarising a skewed predictive distribution by its mean. It also tracks
+predictive skill: the offset is smallest for the highest-$R^2$ models (TP2, TP3,
+$\approx -0.10$) and largest for the lowest (Yasso20, $-0.16$). We argue in the
+Discussion (§\ref{sec:biasdisc}) that this is a property of the proportional
+likelihood rather than a physical statement about Finnish soils.
+
+\textbf{Residuals are site-structured, and the structure is shared across
+models.} A random forest regressing the log-residuals on \num{54} site
+covariates recovers an out-of-bag $R^2$ of \numrange{0.34}{0.52}
+(Table \ref{tab:rfoob}), so a substantial and partly reducible share of the
+unexplained between-plot variance is site-driven rather than random. The
+importance ranking is strikingly consistent across all six models
+(Figure \ref{fig:rfheat}): \textbf{stand basal area at 1985}
+(\texttt{basal\_area\_85}) is the single most important predictor in five of the
+six models --- and second in TP3 --- followed by soil chemistry (total nitrogen,
+cation-exchange capacity, exchangeable aluminium, clay) and then the climate
+variables (mean and warmest-month temperature). No single covariate exceeds
+$\sim 5$--$9\%$ of total importance, so the residual signal is diffuse rather
+than concentrated in one driver. Notably, the covariate set \emph{does} include
+the categorical site classifiers one might expect to carry a regular bias ---
+NFI development class, Cajander fertility class, growing-site type
+(\texttt{kasvup\_tyyppi}), and dominant species --- yet none of them ranks among
+the leading predictors (development class, for instance, is 17th--38th). There
+is thus no clean class-wise residual bias, e.g.\ by site or soil type, of the
+kind that might have been anticipated; the residual structure is carried by
+continuous gradients (biomass, soil chemistry, climate), not by discrete
+site categories. That structurally different models have their residuals
+ordered by the \emph{same} covariates confirms the unexplained variance is a
+property of the data and the site, not of any one model's kinetics.
+
+Table: Out-of-bag $R^2$ of the random-forest residual model, per calibrated
+model (calibration sample, \num{54} site covariates, log-residual target).
+\label{tab:rfoob}
+
+| Model    | SP1  | TP2  | TP3  | Yasso07 | Yasso15 | Yasso20 |
+|----------|-----:|-----:|-----:|--------:|--------:|--------:|
+| OOB $R^2$ | 0.42 | 0.50 | 0.52 | 0.42    | 0.38    | 0.34    |
+
+```{r fig-rfheat, fig.cap="Random-forest residual-predictor importance (relative, within-model) for the calibration sample; the most important covariates are shown and column labels give the out-of-bag $R^2$. Stand basal area at 1985 (\\texttt{basal\\_area\\_85}) tops every model, followed by soil chemistry and climate, and the ordering is shared across structurally different models. \\label{fig:rfheat}", out.width="85%", fig.align="center"}
+show_fig(latest(mm_dir, "multimodel_rf_importance_heatmap_[0-9].*\\.png"))
+```
+
+### [TO DISCUSS --- stand structure/age as the leading residual driver]
+
+\emph{For joint interpretation.} The leading residual predictor is stand basal
+area at 1985, a proxy for stand development stage and standing biomass; the
+explicit NFI development class (\texttt{dev\_class\_85}) is by contrast a weak
+predictor (ranked 17th--38th across models). No direct stand-age variable is
+currently in the covariate set. Whether to read \texttt{basal\_area\_85} as a
+stand-age/development signal --- and whether to add an explicit age covariate to
+sharpen it --- is the open interpretive question to settle before finalising
+this paragraph.
+
+## Identifiability and information gain\label{sec:identifiability}
+
+The convergence diagnostics confirm that good $\hat{R}$ coexists with weak
+identification. Three independent signatures locate where the data actually
+informs the parameters.
+
+\textbf{Prior-pinning.} The fraction of free parameters sitting within
+$0.5\sigma$ of their prior centre rises sharply with model dimension: SP1
+1/6, TP2 2/8, TP3 6/10, Yasso07 13/20, Yasso15 16/26, Yasso20 17/26. The added
+degrees of freedom in the larger models are absorbed by the prior, not by the
+data. The per-parameter prior-vs-posterior marginals (Appendix
+§\ref{sec:marginals}) show this directly.
+
+\textbf{Ridge correlations.} In all three Yasso models the transfer fractions
+leaving a common pool are almost perfectly anti-correlated --- e.g.
+$\rho(p_{EN},p_{EA}) \approx -0.98$ and $\rho(p_{NE},p_{NA}) \approx -0.89$ to
+$-0.98$. The likelihood constrains the \emph{net} flux out of each pool, not how
+that flux splits between destinations; the split rides freely along an
+anti-correlation ridge. The per-parameter KL spectra for all three Yasso
+models (Figures \ref{fig:kl07}--\ref{fig:kl20}), with bars coloured by
+parameter class, tell the same story in each: the twelve transfer fractions
+(orange) each gain $<1$ nat, while the auxiliary turnover parameters (purple)
+and the climate-and-size modifiers (green) absorb almost all of the information
+the data carry. The pattern is consistent across Yasso07, Yasso15 and Yasso20,
+which is what makes the diagnosis structural rather than model-specific.
+
+\textbf{Where the information goes: $\sigma_{\mathrm{input}}$.} The litter
+multiplier is the parameter the data speaks to most loudly, and it does
+strikingly different work in each structure (Table \ref{tab:siginput}). The
+single-pool SP1 scales inputs \emph{down} by a factor of three (median
+\num{0.31}); the two- and three-pool transient models scale them \emph{up}
+by an order of magnitude (TP2 $\sim 13\times$, TP3 $\sim 13\times$); the
+Yasso family sits in between, with Yasso20 needing a threefold increase to
+overcome its baseline under-prediction. This is itself an intercomparison
+result: each structure reaches the same observed stocks by a different
+implied litter flux, and $\sigma_{\mathrm{input}}$ is where that structural
+disagreement is recorded. For the Yasso development programme specifically,
+the reading is that --- on this dataset --- the two SOC campaigns inform the
+\emph{aggregate turnover} (via $\sigma_{\mathrm{input}}$ and the climate
+modifiers) but carry almost no information about the inter-pool partitioning;
+collecting pool-resolved or fractionated measurements would be the way to
+identify the transfer fractions.
+
+Table: Posterior of the litter-input multiplier $\sigma_{\mathrm{input}}$
+(median and 95\% CI). A value of 1 means no rescaling.
+\label{tab:siginput}
+
+| Model   | Median | 95\% CI        | Implied input change |
+|---------|-------:|:--------------:|:--------------------:|
+| SP1     | 0.31   | [0.25, 0.37]   | $\sim 3\times$ lower  |
+| TP2     | 13.4   | [8.0, 21.1]    | $\sim 13\times$ higher |
+| TP3     | 12.7   | [10.3, 15.2]   | $\sim 13\times$ higher |
+| Yasso07 | 1.37   | [1.04, 1.74]   | near baseline          |
+| Yasso15 | 1.91   | [1.58, 2.28]   | $\sim 2\times$ higher  |
+| Yasso20 | 2.98   | [2.26, 3.91]   | $\sim 3\times$ higher  |
+
+```{r fig-kl07, fig.cap="Information gain (KL divergence, posterior $\\|$ prior) per parameter for Yasso07, bars coloured by parameter class. The 12 transfer fractions (orange) each gain well under 1 nat, while the auxiliary turnover parameters (purple) and climate-and-size modifiers (green) gain the most --- the data inform aggregate turnover, not the inter-pool splits. \\label{fig:kl07}", out.width="85%", fig.align="center"}
+show_fig(latest(file.path(diag_dir, "Yasso07"), "Yasso07_kl_divergence_[0-9].*\\.png"))
+```
+
+```{r fig-kl15, fig.cap="KL divergence per parameter for Yasso15 (same colour scheme). The transfer fractions again gain almost no information relative to the prior. \\label{fig:kl15}", out.width="85%", fig.align="center"}
+show_fig(latest(file.path(diag_dir, "Yasso15"), "Yasso15_kl_divergence_[0-9].*\\.png"))
+```
+
+```{r fig-kl20, fig.cap="KL divergence per parameter for Yasso20 (same colour scheme). Despite all twelve fractions being free, none is appreciably informed by the data. \\label{fig:kl20}", out.width="85%", fig.align="center"}
+show_fig(latest(file.path(diag_dir, "Yasso20"), "Yasso20_kl_divergence_[0-9].*\\.png"))
+```
+
+## Discussion
+
+The results support a coherent reading. Once initialisation, likelihood, error
+model, and priors are homogenised, the six models converge to a narrow band of
+modest predictive skill, and the small differences that remain track structure
+coherently across the calibration/holdout split. Crucially, the transient
+initialisation lets the calibrated models reproduce the phenomenon HIKET set out
+to examine: a post-1985 SOC increase that begins to saturate toward the present
+(Figures \ref{fig:delta}, \ref{fig:meansoc}), in place of the flat or declining
+trajectory a steady-state start imposes. The match at the 2006 and 2024
+campaigns is good; the main residual is an over-predicted 1985 baseline and a
+somewhat shallower accumulation slope, captured best by the simpler models.
+
+That residual is better read as an open question than as a model deficiency,
+because the pre-1985 phase of the approach is deliberately coarse. No historical
+litter or climate record exists for 1917--1985: the pre-run interpolates litter
+linearly from a single calibrated 1917 anchor ($\sigma_{\mathrm{init}}$) under a
+constant climate, so the early trajectory rests entirely on calibration and
+carries large uncertainty. A connected and still-unresolved tension concerns the
+litter inputs. The plot-level Tupek inputs used here are approximately flat over
+the observed period, whereas national-scale input reconstructions are lower in
+the past and rise toward the present --- a shape that mirrors the SOC trend
+itself. If the true historical inputs were lower and increasing, both the
+over-predicted 1985 baseline and the too-shallow slope would shrink; if the flat
+plot-level inputs are correct, then the coincidence of a rising SOC trend with
+flat inputs is itself informative, and may be what masked the initialisation
+problem in earlier work. The present data cannot settle this. The transient
+calibration is therefore best framed as a proof of concept --- a first
+demonstration that the approach can represent the observed accumulation and
+incipient saturation --- whose natural successor is a dedicated historical
+reconstruction supplying genuine priors for the pre-1985 phase rather than
+leaving it to calibration.
+
+Two structural messages emerge. First, the three simple transient models are
+not just a low-complexity baseline for the Yasso family to beat: in plot-level
+predictive skill TP2 and TP3 are competitive with, and on this dataset
+marginally better than, the full Yasso family, while remaining far easier to
+identify. We are careful not to over-read this --- ``competitive on $R^2$'' is
+not ``structurally adequate''. The aggregate mean-SOC trajectories of the
+simple models (Figure \ref{fig:meansoc}) are less convincing than their
+plot-level metrics suggest, so the claim is the narrow one that added pool
+structure buys little \emph{predictive} skill here, not that a one- to
+three-pool model is a sufficient description of the system. Second, the added structural detail of the Yasso models is largely
+\emph{unrewarded} by these data: their extra degrees of freedom flow into
+prior-pinned, ridge-correlated transfer fractions that the two SOC campaigns
+cannot resolve, and Yasso20 --- the most complex member, with all twelve
+fractions free --- is the weakest predictor and the one most dependent on
+input rescaling to escape its baseline bias. We read this as a light caution
+rather than a verdict: the complexity may simply exceed what two SOC
+observations per plot can constrain, and the conclusions here are drawn from
+the \emph{ensemble} rather than from any single model. Pool-resolved
+measurements would be required to test whether the Yasso partitioning carries
+predictive value that the present data cannot expose.
+
+### The over-prediction is a property of the likelihood\label{sec:biasdisc}
+
+All six calibrated models over-predict slightly (§\ref{sec:residuals}), reversing
+the baseline under-prediction. This is not evidence that Finnish soils hold less
+carbon than the models imply --- it is a direct consequence of the
+multiplicative-normal error model. With the observation standard deviation
+scaling on the prediction, under-predicting a high-SOC plot incurs a far larger
+\emph{relative} penalty than over-predicting it by the same amount (the penalty
+on a fractional error $\delta$ behaves as $\delta^2/(1+\delta)^2$: unbounded as
+$\delta\to-1$, bounded as $\delta\to\infty$). The calibration therefore hedges
+upward, and the more so the less between-plot variance the model can explain ---
+which is why the bias tracks $R^2$ inversely and is largest for the lowest-skill
+models. Re-scoring confirms the offset is a near-uniform $\approx 10$--$16\%$
+multiplicative shift; a symmetric log-error model, which carries no such
+asymmetry, would re-centre the log-residuals at zero and remove essentially all
+of it. Crucially, the bias is the \emph{only} headline sensitive to the
+likelihood choice: the skill ranking, the fraction non-identifiability, and the
+input-dominance result are governed by the information content of two SOC
+observations per plot, not by the error-model shape, and are invariant to it. We
+therefore report the bias as a modelling-choice consequence and read the
+structural conclusions as robust to it.
+
+### Forcing sensitivity and the resolved TP3 oscillation\label{sec:tp3osc}
+
+Earlier TP3 runs (and, mildly, TP2) showed an interannual ringing in mean SOC,
+absent in SP1 and the Yasso family. Two distinct effects are superimposed here,
+and separating them matters. The first was a genuine \emph{numerical} artefact.
+TP3 was the \emph{only} model integrated by an explicit annual Euler step, and
+when a pool turns over faster than the step the Euler update factor
+$(1-\alpha_A\xi)$ turns negative, so the pool overshoots its equilibrium each
+year. At the posterior median this inflated the trajectory roughness by roughly
+one to three orders of magnitude (mean $|\Delta^2\mathrm{SOC}|$ up to
+$\sim\!10^{3}$--$10^{4}$ tC\,ha$^{-1}$ on individual plots). Replacing TP3's
+integrator with the exact matrix-exponential step now used throughout the
+ensemble (§\ref{models-tp3}) removes that artefact and cuts trajectory roughness
+by roughly $5$--$700\times$; under constant forcing the exact step relaxes
+monotonically to the equilibrium the Euler step overshoots.
+
+The exact integrator does \emph{not}, however, make the TP3 trajectory smooth,
+and it should not. A bounded interannual oscillation remains, and it is
+\emph{physical}. TP3 reaches the observed stocks not by slow turnover but by
+holding carbon in a fast active pool fed by heavily inflated inputs
+($\sigma_{\mathrm{input}}\approx 13$--$20$; §\ref{sec:identifiability}), which
+pushes the active pool's residence time below one year: at the posterior median
+$\alpha_A\xi$ has median $\approx 1.4$--$2.0$ and exceeds~1 in
+$\sim\!95$--$100\%$ of years, more in warm years. A pool that turns over faster
+than the annual step re-equilibrates to each year's climate
+($A_{\mathrm{ss}}=J/\alpha_A\xi$, small in warm years, large in cold), so total
+SOC genuinely tracks interannual climate. This residual oscillation is
+\emph{not} removable by finer time resolution: re-integrating the same posterior
+with twelve monthly sub-steps --- seasonal temperature reconstructed from
+$\bar T$ and its amplitude --- reduces roughness by only $\sim\!10$--$20\%$ and
+shifts mean SOC by $<2$ tC\,ha$^{-1}$, because the seasonal cycle is already
+inside $\xi$ (the four-node quadrature of §\ref{models-yasso07}) and the residual
+signal is year-to-year, not sub-annual.
+
+The contrast with the other models is therefore \emph{structural}, not numerical
+--- all six now integrate exactly. It is governed by two quantities: how fast the
+active pool turns over ($\alpha_A\xi$ relative to~1) and what fraction of the
+total stock that pool holds. TP2's active pool is comparably fast
+($\alpha_A\xi\approx 1.6$) but holds only $\sim\!23\%$ of total SOC, the rest
+buffered in humus, so its total barely ripples (roughness $\sim\!3.7$ vs TP3's
+$\sim\!9.3$); TP3's fast pool holds a comparable share ($\sim\!26\%$) but its
+three-pool cascade lets the fluctuation propagate through the intermediate pool
+as well, and its higher stocks amplify the absolute swing. SP1 sits at the
+opposite extreme: a single pool turning over on century timescales
+($\alpha\xi\approx 0.003$) that simply accumulates litter --- perfectly smooth
+and still rising through the window. The Yasso family parks most carbon in the
+slow humified pool, so despite fast AWEN pools it never enters the sub-annual
+stock regime and stays smooth. The genuine structural point is thus unchanged:
+TP3's fast-pool, inflated-input solution is the same under-identification seen
+statically as input-dominated information gain and as the elevated
+invalid-proposal rate ($8$--$17\%$); the interannual oscillation is a
+\emph{symptom} of that solution, correctly rendered, not a numerical defect.
+The mean-SOC and increment figures below are the exact-integrator run; the TP3
+oscillation they show is the physical residual, not the former Euler ringing.
+
+### [PLACEHOLDER --- residual Yasso-specific over-accumulation]
+
+\emph{To resolve.} After removing the likelihood-induced offset
+(§\ref{sec:biasdisc}), test via a symmetric-lognormal refit whether any
+Yasso-specific over-prediction survives --- e.g. transient over-filling of the
+slow humified pool during the 1917--1985 pre-run. Current evidence bounds it to
+small.
+
+---
+
 # Key design decisions
 
 1. **Transient initialisation via a 68-year pre-run.** The 1985 SOC
@@ -1363,12 +2108,13 @@ calibration used, regardless of any subsequent updates to `Data_work.R`.
    directly interpretable as evidence for or against a post-disturbance
    recovery narrative.
 
-2. **Uniform pre-run protocol across all six models.** SP1/TP2 use exact
-   analytical steps; TP3 uses Euler steps matching its runtime method;
-   Yasso07/15/20 use the Fortran solver with `C_final` chaining. The
-   protocol produces the same conceptual quantity (initial state at 1985)
-   for all models; structural differences in the resulting posteriors are
-   not contaminated by initialisation differences.
+2. **Uniform pre-run protocol and exact integration across all six models.**
+   SP1/TP2/TP3 use exact analytical per-step solutions (closed form for one and
+   two pools; closed-form matrix exponential for the three-pool cascade) and
+   Yasso07/15/20 use the Fortran matrix-exponential solver with `C_final`
+   chaining. Every model thus integrates its linear pool system exactly, so the
+   inter-model differences are structural, not numerical; and the pre-run
+   produces the same conceptual quantity (initial state at 1985) for all.
 
 3. **Six models spanning two design axes.** Pool complexity (SP1 $\to$
    TP2 $\to$ TP3 $\to$ Yasso07) and climate integration (Yasso07 $\to$
@@ -1453,6 +2199,78 @@ calibration used, regardless of any subsequent updates to `Data_work.R`.
 18. **No physical-ceiling rejection** in the likelihood. Implausible
     predictions are penalised via the log-likelihood, not a hard cap.
     Consistent with Viskari (2022).
+
+---
+
+# Appendix: prior and posterior marginals\label{sec:marginals}
+
+For every free parameter in every model, the panels below overlay the
+posterior (solid) on its prior (dashed), both in physical (back-transformed)
+units. They are the visual counterpart of the identifiability discussion
+(§\ref{sec:identifiability}): where the data inform a parameter, the posterior
+contracts and shifts away from the prior; where they do not, the posterior sits
+on top of the prior. The transfer fractions of the Yasso models are the clearest
+example of the latter --- posterior $\approx$ prior, the signature of
+non-identifiability --- while the auxiliary turnover and climate parameters show
+the strongest contraction. Each panel's $x$-axis is clipped to the union of the
+posterior and prior central ranges so that heavy prior tails do not compress the
+posterior to an unreadable spike.
+
+## SP1
+
+```{r fig-marg-sp1, fig.cap="SP1: prior (dashed) vs posterior (solid) for all six free parameters. \\label{fig:margsp1}", out.width="92%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "SP1"), "SP1_marginals_highlight_[0-9].*\\.png"))
+```
+
+## TP2
+
+```{r fig-marg-tp2a, fig.cap="TP2 transfer/humification fractions: prior vs posterior. \\label{fig:margtp2a}", out.width="78%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "TP2"), "TP2_marginals_fractions_[0-9].*\\.png"))
+```
+
+```{r fig-marg-tp2b, fig.cap="TP2 climate and auxiliary parameters: prior vs posterior. \\label{fig:margtp2b}", out.width="92%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "TP2"), "TP2_marginals_climate_nuisance_[0-9].*\\.png"))
+```
+
+## TP3
+
+```{r fig-marg-tp3a, fig.cap="TP3 transfer fractions ($p_S$, $p_H$): prior vs posterior. \\label{fig:margtp3a}", out.width="78%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "TP3"), "TP3_marginals_fractions_[0-9].*\\.png"))
+```
+
+```{r fig-marg-tp3b, fig.cap="TP3 climate and auxiliary parameters: prior vs posterior. \\label{fig:margtp3b}", out.width="92%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "TP3"), "TP3_marginals_climate_nuisance_[0-9].*\\.png"))
+```
+
+## Yasso07
+
+```{r fig-marg-y07a, fig.cap="Yasso07 twelve transfer fractions: posterior $\\approx$ prior throughout --- the non-identifiability signature. \\label{fig:margy07a}", out.width="100%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "Yasso07"), "Yasso07_marginals_fractions_[0-9].*\\.png"))
+```
+
+```{r fig-marg-y07b, fig.cap="Yasso07 climate, size and auxiliary parameters: prior vs posterior. \\label{fig:margy07b}", out.width="100%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "Yasso07"), "Yasso07_marginals_climate_nuisance_[0-9].*\\.png"))
+```
+
+## Yasso15
+
+```{r fig-marg-y15a, fig.cap="Yasso15 twelve transfer fractions: prior vs posterior. \\label{fig:margy15a}", out.width="100%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "Yasso15"), "Yasso15_marginals_fractions_[0-9].*\\.png"))
+```
+
+```{r fig-marg-y15b, fig.cap="Yasso15 climate, size and auxiliary parameters: prior vs posterior. \\label{fig:margy15b}", out.width="100%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "Yasso15"), "Yasso15_marginals_climate_nuisance_[0-9].*\\.png"))
+```
+
+## Yasso20
+
+```{r fig-marg-y20a, fig.cap="Yasso20 twelve transfer fractions: prior vs posterior. Despite all twelve being free, none is appreciably informed by the data. \\label{fig:margy20a}", out.width="100%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "Yasso20"), "Yasso20_marginals_fractions_[0-9].*\\.png"))
+```
+
+```{r fig-marg-y20b, fig.cap="Yasso20 climate, size and auxiliary parameters: prior vs posterior. \\label{fig:margy20b}", out.width="100%", fig.align="center", fig.pos="H"}
+show_fig(latest(file.path(diag_dir, "Yasso20"), "Yasso20_marginals_climate_nuisance_[0-9].*\\.png"))
+```
 
 ---
 

@@ -190,12 +190,35 @@ a "low-pass climate response"; it was a **numerical artefact**. Fixed in
 (`.tp3_step`). Verified by `doublechecks/test_tp3_exact.R`: closed-form ==
 reference matrix-exp to 1.6e-12; under constant forcing Euler rings (roughness
 0.28) while exact is monotonic (0.006), mean SOC identical (40.90 vs 40.88).
-Diagnostic clincher: TP2's active pool is *faster* (`alpha_A*xi~1.5`) yet smooth
-because it integrates *exactly*. **Consequence: TP3 must be re-calibrated** for
-the doc's TP3 posterior/figures (RUN 20260608) to reflect the exact integrator;
-stocks/skill change negligibly, the ringing disappears. The only remaining non-
-exact path is the Yasso diagonal-dominance **Euler fallback** (a guard that the
-stick-breaking budget keeps from firing).
+**Consequence: TP3 must be re-calibrated** for the doc's TP3 posterior/figures
+(RUN 20260608) to reflect the exact integrator; stocks/skill change negligibly.
+The only remaining non-exact path is the Yasso diagonal-dominance **Euler
+fallback** (a guard that the stick-breaking budget keeps from firing).
+
+**IMPORTANT correction (2026-07-01, verified on the real exact run
+`TP3_posterior_20260630_090644`):** the exact integrator does **NOT** make TP3
+smooth — the earlier "the ringing disappears" expectation was WRONG. Two effects
+were conflated. (1) Euler added a huge *numerical* overshoot (posterior-median
+trajectory roughness up to ~10³–10⁴ tC/ha on some plots); exact removes it, cutting
+roughness ~5–700×. (2) A **bounded, genuinely physical** interannual oscillation
+*survives* exact integration: at the posterior median `alpha_A*xi` has median
+**~1.4–2.0** (not ~1.1) and exceeds 1 in **~95–100%** of years, so the fast active
+pool re-equilibrates to each year's climate (`A_ss=J/(alpha_A*xi)`) → total SOC
+genuinely tracks interannual climate. **Sub-annual integration does NOT fix it**:
+re-integrating the same posterior with 12 monthly sub-steps (seasonal T from
+`temp_mean`+amplitude) cuts roughness only ~10–20% and shifts mean SOC <2 tC/ha —
+the seasonal cycle is already inside `xi`, the residual is year-to-year. **The
+TP2-vs-TP3 contrast is STRUCTURAL, not the integrator** (both exact): governed by
+active-pool turnover × that pool's SOC share. Posterior-median clincher (30 plots):
+SP1 `alpha*xi`≈0.003, share 100%, roughness 0.08 (single slow pool, still rising);
+TP2 `alpha_A*xi`≈1.61, active share ~23%, roughness ~3.7 (fast pool but mostly
+buffered in humus); TP3 `alpha_A*xi`≈1.86, active share ~26%, roughness ~9.3 (fast
+pool + 3-pool cascade propagates the swing + higher stocks). Yasso parks carbon in
+slow humus → never sub-annual → smooth. **The oscillation is a correct symptom of
+TP3's fast-pool/inflated-input (`sigma_input`≈13–20) under-identification, not a
+defect.** Docs reframed: `HIKET_calibration.Rmd` §sec:tp3osc + the two forward refs.
+Reproducible checks in `doublechecks/`: `tp3_exact_vs_euler_realforcing.R`,
+`tp3_subannual_forcing_test.R`, `xmodel_turnover_share.R`.
 
 **Deployment correction (2026-06-30):** the exact integrator was NOT actually
 on Puhti for the "2026-06-17" re-run — the `.tp3_step` rewrite sat *uncommitted*
@@ -348,6 +371,34 @@ multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
 ---
 
 ## Known outstanding items
+
+- **🚩 ROIHU-PHASE PRIORITY — physically-bounded input priors (re-calibration).**
+  *Decided 2026-07-01. A SessionStart hook (`.claude/settings.json`) auto-surfaces
+  this on the first Roihu session; do it before any new calibration.* The problem:
+  `sigma_input` is homogenized as a weak Tier-3 nuisance (log-transform, centre 1,
+  log-SD 0.5) — but litter inputs have a **physical referent** (Tupek litter model +
+  NPP ceiling) that this prior throws away. Result: the posterior blows through by
+  5–6σ. Effective litter flux = `sigma_input × raw_J` (raw ≈ 2.5 tC/ha/yr, shared by
+  all six models): **SP1 0.8, Yasso07 3.5, Yasso15 4.8, Yasso20 7.5** (all physical,
+  ≤ ~9 NPP ceiling) but **TP2 34, TP3 50 tC/ha/yr — 13–20×, above boreal NPP =
+  physically impossible.** TP2/TP3 buy their (best) R² by manufacturing carbon; same
+  root cause as the TP3 oscillation (cascade-starved fast pool force-fed). **The fix:**
+  put a PHYSICAL bound on the effective *flux*, not the abstract multiplier, homogeneous
+  across models — `sigma_input × J_raw ∈ ~[0.5, 9]` tC/ha/yr AND `sigma_init ×
+  sigma_input × J_full ∈ ~[0.5, 9]` (the two sigmas couple via the 1917 pre-run flux;
+  `J_1917 = J_full × sigma_init × sigma_input`). Implement as a truncated-lognormal on
+  the fluxes (or hard cap `sigma_input ≲ 3.5`, `sigma_init ∈ [0.1, 1.5]`). **Note:**
+  `sigma_init` is ALREADY physically behaved (all posteriors 0.19–0.72, < 1 = the
+  post-exploitation recovery narrative) — it needs only a light guardrail; `sigma_input`
+  is the one to fix. **Consequence:** removes TP2/TP3's escape hatch → forces misfit
+  onto the (now prior-pinned) rates or into a VISIBLE R² hit = exposes structural
+  inadequacy instead of hiding it (sharpens the thesis). **Caveat:** full six-model
+  re-calibration + mixing check (leveraged param clamped near a boundary may mix worse).
+  Verification scripts: `doublechecks/sigma_input_spread.R` (per-model posterior +
+  σ-distance) and `doublechecks/effective_litter_flux_vs_physical.R` (effective flux
+  vs bounds). Docs: manuscript outline §"multiplier crosses a
+  physical line" + §"Physically-bounded input priors"; memory [[sigma-input-physical-bounds]].
+  To silence the hook once done: `touch .claude/.roihu_input_bounds_done`.
 
 - **⚠ TP3 exact-integrator re-calibration RUNNING on Puhti (2026-06-30, job
   35323262, commit ff216ce), awaiting results — THIS is the real one.**

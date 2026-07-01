@@ -51,12 +51,11 @@ OUTDIR <- file.path(INDIR, "SOC_maps")
 dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
 # --- model -> predictive bundle (keep in sync with build_soc_matrices.R) ---
-# NOTE: TP3 is the pre-fix (Euler) bundle; swap when the exact-integrator
-# re-calibration is synced from Puhti, then re-run.
+# TP3 = EXACT-integrator re-calibration (RUN 20260630_090644, synced 2026-07-01).
 bundles <- c(
   SP1     = "SP1_posterior_predictive_20260608_015026.rds",
   TP2     = "TP2_posterior_predictive_20260608_020212.rds",
-  TP3     = "TP3_posterior_predictive_20260608_020212.rds",
+  TP3     = "TP3_posterior_predictive_20260630_090644.rds",
   Yasso07 = "Yasso07_posterior_predictive_20260611_032825.rds",
   Yasso15 = "Yasso15_posterior_predictive_20260611_032825.rds",
   Yasso20 = "Yasso20_posterior_predictive_20260611_033140.rds"
