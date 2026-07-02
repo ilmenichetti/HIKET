@@ -1,0 +1,188 @@
+---
+title: "Physically-bounded litter-input priors"
+subtitle: "Literature basis and design choices for the `sigma_input` re-parameterisation (HIKET)"
+author: "Lorenzo Menichetti (HIKET project)"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  pdf_document:
+    toc: false
+    number_sections: true
+    latex_engine: xelatex
+    extra_dependencies: ["booktabs", "amsmath", "array"]
+geometry: margin=2.5cm
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+# Summary
+
+`sigma_input` multiplies the litter forcing every model integrates. Under the
+current homogenised prior it is a weak nuisance parameter, and the likelihood
+drags two models (TP2, TP3) to effective litter fluxes of 34--50 tC/ha/yr ---
+above the net primary production of *any* forest biome on Earth. This note
+records the literature basis for replacing that weak prior with a **physical
+bound on the effective litter flux**, homogeneous across all six models, and the
+design choices taken. It feeds the six `Prior_specs/*_priors.R` and the
+manuscript methods.
+
+**Decision:** bound the effective flux to the *widest defensible boreal* window,
+$\texttt{sigma\_input} \times J \in [0.5,\ 8.7]$ tC/ha/yr, anchored on the
+Gower et al. (2001) boreal total-NPP range.
+
+# The problem
+
+The effective input flux is $\texttt{sigma\_input} \times J$, where $J$ is the
+tree-litter object shared by all six models
+(`Data/LitterData/tree_litter_per_site_year_awen_*.csv`, Tupek et al.), median
+$\approx 2.8$ tC/ha/yr across plots (`nwl + fwl + cwl`: non-woody + fine-woody +
+coarse-woody litter, in AWEN pools).
+
+The current prior treats `sigma_input` as a weak Tier-3 nuisance (log-transform,
+centre 1, log-SD 0.5 $\Rightarrow$ 95% CI $\approx [0.37, 2.66]$). But litter
+input has a physical referent the weak prior discards, so the posterior blows
+through it (Table 1; `doublechecks/effective_litter_flux_vs_physical.R`).
+
+Table: Posterior-median effective litter flux by model.
+
+| Model    | `sigma_input` (median) | effective flux (tC/ha/yr) | plausible? |
+|----------|:----------------------:|:-------------------------:|------------|
+| SP1      | 0.32 | 0.8  | yes |
+| Yasso07  | 1.4  | 3.5  | yes |
+| Yasso15  | 1.9  | 4.8  | yes |
+| Yasso20  | 3.0  | 7.5  | yes (very productive edge) |
+| **TP2**  | 13.6 | **34** | **no --- $4\times$ the most productive boreal forest** |
+| **TP3**  | ~20  | **50** | **no --- $6\times$** |
+
+TP2/TP3 buy their (best-in-study) $R^2$ by manufacturing carbon --- the same root
+cause as the TP3 interannual oscillation (a cascade-starved fast pool force-fed to
+reach the observed stock). `sigma_input`'s distance from $\sim 1$ is really a
+**structural-adequacy gauge**, interpretable only once the prior encodes the
+physical ceiling.
+
+# What `sigma_input` legitimately represents
+
+$J$ is **tree litter only** (foliage/needles + fine roots + branches + stumps).
+Two physical terms are *not* in $J$ and are what `sigma_input` should absorb:
+
+1. **Understory / ground-vegetation (incl. moss) litter** --- genuinely missing
+   from $J$. In Finnish boreal forest this is $\sim$15--35% of total litter
+   production (larger at northern, less productive sites): e.g. in a boreal
+   *Betula pendula* stand total soil-C input (tree + understory) was 2.83
+   tC/ha/yr with understory **35% $\approx$ 0.99 tC/ha/yr**. So
+   $\texttt{sigma\_input} \approx 1.2\text{--}1.5$ is *physically justified by
+   understory alone*.
+2. **Tree-litter-model bias** --- Tupek model error in the tree flux itself.
+
+Neither mechanism can plausibly inflate soil input several-fold: a boreal
+forest's *total* detritus input to soil is capped by its net primary production.
+
+# Literature envelope (boreal, widest defensible)
+
+The quantity to bound is **total forest detritus input to soil** (foliage + woody
++ fine roots + understory), i.e. the effective flux --- **not** aboveground
+litterfall, which most papers report and which is only $\sim$half of the total.
+
+**Anchor --- Gower et al. (2001).** Boreal total (above- + belowground) NPP ranges
+**52--868 gC m$^{-2}$ yr$^{-1}$, mean 424** $\rightarrow$ **0.52--8.68 tC/ha/yr,
+mean 4.24**. At steady state a forest's total litter/detritus input to soil
+$\approx$ its NPP (all production eventually becomes detritus). NPP is in fact a
+**generous upper bound** on soil input, because in managed Finnish forests
+harvested stemwood leaves as timber rather than litter --- exactly what "as wide
+as defensible" calls for. Corroborated across the boreal/temperate/tropical global
+database of Luyssaert et al. (2007).
+
+**Cross-checks --- all comfortably inside [0.52, 8.68]:**
+
+- Finnish *Pinus sylvestris* measured tree litter: aboveground 1.31--2.36 +
+  belowground 0.70--0.91 = **2.0--3.3 tC/ha/yr** (belowground 23--37% of total)
+  --- matches our $J$ median 2.8.
+- $+$ understory/moss $\sim$0.5--1.0 $\rightarrow$ typical boreal *total* input
+  $\approx$ **2.5--4.3 tC/ha/yr**.
+- Productive Norway spruce aboveground litterfall up to $\sim$4 tC/ha/yr (central
+  Europe $\sim$8 Mg ha$^{-1}$ biomass; Berg et al. synthesis).
+- **Global context:** even the most productive *tropical* forests reach total NPP
+  $\approx$ 12--15 tC/ha/yr. TP2/TP3's 34--50 tC/ha/yr exceed the NPP of **any**
+  forest biome on Earth by 2--4$\times$ --- categorically impossible, let alone
+  for boreal.
+
+# Chosen bounds
+
+Physical window on the effective total-input flux (homogeneous, all six models):
+$$\boxed{\ \texttt{sigma\_input} \times J \in [0.5,\ 8.7]\ \text{tC/ha/yr}\ }$$
+anchored on the Gower et al. (2001) boreal total-NPP range (widest defensible;
+NPP $\geq$ actual soil input). At the plot-median $J \approx 2.8$ this maps to a
+multiplier window $\texttt{sigma\_input} \in \approx [0.18,\ 3.1]$ ($\approx
+[0.2, 3.5]$ at the lower $J \approx 2.5$).
+
+`sigma_init` is already physically behaved (posteriors 0.19--0.72, all $< 1$ ---
+the post-exploitation recovery narrative) and needs only a light guardrail
+($\texttt{sigma\_init} \in [0.1, 1.5]$). The two couple through the 1917 pre-run
+flux ($J_{1917} = J \times \texttt{sigma\_init} \times \texttt{sigma\_input}$);
+with both individually bounded the pre-run flux stays inside the same physical
+window, so no explicit joint constraint is imposed (verify post-run).
+
+## Consequences per model
+
+- **SP1, Yasso07, Yasso15** (0.8 / 3.5 / 4.8): well inside --- untouched.
+- **Yasso20** (7.5): **within** the widest boreal envelope ($7.5 < 8.7$). At the
+  *widest defensible* bound Yasso20 is a very-productive-but-possible boreal
+  forest, so it is deliberately **not** bound. That Yasso20 sits at the physical
+  edge is itself a reportable result.
+- **TP2, TP3** (34 / 50): **hard-bound** at the ceiling. This removes their escape
+  hatch $\rightarrow$ forces the misfit onto the (now prior-pinned) rates or into
+  a visible $R^2$ hit = exposes structural inadequacy instead of hiding it.
+
+# Implementation
+
+Bound the **effective flux** (the physical quantity), not the abstract
+multiplier, using each plot's own $J$:
+
+- **Truncated-lognormal on `sigma_input`:** keep the weakly-informative centre-1
+  shape (log-SD 0.5) but impose a **hard wall** so that
+  $\texttt{sigma\_input} \times \bar{J} \in [0.5, 8.7]$, using the plot-mean
+  $\bar{J}$ for the truncation. Truncated-lognormal over a flat uniform: retains
+  the mild pull to 1 (no artificial preference for sitting at the ceiling) and
+  mixes better near the wall in DEzs.
+- **`sigma_init`:** light hard bounds $[0.1, 1.5]$.
+- **Homogeneous across all six** `Prior_specs/*_priors.R` --- the intercomparison
+  requires identical construction.
+
+## Caveats
+
+- **Mixing.** A leveraged parameter (TP2/TP3 `sigma_input`) clamped near a
+  boundary can mix worse; check R-hat/ESS for `sigma_input` specifically after
+  the re-calibration.
+- **Scalar vs per-plot.** `sigma_input` is one scalar; truncation uses the mean
+  $\bar{J}$, so a few high-$J$ plots may nudge just past 8.7 at the multiplier
+  ceiling. Second-order relative to killing the 13--20$\times$ inflation; noted in
+  methods.
+- **Re-calibration required.** Full six-model re-run (Roihu) + convergence check.
+
+# Decisions taken
+
+1. Scope = **boreal**, at the **widest defensible** end (Gower 2001 NPP max), not
+   European/global (a tropical ceiling would not usefully constrain even TP2; a
+   boreal ceiling is the physically correct one for a Finnish application).
+2. Bound the **effective flux**, not the multiplier, so it is homogeneous in
+   physical units across models with differing $J$.
+3. **Floor from literature** (0.5 tC/ha/yr, Gower min), not an "understory-only-
+   adds $\Rightarrow \texttt{sigma\_input} \geq 1$" argument --- keeps SP1's
+   sub-1 fit admissible rather than forcing it to a floor.
+4. Shape = **truncated-lognormal** (weak centre-1 + hard physical wall).
+5. **Yasso20 stays free** (widest envelope; $7.5 < 8.7$) --- only TP2/TP3 bind.
+
+# References
+
+- Gower, S.T. et al. (2001). Net primary production and carbon allocation patterns
+  of boreal forest ecosystems. *Ecological Applications* 11(5):1395--1411.
+- Luyssaert, S. et al. (2007). CO$_2$ balance of boreal, temperate, and tropical
+  forests derived from a global database. *Global Change Biology* 13:2509--2537.
+- Berg, B. et al. (2000). Litter fall in some European coniferous forests as
+  dependent on climate: a synthesis. *Can. J. For. Res.* doi:10.1139/x00-172.
+- Leppälammi-Kujansuu, J. et al. Below- and aboveground litter carbon inputs along
+  a boreal site-type gradient (S. Finland). *For. Ecol. Manage.*, ScienceDirect
+  S0378112721001705.
+- Tupek, B. et al. Tree litter dataset, Zenodo DOI 10.5281/zenodo.19736499.
