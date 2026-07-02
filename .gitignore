@@ -50,3 +50,13 @@ Data/Water_extension/*
 
 # Zenodo deposit archive (build artifact)
 Reporting/NextgenC_report/*.zip
+
+# Build cruft (LaTeX aux, local pipeline logs, loose reference PDFs)
+Documentation/*vibe*
+*.log
+texput.log
+Calibration_real_data_transient/pipeline_local_*.log
+Model_functions_real_data_transient/Decomposition_functions/Yasso_original/papers/*.pdf
+
+# Annotated review copy holds the user's PDF notes — local only
+Calibration_real_data_transient/documentation/HIKET_calibration_annotated.pdf
