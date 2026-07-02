@@ -17,4 +17,4 @@ if test -f ~/.Renviron; then
 fi
 echo "TMPDIR=/scratch/project_2019134" >> ~/.Renviron
 cd /scratch/project_2019134/HIKET/
-srun apptainer_wrapper exec Rscript --no-save Calibration_real_data_transient/run_TP3_transient_calibration.R
+srun Rscript --no-save Calibration_real_data_transient/run_TP3_transient_calibration.R

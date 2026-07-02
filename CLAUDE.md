@@ -83,29 +83,40 @@ Fortran `.so` binaries, `*.rds`/`*.csv` in diagnostics,
 - Run scripts interactively or via `Rscript`
 - Fortran `.so` files compiled locally for arm64 — **do not push to git**
 
-### CSC Puhti HPC (production)
-- Path: `/scratch/project_2019134/HIKET/`
+### CSC Roihu HPC (production, since 2026-07-02)
+- Path: `/scratch/project_2019134/HIKET/` (same project number as Puhti; **180-day
+  scratch cleanup** — working area only, keep code in git + final outputs on Zenodo)
+- Login: `ssh menichet@roihu-cpu.csc.fi` — **cert-based auth, re-sign the SSH
+  certificate daily** via MyCSC (24 h validity). Local `~/.ssh/config` has a `roihu`
+  alias. Host key ED25519 SHA256 `YNdesHbXhxN0hKD4mWvYGQONebjRqY+CGXDqPiZyByQ`.
 - Module: `module load r-env`
-- Fortran compilation: `apptainer_wrapper exec R CMD SHLIB <file>.f90`
+- **R runs NATIVELY — no `apptainer_wrapper`.** Batch: `srun Rscript --no-save …`;
+  interactive: `start-r` or `R --no-save`. (This is the key Puhti→Roihu change.)
+- Fortran compilation: `R CMD SHLIB <file>.f90` (native, no wrapper; AMD Zen 5 x86-64)
+- Partitions: `small` (72 h, 384 cores/node), `test` (15 min), `medium`/`large`
+  (36 h), `longrun` (10 d). Existing `--partition=small --time=36:00:00` is valid.
 - SLURM user: `menichet`
-- **⚠ DECOMMISSION ~end July 2026.** Plan: finish the in-flight TP3 exact-
-  integrator run + downstream + docs on Puhti and **close out HIKET here first**;
-  do NOT start new development on Puhti. Further work migrates to **Roihu** (CSC's
-  Puhti successor) — re-clone the repo, recompile the Fortran `.so` there (each
-  `.f90` in its own `SHLIB` call, see Fortran section), and update paths/module/
-  SLURM details below once the Roihu environment is set up.
+
+### CSC Puhti HPC (legacy — DECOMMISSIONS ~end July 2026)
+- HIKET close-out on Puhti is **DONE** (2026-07-01). Do NOT start new work here;
+  all further development is on Roihu. Retained only as a source to `rsync` any
+  remaining `runs/`/`diagnostics/`/`Data/` from before it goes offline.
+- `ssh menichet@puhti.csc.fi` (no certificate needed, unlike Roihu).
 
 ### Sync workflow
 ```bash
-# Code → Puhti
+# Code → Roihu
 git add ... && git commit -m "..." && git push
-# [on Puhti]
+# [on Roihu]
 cd /scratch/project_2019134/HIKET/ && git pull
 # Recompile .so if any .f90 changed (see Fortran section below)
 
+# Data (gitignored) → Roihu: from Mac (or one-time rsync from Puhti while it lives)
+rsync -av "<mac-repo>/Data/" menichet@roihu-cpu.csc.fi:/scratch/project_2019134/HIKET/Data/
+
 # Results → Mac
-rsync -av menichet@puhti.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data_transient/runs/ ./Calibration_real_data_transient/runs/
-rsync -av menichet@puhti.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data_transient/diagnostics/ ./Calibration_real_data_transient/diagnostics/
+rsync -av menichet@roihu-cpu.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data_transient/runs/ ./Calibration_real_data_transient/runs/
+rsync -av menichet@roihu-cpu.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data_transient/diagnostics/ ./Calibration_real_data_transient/diagnostics/
 ```
 
 ---
@@ -128,7 +139,7 @@ squeue -u menichet    # monitor
 ### Stages 2–4 — Predictive + Residuals + Comparison (after calibration)
 ```bash
 module load r-env
-apptainer_wrapper exec Rscript --no-save \
+Rscript --no-save \
   Calibration_real_data_transient/run_hiket_pipeline.R --skip-calibration
 ```
 
@@ -137,14 +148,16 @@ apptainer_wrapper exec Rscript --no-save \
 `R CMD SHLIB yasso07.f90 yasso15.f90` links both objects into a single
 `yasso07.so` and never creates `yasso15.so` — which breaks Yasso15 AND Yasso20
 (Yasso20 loads `yasso15.so`; it shares Yasso15's Fortran), and risks symbol
-shadowing. The `.so` files are gitignored, so this MUST be redone on Puhti after
-any `.f90` change — a stale `.so` silently returns garbage (e.g. zero `C_init`
-from the transient init → see the Yasso07 non-convergence post-mortem, 2026-06).
+shadowing. The `.so` files are gitignored, so this MUST be redone on Roihu after
+a fresh clone or any `.f90` change — a stale `.so` silently returns garbage (e.g.
+zero `C_init` from the transient init → see the Yasso07 non-convergence post-
+mortem, 2026-06).
 ```bash
+module load r-env
 cd Model_functions_real_data_transient/Decomposition_functions/Yasso/
 rm -f yasso07.so yasso07.o yasso07_mod.mod yasso15.so yasso15.o yasso15_mod.mod
-apptainer_wrapper exec R CMD SHLIB yasso07.f90    # separate call
-apptainer_wrapper exec R CMD SHLIB yasso15.f90    # separate call
+R CMD SHLIB yasso07.f90    # native on Roihu (no apptainer_wrapper); separate call
+R CMD SHLIB yasso15.f90    # separate call
 ```
 Quick check a `.so` is current: `yasso07_transient_init` at
 `YASSO07_DEFAULT_PARAMS` should give ~69 tC/ha; ~0 means the binary is stale.
