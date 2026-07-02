@@ -278,7 +278,7 @@ plots_real <- as.character(unique(Yasso15_climate$plot_id))
 message(sprintf("Plots after mapping: %d", length(plots_real)))
 
 if (!is.na(N_PLOTS_TEST) && N_PLOTS_TEST < length(plots_real)) {
-  set.seed(42)
+  set.seed(2025L)  # NOT 42: that is the holdout-assignment seed; reusing it makes the test subset re-draw exactly the held-out plots (0 calibration). See 2026-07-02.
   plots <- sort(sample(plots_real, N_PLOTS_TEST))
 } else {
   plots <- plots_real
