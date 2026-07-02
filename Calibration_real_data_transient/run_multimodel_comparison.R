@@ -141,7 +141,7 @@ for (m in MODELS)
   cat(sprintf("  %-8s  RUN_ID: %s\n", m, run_ids[[m]]))
 cat("\n")
 cat(sprintf("%-10s  %6s  %10s  %10s  %10s\n",
-            "Model", "R²", "RMSE (med)", "Bias (med)", "95% cov"))
+            "Model", "R²", "RMSE (med)", "Bias (med)", "Param cov"))
 cat(strrep("-", 54), "\n")
 for (i in seq_len(nrow(metrics_df))) {
   cat(sprintf("%-10s  %6.3f  %10.2f  %+10.2f  %10.3f\n",
@@ -151,6 +151,9 @@ for (i in seq_len(nrow(metrics_df))) {
               metrics_df$Bias_median[i],
               metrics_df$Coverage_95[i]))
 }
+cat(strrep("-", 54), "\n")
+cat('Param cov = fraction of obs inside the 95% CI of the predicted MEAN\n')
+cat('            (parameter uncertainty only; excludes obs error).\n')
 cat("\n")
 sink()
 message(sprintf("Metrics table: %s", metrics_txt))
@@ -170,13 +173,16 @@ if (has_holdout) {
   sink(holdout_txt)
   cat("HIKET Multi-Model Comparison — Independent Validation Metrics\n")
   cat(sprintf("Generated: %s\n\n", format(Sys.time())))
-  cat(sprintf("%-10s  %6s  %10s  %10s  %10s\n", "Model","R²","RMSE (med)","Bias (med)","95% cov"))
+  cat(sprintf("%-10s  %6s  %10s  %10s  %10s\n", "Model","R²","RMSE (med)","Bias (med)","Param cov"))
   cat(strrep("-", 54), "\n")
   for (i in seq_len(nrow(metrics_holdout_df)))
     cat(sprintf("%-10s  %6.3f  %10.2f  %+10.2f  %10.3f\n",
                 metrics_holdout_df$Model[i], metrics_holdout_df$R2[i],
                 metrics_holdout_df$RMSE_median[i], metrics_holdout_df$Bias_median[i],
                 metrics_holdout_df$Coverage_95[i]))
+  cat(strrep("-", 54), "\n")
+  cat('Param cov = fraction of obs inside the 95% CI of the predicted MEAN\n')
+  cat('            (parameter uncertainty only; excludes obs error).\n')
   sink()
   message(sprintf("Holdout metrics table: %s", holdout_txt))
   print(metrics_holdout_df[, c("Model","R2","RMSE_median","Bias_median","Coverage_95")])
@@ -226,7 +232,7 @@ for (m in MODELS) {
          legend = c(sprintf("R² = %.3f",      mt$R2),
                     sprintf("RMSE = %.1f",     mt$RMSE_median),
                     sprintf("Bias = %+.1f",    mt$bias_median),
-                    sprintf("Cov = %.2f",      mt$coverage_95)),
+                    sprintf("ParamCov = %.2f", mt$coverage_95)),
          bty = "n", cex = 0.8)
 }
 
@@ -283,7 +289,7 @@ if (has_holdout) {
     legend("topleft",
            legend = c(sprintf("R² = %.3f", mt$R2), sprintf("RMSE = %.1f", mt$RMSE_median),
                       sprintf("Bias = %+.1f", mt$bias_median),
-                      sprintf("Cov = %.2f", mt$coverage_95)),
+                      sprintf("ParamCov = %.2f", mt$coverage_95)),
            bty = "n", cex = 0.8)
   }
   bias_vals_h <- sapply(MODELS, function(m) pp[[m]]$metrics_holdout$bias_median)
@@ -421,6 +427,117 @@ message(sprintf("ΔSOC trajectory: %s", delta_png))
 
 
 # =============================================================================
+# 4b.  Plot B2: mean absolute SOC trajectory (per-model grid)
+# =============================================================================
+# Calibrated analogue of the baseline *_mean_soc_trajectory.png figures: per
+# year, the cross-plot mean of the predicted SOC (posterior-median per plot)
+# with a +/-1 SE band, plus the observed campaign means. One panel per model on
+# a shared y-axis so absolute levels and the 1985->2006 accumulation are
+# directly comparable across models and against the baselines.
+soc_traj_by_model <- lapply(MODELS, function(m) {
+  ps <- pp[[m]]$posterior_summary
+  agg <- aggregate(soc_median ~ year, data = ps,
+                   FUN = function(v) c(mean = mean(v),
+                                       se = sd(v) / sqrt(length(v))))
+  data.frame(year = agg$year,
+             mean_soc = agg$soc_median[, "mean"],
+             se_soc   = agg$soc_median[, "se"])
+})
+names(soc_traj_by_model) <- MODELS
+
+# Observed campaign means (model-independent; taken from the first model's obs)
+rd_obs <- pp[[MODELS[1]]]$residuals_df
+obs_by_year <- aggregate(soc_obs_tCha ~ year, data = rd_obs,
+                         FUN = function(v) c(mean = mean(v),
+                                             se = sd(v) / sqrt(length(v))))
+obs_by_year <- data.frame(year = obs_by_year$year,
+                          mean_obs = obs_by_year$soc_obs_tCha[, "mean"],
+                          se_obs   = obs_by_year$soc_obs_tCha[, "se"])
+
+y_soc <- range(unlist(lapply(MODELS, function(m) {
+            t <- soc_traj_by_model[[m]]; c(t$mean_soc - t$se_soc, t$mean_soc + t$se_soc) })),
+            obs_by_year$mean_obs - 1.96 * obs_by_year$se_obs,
+            obs_by_year$mean_obs + 1.96 * obs_by_year$se_obs, na.rm = TRUE)
+
+meansoc_png <- file.path(DIR_OUT, sprintf("multimodel_mean_soc_%s.png", COMP_ID))
+png(meansoc_png, width = 14L * PX_PER_IN, height = 8L * PX_PER_IN, res = PX_PER_IN)
+par(mfrow = c(2, 3), mar = c(4, 4, 3, 1), oma = c(0, 0, 2, 0))
+for (m in MODELS) {
+  t  <- soc_traj_by_model[[m]]
+  cc <- MODEL_COLS[m]
+  plot(NA, xlim = range(t$year), ylim = y_soc,
+       xlab = "Year", ylab = "Mean SOC across plots (tC/ha)", main = m)
+  polygon(c(t$year, rev(t$year)),
+          c(t$mean_soc - t$se_soc, rev(t$mean_soc + t$se_soc)),
+          col = adjustcolor(cc, 0.20), border = NA)
+  lines(t$year, t$mean_soc, col = cc, lwd = 2.5)
+  arrows(obs_by_year$year, obs_by_year$mean_obs - 1.96 * obs_by_year$se_obs,
+         obs_by_year$year, obs_by_year$mean_obs + 1.96 * obs_by_year$se_obs,
+         code = 3, angle = 90, length = 0.04, col = "firebrick", lwd = 2)
+  points(obs_by_year$year, obs_by_year$mean_obs, pch = 19, cex = 1.2, col = "firebrick")
+}
+mtext(sprintf("Calibrated mean absolute SOC trajectory  |  predicted mean +/-1 SE (line) vs observed campaign means (red)  |  comp %s", COMP_ID),
+      side = 3, outer = TRUE, line = 0.4, cex = 0.85, font = 2)
+dev.off()
+message(sprintf("Mean SOC trajectory: %s", meansoc_png))
+
+
+# =============================================================================
+# 4b. Plot B2: forcing drivers (temperature, moisture, litter input)
+# =============================================================================
+# Context for the trajectory figures (Plot B / mean SOC): cross-plot mean
+# +/- 95% CI of the three model drivers over the observed period. The climate
+# drivers (T, precip) are strongly oscillatory year-to-year while litter input
+# is smooth -- so any interannual ringing in a model's SOC trajectory (notably
+# TP3) is climate-driven, not litter-driven. Drivers are common across models,
+# so we read them from the first available input bundle. 1985 is the VMI8
+# initialisation year (near-zero applied litter) and is dropped.
+
+DIR_INPUTS <- "./Data/model_inputs"
+drivers <- tryCatch({
+  pkg <- NULL
+  for (m in MODELS) {
+    f <- file.path(DIR_INPUTS, sprintf("%s_inputs_%s.rds", m, run_ids[[m]]))
+    if (file.exists(f)) { pkg <- readRDS(f); break }
+  }
+  if (is.null(pkg)) stop("no <MODEL>_inputs_<RUN_ID>.rds bundle found in ", DIR_INPUTS)
+  cb <- do.call(rbind, pkg$climate_by_plot)
+  ib <- do.call(rbind, pkg$inputs_by_plot)
+  litcols <- setdiff(names(ib), c("plot_id", "year"))
+  ib$tot_input <- rowSums(ib[, litcols, drop = FALSE])
+  cb <- cb[cb$year >= 1986, ]; ib <- ib[ib$year >= 1986, ]   # drop init year
+  agg <- function(df, var) {
+    s <- split(df[[var]], df$year)
+    data.frame(year = as.integer(names(s)),
+               mean = sapply(s, mean, na.rm = TRUE),
+               se   = sapply(s, function(x) sd(x, na.rm = TRUE) / sqrt(sum(is.finite(x)))))
+  }
+  list(T = agg(cb, "temp_mean"), P = agg(cb, "precip"), I = agg(ib, "tot_input"))
+}, error = function(e) { message("[drivers] skipped: ", conditionMessage(e)); NULL })
+
+if (!is.null(drivers)) {
+  drivers_png <- file.path(DIR_OUT, sprintf("multimodel_drivers_%s.png", COMP_ID))
+  png(drivers_png, width = 9L * PX_PER_IN, height = 9L * PX_PER_IN, res = PX_PER_IN)
+  op <- par(mfrow = c(3, 1), mar = c(3.2, 4.6, 1.6, 1), mgp = c(2.5, 0.7, 0), las = 1)
+  band <- function(d, col) polygon(c(d$year, rev(d$year)),
+            c(d$mean - 1.96 * d$se, rev(d$mean + 1.96 * d$se)),
+            col = adjustcolor(col, 0.25), border = NA)
+  pan <- function(d, col, ylab, main) {
+    plot(d$year, d$mean, type = "n",
+         ylim = range(d$mean - 1.96 * d$se, d$mean + 1.96 * d$se),
+         xlab = "", ylab = ylab, main = main)
+    band(d, col); lines(d$year, d$mean, col = col, lwd = 2)
+  }
+  pan(drivers$T, "firebrick",   expression("Mean annual T ("*degree*"C)"),       "(a) Temperature")
+  pan(drivers$P, "steelblue",   "Annual precipitation (mm)",                     "(b) Precipitation (moisture)")
+  pan(drivers$I, "forestgreen", expression("Litter input (tC ha"^-1*" yr"^-1*")"), "(c) Total litter input")
+  mtext("Year", side = 1, line = 2.2, cex = 0.8)
+  par(op); dev.off()
+  message(sprintf("Driver panel: %s", drivers_png))
+}
+
+
+# =============================================================================
 # 5.  Plot C: Residual distributions + by KA  (2 rows, 2 cols)
 # =============================================================================
 
@@ -444,6 +561,7 @@ dens_list <- lapply(MODELS, function(m) {
   y_max <<- max(y_max, max(d$y))
   d
 })
+names(dens_list) <- MODELS   # named, so dens_list[[m]] works in the draw loop below
 # Rescale y axis then draw
 plot(NA, xlim = x_range, ylim = c(0, y_max * 1.1),
      xlab = "Residual  log(obs) - log(pred)",
@@ -717,10 +835,18 @@ if (length(ok_models) == 0) {
     if (!is.na(oob_r2[m])) sprintf("%s (OOB R2=%.2f)", m, oob_r2[m]) else m
   })
   
+  # heatmap() requires >= 2 rows and >= 2 cols; with <2 models reporting RF data
+  # (or a single shared predictor) it errors. Skip gracefully instead.
+  if (nrow(imp_mat) < 2L || ncol(imp_mat) < 2L) {
+    message(sprintf(
+      "[heatmap] Need >=2 predictors and >=2 models; have %d x %d. Skipping heatmap.",
+      nrow(imp_mat), ncol(imp_mat)))
+  } else {
+
   heat_pal <- colorRampPalette(
     c("white", "#deebf7", "#9ecae1", "#3182bd", "#08306b")
   )(100)
-  
+
   n_pred   <- nrow(imp_mat)
   plot_h   <- max(7L, round(n_pred * 0.45 + 4L))
   heat_png <- file.path(DIR_OUT,
@@ -744,6 +870,7 @@ if (length(ok_models) == 0) {
   
   dev.off()
   message(sprintf("[heatmap] Written: %s", heat_png))
+  }
 }
 
 # --- Holdout RF heatmap (mirrors Plot D, reads *_rf_importance_holdout_*.csv) ---
@@ -1055,6 +1182,52 @@ if (!is.null(site_raw_proj) && "nfi_region" %in% names(site_raw_proj)) {
 } else {
   message("[projection] nfi_region not found in site_raw.csv -- ",
           "run assign_nfi_regions.R first; skipping projection plot.")
+}
+
+# =============================================================================
+# 6c.  Plot F: transient initial-state evidence (sigma_init caterpillar)
+# =============================================================================
+# sigma_init is the ratio of 1917 litter input to the contemporary mean. A
+# posterior below 1 means the data wants a sub-equilibrium, still-accumulating
+# 1985 state -- i.e. it rejects a steady-state initialisation. We read sigma_init
+# straight from each model's physical-space posterior (the predictive bundles do
+# not carry it) and draw median + 50% + 95% intervals on a common axis.
+siginit_q <- lapply(MODELS, function(m) {
+  f <- file.path(DIR_RUNS, sprintf("%s_posterior_%s.rds", m, run_ids[[m]]))
+  if (!file.exists(f)) return(NULL)
+  post <- readRDS(f)
+  if (!("sigma_init" %in% colnames(post))) return(NULL)
+  quantile(post[, "sigma_init"], c(.025, .25, .5, .75, .975), na.rm = TRUE)
+})
+names(siginit_q) <- MODELS
+have_si <- !vapply(siginit_q, is.null, logical(1))
+
+if (any(have_si)) {
+  mods_si <- MODELS[have_si]
+  qm      <- do.call(rbind, siginit_q[mods_si])   # rows = models, cols = quantiles
+  siginit_png <- file.path(DIR_OUT, sprintf("multimodel_sigma_init_%s.png", COMP_ID))
+  png(siginit_png, width = 8L * PX_PER_IN, height = 5L * PX_PER_IN, res = PX_PER_IN)
+  par(mar = c(5.5, 6, 3, 1))
+  n  <- length(mods_si)
+  yy <- rev(seq_len(n))                            # first model at top
+  xlim <- range(c(qm, 1), na.rm = TRUE) * c(0.95, 1.05)
+  plot(NA, xlim = xlim, ylim = c(0.5, n + 0.5), yaxt = "n",
+       xlab = expression(sigma[init]~"  (1917 litter / contemporary mean)"),
+       ylab = "", main = expression("Transient initial-state evidence:  posterior of "*sigma[init]))
+  abline(v = 1, lty = 2, col = "grey40")           # steady-state reference
+  axis(2, at = yy, labels = mods_si, las = 1)
+  for (i in seq_len(n)) {
+    cc <- MODEL_COLS[mods_si[i]]
+    segments(qm[i, 1], yy[i], qm[i, 5], yy[i], col = cc, lwd = 1.6)           # 95%
+    segments(qm[i, 2], yy[i], qm[i, 4], yy[i], col = cc, lwd = 5)             # 50%
+    points(qm[i, 3], yy[i], pch = 21, bg = "white", col = cc, lwd = 2, cex = 1.4)
+  }
+  mtext("dashed line = steady-state (no transient accumulation)",
+        side = 1, line = 4.2, cex = 0.8, col = "grey30")
+  dev.off()
+  message(sprintf("sigma_init caterpillar: %s", siginit_png))
+} else {
+  message("[sigma_init] no posterior RDS with sigma_init found -- skipping caterpillar")
 }
 
 # =============================================================================

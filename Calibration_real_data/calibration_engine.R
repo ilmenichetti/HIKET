@@ -1274,13 +1274,20 @@ run_diagnostics <- function(chain_results, to_original, param_names,
     param_names
   )
 
+  # Colour each bar by parameter class (classify_param / class_cols defined
+  # once at module scope, above plot_one_marginal_honest \u2014 shared with the
+  # prior/posterior marginal panels so both figures use the same scheme).
+  param_class <- vapply(names(kl_vals), classify_param, character(1))
+  bar_col     <- class_cols[param_class]
+  present     <- class_levels[class_levels %in% param_class]
+
   kl_png  <- file.path(DIR_DIAG,
                        sprintf("%s_kl_divergence_%s.png", MODEL_NAME, RUN_ID))
   png_w   <- max(8L, ceiling(length(kl_vals) * 0.38)) * PX_PER_IN
   png(kl_png, width = png_w, height = 6L * PX_PER_IN, res = PX_PER_IN)
   par(mar = c(7.5, 4.5, 3.5, 1))
   barplot(kl_vals,
-          col       = "steelblue",
+          col       = bar_col,
           border    = NA,
           las       = 2,
           cex.names = 0.78,
@@ -1288,6 +1295,8 @@ run_diagnostics <- function(chain_results, to_original, param_names,
           main      = sprintf("%s | KL divergence by parameter  (%s)",
                               MODEL_NAME, RUN_ID))
   abline(h = 1, lty = 2, col = "grey40", lwd = 1.2)
+  legend("topright", legend = present, fill = class_cols[present],
+         border = NA, bty = "n", cex = 0.85, title = "Parameter class")
   mtext("Dashed line = 1 nat  (substantial information gain from data)",
         side = 1, line = 6.0, cex = 0.75, col = "grey40")
   dev.off()
@@ -1591,6 +1600,30 @@ append_to_report <- function(run_config, section_text) {
 
 
 # ---------------------------------------------------------------------------
+# Parameter classification (single source of truth).
+# Used to colour BOTH the KL barplot and the prior/posterior marginal panels,
+# mirroring the prior-homogenisation tiers (Prior_specs/PRIOR_HOMOGENIZATION_PLAN.md
+# section 2): Tier 1 climate & size, Tier 2 the 12 transfer fractions, Tier 3
+# auxiliary uncertainty; the simple models additionally carry decomposition
+# rates (alpha*). Classification is by parameter name.
+# ---------------------------------------------------------------------------
+classify_param <- function(nm) {
+  if (grepl("^sigma", nm))                            return("Auxiliary uncertainty")
+  if (grepl("^p_",   nm))                             return("Transfer fraction")
+  if (grepl("^alpha", nm))                            return("Decomposition rate")
+  if (grepl("^(beta|gamma|delta)", nm) || nm == "r")  return("Climate & size")
+  return("Other")
+}
+class_levels <- c("Climate & size", "Decomposition rate",
+                  "Transfer fraction", "Auxiliary uncertainty", "Other")
+class_cols   <- c("Climate & size"       = "#1b9e77",
+                  "Decomposition rate"    = "#e7298a",
+                  "Transfer fraction"     = "#d95f02",
+                  "Auxiliary uncertainty" = "#7570b3",
+                  "Other"                 = "grey60")
+
+
+# ---------------------------------------------------------------------------
 # Helper: plot one marginal panel with HONEST prior/posterior density.
 #
 # Why "honest":
@@ -1626,14 +1659,24 @@ plot_one_marginal_honest <- function(post_v, prior_v, param_name, model_name,
   
   # True max of both — no implicit rescaling
   ylim <- c(0, max(d_post$y, d_prior$y))
-  
-  plot(d_post, col = "steelblue", lwd = 2,
-       xlim = xlim, ylim = ylim,
+
+  # Style: prior = neutral light-grey filled polygon (backdrop); posterior =
+  # semi-transparent polygon coloured by parameter class (same scheme as the
+  # KL barplot), drawn on top with a darker class-coloured outline.
+  post_col   <- class_cols[classify_param(param_name)]
+  prior_fill <- "grey88"
+  post_fill  <- adjustcolor(unname(post_col), alpha.f = 0.45)
+  np <- length(d_post$x); nq <- length(d_prior$x)
+
+  plot(NA, xlim = xlim, ylim = ylim,
        main = sprintf("%s | %s", model_name, param_name),
        xlab = param_name, ylab = "Density")
-  lines(d_prior, col = "grey60", lwd = 1, lty = 2)
+  polygon(c(d_prior$x[1], d_prior$x, d_prior$x[nq]), c(0, d_prior$y, 0),
+          col = prior_fill, border = "grey70", lwd = 1)
+  polygon(c(d_post$x[1], d_post$x, d_post$x[np]), c(0, d_post$y, 0),
+          col = post_fill, border = unname(post_col), lwd = 2)
   legend("topright",
          legend = c("Posterior", "Prior"),
-         col    = c("steelblue", "grey60"),
-         lwd    = c(2, 1), lty = c(1, 2), bty = "n", cex = 0.7)
+         fill   = c(post_fill, prior_fill),
+         border = c(unname(post_col), "grey70"), bty = "n", cex = 0.7)
 }

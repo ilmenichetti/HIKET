@@ -389,7 +389,7 @@ coverage_95 <- mean(obs >= residuals_df$soc_q025 &
                     obs <= residuals_df$soc_q975, na.rm = TRUE)
 
 message("\nPredictive metrics:")
-message(sprintf("  R²: %.3f  |  RMSE: %.2f  |  Bias: %+.2f  |  Cov95: %.3f",
+message(sprintf("  R²: %.3f  |  RMSE: %.2f  |  Bias: %+.2f  |  ParamCov: %.3f",
                 R2, RMSE_med, bias_med, coverage_95))
 
 # --- Split calibration / holdout and compute metrics for each ---
@@ -410,11 +410,11 @@ metrics_calib   <- compute_metrics(res_calib)
 metrics_holdout <- compute_metrics(res_holdout)
 
 message("\nCalibration metrics:")
-message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f",
                 metrics_calib$R2, metrics_calib$RMSE_median,
                 metrics_calib$bias_median, metrics_calib$coverage_95))
 message("Holdout (independent validation) metrics:")
-message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f",
                 metrics_holdout$R2, metrics_holdout$RMSE_median,
                 metrics_holdout$bias_median, metrics_holdout$coverage_95))
 
@@ -449,7 +449,7 @@ legend("topleft",
        legend = c(sprintf("R² = %.3f", R2),
                   sprintf("RMSE = %.1f tC/ha", RMSE_med),
                   sprintf("Bias = %+.1f tC/ha", bias_med),
-                  sprintf("95%% coverage = %.2f", coverage_95)),
+                  sprintf("Param 95%% CI cov = %.2f", coverage_95)),
        bty = "n", cex = 0.85)
 ktp_present <- sort(unique(na.omit(ktp_vals)))
 ktp_present <- ktp_present[ktp_present %in% names(ktp_palette)]
@@ -549,7 +549,7 @@ legend("topleft",
        legend = c(sprintf("R² = %.3f",           metrics_holdout$R2),
                   sprintf("RMSE = %.1f tC/ha",   metrics_holdout$RMSE_median),
                   sprintf("Bias = %+.1f tC/ha",  metrics_holdout$bias_median),
-                  sprintf("95%% coverage = %.2f", metrics_holdout$coverage_95),
+                  sprintf("Param 95%% CI cov = %.2f", metrics_holdout$coverage_95),
                   sprintf("n holdout = %d",       length(holdout_plots))),
        bty = "n", cex = 0.85)
 ktp_present_h <- sort(unique(na.omit(ktp_vals_h)))
@@ -650,7 +650,7 @@ message("Saved posterior predictive bundle.")
 
 append_to_report(run_config, paste(c(
   "\n[5] Predictive performance (transient init)\n",
-  sprintf("    R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov95: %.3f\n",
+  sprintf("    R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f\n",
           R2, RMSE_med, bias_med, coverage_95),
   sprintf("    Projection years:       %d\n",       PROJ_YEARS),
   sprintf("    Climate recycle window: %d years\n", RECYCLE_YEARS)), collapse=""))

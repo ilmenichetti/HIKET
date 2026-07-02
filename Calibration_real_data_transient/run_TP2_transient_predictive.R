@@ -244,6 +244,11 @@ t_proj <- system.time({
       inputs_proj      <- tail(inputs, 1L)[rep(1L, PROJ_YEARS), , drop = FALSE]
       inputs_proj$year <- proj_yrs
 
+      # Belt-and-suspenders: tail() + index subset carries original row names,
+      # which can confuse downstream rbind / dplyr joins. Reset both frames here.
+      rownames(inputs_proj) <- NULL
+      rownames(clim_proj)   <- NULL
+
       # -- Initial state: terminal pool values from historical run ------------
       C_proj_init <- unlist(run_hist[nrow(run_hist), POOL_COLS])
 
@@ -346,7 +351,7 @@ message(sprintf("  RMSE (mean):   %.2f tC/ha", RMSE))
 message(sprintf("  Bias (mean):   %+.2f tC/ha", bias))
 message(sprintf("  RMSE (median): %.2f tC/ha", RMSE_med))
 message(sprintf("  Bias (median): %+.2f tC/ha", bias_med))
-message(sprintf("  95%% coverage:  %.3f", coverage_95))
+message(sprintf("  Param 95%% CI cov:  %.3f", coverage_95))
 
 # --- Split calibration / holdout and compute metrics for each ---
 res_calib   <- residuals_df[!residuals_df$is_holdout, ]
@@ -366,11 +371,11 @@ metrics_calib   <- compute_metrics(res_calib)
 metrics_holdout <- compute_metrics(res_holdout)
 
 message("\nCalibration metrics:")
-message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f",
                 metrics_calib$R2, metrics_calib$RMSE_median,
                 metrics_calib$bias_median, metrics_calib$coverage_95))
 message("Holdout (independent validation) metrics:")
-message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  Cov: %.3f",
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f",
                 metrics_holdout$R2, metrics_holdout$RMSE_median,
                 metrics_holdout$bias_median, metrics_holdout$coverage_95))
 
@@ -410,7 +415,7 @@ legend("topleft",
        legend = c(sprintf("R² = %.3f", R2),
                   sprintf("RMSE = %.1f tC/ha", RMSE_med),
                   sprintf("Bias = %+.1f tC/ha", bias_med),
-                  sprintf("95%% coverage = %.2f", coverage_95)),
+                  sprintf("Param 95%% CI cov = %.2f", coverage_95)),
        bty = "n", cex = 0.85)
 ktp_present <- sort(unique(na.omit(ktp_vals)))
 ktp_present <- ktp_present[ktp_present %in% names(ktp_palette)]
@@ -514,7 +519,7 @@ legend("topleft",
        legend = c(sprintf("R² = %.3f",           metrics_holdout$R2),
                   sprintf("RMSE = %.1f tC/ha",   metrics_holdout$RMSE_median),
                   sprintf("Bias = %+.1f tC/ha",  metrics_holdout$bias_median),
-                  sprintf("95%% coverage = %.2f", metrics_holdout$coverage_95),
+                  sprintf("Param 95%% CI cov = %.2f", metrics_holdout$coverage_95),
                   sprintf("n holdout = %d",       length(holdout_plots))),
        bty = "n", cex = 0.85)
 ktp_present_h <- sort(unique(na.omit(ktp_vals_h)))
@@ -627,7 +632,7 @@ append_to_report(run_config, paste(c(
   sprintf("    Bias (mean):            %+.2f tC/ha\n", bias),
   sprintf("    RMSE (median):          %.2f tC/ha\n", RMSE_med),
   sprintf("    Bias (median):          %+.2f tC/ha\n", bias_med),
-  sprintf("    95%% CI coverage:        %.3f\n",    coverage_95),
+  sprintf("    Param 95%% CI cov (mean):   %.3f\n",    coverage_95),
   sprintf("    Projection years:       %d\n",       PROJ_YEARS),
   sprintf("    Climate recycle window: %d years\n", RECYCLE_YEARS)), collapse=""))
 
