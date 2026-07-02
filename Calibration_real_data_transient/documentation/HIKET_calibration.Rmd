@@ -839,7 +839,7 @@ unconstrained space, and $\log J$ is the log-Jacobian of the transforms.
 Prior specifications are stored in `Prior_specs/{Model}_priors.R` and
 sourced at the top of each calibration script.
 
-## Homogenization across models
+## Homogenization across models\label{sec:priors-tier3}
 
 The scientific question --- whether divergent SOC projections reflect genuine
 structural differences or calibration artefacts --- requires that the
@@ -869,8 +869,8 @@ logit (stick-break) &
 no --- Viskari 2022 fixed/derived 9 of 12 $\Rightarrow$ common prior restores symmetry \\
 \textbf{Tier 3} auxiliary ($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$) &
 1.0 &
-\emph{common} log SD = 0.50 (identical) &
-log &
+common log SD = 0.50; $\sigma_{\mathrm{input}}$ additionally bounded to a physical flux window &
+log; $\sigma_{\mathrm{input}}$ bounded (scaled-logit) &
 HIKET-only $\Rightarrow$ identical everywhere \\
 \bottomrule
 \end{longtable}
@@ -885,6 +885,36 @@ re-introducing the very asymmetry the design exists to remove. What
 legitimately differs between models --- Tier-1 centres and widths, and the
 parameter set itself (Yasso07 has no separate N/H climate response) --- is
 genuine structure, not a calibration choice.
+
+Tier 3 requires one refinement. $\sigma_{\mathrm{init}}$ and
+$\sigma_{\mathrm{input}}$ were originally treated identically, as weak
+log-normal nuisances, but they differ in one decisive respect: unlike the
+decay rates and transfer fractions, litter input carries an \emph{external
+physical referent} --- a boreal forest's total detritus input to soil is
+bounded by its net primary production. A purely weak prior discards that
+information, and the likelihood exploits the gap: TP2 and TP3 reach
+posterior-median effective litter fluxes of 34 and 50 tC/ha/yr, four to six
+times the most productive boreal forest on record, manufacturing carbon to
+match the observed stock. We therefore bound the \emph{effective flux}
+$\sigma_{\mathrm{input}}\times J$ to the widest defensible boreal window,
+$[0.5,\,8.7]$ tC/ha/yr, anchored on the Gower et al.\ (2001) boreal total-NPP
+range (52--868 gC\,m$^{-2}$\,yr$^{-1}$; at steady state a forest's total litter
+input $\approx$ its NPP, and NPP is a \emph{generous} ceiling because harvested
+stemwood leaves as timber rather than litter). The bound is homogeneous across
+all six models --- identical in physical units, not in the abstract multiplier,
+since $J$ differs slightly between models --- and is implemented as a bounded
+(scaled-logit) reparameterisation rather than a hard truncation, so the sampler
+works in an unconstrained space and incurs no boundary-rejection artefact; the
+posterior may still pile up against the wall (the intended diagnostic), but its
+mixing does not degrade there. $\sigma_{\mathrm{init}}$, whose posteriors are
+already physical ($0.19$--$0.72$, all below 1 --- the post-disturbance recovery
+signature), keeps only a light guardrail ($[0.1,\,1.5]$). Removing
+$\sigma_{\mathrm{input}}$'s escape hatch forces any residual misfit onto the
+(prior-pinned) rate parameters or into a visible drop in predictive skill,
+exposing structural inadequacy instead of hiding it --- for TP2 and TP3 the
+inflated multiplier was itself a structural-adequacy signal. The full literature
+basis, cross-checks against measured Finnish litter, and design decisions are in
+the accompanying note (\texttt{sigma\_input\_physical\_bounds\_note}).
 
 ## Sources
 
@@ -1212,18 +1242,22 @@ steady state under $J_{1917}$ and constant climate.
 ## The two auxiliary uncertainty parameters
 
 $\sigma_{\mathrm{init}}$ and $\sigma_{\mathrm{input}}$ are free
-parameters in every model, both log-transformed with a prior centred at
-1.0 (log-normal, unconstrained-space SD = 0.5, giving a physical 95\% prior
-interval of approximately [0.37, 2.72] --- i.e. each multiplier lies between
-about $0.37\times$ and $2.72\times$ its nominal value with 95\% prior
-probability).
+parameters in every model, both centred at 1.0 with a weakly-informative
+log-normal prior (unconstrained-space SD = 0.5, a physical 95\% interval of
+approximately [0.37, 2.72] in the interior). $\sigma_{\mathrm{input}}$ carries
+one additional constraint the rates do not (below).
 
 \textbf{$\sigma_{\mathrm{input}}$} scales the entire contemporary litter
 time series (1985 onward). It absorbs uncertainty in the litter input
 model --- plot-level litter estimates carry uncertainty from both the
 litter model itself and the representation of understorey vegetation,
 which is not individually measured. $\sigma_{\mathrm{input}}$ also
-scales $J_{1985}$, the endpoint of the pre-run interpolation.
+scales $J_{1985}$, the endpoint of the pre-run interpolation. Because litter
+input --- unlike the decay rates --- is externally bounded by forest
+productivity, the effective flux $\sigma_{\mathrm{input}}\times J$ is
+constrained to a physical boreal window, $[0.5,\,8.7]$ tC/ha/yr, homogeneous
+across all six models (\S\ref{sec:priors-tier3}); without this bound TP2 and
+TP3 inflate it four- to six-fold, above the productivity of any boreal forest.
 
 \textbf{$\sigma_{\mathrm{init}}$} scales only the 1917 litter anchor,
 $J_{1917}$. It encodes the ratio of historical (pre-1985) to contemporary
