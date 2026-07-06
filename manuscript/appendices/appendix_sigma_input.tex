@@ -1,0 +1,68 @@
+% =====================================================================
+%  Appendix module: Physically-bounded litter-input priors
+%  Modular subfile: compiles standalone (uses the main preamble) OR is
+%  pulled into the main document via \subfile{...}. See main file header.
+%  Condensed from: Calibration_real_data_transient/documentation/
+%                  sigma_input_physical_bounds_note.{Rmd,pdf}
+% =====================================================================
+\documentclass[../HIKET_story_outline.tex]{subfiles}
+
+\begin{document}
+
+\section{Physically-bounded litter-input priors}
+\label{app:input-bounds}
+
+\paragraph{Problem.} The input multiplier $\sigma_{\mathrm{input}}$ scales the
+litter forcing every model integrates. Left as a weak, scale-free prior it lets
+the likelihood drag two models (TP2, TP3) to effective litter fluxes of
+$34$--$50$~tC\,ha$^{-1}$\,yr$^{-1}$ --- several times the net primary production of
+any boreal forest. The multiplier's distance from unity is therefore a
+\emph{structural-adequacy gauge}, interpretable only once the prior encodes a
+physical ceiling.
+
+\paragraph{Physical envelope.} The effective flux is
+$\sigma_{\mathrm{input}}\times J$, with $J$ the shared tree-litter object (median
+$\approx 2.8$~tC\,ha$^{-1}$\,yr$^{-1}$). We bound it to the boreal total-NPP
+envelope of Gower et al.\ (2001), $[0.05,\,8.7]$~tC\,ha$^{-1}$\,yr$^{-1}$,
+homogeneous across all six models and applied to \emph{both} ends of the pre-run:
+the contemporary flux $F_{\mathrm{now}}=\sigma_{\mathrm{input}}J$ and the 1917
+historical flux $F_{1917}=\sigma_{\mathrm{init}}\sigma_{\mathrm{input}}J$. The
+ceiling ($8.7$, the Gower maximum) is the binding limit; the floor is relaxed
+below the Gower minimum to a small, strictly-positive, non-binding guardrail ---
+kept $>0$ so that zero flux (hence zero predicted SOC and a $-\infty$ likelihood)
+cannot occur, and set low to pre-position for a future stratified $\sigma$.
+Because $\sigma_{\mathrm{init}}$ has no independent physical referent --- it is a
+\emph{ratio} of two fluxes --- it is not bounded on its own; instead $F_{1917}$ is
+bounded to the same envelope and $\sigma_{\mathrm{init}}=F_{1917}/F_{\mathrm{now}}$
+is recovered. The multipliers are scalar (network-average), so local disturbance
+(clear-cuts) lives in the per-plot $J$, not in the bound.
+
+\paragraph{Mechanism: bounded re-parameterisation.} A hard truncation would mix
+poorly precisely where it bites, since the two binding models sit against the
+ceiling. Instead we sample an unconstrained coordinate $z$ and map it through a
+scaled logistic onto the window $[a,b]$,
+\[
+  p=g(z)=a+(b-a)\,\sigma(z),\qquad \sigma(z)=\tfrac{1}{1+e^{-z}},\qquad
+  z=g^{-1}(p)=\log\tfrac{p-a}{\,b-p\,},
+\]
+so every proposal is feasible by construction and the boundary is approached
+asymptotically, never struck. The change of variables contributes a Jacobian term
+to the log-prior,
+\[
+  \log\!\left|g'(z)\right| = \log(p-a)+\log(b-p)-\log(b-a),
+\]
+which keeps the physical-space prior the one intended. The two fluxes are two such
+coordinates; the multipliers are recovered as
+$\sigma_{\mathrm{input}}=F_{\mathrm{now}}/\bar J$ and
+$\sigma_{\mathrm{init}}=F_{1917}/F_{\mathrm{now}}$, with $\bar J$ a fixed
+mean-litter units bridge. Implemented as one new transform type in the calibration
+engine, homogeneous across the six prior specifications.
+
+\paragraph{Consequence.} The escape hatch closes: misfit is forced onto the
+(otherwise prior-pinned) kinetics or into a visible $R^2$ hit, exposing structural
+inadequacy instead of hiding it in manufactured carbon.
+
+\footnotesize\emph{Full derivation, per-model diagnostics, literature envelope and
+references: standalone note \texttt{sigma\_input\_physical\_bounds\_note}.}\normalsize
+
+\end{document}

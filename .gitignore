@@ -60,3 +60,12 @@ Model_functions_real_data_transient/Decomposition_functions/Yasso_original/paper
 
 # Annotated review copy holds the user's PDF notes — local only
 Calibration_real_data_transient/documentation/HIKET_calibration_annotated.pdf
+
+# LaTeX build artifacts (manuscript)
+manuscript/*.aux
+manuscript/*.log
+manuscript/*.toc
+manuscript/*.out
+manuscript/appendices/*.aux
+manuscript/appendices/*.log
+manuscript/appendices/*.pdf

@@ -43,6 +43,16 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{amsmath}
 \usepackage{titlesec}
+% ---------------------------------------------------------------------
+%  MODULAR APPENDICES.
+%  Each appendix lives in appendices/*.tex as a `subfiles` document. It can be:
+%    (a) compiled STANDALONE  -> `pdflatex appendices/appendix_xxx.tex`
+%        (borrows this file's preamble automatically), or
+%    (b) compiled TOGETHER    -> pulled in here via \subfile{...} (see the
+%        Appendices part near the end). Comment a \subfile line to drop a module.
+%  This keeps each methods insert self-contained and separately shareable.
+% ---------------------------------------------------------------------
+\usepackage{subfiles}
 
 % Number and list every heading level down to subparagraph.
 \setcounter{secnumdepth}{5}
@@ -190,6 +200,8 @@ the data and its uncertainty speak. Plant the thread; pay it off in Methods.
 % =====================================================================
 
 \section{Materials and methods}
+% Detailed derivations are offloaded to the modular appendices (see the
+% Appendices part); the M&M body states each choice and points to its appendix.
 
 \subsection{Study system and data}
 
@@ -245,7 +257,7 @@ memory lives.
 % [Bayes]
 $\sigma_{\mathrm{init}}$ as a Bayesian-calibrated strength on the historical
 start, not a fixed choice --- the concrete place the thread meets the
-protagonist.
+protagonist. Full pre-run construction in Appendix~\ref{app:transient}.
 
 \subsection{A fair frame for intercomparison}
 The design principle: any residual difference must be attributable to
@@ -256,10 +268,12 @@ Brief enumeration.
 
 \subsubsection{Exact integration in every model}
 All six integrate their linear system exactly; differences are structural,
-not numerical.
+not numerical. Solvers and the discarded Euler path in
+Appendix~\ref{app:exact}.
 
 \subsubsection{Homogenized priors: method, not number}
-Tiered scheme; identical in construction/scale/DoF, not in raw values.
+Tiered scheme; identical in construction/scale/DoF, not in raw values. Full
+parameter-class $\times$ prior-criteria tables in Appendix~\ref{app:priors}.
 
 \subsubsection{Equal degrees of freedom}
 All transfer fractions free in every Yasso variant. One sentence on why.
@@ -270,8 +284,26 @@ All transfer fractions free in every Yasso variant. One sentence on why.
 Multiplicative-normal likelihood. Flag the asymmetry briefly (paid back in
 Discussion).
 
+\subsubsection{Physically-bounded input priors}
+% Now a METHODS choice (implemented for the production re-calibration), not only
+% an Outlook refinement. The effective litter flux is bounded to the boreal
+% NPP envelope, homogeneous across models, via a bounded re-parameterisation.
+The effective litter flux is bounded to a boreal NPP envelope, homogeneous across
+models, so the input multiplier cannot manufacture unphysical carbon; the
+auxiliary $\sigma_{\mathrm{init}}$/$\sigma_{\mathrm{input}}$ pair is
+re-parameterised rather than truncated. Rationale, envelope and mechanism in
+Appendix~\ref{app:input-bounds}. [placeholder]
+
 \subsubsection{Sampler and diagnostics}
 MCMC settings; convergence and identifiability diagnostics used.
+
+\subsubsection{Holdout split and validation}
+Plot-level holdout excluded from the likelihood; separate predictive metrics.
+[placeholder]
+
+\subsubsection{Software, compute and reproducibility}
+Engine, samplers, exact-integration back-ends; fixed seeds; HPC production run.
+[placeholder]
 
 \subsection{Predictive and residual analysis}
 Posterior-predictive trajectories; residual analysis against site covariates.
@@ -364,7 +396,7 @@ data constrain net fluxes out of a pool, not the individual splits.
 For a linear pool system the observable stocks depend on the parameters only
 through lumped combinations; distinct parameter sets give identical
 predictions (parameter-space ridges). Two equations of placeholder math.
-[placeholder]
+Full argument in Appendix~\ref{app:nonident}. [placeholder]
 
 \paragraph{Signature in practice}
 % [Bayes] — the lens: the Bayesian frame makes non-identifiability visible and
@@ -427,6 +459,11 @@ belowground) input regimes.
 % input inflation into an exposed structural-adequacy signal. Sharpens the
 % intercomparison. Caveat: full 6-model re-calibration + mixing check (a leveraged
 % parameter clamped near a boundary). Planned for the Roihu compute phase.
+% NOTE: now IMPLEMENTED as a methods choice (see M&M "Physically-bounded input
+% priors" + Appendix~\ref{app:input-bounds}); this Outlook beat may collapse into
+% a forward-looking sentence on the belowground/history extension once the
+% production re-run lands.
+Cross-ref: Appendix~\ref{app:input-bounds}.
 
 \subsubsection{An interdisciplinary, source-diverse effort}
 Reconstruction needs evidence beyond the usual datasets --- grey literature
@@ -459,6 +496,21 @@ implementation. Credit the machinery without overclaiming novelty.
 The approach can go much further once the pre-observation history is
 reconstructed from data rather than left to calibration --- the open frontier,
 and the natural successor study. Close here.
+
+% =====================================================================
+\part{Appendices}
+% Modular methods inserts. Each \subfile below is a standalone `subfiles`
+% document under appendices/ that also compiles on its own. Comment a line to
+% drop that module from the combined build; the full sigma_input module is
+% written, the rest are structural stubs to be filled.
+% =====================================================================
+\appendix
+
+\subfile{appendices/appendix_sigma_input}          % FULL — physically-bounded input priors
+\subfile{appendices/appendix_prior_homogenization} % stub
+\subfile{appendices/appendix_transient_init}       % stub
+\subfile{appendices/appendix_nonidentifiability}   % stub
+\subfile{appendices/appendix_exact_integration}    % stub
 
 % ---------------------------------------------------------------------
 \section*{Notes for collapsing (remove before submission)}

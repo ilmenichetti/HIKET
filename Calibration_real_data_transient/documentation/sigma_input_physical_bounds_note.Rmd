@@ -110,19 +110,49 @@ database of Luyssaert et al. (2007).
 
 # Chosen bounds
 
-Physical window on the effective total-input flux (homogeneous, all six models):
-$$\boxed{\ \texttt{sigma\_input} \times J \in [0.5,\ 8.7]\ \text{tC/ha/yr}\ }$$
-anchored on the Gower et al. (2001) boreal total-NPP range (widest defensible;
-NPP $\geq$ actual soil input). At the plot-median $J \approx 2.8$ this maps to a
-multiplier window $\texttt{sigma\_input} \in \approx [0.18,\ 3.1]$ ($\approx
-[0.2, 3.5]$ at the lower $J \approx 2.5$).
+Physical envelope on the effective total-input flux, from Gower et al. (2001)
+boreal total NPP, applied **homogeneously to all six models and to both ends of
+the pre-run** --- the contemporary flux *and* the 1917 historical flux:
+$$\boxed{\ F_{\text{now}},\ F_{1917}\ \in\ [\,0.05,\ 8.7\,]\ \text{tC/ha/yr}\ }$$
+where $F_{\text{now}} = \texttt{sigma\_input}\times J$ and
+$F_{1917} = \texttt{sigma\_init}\times\texttt{sigma\_input}\times J$.
 
-`sigma_init` is already physically behaved (posteriors 0.19--0.72, all $< 1$ ---
-the post-exploitation recovery narrative) and needs only a light guardrail
-($\texttt{sigma\_init} \in [0.1, 1.5]$). The two couple through the 1917 pre-run
-flux ($J_{1917} = J \times \texttt{sigma\_init} \times \texttt{sigma\_input}$);
-with both individually bounded the pre-run flux stays inside the same physical
-window, so no explicit joint constraint is imposed (verify post-run).
+**Ceiling ($8.7$)** --- the physically binding limit, anchored on the Gower boreal
+total-NPP maximum (widest defensible; NPP $\geq$ actual soil input). At the
+plot-median $J \approx 2.8$ this is a multiplier ceiling
+$\texttt{sigma\_input} \lesssim 3.1$.
+
+**Floor ($0.05$)** --- deliberately relaxed *below* the Gower minimum ($0.52$) to a
+small, strictly-positive guardrail. It is **non-binding** for the global
+calibration (all effective fluxes land at $0.8$--$7.5$, far above it), so it
+changes nothing now; it is set low **on purpose**, to pre-position for a future
+local/stratified `sigma` where disturbed strata (e.g. clear-cuts) genuinely want
+low flux (see the forward-note). It is kept strictly positive, **not zero**, so
+the model stays non-degenerate: zero flux $\Rightarrow$ zero predicted SOC
+$\Rightarrow$ a $-\infty$ likelihood.
+
+**`sigma_init` is not bounded on its own.** It has no independent physical
+referent --- it is a *ratio* of two fluxes (how much more or less productive 1917
+was than today). Instead we bound the **1917 flux** $F_{1917}$ to the *same*
+envelope: a boreal forest in 1917 was subject to the same NPP physics as one
+today, so Gower is a statement about boreal productivity, not about a particular
+decade. We then let $\texttt{sigma\_init} = F_{1917}/F_{\text{now}}$ fall out. This
+is a **joint** constraint on the two multipliers, imposed cleanly by
+re-parameterising in flux space (Appendix). It replaces --- and corrects --- an
+earlier idea of an independent guardrail $[0.1, 1.5]$ on `sigma_init`: that did
+*not* actually keep the pre-run flux inside the envelope, because
+$\texttt{sigma\_init}\times\texttt{sigma\_input}$ can reach $1.5\times 3.1
+\approx 4.6$, i.e. $F_{1917}$ up to $\sim 13$ tC/ha/yr, above the ceiling.
+
+**Ensemble scope --- why clear-cuts do not break this.** `sigma_init` and
+`sigma_input` are **single scalar multipliers shared across all plots**, so the
+envelope constrains the *network-average, typical-forest* flux --- exactly where
+the NPP range is the right statement. Local, transient disturbances (clear-cut,
+fire, harvest) push *individual* plots below the floor, but they live in the
+**per-plot $J$**, not in the scalar multipliers, so they are represented where
+they belong and never require the average multiplier to leave the envelope. The
+envelope is deliberately an *ensemble* prior on average boreal productivity, not a
+per-plot bound; clear-cutting is precisely why it must stay ensemble-level.
 
 ## Consequences per model
 
@@ -131,35 +161,192 @@ window, so no explicit joint constraint is imposed (verify post-run).
   *widest defensible* bound Yasso20 is a very-productive-but-possible boreal
   forest, so it is deliberately **not** bound. That Yasso20 sits at the physical
   edge is itself a reportable result.
-- **TP2, TP3** (34 / 50): **hard-bound** at the ceiling. This removes their escape
+- **TP2, TP3** (34 / 50): **bound** at the ceiling. This removes their escape
   hatch $\rightarrow$ forces the misfit onto the (now prior-pinned) rates or into
   a visible $R^2$ hit = exposes structural inadequacy instead of hiding it.
 
-# Implementation
+# Implementation: how to enforce the bound in the sampler
 
-Bound the **effective flux** (the physical quantity), not the abstract
-multiplier, using each plot's own $J$:
+Two questions are easy to conflate but are separate:
 
-- **Truncated-lognormal on `sigma_input`:** keep the weakly-informative centre-1
-  shape (log-SD 0.5) but impose a **hard wall** so that
-  $\texttt{sigma\_input} \times \bar{J} \in [0.5, 8.7]$, using the plot-mean
-  $\bar{J}$ for the truncation. Truncated-lognormal over a flat uniform: retains
-  the mild pull to 1 (no artificial preference for sitting at the ceiling) and
-  mixes better near the wall in DEzs.
-- **`sigma_init`:** light hard bounds $[0.1, 1.5]$.
+1. **What is the bound?** --- the physical window $[0.5, 8.7]$ tC/ha/yr on the
+   effective flux. This is settled (previous sections).
+2. **How do we make the sampler respect it?** --- the *enforcement mechanism*.
+   The natural idea is a hard boundary in the prior; below we explain why that
+   struggles here, and what we do instead (a re-parameterisation).
+
+## A scale factor is unavoidable (and it is not "data" the sampler touches)
+
+The bound is a statement in **physical flux units** (tC/ha/yr). But the parameter
+the sampler actually moves, `sigma_input`, is a **dimensionless multiplier** ---
+the model applies `sigma_input` $\times\, J$ inside each wrapper, and $J$ (the
+per-plot litter magnitude) is what carries the units. To state a flux bound as a
+bound on the multiplier we must divide by the litter scale:
+
+$$\texttt{sigma\_input} \in \Big[\tfrac{0.05}{\bar J},\ \tfrac{8.7}{\bar J}\Big]
+  \approx [0.018,\ 3.1] \quad (\bar J \approx 2.8).$$
+
+$\bar J$ is a **unit-conversion factor** (an "exchange rate" between flux and
+multiplier), not a live reading of the calibration data: it is one number, the
+cross-plot mean litter, known up front and frozen for the whole run. It can be
+typed in by hand ($[0.018, 3.1]$) or --- cleaner --- computed once at setup from
+the litter the engine already loads, so the prior file can state the
+literature-native physical window $[0.5, 8.7]$ and the engine does the division.
+Either way the data flow at run time is unchanged: litter still enters only in
+the wrapper, exactly as now. This factor is a **units bridge** and nothing more;
+it is needed however we choose to enforce the bound. What follows is about the
+enforcement itself.
+
+## The natural idea: put a wall in the prior --- and why we don't
+
+The obvious way to add a constraint --- and the way a standard Bayesian
+calibration does it --- is to write it straight into the **prior** as a hard
+boundary: give `sigma_input` zero prior probability anywhere outside the window
+(a *truncated* prior, or a uniform box with a floor and a ceiling). Everything
+inside is allowed; everything outside is forbidden.
+
+There is nothing wrong with this *as a description of what we want*. The posterior
+it defines is exactly the right one. The difficulty is not the destination but the
+**journey the sampler has to take to it** --- and it shows up precisely for the two
+models the bound exists to catch.
+
+Recall *why* we are doing this: the likelihood is dragging TP2 and TP3 toward
+absurdly high litter. So their `sigma_input` does not want to rest in the middle
+of the window --- it wants to be pinned **hard against the ceiling**. Now picture
+the sampler there. At each step it proposes a nearby value and either keeps it or
+rejects it. Sitting right at the wall, a large fraction of the proposed steps land
+*outside* the window, where the prior is zero, so they are simply thrown away. The
+chain keeps getting shoved into the wall and bounced back, taking tiny effective
+steps, revisiting nearly the same value over and over. Two costs follow. First,
+the chain explores very slowly --- many iterations, few genuinely independent
+samples (poor mixing). Second, the cloud of samples that piles up right at the
+boundary is *partly an artefact of the sampler being stuck*: you can no longer
+cleanly tell "the data want it at the ceiling" from "the sampler could not get
+away from the ceiling." And all of this is worst for exactly the parameters we
+introduced the bound to diagnose. A wall is hardest to sample against precisely
+where the posterior leans on it.
+
+## What we do instead: move the wall out of reach
+
+The re-parameterisation (Option A) keeps the **same target** --- the same allowed
+window, the same posterior --- but reaches it without ever letting the sampler
+touch a wall. The trick is to let the sampler walk on a **re-drawn ruler**.
+
+Instead of sampling `sigma_input` directly (where 0.5 and 8.7 are real places it
+can walk off the end of), we let it walk on a stretched, endless ruler and simply
+*read off* the physical value from where it stands. The ruler is marked so that
+physical values crowd together as you approach either limit: 0.5 is printed
+infinitely far to the left, 8.7 infinitely far to the right, and the middle of the
+window sits in the middle of the ruler. The sampler takes ordinary, unobstructed
+steps along this ruler --- there is no end to fall off, so **every proposal it
+makes is automatically a legal value inside the window.** As it walks far to the
+right, the physical value it reads glides *toward* 8.7 and slows down, approaching
+but never reaching it --- an asymptote, not a collision.
+
+For the two hard cases this is exactly the behaviour we want. "TP2 wants the
+maximum litter" stops being "keep slamming into a wall at 8.7" and becomes "keep
+strolling rightward along an endless ruler" --- a smooth, well-mixing walk. The
+bound is still absolutely respected (the ruler *cannot* read a value outside the
+window), but it is respected by construction rather than by rejection. The wall
+has been moved to infinity, so the sampler never spends effort fighting it.
+
+The re-drawn ruler is a smooth **S-shaped map** from the endless coordinate onto
+the window --- the same logistic curve behind an ordinary logit prior, just
+stretched to span the physical window. We never need its algebra to use it (it is
+written out in the Appendix); what matters is its shape: steep in the middle,
+flattening toward each end so the ends lie infinitely far out.
+
+## The same ruler, used twice (the two auxiliary parameters)
+
+We apply this trick not once but twice, because there are **two fluxes** that must
+stay physical: today's litter input and the 1917 input the pre-run starts from.
+Each gets its own endless ruler onto the *same* physical window --- one reads off
+the contemporary flux, the other the historical flux. `sigma_input` is recovered
+from the first; `sigma_init` is simply the **ratio** of the two (how much more or
+less productive 1917 was than today). So we never bound `sigma_init` directly ---
+we bound the two fluxes it is built from, and it inherits a physical range
+automatically. Both walks are wall-free in exactly the same way, and because they
+are two separate rulers the density correction below is just applied to each.
+
+## The one catch: an unevenly stretched ruler needs a density correction
+
+This is where the Jacobian comes in, and it is the *only* extra thing Option A
+asks of us.
+
+Because the new ruler is stretched --- packed tightly near the two ends, loose in
+the middle --- an evenly-spread walk along it is **not** evenly spread in physical
+units. If we did nothing, we would silently be imposing a lopsided prior on
+`sigma_input` that we never chose: more weight where the ruler is loose, less
+where it is packed, purely as a side effect of the stretching. That is not a bound
+problem, it is an accidental prior we did not ask for.
+
+The fix is a single correction term. A probability density is "probability *per
+unit length*" --- so the instant you change what "a unit of length" means along
+the ruler, you must re-scale the density to match, by multiplying by how much the
+ruler is locally stretched at each point. **That local stretch factor is the
+Jacobian.** Including it (in practice, adding its logarithm to the log-prior)
+guarantees that the prior we actually get in physical units is the prior we
+*intended* --- a genuinely flat prior across the window, or a mild pull toward 1,
+whatever we wrote --- rather than a by-product of the coordinate change. It is one
+term, computed automatically alongside the map; no tuning, no interpretive cost.
+
+If it helps: the map re-labels the axis, and the Jacobian is the bookkeeping that
+keeps the areas under the curve honest after the re-labelling.
+
+## In short
+
+Same constraint and same posterior as the naive truncated prior --- but reached by
+walking a wall-free, stretched coordinate instead of rejecting proposals at a
+wall. We pay exactly one price, the Jacobian correction, and in return the two
+binding models (TP2/TP3) mix cleanly against a bound they would otherwise sit
+stuck against.
+
+## Remaining caveats
+
+- **Scalar vs per-plot.** `sigma_input` is a single number shared across plots,
+  and the window is placed using the mean litter $\bar J$, so a handful of
+  high-$J$ plots could nudge just past 8.7. This is second-order relative to
+  killing the 13--20$\times$ inflation --- a gross, everywhere-violated excursion,
+  not a few-plots-over-8.7 effect; noted in methods.
+- **`sigma_init`.** Not bounded directly: the same wall-free ruler is applied to
+  the 1917 flux, and `sigma_init` is recovered as the ratio of the two fluxes
+  (§"Chosen bounds", Appendix). Its posteriors already sit interior (0.19--0.72),
+  so the envelope is non-binding for it --- construction stays uniform, behaviour
+  unchanged.
+- **Floor relaxed to $0.05$, not $0$.** Non-binding now; kept strictly positive so
+  the low-flux region stays non-degenerate. True near-zero *local* flux needs more
+  than a bound relaxation --- see the forward-note.
 - **Homogeneous across all six** `Prior_specs/*_priors.R` --- the intercomparison
   requires identical construction.
+- **Re-calibration required.** Full six-model re-run (Roihu); afterward, check
+  R-hat/ESS for `sigma_input` specifically on TP2/TP3 to confirm the clean mixing
+  the re-parameterisation is meant to buy.
 
-## Caveats
+# Forward-note: toward a local / stratified `sigma`
 
-- **Mixing.** A leveraged parameter (TP2/TP3 `sigma_input`) clamped near a
-  boundary can mix worse; check R-hat/ESS for `sigma_input` specifically after
-  the re-calibration.
-- **Scalar vs per-plot.** `sigma_input` is one scalar; truncation uses the mean
-  $\bar{J}$, so a few high-$J$ plots may nudge just past 8.7 at the multiplier
-  ceiling. Second-order relative to killing the 13--20$\times$ inflation; noted in
-  methods.
-- **Re-calibration required.** Full six-model re-run (Roihu) + convergence check.
+A later step may let `sigma` vary by stratum (or plot) rather than as one national
+scalar --- so that, e.g., recently clear-cut strata can take a genuinely low
+input. The flux floor is set low ($0.05$) now to leave that door open, but two
+things must be handled *before* near-zero local flux is usable, and neither is
+solved by the bound relaxation alone.
+
+1. **The re-parameterisation removes a *prior* wall, not a *likelihood* cliff.** As
+   the effective flux $\to 0$, the steady-state initial carbon
+   $C_{\text{init}} = J/(\alpha\,\xi) \to 0$, so predicted SOC $\to 0$. Under the
+   multiplicative-normal error the standard deviation ($\propto$ predicted SOC)
+   also $\to 0$, and for a plot with real, non-zero observed SOC the log-likelihood
+   diverges to $-\infty$. That is a cliff in the *likelihood*; the smooth ruler
+   does nothing about it. For the global run it is harmless (no posterior mass down
+   there); for a low-flux stratum it becomes live.
+2. **Steady-state initialisation is wrong for a disturbed plot.** A clear-cut
+   removes *inputs*, not the existing *soil stock* (soil C decays slowly). But
+   steady-state init ties $C_{\text{init}}$ to the current (low) flux, forcing
+   near-zero initial carbon and clashing with the observed stock. Local low-flux
+   calibration therefore needs a non-steady-state initial condition for disturbed
+   plots, and likely an **additive error floor** (or a floor on the sd) so the
+   likelihood cannot collapse.
+
+These are modelling changes, logged here for when the stratified step is taken.
 
 # Decisions taken
 
@@ -168,11 +355,138 @@ multiplier, using each plot's own $J$:
    boreal ceiling is the physically correct one for a Finnish application).
 2. Bound the **effective flux**, not the multiplier, so it is homogeneous in
    physical units across models with differing $J$.
-3. **Floor from literature** (0.5 tC/ha/yr, Gower min), not an "understory-only-
-   adds $\Rightarrow \texttt{sigma\_input} \geq 1$" argument --- keeps SP1's
-   sub-1 fit admissible rather than forcing it to a floor.
-4. Shape = **truncated-lognormal** (weak centre-1 + hard physical wall).
+3. **Floor relaxed to $0.05$ tC/ha/yr** (below the Gower minimum $0.52$) --- a
+   strictly-positive, non-binding guardrail. Keeps SP1's sub-1 fit admissible,
+   stays non-degenerate (not zero), and pre-positions for a future
+   local/stratified `sigma`.
+4. Enforcement mechanism = **re-parameterisation** (see §"How to enforce the
+   bound in the sampler"). Rather than a hard wall in the prior --- which mixes
+   badly exactly for the binding models TP2/TP3, since their `sigma_input` sits
+   against the ceiling --- the parameter is sampled on an unbounded, stretched
+   coordinate that reads off a value inside the window by construction: same
+   posterior, but no wall for the sampler to reject against. This supersedes the
+   note's earlier "truncated-lognormal" idea.
 5. **Yasso20 stays free** (widest envelope; $7.5 < 8.7$) --- only TP2/TP3 bind.
+6. **Uniform construction across the two auxiliary parameters**, via a joint,
+   flux-space re-parameterisation: both the contemporary and the 1917 flux are
+   bounded to the *same* Gower envelope, and `sigma_init` is recovered as their
+   ratio rather than bounded independently. Corrects the earlier (incorrect) claim
+   that independent bounds keep the pre-run flux in-window.
+7. **Local/stratified `sigma` deferred** but pre-positioned (low floor); its
+   prerequisites (non-steady-state init for disturbed plots, additive error floor)
+   are logged in the forward-note.
+
+# Appendix: the construction in full (deeper reading layer)
+
+This appendix formalises what the narrative above described in words: the bounded
+transform, the two-flux re-parameterisation, and how both slot into the sampler.
+Nothing here changes the plain-language account --- it is the same object written
+algebraically, for implementation and review. A reader happy with the "endless
+ruler" picture can stop at the previous section.
+
+## A.1 The bounded (scaled-logit) transform
+
+Let $z \in \mathbb{R}$ be an unconstrained coordinate the sampler moves freely, and
+$[a,b]$ the physical window. The map onto the window is a scaled logistic:
+$$p \;=\; g(z) \;=\; a + (b-a)\,\sigma(z), \qquad
+  \sigma(z) = \frac{1}{1+e^{-z}} \in (0,1),$$
+so $g:\mathbb{R}\to(a,b)$, with $g(-\infty)=a$, $g(0)=\tfrac{a+b}{2}$ and
+$g(+\infty)=b$. This is the "endless ruler": the whole real line is mapped into the
+finite window, the two edges sitting at $z=\mp\infty$. Its inverse (physical
+$\to$ sampler coordinate) is
+$$z \;=\; g^{-1}(p) \;=\; \log\frac{p-a}{\,b-p\,},$$
+the logit of the *fractional position* of $p$ within the window --- literally the
+engine's existing `logit` transform composed with an affine rescale.
+
+The local stretch factor (the one-dimensional Jacobian) is the derivative
+$$\frac{dp}{dz} \;=\; (b-a)\,\sigma(z)\bigl(1-\sigma(z)\bigr)
+   \;=\; \frac{(p-a)(b-p)}{\,b-a\,},$$
+maximal at the centre ($(b-a)/4$) and vanishing *linearly* toward each end
+($\propto p-a$ near the floor, $\propto b-p$ near the ceiling) --- which is exactly
+why the edges are approached but never reached. The log-Jacobian, the term added to
+the log-prior, is
+$$\log\left|\frac{dp}{dz}\right| \;=\; \log(p-a) + \log(b-p) - \log(b-a).$$
+
+For any chosen prior density $\pi_p(p)$ on the physical value, the induced density
+in the sampling coordinate is $\pi_z(z) = \pi_p\!\bigl(g(z)\bigr)\,\lvert
+g'(z)\rvert$; in log-form the sampler accumulates $\log\pi_p(p) + \log\lvert
+g'(z)\rvert$. A **flat** prior on $p$ across $[a,b]$ therefore contributes just the
+log-Jacobian (up to a constant); a mild centre-pull, if wanted, enters through
+$\log\pi_p$. The Jacobian is what makes "flat on $p$" actually flat, rather than an
+accidental by-product of the stretch.
+
+## A.2 The two-flux re-parameterisation
+
+Two physical fluxes must stay inside the envelope $[a,b]=[0.05,\,8.7]$: the
+contemporary effective input $F_{\text{now}}$ and the 1917 pre-run input
+$F_{1917}$. Give each its own unconstrained coordinate and map both through the
+*same* bounded transform:
+$$F_{\text{now}} = g(z_1;a,b), \qquad F_{1917} = g(z_2;a,b).$$
+The physical multipliers the wrappers expect are then recovered as
+$$\texttt{sigma\_input} = \frac{F_{\text{now}}}{\bar J}, \qquad
+  \texttt{sigma\_init}  = \frac{F_{1917}}{F_{\text{now}}},$$
+with $\bar J$ the frozen mean-litter units-bridge (§"A scale factor..."). This
+reproduces the model's existing algebra: the wrapper forms $J_{1985} =
+\texttt{sigma\_input}\times J_{t_0} \approx F_{\text{now}}$ and $J_{1917} =
+\texttt{sigma\_init}\times\texttt{sigma\_input}\times J_{\text{full}} \approx
+F_{1917}$, so **both fluxes are bounded by construction** and `sigma_init` inherits
+the range $[a/b,\ b/a] = [0.006,\ 174]$ --- wide, as it should be (we have no
+direct information on 1917 productivity beyond the envelope), with the SOC data
+identifying it within (posteriors $0.19$--$0.72$).
+
+Because the transform is separable in $(z_1,z_2)$, the joint log-prior is just the
+sum of the two independent pieces,
+$$\log\pi(z_1,z_2) = \underbrace{\log\pi_p(F_{\text{now}}) + \log\lvert
+g'(z_1)\rvert}_{\text{contemporary}} + \underbrace{\log\pi_p(F_{1917}) + \log\lvert
+g'(z_2)\rvert}_{\text{historical}},$$
+each term exactly as in A.1; the Jacobian is diagonal, no cross terms.
+
+## A.3 Where it lives in the engine
+
+The transform machinery is `build_transforms()` in the base engine. Each parameter
+group carries a `type`; the existing diagonal types (`log`, `logit`,
+`unconstrained`) dispatch inside `to_original`, `to_unconstrained` and
+`log_jacobian`. The bounded map is **one new type**, `bounded`, carrying its window
+$(a,b)$:
+
+\footnotesize
+```
+to_original      : p   <- a + (b - a) / (1 + exp(-z))
+to_unconstrained : z   <- log((p - a) / (b - p))
+log_jacobian     : jac <- jac + sum( log(p - a) + log(b - p) - log(b - a) )
+```
+\normalsize
+
+$F_{\text{now}}$ and $F_{1917}$ are two `bounded` coordinates; the recovery of
+`sigma_input`/`sigma_init` (the divisions in A.2) happens once per likelihood call,
+either at the tail of `to_original` or the head of the wrapper, using the frozen
+$\bar J$. The window $(a,b)$ is stated in **physical flux units** in each
+`Prior_specs/*_priors.R`; $\bar J$ is computed once at setup from the litter the
+engine already holds. No per-iteration data read is added --- the run-time path is
+identical to the current one, plus two cheap evaluations of $g$ and their
+log-Jacobians.
+
+## A.4 The per-iteration path, end to end
+
+\footnotesize
+```
+sampler proposes  z = (..., z1, z2, ...)        # unconstrained, wall-free
+  F_now   = g(z1; a, b)                          # bounded transform
+  F_1917  = g(z2; a, b)
+  sigma_input = F_now  / Jbar                     # recover multipliers
+  sigma_init  = F_1917 / F_now
+  -> model_params
+wrapper: J_1985 = sigma_input * J_t0             # data (litter) enters here, as now
+         J_1917 = sigma_init * sigma_input * J_full
+run model -> SOC_hat -> likelihood
+log_posterior += log_prior(F_now)  + logJ(z1)
+             +  log_prior(F_1917) + logJ(z2)      # Jacobian keeps priors honest
+```
+\normalsize
+
+Every proposal $z$ is feasible, both fluxes lie inside $[a,b]$ by construction, and
+the two log-Jacobian terms guarantee the physical-space priors are the ones we
+intended. That is the whole mechanism.
 
 # References
 
