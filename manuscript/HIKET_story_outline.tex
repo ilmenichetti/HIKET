@@ -53,6 +53,17 @@
 %  This keeps each methods insert self-contained and separately shareable.
 % ---------------------------------------------------------------------
 \usepackage{subfiles}
+% ---------------------------------------------------------------------
+%  OPTIONAL STRATIFIED-CALIBRATION STRAND (rendered in red).
+%  A self-contained future-work line that can be ADDED if data/time allow, or
+%  DROPPED entirely with a single switch while the whole storyline stays in place
+%  (just smaller). Set \stratfalse to remove every \ifstrat...\fi block below;
+%  while \strattrue they render in red so the strand is visually separable.
+% ---------------------------------------------------------------------
+\usepackage{xcolor}
+\newif\ifstrat
+\strattrue        % <-- \stratfalse drops the entire stratified-calibration strand
+\newcommand{\stratnote}[1]{\ifstrat{\color{red}#1}\fi}  % inline red, droppable
 
 % Number and list every heading level down to subparagraph.
 \setcounter{secnumdepth}{5}
@@ -148,6 +159,16 @@ the model must reproduce.
 \subsection{Scope and contribution (preview)}
 One short paragraph previewing the move: a transient initialization, tested
 fairly across a model ladder. Keep it a promise, not the argument.
+% CONTRIBUTION DELTA --- state explicitly (the ``relatively new, applied'' register;
+% reviewers respect it if precise, and ``spin-up is old'' is the reflex to pre-empt).
+% NOT transient init per se, but:
+%   (i)  the unknown historical start made a CALIBRATED, uncertainty-PROPAGATING
+%        parameter (sigma_init) when NO historical forcing data exist --- not a fixed
+%        spin-up nor a prescribed land-use history;
+%   (ii) applied HOMOGENEOUSLY across a structural ensemble as a fair-frame device
+%        (lets divergence be attributed to structure vs. initialisation artefact);
+%   (iii) at national-NFI scale (~350-400 plots, per-plot).
+% The insight it buys: inputs/forcing history bind; structure does not.
 
 % =====================================================================
 \part{Challenge}
@@ -219,6 +240,12 @@ Gridded daily climate; per-model temporal aggregation.
 \subsection{The model ladder}
 Six models on two crossed axes (pool complexity; climate integration), so no
 conclusion rests on one structure.
+% MODEL ROLES (state up front): Yasso is the PRIMARY / operational model --- it is
+% the Finnish GHG-inventory model, so it is the one that matters for the application.
+% SP1/TP2/TP3 are a structural ROBUSTNESS ladder: hypothesis-testing that the
+% transient-init + input-uncertainty conclusions survive across model structure,
+% NOT a beauty contest for the ``best'' model. This reframes the complexity axis as
+% robustness/sensitivity rather than an optimal-complexity search.
 
 \subsubsection{Pool-complexity axis}
 SP1 $\to$ TP2 $\to$ TP3 $\to$ Yasso07. One sentence each. [placeholder]
@@ -275,8 +302,23 @@ Appendix~\ref{app:exact}.
 Tiered scheme; identical in construction/scale/DoF, not in raw values. Full
 parameter-class $\times$ prior-criteria tables in Appendix~\ref{app:priors}.
 
-\subsubsection{Equal degrees of freedom}
-All transfer fractions free in every Yasso variant. One sentence on why.
+\subsubsection{Degrees of freedom, set by external information}
+Flow fractions are equal-DoF (all free) in every multi-pool model --- the
+fair-frame core. Rates differ BY DESIGN, and the reason is information, not
+inconsistency:
+% Yasso FIXES its base rates (published, authoritative -> preserves each pool's
+% chemical definition) and spends its freedom on fractions + climate + size.
+% SP1/TP2/TP3 CALIBRATE their rates because no authoritative rate constants exist to
+% fix them to (they have priors, but no external value worth pinning). So the ladder
+% spans externally-anchored (Yasso) -> fully-calibrated (simple): identifiability
+% tracks how much external information a structure carries. State openly --- a
+% careful reader WILL notice the rate asymmetry; framed this way it is a deliberate,
+% information-driven choice, and it doubles as an illustration of the equifinality
+% theme (see Discussion excursus).
+Pin what external knowledge lets you pin; calibrate the rest.
+\stratnote{[strand] This convention is also what makes the stratified extension
+Yasso-only: with rates fixed, Yasso's stratifiable knobs are inputs + the
+humus-formation fraction --- see the optional strand in the Outlook.}
 
 \subsection{Calibration and inference}
 
@@ -365,6 +407,15 @@ transient the data demand. Lift off Finland.
 % Distinct beat (chosen: clearer over woven). Trickster pays off here.
 The data cannot resolve kinetics; the input multiplier absorbs what structure
 cannot. So the frontier is inputs, not soil chemistry.
+% CENTRALITY: not a side story --- it is the ANSWER to the complexity question
+% (structure is a weak lever BECAUSE inputs dominate). Give it Discussion-central
+% status, not a sidebar.
+% CLOSED LOOP: diagnosed on the unbounded run -> bounded in Methods -> consequence
+% on the bounded re-run (whether TP2/TP3 take a visible R^2 hit, or the misfit
+% relocates onto the now-pinned kinetics). The bound is what gives the reveal teeth.
+% HEDGE (honesty): say ``consistent with input/forcing error'', NOT ``proven'' ---
+% the current global design cannot exclude local kinetic variation (see excursus +
+% the optional stratified strand, which is exactly the fair test of that).
 
 \subsubsection{The multiplier crosses a physical line (quantitative payoff)}
 % The Trickster's tell: sigma_input is not a nuisance, it has a physical referent.
@@ -409,6 +460,14 @@ is what lets us see this rather than hide it in a fitted point. Tie to Results.
 It is intrinsic to the model class and the data content (few observations per
 plot); it bounds what calibration can ever claim.
 
+\paragraph{Managing it by convention, transparently}
+We do not claim to resolve the rate$\leftrightarrow$fraction equifinality --- we
+MANAGE it: where authoritative rate values exist (Yasso) we pin the chemical axis
+and calibrate the partitioning; where they do not (simple models) we calibrate and
+let the equifinality show. An explicit convention, not an identification claim ---
+and the candour is what keeps this section credible rather than defensive. Ties
+back to ``degrees of freedom set by external information'' in Methods.
+
 \subsection{The over-prediction is a property of the likelihood}
 % Persona/candor beat.
 Slight, systematic over-prediction follows from the multiplicative-normal
@@ -449,21 +508,23 @@ generalizes. Tie back to the Intro's general statement.
 \subsection{Outlook: toward a historical perspective on inputs}
 The forward call. The real next step is reconstructing historical (and
 belowground) input regimes.
+% TWO-PRONGED FRONTIER, one lesson (add structure to the FORCING, not the kinetics):
+%   (temporal) reconstruct the input HISTORY --- replace the linear 1917->1985 guess;
+%   (spatial/class) stratify the input LEVEL by site class --- the red optional strand.
+% The physical envelope UNIFIES both: it bounds sigma_init (the 1917/history input)
+% AND sigma_input (the contemporary input) under one constraint, so ``reconstruct the
+% input history'' literally means doing better than our linear guess at BOTH ends of
+% the pre-run. Note: Komeetta 2024 = a 3rd SOC obs/plot -> won't rescue kinetic
+% identifiability (12 fractions vs 3 points), but strengthens the input/init signal
+% that the stratified strand leans on.
 
-\subsubsection{Physically-bounded input priors (the method refinement)}
-% Concrete methodological Boon, ready to state. Put a PHYSICAL bound on the
-% effective litter FLUX (not the abstract multiplier), homogeneous across models:
-% sigma_input*J_raw and sigma_init*sigma_input*J_full in ~[0.5, 9] tC/ha/yr
-% (NPP-bounded). Removes TP2/TP3's escape hatch -> forces the misfit onto the
-% (currently prior-pinned) rates or into a VISIBLE R^2 hit, i.e. converts hidden
-% input inflation into an exposed structural-adequacy signal. Sharpens the
-% intercomparison. Caveat: full 6-model re-calibration + mixing check (a leveraged
-% parameter clamped near a boundary). Planned for the Roihu compute phase.
-% NOTE: now IMPLEMENTED as a methods choice (see M&M "Physically-bounded input
-% priors" + Appendix~\ref{app:input-bounds}); this Outlook beat may collapse into
-% a forward-looking sentence on the belowground/history extension once the
-% production re-run lands.
-Cross-ref: Appendix~\ref{app:input-bounds}.
+\subsubsection{From diagnosis to method (now folded into M\&M)}
+% The physical input bound was the ``refinement'' beat --- it is now IMPLEMENTED as
+% a Methods choice (M&M ``Physically-bounded input priors'' + App.~\ref{app:input-bounds}),
+% so it is no longer future work. What remains genuinely FUTURE is the input HISTORY
+% (temporal reconstruction) and belowground inputs.
+The bound itself has moved to Methods; the remaining frontier is the input
+\emph{history} (temporal) and belowground inputs. See Appendix~\ref{app:input-bounds}.
 
 \subsubsection{An interdisciplinary, source-diverse effort}
 Reconstruction needs evidence beyond the usual datasets --- grey literature
@@ -475,6 +536,58 @@ Replace the equilibrium default with priors grounded in reconstructed history,
 calibrated under uncertainty. The thread closes here: better history $\to$
 sharper prior $\to$ a start that is assumed less and inferred more. The
 generalizable recommendation.
+
+% =====================================================================
+%  OPTIONAL STRATIFIED-CALIBRATION STRAND  (red; drop entirely with \stratfalse)
+%  Self-contained: removing it leaves the storyline whole, just smaller.
+% =====================================================================
+\ifstrat
+{\color{red}
+\subsection{[Optional strand] Locally stratified calibration (Yasso only)}
+A droppable extension --- include only if data + time allow; the storyline stands
+without it. It is the SPATIAL counterpart of the historical-reconstruction prong:
+both add structure to the \emph{forcing}, never to the kinetics.
+
+\subsubsection{Scope --- the operational model only}
+Stratify Yasso (the operational model); SP1/TP2/TP3 stay global robustness anchors.
+Consistent with the rate convention: Yasso already fixes its published rates, so its
+free knobs (inputs + fractions) are the ones available to stratify. Triggered only
+``if complexity emerges as needed'', not by default.
+
+\subsubsection{What to stratify --- inputs and the humus-formation fraction}
+The physically-bounded input $\sigma$ and the humus-formation fraction (the
+stabilisation control) --- NOT the rates (fixed) nor the inter-pool splits
+(non-identified). Both carry external, class-varying referents; humus formation is
+a near-net stabilisation flux the total stock genuinely constrains, so of the
+fractions it is the one worth stratifying.
+
+\subsubsection{RF-guided selection, holdout-evaluated}
+Use the residual random forest to CHOOSE the stratifying classes (its OOB $R^2$ is
+the ceiling of covariate-recoverable local structure); then measure the stratified
+model's gain on the HELD-OUT plots --- non-negotiable, or selecting and scoring on
+the same data makes the improvement circular. Report ``RF says up to $X\%$ is
+recoverable; the stratified mechanistic model recovers $Y\%$ on holdout.''
+
+\subsubsection{Hierarchical, predictive-robustness framing}
+Partial pooling: data-poor strata shrink to the global value (no minimum-$N$
+problem); the between-stratum variance is itself a result. Headline = improved,
+more ROBUST posterior predictions even where stratum parameters stay weakly
+identified --- identifiability and predictive skill are distinct, and robustness is
+what the GHG-inventory use needs.
+
+\subsubsection{Equifinality as a measured quantity}
+Bounded inputs vs.\ free humus formation compete for the local variance; the
+physical bound PARTIALLY breaks their equifinality (one competitor has walls, the
+other does not), so the learned variances softly attribute local variance to
+input vs.\ stabilisation origin --- cross-checked by the RF driver identity
+(productivity proxies $\to$ input; soil-chemistry proxies $\to$ stabilisation).
+Frame as ``consistent with'', not proof. Expect modest holdout gains against a low
+predictability ceiling --- modest-but-robust-and-honest beats an overclaimed jump.
+}
+\fi
+% =====================================================================
+%  end optional strand
+% =====================================================================
 
 \section{Conclusions}
 % Written LAST; author shapes. Closes on: success -> Bayesian enabling ->
