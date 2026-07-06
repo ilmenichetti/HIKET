@@ -139,6 +139,24 @@ log_jac_stick <- function(p, budget) {
 }
 
 
+# --- Bounded (scaled-logit) transform (unconstrained -> window [a,b]) ---
+#
+# Maps the whole real line smoothly onto a finite physical window (a, b) via a
+# scaled logistic. The two edges sit at x = -/+ Inf, so every proposal is a
+# feasible in-window value and the sampler never meets a wall to reject against
+# (contrast with hard truncation). Used to keep the effective litter FLUX inside
+# a physical (boreal NPP) envelope; see the flux_pair type in build_transforms()
+# and documentation/sigma_input_physical_bounds_note.
+bounded_fwd <- function(x, a, b) a + (b - a) * inv_logit(x)          # x -> p in (a,b)
+bounded_inv <- function(p, a, b) logit((p - a) / (b - a))            # p in (a,b) -> x
+
+# Log stretch factor (1-D Jacobian) of bounded_fwd at the point mapping to p:
+#   dp/dx = (b-a) sigma(x)(1-sigma(x)) = (p-a)(b-p)/(b-a)
+# so log|dp/dx| = log(p-a) + log(b-p) - log(b-a). Vanishes linearly toward each
+# edge, which is why the window boundary is approached but never reached.
+log_jac_bounded <- function(p, a, b) log(p - a) + log(b - p) - log(b - a)
+
+
 # =============================================================================
 # 2.  Transform builder
 #
@@ -176,6 +194,22 @@ log_jac_stick <- function(p, budget) {
 #                         For single proportions in (0,1).
 #                         Used for RothC DPM:RPM ratio, f_bio, f_hum.
 #
+#       "flux_pair"     : list(names = c("sigma_input","sigma_init"),
+#                              type = "flux_pair", window = c(a, b), J_bar = Jb)
+#                         COUPLED group for the two auxiliary litter-input
+#                         parameters. Bounds the effective litter FLUX (not the
+#                         abstract multiplier) to a physical window [a,b] at BOTH
+#                         ends of the pre-run, homogeneous across models:
+#                           F_now  = bounded(x1; a,b),  sigma_input = F_now / J_bar
+#                           F_1917 = bounded(x2; a,b),  sigma_init  = F_1917 / F_now
+#                         so both the contemporary and the 1917 flux lie in [a,b]
+#                         by construction and sigma_init is their ratio (it has no
+#                         independent physical referent). J_bar is the frozen
+#                         cross-plot mean litter (units bridge, computed at setup).
+#                         names[1] MUST be the flux-defining multiplier
+#                         (sigma_input); names[2] the ratio (sigma_init).
+#                         See documentation/sigma_input_physical_bounds_note.
+#
 #     EXTENSIBILITY:
 #       Adding a new parameter type requires adding one case to the three
 #       switch() statements below and one entry to the Jacobian switch.
@@ -205,7 +239,14 @@ build_transforms <- function(param_spec) {
              stick_break   = { p[nms] <- stick_break(x[nms], grp$budget) },
              log           = { p[nms] <- exp(x[nms]) },
              unconstrained = { p[nms] <- x[nms] },
-             logit         = { p[nms] <- inv_logit(x[nms]) }
+             logit         = { p[nms] <- inv_logit(x[nms]) },
+             flux_pair     = {                                     # coupled: see header
+               a <- grp$window[1]; b <- grp$window[2]; Jb <- grp$J_bar
+               F_now  <- bounded_fwd(x[nms[1]], a, b)              # contemporary flux
+               F_1917 <- bounded_fwd(x[nms[2]], a, b)              # 1917 flux
+               p[nms[1]] <- F_now / Jb                            # sigma_input
+               p[nms[2]] <- F_1917 / F_now                        # sigma_init = ratio
+             }
       )
     }
     p
@@ -225,7 +266,14 @@ build_transforms <- function(param_spec) {
              stick_break   = { x[nms] <- stick_break_inv(p[nms], grp$budget) },
              log           = { x[nms] <- log(p[nms]) },
              unconstrained = { x[nms] <- p[nms] },
-             logit         = { x[nms] <- logit(p[nms]) }
+             logit         = { x[nms] <- logit(p[nms]) },
+             flux_pair     = {                                     # inverse of the coupled map
+               a <- grp$window[1]; b <- grp$window[2]; Jb <- grp$J_bar
+               F_now  <- p[nms[1]] * Jb                           # sigma_input -> F_now
+               F_1917 <- p[nms[2]] * F_now                        # sigma_init  -> F_1917
+               x[nms[1]] <- bounded_inv(F_now,  a, b)
+               x[nms[2]] <- bounded_inv(F_1917, a, b)
+             }
       )
     }
     x
@@ -253,7 +301,16 @@ build_transforms <- function(param_spec) {
              stick_break   = { jac <- jac + log_jac_stick(p[nms], grp$budget) },
              log           = { jac <- jac + sum(log(p[nms])) },
              unconstrained = { },                                # identity contributes 0
-             logit         = { jac <- jac + sum(log(p[nms] * (1 - p[nms]))) }
+             logit         = { jac <- jac + sum(log(p[nms] * (1 - p[nms]))) },
+             flux_pair     = {                                   # |det d(si,sinit)/d(x1,x2)|
+               a <- grp$window[1]; b <- grp$window[2]; Jb <- grp$J_bar
+               F_now  <- p[nms[1]] * Jb                          # recover the two fluxes
+               F_1917 <- p[nms[2]] * F_now
+               # det = g'(x1) g'(x2) / (J_bar * F_now); see note Appendix A.2
+               jac <- jac + log_jac_bounded(F_now,  a, b) +
+                            log_jac_bounded(F_1917, a, b) -
+                            log(Jb) - log(F_now)
+             }
       )
     }
     jac

@@ -60,3 +60,10 @@ YASSO07_SIGMA_PPM <- c(
   sigma_init  = 0.50,
   sigma_input = 0.50
 )
+
+# Physical litter-flux envelope (tC/ha/yr), homogeneous across all six models.
+# Bounds the EFFECTIVE flux sigma_input*J (and the 1917 flux) to the boreal NPP
+# range (Gower et al. 2001); floor relaxed below the Gower min as a small,
+# strictly-positive, non-binding guardrail. Enforced via the `flux_pair`
+# transform in calibration_engine.R. See sigma_input_physical_bounds_note.
+YASSO07_INPUT_FLUX_WINDOW <- c(0.05, 8.7)

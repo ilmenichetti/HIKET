@@ -95,8 +95,10 @@ param_spec <- list(
   list(names = "beta1",       type = "log"),
   list(names = "beta2",       type = "unconstrained"),
   list(names = "gamma",       type = "unconstrained"),
-  list(names = "sigma_init",  type = "log"),
-  list(names = "sigma_input", type = "log")
+  # sigma_input/sigma_init: bounded flux_pair — effective litter flux held in the
+  # physical window (sigma_init = ratio). J_bar filled from litter_means below.
+  list(names = c("sigma_input", "sigma_init"), type = "flux_pair",
+       window = TP2_INPUT_FLUX_WINDOW, J_bar = 1.0)
 )
 
 transforms       <- build_transforms(param_spec)
@@ -217,6 +219,22 @@ litter_means <- lapply(plots_real, function(pid) {
   )
 })
 names(litter_means) <- plots_real
+
+# --- Inject J_bar into the flux_pair transform (needs litter_means) ----------
+# J_bar = cross-plot mean litter: the units bridge between the physical flux
+# window and the dimensionless sigma_input multiplier. Fixed for the whole run.
+J_bar  <- mean(vapply(litter_means[plots_real], `[[`, numeric(1), "J_total_mean"))
+fp_idx <- which(vapply(param_spec, function(g) identical(g$type, "flux_pair"), logical(1)))
+param_spec[[fp_idx]]$J_bar <- J_bar
+transforms       <- build_transforms(param_spec)
+to_original      <- transforms$to_original
+to_unconstrained <- transforms$to_unconstrained
+log_jacobian     <- transforms$log_jacobian
+best_x           <- to_unconstrained(free_defaults)
+stopifnot(
+  max(abs(to_original(best_x)[FREE_NAMES] - free_defaults[FREE_NAMES])) < 1e-10)
+message(sprintf("flux_pair J_bar = %.3f tC/ha/yr | sigma_input window [%.3f, %.3f]",
+                J_bar, TP2_INPUT_FLUX_WINDOW[1] / J_bar, TP2_INPUT_FLUX_WINDOW[2] / J_bar))
 
 obs_meta <- lapply(plots_real, function(pid) {
   clim     <- Yasso07_climate[as.character(Yasso07_climate$plot_id) == pid, ]

@@ -88,13 +88,18 @@ message("=============================================================\n")
 # in the same position in the parameter vector. Only its prior centre and
 # physical interpretation change (see free_defaults section below).
 
+# sigma_input/sigma_init: bounded flux_pair — the effective litter flux is held
+# inside the physical window SP1_INPUT_FLUX_WINDOW at both ends of the pre-run
+# (sigma_init recovered as a ratio). J_bar is a placeholder here; it is filled
+# from litter_means (cross-plot mean litter) and the transform rebuilt once the
+# data are loaded (see "Inject J_bar" below).
 param_spec <- list(
   list(names = "alpha",       type = "log"),
   list(names = "beta1",       type = "log"),
   list(names = "beta2",       type = "unconstrained"),
   list(names = "gamma",       type = "unconstrained"),
-  list(names = "sigma_init",  type = "log"),
-  list(names = "sigma_input", type = "log")
+  list(names = c("sigma_input", "sigma_init"), type = "flux_pair",
+       window = SP1_INPUT_FLUX_WINDOW, J_bar = 1.0)
 )
 
 transforms       <- build_transforms(param_spec)
@@ -215,6 +220,24 @@ litter_means <- lapply(plots_real, function(pid) {
   )
 })
 names(litter_means) <- plots_real
+
+# --- Inject J_bar into the flux_pair transform (needs litter_means) ----------
+# J_bar = cross-plot mean litter: the units bridge between the physical flux
+# window and the dimensionless sigma_input multiplier. Fixed for the whole run.
+# The param_spec placeholder (J_bar = 1.0) is now replaced and the transform
+# rebuilt; best_x (prior centre) is recomputed with the real J_bar.
+J_bar  <- mean(vapply(litter_means[plots_real], `[[`, numeric(1), "J_total_mean"))
+fp_idx <- which(vapply(param_spec, function(g) identical(g$type, "flux_pair"), logical(1)))
+param_spec[[fp_idx]]$J_bar <- J_bar
+transforms       <- build_transforms(param_spec)
+to_original      <- transforms$to_original
+to_unconstrained <- transforms$to_unconstrained
+log_jacobian     <- transforms$log_jacobian
+best_x           <- to_unconstrained(free_defaults)
+stopifnot(
+  max(abs(to_original(best_x)[FREE_NAMES] - free_defaults[FREE_NAMES])) < 1e-10)
+message(sprintf("flux_pair J_bar = %.3f tC/ha/yr | sigma_input window [%.3f, %.3f]",
+                J_bar, SP1_INPUT_FLUX_WINDOW[1] / J_bar, SP1_INPUT_FLUX_WINDOW[2] / J_bar))
 
 obs_meta <- lapply(plots_real, function(pid) {
   clim     <- Yasso07_climate[as.character(Yasso07_climate$plot_id) == pid, ]
