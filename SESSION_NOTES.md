@@ -610,3 +610,49 @@ fin outline + peat overlay onto the raster CRS instead of assuming 3067.
   (predictive hard-loads the input bundle keyed to each new RUN_ID); check **sigma_input
   R-hat/ESS on TP2/TP3** (against-ceiling params) + whether TP2/TP3 R² takes the expected
   visible hit; then stages 2–4 + NextGenC + docs.
+
+### First run FAILED (OOM) → fixed + relaunched (commit adf0a2a)
+- **Symptom:** two Yasso jobs "finished" in <10 min (OOM-killed); SP1/TP2 still running
+  but pathologically slow. NOT the flux_pair change — logs showed `flux_pair J_bar=2.472`,
+  forward sanity PASS, likelihood PASS, MCMC reached iter 300 before the kernel killed it.
+- **Root cause (migration miss):** `CORES_PER_CHAIN` used a `puhti|mahti`-only nodename
+  check that fell through to `detectCores()-1` on Roihu = **383 workers** on a 40-CPU/16 GB
+  alloc → OOM (Yasso's Fortran per-worker footprint hit the wall; pure-R SP1/TP2 survived
+  but forked ~358 procs/eval = crawling). **Fix:** all 6 scripts →
+  `CORES_PER_CHAIN <- parallelly::availableCores()` (SLURM-aware everywhere; verified it
+  honours `SLURM_CPUS_PER_TASK`); 6 SLURM scripts `--mem-per-cpu` 400→1000 MB headroom.
+  Verified: TP2 full smoke MCMC (temp 16plots/400iter) exit 0, posterior fluxes in-window.
+  User `scancel`'d + `git pull` + relaunched. Diagnosis was done from rsync'd logs (user
+  syncs; I read locally — SSH is manual).
+- **LESSON (persist):** on Roihu ALWAYS derive core count from `parallelly::availableCores()`,
+  never `detectCores()` (ignores the cgroup/SLURM allocation on a 384-core node).
+
+### Roihu optimization / credits discussion (docs read, no code change)
+- Roihu CPU node = 384 cores (2×192 AMD Turin) / 768 GiB. Billing = **(cores×1 +
+  mem_GiB×0.1 + nvme×0.006) × actual_walltime_h** (reserved resources, actual elapsed time).
+- User priorities = **simple code + credit efficiency**, speed secondary. Consequences:
+  (a) DON'T implement parallel-chains/hybrid (nested forking — complexity); keep sequential
+  chains. (b) DON'T bump cores (more cores = more idle-core BU on a serial MCMC → worse
+  credits; my earlier "bump to 128" retracted). (c) mem-per-cpu=1000 is cheap OOM insurance
+  (~10% of BU; a re-OOM wastes 100%). (d) After runs: `seff <jobid>` → measure CPU% + peak
+  mem → right-size cores/mem for NEXT run from real data. (e) `--time` cap is free (billed on
+  actual). Current 40-core config is already credit-reasonable — relaunched as-is.
+
+### Manuscript storyline deepened + red stratification strand (commit 18d739d)
+- Discussed the story spine at length; consolidated into `manuscript/HIKET_story_outline.tex`
+  (still scaffold) + memory [[manuscript-story-outline]]. Key locks: init stays PROTAGONIST
+  (novelty = calibrated/uncertainty-propagating/at-scale, NOT spin-up); input uncertainty =
+  central consequence w/ "consistent-with not proven" hedge; Yasso=primary/simple=robustness
+  ladder; DoF-by-external-information convention (Yasso fixes published rates, simple models
+  calibrate); two-pronged frontier (temporal history + spatial stratification).
+- **Droppable red strand** for the future stratified-calibration line: `\newif\ifstrat`
+  toggle, `\stratfalse` removes it all (15pp→14pp, both compile). Strand = Yasso-only,
+  stratify bounded inputs + humus-formation fraction (not rates/splits), RF-guided +
+  HELDOUT-evaluated, hierarchical, predictive-robustness framing, equifinality-as-measured.
+
+### NEXT SESSION (after runs land)
+- User syncs results (rsync runs/+diagnostics/+Data/model_inputs/). Then: inspect
+  convergence (esp. sigma_input R-hat/ESS on TP2/TP3), run `seff` per job for credit
+  right-sizing, run stages 2–4 (`run_hiket_pipeline.R --skip-calibration`), refresh NextGenC
+  (TP3 RUN_ID), update docs/manuscript with the bounded-run numbers (the sigma_input R²-hit
+  payoff). All committed + pushed through 18d739d; tree clean.
