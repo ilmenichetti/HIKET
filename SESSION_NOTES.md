@@ -462,3 +462,138 @@ fin outline + peat overlay onto the raster CRS instead of assuming 3067.
 - Zenodo description saved as tracked `Reporting/NextgenC_report/ZENODO_description.md`.
 - TP3 Euler caveat still stands — TP3 refresh when the exact run syncs is now a clean
   3035-pipeline rerun.
+
+## Session 2026-07-02 — Roihu migration + sigma_input physical bounds (docs done, impl pending)
+
+### Puhti→Roihu migration COMPLETE (commit c0a19f3) + smoke test PASSED
+- Pre-Roihu cleanup first (commits 18def20, a8c6ac1, 92d3005, 4ca0e84): committed the
+  deferred predictive/engine edits, NextGenC TP3 outputs, gitignore cruft, tracked the
+  NextGenC ODS/PNG + manuscript PDF, deleted merged branch. Tree clean.
+- **Roihu now production.** Same project number: `/scratch/project_2019134/HIKET`.
+  Login `ssh menichet@roihu-cpu.csc.fi` — **cert-based, re-sign SSH cert daily** (24h)
+  via MyCSC; Mac `~/.ssh/config` has `roihu` alias. Cert GOTCHA: must be signed over the
+  SAME key as local `~/.ssh/id_ed25519` (fp 7g0pP4Lb) or "invalid format". Host key
+  ED25519 SHA256 `YNdesHbXhxN0hKD4mWvYGQONebjRqY+CGXDqPiZyByQ` (verified vs docs.csc.fi).
+- **R runs NATIVELY on Roihu — no `apptainer_wrapper`.** All 8 `hiket_*.sh` + CLAUDE.md
+  updated (`srun Rscript`, `R CMD SHLIB` native, Zen5 x86-64, partition `small`=72h/384c).
+- Migration steps done: clone, `Data/` rsync (Mac→Roihu), Fortran recompile (both
+  `yasso07.so`+`yasso15.so` present, separate SHLIB calls).
+- **Smoke test PASSED** (job 126351 COMPLETED 0:0, 4m; Yasso07, test partition, 30 plots/
+  500 iter): full path green — native R, Fortran, MCMC, diagnostics render, output save.
+- **BUG FOUND+FIXED (commit 78f58f9):** all 6 `run_*_transient_calibration.R` used
+  `set.seed(42)` for the N_PLOTS_TEST subset draw, but the holdout set in `site_raw.csv`
+  was assigned with that SAME seed 42 → any test run with N_PLOTS_TEST≤89 re-drew exactly
+  the held-out plots → 0 calibration plots → mtext "plot.new" crash. Confirmed
+  `set.seed(42);sample(plots_real,89)`==holdout (89/89). Masked in production (NA). Fixed
+  → `set.seed(2025L)`.
+
+### sigma_input physical bounds — DECIDED + DOCUMENTED (implementation deferred)
+- Problem: `sigma_input` was a weak Tier-3 nuisance; TP2/TP3 posteriors reach effective
+  litter flux 34/50 tC/ha/yr (13–20×), above any forest's NPP.
+- Literature research (cited): `J` = TREE litter only (median 2.8 tC/ha/yr); understory
+  (~0.5–1, ~15–35% of total) NOT in J = what sigma_input should absorb. **Anchor: Gower
+  et al. (2001) Ecol.Appl. 11(5):1395 boreal total NPP 52–868 gC/m²/yr = 0.52–8.68
+  tC/ha/yr** (steady-state litter≈NPP; NPP generous since harvested stemwood≠litter).
+  Cross-checks (Finnish Pinus 2.0–3.3, Berg, Luyssaert 2007) all inside.
+- **DECISION (user, option A = widest boreal): effective flux `sigma_input × J ∈
+  [0.5, 8.7]` tC/ha/yr**, homogeneous all 6 (in physical units, since J differs).
+  → multiplier ≈[0.18,3.1] at J̄≈2.8. sigma_init light guardrail [0.1,1.5].
+  Consequence: only TP2/TP3 bind; **Yasso20 (7.5<8.7) stays free** (productive edge —
+  itself a result). "Also constrain Yasso" vs "widest" resolved by literature: 7.5 is
+  physically possible.
+- **Shape = bounded (scaled-logit) REPARAMETERISATION, not hard truncation** — addresses
+  user's posterior-artifact worry: sampler works unconstrained, no boundary-rejection/
+  mixing artefact; edge pile-up for TP2/TP3 is the intended diagnostic, not a bug.
+- **Docs DONE + committed:** standalone note `documentation/sigma_input_physical_bounds_note.Rmd`
+  (+pdf, 4d46c9a) fully cited; `HIKET_calibration.Rmd` (+pdf, c743e38) — Tier-3 table row,
+  new rationale paragraph in Priors (label `sec:priors-tier3`), aux-parameters section.
+
+### NEXT SESSION — implementation, then weekend Roihu production re-run
+- **Prior/transform machinery scoping (started):** `build_transforms` + `createPrior`
+  are defined in the BASE engine `Calibration_real_data/calibration_engine.R` (the
+  transient engine sources it). Transforms currently only log/logit/unconstrained — the
+  **bounded (scaled-logit / min-max) transform is NEW machinery to add** (transform +
+  inverse + log-Jacobian). The prior needs per-plot mean `J̄` to set the wall, but
+  `*_priors.R` don't currently see the data → must pass `J̄` in from the engine (inputs
+  available there).
+- Files to touch: 6 `Prior_specs/*_priors.R` (flux window + sigma_input bounded-transform
+  spec) + base `calibration_engine.R` (bounded transform + Jacobian in build_transforms/
+  createPrior). Homogeneous across all 6.
+- Verify BEFORE Roihu: `doublechecks/effective_litter_flux_vs_physical.R` +
+  `preflight_prior_pushforward.R` (prior-pushforward at full N). Post-run: check R-hat/ESS
+  for sigma_input on TP2/TP3, watch correlation shifts.
+- Roihu workflow: edit local → push → `git pull` on Roihu → **NO recompile** (pure R, no
+  .f90) → submit 6 `sbatch hiket_*.sh`. Clean tree both sides before pull. Silence the
+  SessionStart hook: `touch .claude/.roihu_input_bounds_done`.
+- Plan: launch full 6-model re-calibration over the weekend = first Roihu PRODUCTION test.
+
+## Session 2026-07-06 — sigma_input physical bounds IMPLEMENTED + fully verified (ready for Roihu)
+
+### Design refinements (before coding) — in the docs
+- **Enforcement mechanism settled: bounded RE-PARAMETERISATION, not truncation.** Long
+  pedagogical thread with the user (recorded in `documentation/sigma_input_physical_bounds_note`):
+  the naive idea is a hard wall in the prior (Option B); it mixes badly *exactly* for the
+  binding models TP2/TP3, which sit against the ceiling (rejection/stickiness + boundary
+  pile-up that is partly a sampling artefact). Option A (reparam) maps an unconstrained
+  coordinate through a scaled logit onto the window → every proposal feasible, wall at
+  ±∞, smooth mixing; price = one Jacobian term. Option C (per-plot likelihood rejection)
+  = only per-plot-exact but reintroduces `-Inf` pathology. Chose A.
+- **`J̄` is a units bridge, not a data read** — the physical flux window [0.05,8.7] tC/ha/yr
+  ÷ mean litter `J̄`(≈2.47) = multiplier window [0.02,3.5]. Computed once at setup, frozen.
+  Run-time data flow UNCHANGED (litter still only enters in the wrapper).
+- **Two-flux joint construction (user's call, cleaner):** bound BOTH the contemporary flux
+  `F_now=σ_input·J` and the 1917 flux `F_1917=σ_init·σ_input·J` to the SAME Gower envelope;
+  `σ_init` = ratio `F_1917/F_now` (no independent referent). Fixes an incorrect earlier note
+  claim (independent bounds do NOT keep the pre-run flux in-window: 1.5×8.7≈13). Envelope is
+  ENSEMBLE-level (scalar multipliers) → clear-cuts live in per-plot `J`, don't break it.
+- **Floor relaxed 0.5→0.05** (below Gower min): non-binding guardrail, strictly >0 (zero flux
+  → zero SOC → −∞ likelihood), pre-positions a future local/stratified σ. Forward-note added:
+  local low-flux needs non-steady-state init for disturbed plots + additive error floor.
+- Docs updated + re-rendered: `sigma_input_physical_bounds_note.{Rmd,pdf}` (plain "endless
+  ruler" layer + deeper algorithmic Appendix: transform math, two-flux, Jacobian, pseudocode).
+  Manuscript: modular appendices via `subfiles` (`manuscript/appendices/`, each compiles
+  standalone OR combined); wrote the 1-page physically-bounded-input-priors appendix + 4
+  stub appendix modules; M&M restructured with appendix cross-refs + new placeholders.
+  Commits **4ba0492** (docs+manuscript).
+
+### Implementation — commit eb1728c
+- **Engine `Calibration_real_data/calibration_engine.R`:** new primitives `bounded_fwd/
+  bounded_inv/log_jac_bounded` + a COUPLED `flux_pair` transform type in `build_transforms()`
+  (all three switches). Maps x1,x2 → F_now,F_1917 via scaled logit; recovers
+  `σ_input=F_now/J̄`, `σ_init=F_1917/F_now`. Coupled analytical log-Jacobian
+  `logJac(F_now)+logJac(F_1917)−log(J̄)−log(F_now)` (det of the 2×2 map).
+- **6 calibration scripts:** replaced the two `log` sigma entries with the `flux_pair` group
+  (window = `<MODEL>_INPUT_FLUX_WINDOW`, `J_bar=1.0` placeholder). J̄ known only AFTER
+  `litter_means` (line ~207) but param_spec is earlier → **build-then-inject pattern**:
+  after litter_means compute J̄, inject into the group, REBUILD transforms + best_x. Two J̄
+  variants: scalar `J_total_mean` (SP1/TP2/TP3), summed AWEN pool means (Yasso07/15/20).
+- **6 prior files:** added `<MODEL>_INPUT_FLUX_WINDOW <- c(0.05, 8.7)`, homogeneous.
+- sigma_ppm (0.50) kept — in the new bounded coordinate it's still weakly informative (~±33%
+  on the multiplier near J̄).
+
+### Verification (this is why it's Roihu-ready)
+- **Unit test** `doublechecks/test_flux_pair_transform.R`: round-trip exact (4e-16), fluxes
+  in-window over 2000 extreme draws, analytical vs numerical log-Jac 8e-10. PASS.
+- **Preflight (genuine ll_fn, full N=358) all 6 models: 0% blowup.** ll@defaults MATCHES
+  historical baselines exactly (Yasso07/15/20 = −4869/−5083/−7497) → flux_pair leaves defaults
+  byte-identical (round-trip guarantee). SP1 forward-sanity WARN is PRE-EXISTING (identical
+  in 20260603/08 reports), not a regression. J̄=2.472 consistent across all 6 (shared litter).
+- **Full short MCMC smoke test (TP2, temp 16 plots/400 iter, config reverted after):** exit 0,
+  5 chains 100% finite, all diagnostics rendered, posterior/chains/metadata saved. Saved
+  posterior verified PHYSICAL: both F_now (1.30–4.24) and F_1917 (1.36–5.07) strictly inside
+  [0.05,8.7] → **constraint enforced in real MCMC output.**
+- **Data-flow audit:** posterior saved = `all_phys` (`to_original` row-wise → coupling
+  respected); predictive loads `posterior_phys` (physical σ_input/σ_init); diagnostics
+  (traces/marginals/KL/prior draws) ALL route through `to_original` → no downstream breakage.
+- **SLURM scripts audited:** all 6 `hiket_*.sh` correct for Roihu (native `srun Rscript
+  --no-save`, project_2019134, partition small 36h). No .sh change needed. Config production
+  (NA/5/50000/5000).
+
+### Roihu handoff (NEXT)
+- Pushed **eb1728c** to origin/main. On Roihu: clean tree → `git pull` → **NO recompile**
+  (pure R, no .f90 touched) → `mkdir -p .../progress_logs` (safety; SLURM won't create it) →
+  submit 6 `sbatch hiket_*.sh`. Silence hook: `touch .claude/.roihu_input_bounds_done`.
+- **Post-run WATCH: R-hat/ESS for `sigma_input` on TP2/TP3** — the params now against the
+  ceiling; reparam was chosen so they mix there, but only the real run confirms. Also watch
+  correlation shifts and whether TP2/TP3 R² takes the expected visible hit (escape hatch closed).
+- Then downstream (stages 2–4) + NextGenC refresh + doc/manuscript updates as usual.
