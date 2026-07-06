@@ -86,9 +86,14 @@ Fortran `.so` binaries, `*.rds`/`*.csv` in diagnostics,
 ### CSC Roihu HPC (production, since 2026-07-02)
 - Path: `/scratch/project_2019134/HIKET/` (same project number as Puhti; **180-day
   scratch cleanup** — working area only, keep code in git + final outputs on Zenodo)
-- Login: `ssh menichet@roihu-cpu.csc.fi` — **cert-based auth, re-sign the SSH
-  certificate daily** via MyCSC (24 h validity). Local `~/.ssh/config` has a `roihu`
-  alias. Host key ED25519 SHA256 `YNdesHbXhxN0hKD4mWvYGQONebjRqY+CGXDqPiZyByQ`.
+- Login: `ssh roihu` — **cert-based auth, re-sign the SSH certificate daily** via
+  MyCSC → Profile → SSH PUBLIC KEYS → ⋮ → "Sign and download SSH certificate" (24 h
+  validity). It downloads as `cert.pub`; save to `~/.ssh/cert.pub` (the `roihu` alias
+  in `~/.ssh/config` points `CertificateFile` there). Host key ED25519 SHA256
+  `YNdesHbXhxN0hKD4mWvYGQONebjRqY+CGXDqPiZyByQ`. **The user handles all SSH cert/key
+  operations and Roihu logins MANUALLY — do not touch `~/.ssh` files or `ssh roihu`
+  yourself unless explicitly asked (see memory `ssh-cert-handled-manually`); give the
+  user the commands to run instead.**
 - Module: `module load r-env`
 - **R runs NATIVELY — no `apptainer_wrapper`.** Batch: `srun Rscript --no-save …`;
   interactive: `start-r` or `R --no-save`. (This is the key Puhti→Roihu change.)

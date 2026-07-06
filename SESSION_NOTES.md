@@ -597,3 +597,16 @@ fin outline + peat overlay onto the raster CRS instead of assuming 3067.
   ceiling; reparam was chosen so they mix there, but only the real run confirms. Also watch
   correlation shifts and whether TP2/TP3 R² takes the expected visible hit (escape hatch closed).
 - Then downstream (stages 2–4) + NextGenC refresh + doc/manuscript updates as usual.
+
+### Roihu run LAUNCHED (2026-07-06)
+- Pushed eb1728c/c5646b6; user pulled on Roihu and **submitted all 6 `sbatch hiket_*.sh`
+  jobs — the flux_pair production re-calibration is in the queue.** First Roihu PRODUCTION run.
+- Cert workflow clarified: MyCSC "Sign and download SSH certificate" downloads as
+  **`cert.pub`** (not `id_ed25519-cert.pub`); saved to `~/.ssh/cert.pub`; `~/.ssh/config`
+  `roihu` alias `CertificateFile` updated to match. 24h validity, re-sign daily.
+- **User handles all SSH/cert operations + Roihu logins MANUALLY** (recorded in memory
+  `ssh-cert-handled-manually`; CLAUDE.md Roihu section updated). Don't ssh/touch ~/.ssh.
+- AWAITING results. When they land: rsync back `runs/`+`diagnostics/`+`Data/model_inputs/`
+  (predictive hard-loads the input bundle keyed to each new RUN_ID); check **sigma_input
+  R-hat/ESS on TP2/TP3** (against-ceiling params) + whether TP2/TP3 R² takes the expected
+  visible hit; then stages 2–4 + NextGenC + docs.
