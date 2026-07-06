@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=400
+#SBATCH --mem-per-cpu=1000
 # TP2 is pure R; no Fortran. 8 free params (two-pool update loop), slightly
 # more than SP1; finishes well inside the 36h walltime.
 module load r-env

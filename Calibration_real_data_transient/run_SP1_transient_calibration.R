@@ -42,11 +42,10 @@ RUN_ID           <- format(Sys.time(), "%Y%m%d_%H%M%S")
 source("./Calibration_real_data_transient/calib_config.R")
 
 
-CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()[["nodename"]])) {
-  parallelly::availableCores()
-} else {
-  parallel::detectCores() - 1L
-}
+# SLURM-aware core count: respects --cpus-per-task on Roihu/Puhti/Mahti; returns
+# local cores on a laptop. The old puhti|mahti-only check fell through to
+# detectCores() on Roihu → 383 workers on a 40-CPU alloc → OOM (fixed 2026-07-06).
+CORES_PER_CHAIN <- parallelly::availableCores()
 
 STEADY_STATE_YEARS <- 20L    # climate window for xi_mean (unchanged)
 PREINIT_YEAR       <- 1917L  # first year of pre-run (Finland independence)

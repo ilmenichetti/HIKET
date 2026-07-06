@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=400
+#SBATCH --mem-per-cpu=1000
 module load r-env
 if test -f ~/.Renviron; then
     sed -i '/TMPDIR/d' ~/.Renviron

@@ -88,8 +88,10 @@ RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 source("./Calibration_real_data_transient/calib_config.R")
 
 
-CORES_PER_CHAIN <- if (grepl("puhti|mahti", Sys.info()["nodename"])) parallelly::availableCores() else parallel::detectCores() - 1L
-# CORES_PER_CHAIN <- 90L   # Roihu
+# SLURM-aware core count: respects --cpus-per-task on Roihu/Puhti/Mahti; returns
+# local cores on a laptop. The old puhti|mahti-only check fell through to
+# detectCores() on Roihu → 383 workers on a 40-CPU alloc → OOM (fixed 2026-07-06).
+CORES_PER_CHAIN <- parallelly::availableCores()
 
 # Steady-state climate window in YEARS. Converted to monthly rows below
 # when passed to make_likelihood, because climate_by_plot is monthly format.

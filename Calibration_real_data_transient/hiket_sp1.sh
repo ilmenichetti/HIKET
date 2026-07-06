@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=400
+#SBATCH --mem-per-cpu=1000
 # SP1 is pure R with no Fortran; no R CMD SHLIB step needed.
 # Likelihood is ~20x cheaper per eval than Yasso07 (no Fortran call, 6 free
 # params vs 20, pure R loop), so it finishes well inside the 36h walltime.

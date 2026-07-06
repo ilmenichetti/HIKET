@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=400
+#SBATCH --mem-per-cpu=1000
 # TP3 is pure R; no Fortran. 10 free params vs TP2's 8, comparable to TP2;
 # finishes well inside the 36h walltime.
 module load r-env
