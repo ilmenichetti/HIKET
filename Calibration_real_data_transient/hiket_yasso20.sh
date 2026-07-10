@@ -8,11 +8,14 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=1000
+#SBATCH --mem-per-cpu=2000
 module load r-env
 if test -f ~/.Renviron; then
     sed -i '/TMPDIR/d' ~/.Renviron
 fi
 echo "TMPDIR=/scratch/project_2019134" >> ~/.Renviron
 cd /scratch/project_2019134/HIKET/
+# Make the SLURM alloc visible INSIDE the r-env singularity container so
+# parallelly::availableCores() returns --cpus-per-task, not the full node (383).
+export SINGULARITYENV_SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 srun Rscript --no-save Calibration_real_data_transient/run_Yasso20_transient_calibration.R

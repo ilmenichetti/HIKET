@@ -15,4 +15,7 @@ if test -f ~/.Renviron; then
 fi
 echo "TMPDIR=/scratch/project_2019134" >> ~/.Renviron
 cd /scratch/project_2019134/HIKET/
+# Make the SLURM alloc visible INSIDE the r-env singularity container so
+# parallelly::availableCores() returns --cpus-per-task, not the full node (383).
+export SINGULARITYENV_SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 srun Rscript --no-save Calibration_real_data_transient/run_Yasso07_transient_calibration.R

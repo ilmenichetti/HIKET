@@ -90,8 +90,12 @@ source("./Calibration_real_data_transient/calib_config.R")
 
 # SLURM-aware core count: respects --cpus-per-task on Roihu/Puhti/Mahti; returns
 # local cores on a laptop. The old puhti|mahti-only check fell through to
-# detectCores() on Roihu → 383 workers on a 40-CPU alloc → OOM (fixed 2026-07-06).
-CORES_PER_CHAIN <- parallelly::availableCores()
+# detectCores() on Roihu → 383 workers on a 40-CPU alloc → OOM. availableCores()
+# ALSO leaks the full node (383) inside the CSC r-env *singularity* container —
+# it can't see SLURM_CPUS_PER_TASK, so it ignores --cpus-per-task (OOM recurred,
+# jobs 147307-312, 2026-07-06). Cap by the SLURM alloc; fall back to 40 off-SLURM.
+CORES_PER_CHAIN <- min(parallelly::availableCores(),
+                       as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "40")))
 
 # Steady-state climate window in YEARS. Converted to monthly rows below
 # when passed to make_likelihood, because climate_by_plot is monthly format.

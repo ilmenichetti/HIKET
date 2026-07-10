@@ -95,8 +95,17 @@ Fortran `.so` binaries, `*.rds`/`*.csv` in diagnostics,
   yourself unless explicitly asked (see memory `ssh-cert-handled-manually`); give the
   user the commands to run instead.**
 - Module: `module load r-env`
-- **R runs NATIVELY — no `apptainer_wrapper`.** Batch: `srun Rscript --no-save …`;
-  interactive: `start-r` or `R --no-save`. (This is the key Puhti→Roihu change.)
+- **No explicit `apptainer_wrapper` call needed** — you invoke `srun Rscript
+  --no-save …` directly (batch) or `start-r`/`R --no-save` (interactive). BUT the
+  `r-env` module's `Rscript` shim still `exec`s a **singularity container** under the
+  hood (confirmed in job 147311/147312 `.err`: `/usr/bin/singularity … exec …`). This
+  matters for parallelism: the container does NOT see `SLURM_CPUS_PER_TASK`, so
+  `parallelly::availableCores()` returns the **full node (383)**, ignoring
+  `--cpus-per-task` → 383 mclapply forks → **OOM** (jobs 147307-312, 2026-07-06). Fix
+  applied in all six `run_*_transient_calibration.R` (cap cores by the SLURM alloc) +
+  `hiket_*.sh` (`export SINGULARITYENV_SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK`
+  passes the alloc into the container). Watch the `Cores per chain:` log line — it must
+  read **40**, not 383.
 - Fortran compilation: `R CMD SHLIB <file>.f90` (native, no wrapper; AMD Zen 5 x86-64)
 - Partitions: `small` (72 h, 384 cores/node), `test` (15 min), `medium`/`large`
   (36 h), `longrun` (10 d). Existing `--partition=small --time=36:00:00` is valid.
