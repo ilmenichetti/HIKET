@@ -1,0 +1,55 @@
+% =====================================================================
+%  Appendix module: Reconciling the SOC-change diagnostics
+%  Modular subfile — see main file header.
+% =====================================================================
+\documentclass[../HIKET_story_outline.tex]{subfiles}
+
+\begin{document}
+
+\section{Reconciling the SOC-change diagnostics}
+\label{app:deltareconcile}
+
+Two diagnostics of the same six calibrated trajectories can appear to tell
+different stories, and we reconcile them here explicitly. An earlier version of
+the increment figure plotted the \emph{cumulative-average} accumulation rate,
+\[
+  \bar r(t) \;=\; \frac{\mathrm{SOC}(t) - \mathrm{SOC}(t_0)}{t - t_0},
+  \qquad t_0 = 1985,
+\]
+whose curves \emph{decline} over time for every model. Read too quickly, a
+falling curve suggests SOC is decreasing --- which contradicts the absolute-stock
+figures (the mean-SOC trajectory and the initialization figure), where every
+model's mean SOC \emph{rises} toward saturation. There is no contradiction: the
+two are the same data under different transforms.
+
+Figure~\ref{fig:deltareconcile} shows the identical six trajectories through
+three lenses. Panel (a) is the absolute stock; it rises and bends toward
+saturation. Panel (b) is $\bar r(t)$ --- the earlier figure's quantity; it
+declines because the \emph{time-averaged} rate of a decelerating-but-still-rising
+stock necessarily falls as the saturating tail is averaged in, not because any
+carbon is lost. Panel (c) is the instantaneous increment $\mathrm{d}\,\mathrm{SOC}/\mathrm{d}t$;
+it too declines, dipping slightly negative for the multi-pool models near
+saturation --- the derivative view of the same bend. All three panels are
+mutually consistent: (b)'s decline is (a)'s curvature and (c)'s deceleration.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{figures/appendix_delta_reconciliation.png}
+  \caption{The same six calibrated trajectories under three transforms.
+  (a) absolute mean SOC; (b) the cumulative-average rate
+  $(\mathrm{SOC}(t)-\mathrm{SOC}(t_0))/(t-t_0)$ used in the earlier increment
+  figure; (c) the instantaneous annual increment (5-year mean). The decline in
+  (b) is the deceleration of a still-rising stock, not a loss of carbon.}
+  \label{fig:deltareconcile}
+\end{figure}
+
+Panel (b) also carries a substantive reading that the absolute-stock view makes
+less obvious: every model's cumulative-average rate settles \emph{below} the
+observed reference (dashed). Because the models over-predict the 1985 state by
+$\sim$26\,tC\,ha$^{-1}$ (the main-text initialization figure), their accumulation
+\emph{since} 1985 is smaller than the observed $63\!\to\!105$ climb, so their
+time-averaged rate cannot reach the observed value. The gap between the model
+curves and the dashed line in panel (b) is thus a second view of the same
+initialization over-prediction, not an independent discrepancy.
+
+\end{document}

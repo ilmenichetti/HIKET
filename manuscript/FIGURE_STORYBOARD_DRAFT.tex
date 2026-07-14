@@ -1,0 +1,355 @@
+% HIKET figure storyboard (working draft) -- LaTeX + TikZ.
+% Compile: pdflatex FIGURE_STORYBOARD_DRAFT.tex  (run from manuscript/).
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+\newcommand{\wh}[1]{\textbf{What:}~#1}
+\newcommand{\ft}[1]{\textbf{Fits:}~#1}
+% figure paths (relative to manuscript/)
+\newcommand{\mm}{../Calibration_real_data_transient/diagnostics/multimodel}
+\newcommand{\dg}{../Calibration_real_data_transient/diagnostics}
+\newcommand{\rep}{../Reporting/NextgenC_report}
+\newcommand{\CID}{20260710_104903_20260710_104904_20260710_104904_20260710_104902_20260710_104902_20260710_102431}
+
+\title{\vspace{-1.5cm}HIKET --- figure storyboard (working draft)}
+\author{}
+\date{Figures in narrative order (Schimel OCAR). Flux-bounded 20260710 run. Compiled \today.}
+
+\begin{document}
+\maketitle
+\vspace{-0.8cm}
+
+\noindent\emph{Protagonist} = the initialization problem. \emph{Trickster} = $\sinput$ (input/history
+uncertainty). Very short notes per figure. \texttt{[TO CREATE]} marks gaps; \textbf{F9 is built}.
+
+% =====================================================================
+\section*{Storyline schema (main arc + side arcs)}
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\scriptsize,
+  ocar/.style={rectangle, rounded corners, draw=blue!55!black, fill=blue!7, align=center,
+               text width=32mm, minimum height=17mm, inner sep=3pt},
+  arca/.style={rectangle, rounded corners, draw=orange!80!black, fill=orange!12, very thick,
+               align=left, text width=150mm, inner sep=5pt},
+  arcbc/.style={rectangle, rounded corners, draw=teal!65!black, fill=teal!9, align=left,
+                text width=72mm, inner sep=5pt},
+  land/.style={rectangle, rounded corners, draw=green!50!black, fill=green!9, align=center,
+               text width=150mm, inner sep=4pt},
+  thread/.style={rectangle, rounded corners, draw=black!40, fill=black!4, align=left,
+                 text width=150mm, inner sep=4pt},
+  fl/.style={-{Latex[length=2.2mm]}, thick, blue!55!black},
+  flo/.style={-{Latex[length=2.6mm]}, very thick, orange!80!black},
+  lbl/.style={align=left, font=\scriptsize\itshape, text width=62mm},
+]
+% --- OCAR row ---
+\node[ocar] (O) {\textbf{Opening}\\[2pt] steady-state init is the default; Finnish soils accumulate $\to$ saturate};
+\node[ocar, right=7mm of O] (C) {\textbf{Challenge}\\[2pt] an equilibrium start is \emph{already} saturated $\to$ cannot show accumulation; no forcing history to spin up from};
+\node[ocar, right=7mm of C] (A) {\textbf{Action}\\[2pt] transient init + calibrated $\sinit$ under a \emph{fair frame}};
+\node[ocar, right=7mm of A] (R) {\textbf{Resolution}\\[2pt] works (proof of concept); binding uncertainty \textbf{relocates onto inputs}};
+\draw[fl] (O)--(C); \draw[fl] (C)--(A); \draw[fl] (A)--(R);
+% banner
+\node[above=2mm of $(O.north)!0.5!(R.north)$, font=\small\bfseries, blue!55!black]
+  {MAIN ARC --- the initialization problem \quad\mdseries\itshape(protagonist, held constant)};
+% --- Side Arc A ---
+\coordinate (mid) at ($(O.south)!0.5!(R.south)$);
+\node[arca, below=20mm of mid] (SA)
+  {\textbf{SIDE ARC A --- pool-complexity axis}\hfill\textit{(the principal side arc; its own section)}\\[2pt]
+   ladder \; SP1 $\to$ TP2 $\to$ TP3 $\to$ Yasso07 \;(pools)\; \& \; Yasso07 $\to$ 15 $\to$ 20 \;(climate)\\[2pt]
+   \textbf{tension:} does adding structural complexity improve the answer --- on \emph{either} axis?\\[1pt]
+   \textbf{resolution (from the study):} \emph{no, on both} --- \textbf{complexity buys nothing
+   \emph{within this applied scope}} (soft via scope, not hedging); it then \textbf{relocates the
+   leverage}: structure is a weak lever because \emph{inputs} dominate.};
+\draw[flo] (A.south) to[out=-90,in=90]
+  node[lbl, right=1mm, pos=0.45]{the fair frame + $\sinit$/$\sinput$ give an \textbf{even, unbiased} testing ground: init \& input uncertainty are absorbed, not baked into the ranking} (SA.north);
+% --- Side arcs B / C ---
+\node[arcbc, below=15mm of SA.south west, anchor=north west] (SB)
+  {\textbf{SIDE ARC B --- $\sinput$ reveal} (Trickster)\\[2pt]
+   inputs bind, not kinetics; the physical bound closes the escape hatch \textbf{(F9)}.};
+\node[arcbc, below=15mm of SA.south east, anchor=north east] (SC)
+  {\textbf{SIDE ARC C --- non-identifiability}\\[2pt]
+   rate $\leftrightarrow$ fraction equifinality, managed openly by convention.};
+\draw[flo] (SA.south west)++(20mm,0) coordinate(sal) (sal) to[out=-90,in=90]
+  node[font=\scriptsize\bfseries, orange!80!black, left=1mm, pos=0.5]{leverage redirects here} (SB.north);
+\draw[flo] (SA.south east)++(-20mm,0) coordinate(sar) (sar) to[out=-90,in=90]
+  node[font=\scriptsize, right=1mm, pos=0.5]{feeds} (SC.north);
+% --- threads + landing ---
+\node[thread, below=8mm of $(SB.south east)!0.5!(SC.south west)$, anchor=north] (TH)
+  {\textbf{THREADS} (run throughout, never own the spine): \quad
+   \textbf{[Bayes]} calibration turns the unknown start into a parameter (enabling machinery) \quad
+   \textbf{[History]} Finnish forest history justifies the non-equilibrium \& the rising inputs};
+\node[land, below=4mm of TH] (LA)
+  {\textbf{LANDING --- application / policy:} wall-to-wall national SOC maps \textbf{(F12--F14)}};
+\draw[fl, green!50!black] (TH)--(LA);
+\draw[fl, teal!65!black] (SB.south) to[out=-90,in=100] (TH.north west);
+\draw[fl, teal!65!black] (SC.south) to[out=-90,in=80] (TH.north east);
+\end{tikzpicture}
+\end{center}
+
+\noindent Vertical link: the main arc's machinery (transient init + the two $\sigma$'s) is what makes
+SIDE ARC~A a \emph{fair} test --- models compete on structure, not on who guessed inputs / initial state best.
+
+% =====================================================================
+\section*{Opening / Challenge --- the phenomenon and the trap}
+
+\paragraph{F1 $\cdot$ The inputs (redesigned --- inputs-first).}
+\begin{center}\includegraphics[width=0.86\linewidth]{figures/F1_inputs.png}\end{center}
+\wh{three views of the litter input, with climate demoted to a supporting strip. \textbf{(a)} composition
+over time --- stacked non-woody / fine-woody / coarse-woody: total rises $2.1\!\to\!3.0$ (peak 2005) then
+plateaus $\sim$2.8; \emph{non-woody foliage/fine-root litter drives $\sim$55\% of the rise}. \textbf{(b)}
+a strong south--north gradient (447 plots, latitude terciles: mean 3.0 / 2.9 / 2.1 tC/ha/yr) with the
+wide within-band plot spread shaded. \textbf{(c,d)} $T$ and $P$ --- interannual swings, no accumulation
+trend --- shown small, as context only.}
+\ft{makes the opening about \textbf{inputs}, not climate. (a) the smooth rise-then-plateau $\Rightarrow$
+accumulation is input/history-driven (motivates transient init + the [History] thread); (b) inputs vary
+enormously in \emph{space} --- the heterogeneity that $\sinput$ and site productivity (F11) engage, and
+the spatial face of the SOC maps (F12); (c,d) climate is jagged/trendless $\Rightarrow$ any interannual
+SOC wiggle is climate, not accumulation. Foreshadows the $\sinput$ reveal. \emph{Script:}
+\texttt{figures/build\_F1\_inputs.R} (Yasso20 bundle --- the size-class split lives only in the Yasso inputs).}
+
+\paragraph{F2 $\cdot$ Uncalibrated baseline under-predicts (redesigned --- general, cross-plot mean).}
+\begin{center}\includegraphics[width=0.82\linewidth]{figures/F2_baseline.png}\end{center}
+\wh{Yasso20 forward at published defaults ($\sinput=1$) with the conventional equilibrium start,
+\emph{averaged over all 447 plots} (like F3, not 4 example plots). The baseline sits \textbf{flat at
+$\sim$50 tC/ha}; the observed campaign means climb $63\to102\to105$ --- a widening deficit of
+$-14/-50/-56$ tC/ha.}
+\ft{two failures in one glance. (1) \textbf{Flat} --- an equilibrium start is \emph{already} at its
+steady state, so it cannot accumulate: the OCAR \emph{Challenge} made visual (motivates the transient-init
+protagonist). (2) \textbf{Low} --- boreal-blind published defaults sit far below the stocks (the Mentor
+beat): the lineage is real but the \emph{start}, not the soil, is wrong. \emph{Script:}
+\texttt{figures/build\_F2\_baseline.R} (baseline predictions + observed campaign means; defaults are
+calibration-independent, so no RUN\_ID coupling).}
+
+% =====================================================================
+\section*{Action / Results --- the protagonist pays off (H1)}
+
+\paragraph{F3 $\cdot$ Mean-SOC trajectories, six models (headline).}
+\begin{center}\includegraphics[width=0.82\linewidth]{\mm/multimodel_mean_soc_\CID.png}\end{center}
+\wh{cross-plot mean SOC $1985\to2024$; all six rise then bend toward saturation, tracking campaign means.}
+\ft{\textbf{H1} --- transient init reproduces accumulation-then-saturation, the shape an equilibrium start forecloses. The central proof of concept.}
+
+\paragraph{F4 $\cdot$ The initialization problem (redesigned --- 2-panel: past spin-up + future forecast).}
+\begin{center}\includegraphics[width=0.98\linewidth]{figures/F4_initialization.png}\end{center}
+\wh{six model means, same colour code, posterior ribbons in the observed/forecast windows. \textbf{(a)}
+the \emph{full} trajectory including the modelled transient-init spin-up $1917\to1985$ (median line;
+constant climate + linearly ramped litter from a below-equilibrium 1917 anchor, level pinned to the
+calibrated 1985 stock) + observed window on the observed path ($63\to102\to105$): all models reach
+$\sim$90 in 1985 --- \textbf{$+26$ tC/ha above the observed start} --- and climb only $\sim$$+0.70$
+tC/ha/yr through 2006 vs the data's $+1.84$. \textbf{(b)} the \emph{future forecast} $2025\to2084$: models
+agree in the calibrated window but \emph{fan out sharply} (SP1 $\to$133 with no saturation; Yasso15/20
+plateau $\sim$108).}
+\ft{the candid beat of the protagonist's payoff. (a) makes the transient-init machinery visible: each
+model recovers from a below-equilibrium 1917 anchor --- \emph{but the structures disagree about how much}
+(simple models recover strongly from $\sim$70--80; Yasso15/20 start near-full $\sim$93--96), and all
+converge $\sim$26 tC/ha above the observed 1985 start (the open [[transient-phase-open-question]], a live
+question not a failure). (b) is the structural-divergence story: equal where calibrated, divergent when
+extrapolated. \emph{Secondary:} shape-divergence is expressiveness in the unobserved past/future, not
+data-constrained skill (honest lead-in to Side Arc~A). \emph{Reconciliation} of the earlier
+cumulative-average-rate figure: appendix ``Reconciling the SOC-change diagnostics.''
+\emph{Scripts:} \texttt{build\_F4\_initialization.R} (caches the spin-up reconstruction to
+\texttt{F4\_cache.rds}), \texttt{build\_appendix\_delta\_reconciliation.R}.}
+
+\paragraph{F5 $\cdot$ Per-plot SOC trajectories (supplementary / physical-sanity).}
+\begin{center}\includegraphics[width=0.9\linewidth]{\rep/NextGenC_SOC_trajectories.png}\end{center}
+\wh{every plot's mean SOC; all models now peak at a physical $\sim$100 tC/ha; TP2/TP3 jagged, SP1 smooth.}
+\ft{shows the flux bound worked (no inflated stocks) and that the TP3 oscillation is a real fast-pool signal, not the old Euler artefact.}
+
+% =====================================================================
+\section*{Action / Results --- structural skill under the fair frame (H2)}
+
+\paragraph{F6 $\cdot$ Observed vs predicted --- calibration then holdout.}
+\begin{center}
+\includegraphics[width=0.49\linewidth]{\mm/multimodel_obs_vs_pred_\CID.png}\hfill
+\includegraphics[width=0.49\linewidth]{\mm/multimodel_obs_vs_pred_holdout_\CID.png}
+\end{center}
+\wh{plot-level posterior medians vs observed; skill spread between models is small.}
+\ft{\textbf{H2} --- differences real but modest; on holdout the ranking nearly collapses (calib $R^2$ 0.047--0.077; holdout 0.015--0.037). Bounding inputs cost skill \emph{only} for TP2/TP3.}
+
+% =====================================================================
+\section*{SIDE ARC A --- Pool-complexity axis: does complexity improve the answer?}
+\textit{The principal side narrative --- its own section. It carries a self-contained tension and
+resolution, and it serves the spine rather than competing with it.}
+
+\paragraph{Why the test is fair (link to the main arc).}
+The comparison only means anything if the models are not secretly competing on who guessed the inputs
+or the initial state best. Transient init + the two auxiliary $\sigma$'s provide exactly that even
+ground: $\sinit$ absorbs the unknown historical start, $\sinput$ the litter-input uncertainty, both
+homogeneously and with uncertainty propagated. So the six structures ``battle'' on an unbiased field
+--- the ranking reflects \textbf{structure}, not input/init luck.
+
+\paragraph{The ladder --- each rung a probe.}
+\textbf{SP1 (1 pool)} the Occam floor: the minimal model already reproduces
+accumulation$\to$saturation and is competitive; the study's only identified rate --- proof the
+\emph{start}, not the structure, is the hero. \;
+\textbf{TP2 (2 pools)} the fast/slow split made visible: the pool-memory mechanism that justifies
+transient init; textbook-clean control. \;
+\textbf{TP3 (3-pool cascade)} the cautionary rung: the extra pool buys non-identifiability + input
+compensation + oscillation, not skill --- the clearest escape-hatch victim. \;
+\textbf{$\to$ Yasso07/15/20} rates fixed; the operational destination (pools \emph{and} the
+climate-integration sub-axis).
+
+\paragraph{The tension.} Does climbing structural complexity improve the answer --- on \emph{either}
+axis (pools SP1$\to$Yasso07, climate Yasso07$\to$15$\to$20)?
+
+\paragraph{The resolution --- complexity buys nothing \emph{within this scope} (soft but firm).}
+\emph{No, on both axes.} Skill does not climb either ladder: calibration $R^2$ stays 0.047--0.077
+(holdout 0.015--0.037), the pool-axis OLS slope is \emph{negative}, and the \emph{most} complex model,
+Yasso20, is the \emph{worst} fit on both calibration and holdout; the climate axis $07\!\to\!15\!\to\!20$
+falls monotonically $0.067\!\to\!0.060\!\to\!0.047$. We do argue the anti-complexity claim --- but the
+diplomacy is carried by \textbf{scope}, not by hedging.
+
+\emph{The scoped claim.} For \textbf{this class of exercise} --- an \emph{applied} task whose aim is
+predictive accuracy \emph{and} calibrated uncertainty on a defined, representative regional dataset,
+where site-specific \textbf{recalibration is affordable} --- added structural complexity does not buy
+skill and can cost it. In that setting we \emph{willingly} trade cross-region transferability for local
+fit: losing generalization power is an acceptable price when the target is one region done well. That is
+a claim about a \emph{context}, not a universal verdict on model design.
+
+\emph{Why this does not condemn Yasso (different objective function).} The Yasso programme optimizes a
+\emph{different} objective --- generality, standardization, and transferability \emph{without} local
+recalibration, plus litter-quality (AWEN) resolution --- none of which this single-region SOC-fit test
+measures. Structural richness is exactly what buys \emph{that}. So ``more complexity does not help
+\emph{here}'' and ``Yasso is the right inventory tool'' coexist without contradiction; the two simply
+answer to different loss functions.
+
+\emph{Why the claim is robust (three legs, not a bare correlation).} (1) \textbf{Fair frame:} $\sinit$
+and $\sinput$ absorb init/input uncertainty homogeneously, so it is genuinely \emph{structure} being
+tested, not who guessed inputs best. (2) \textbf{Holdout:} the flat/declining ordering survives
+independent validation, not just in-sample. (3) \textbf{Mechanism:} the surplus degrees of freedom have
+a \emph{known destination} --- non-identified fractions (F7, F8), input compensation, and the TP3
+oscillation (F9) --- so we can say \emph{why} complexity does not pay, not merely that it doesn't.
+
+\emph{The redirect.} With that established, the arc does not crown a winner --- it \textbf{relocates the
+leverage}: for this application the binding uncertainty is not in structure but in the \emph{inputs and
+initial state}, which hands straight to Side Arc~B (a relocated question, not a condemnation).
+
+\paragraph{F6b $\cdot$ Skill vs.\ structural complexity. (NEW)}
+\begin{center}\includegraphics[width=0.98\linewidth]{figures/F6b_skill_vs_complexity.png}\end{center}
+\wh{two panels, both $R^2$ (y): \textbf{A} pool count 1$\to$5 (all six), \textbf{B} the climate
+sub-axis Yasso07$\to$15$\to$20. Filled = calibration, open = independent holdout.}
+\ft{makes ``complexity does not move the answer'' visible in one glance --- the resolution of SIDE ARC~A.
+The pool-axis OLS slope is \emph{negative} ($-0.0024\,R^2$/pool); the climate axis falls monotonically
+$0.067\!\to\!0.060\!\to\!0.047$; the most complex model (Yasso20) is the worst on both calibration and holdout.}
+
+% =====================================================================
+\section*{Action / Results --- what the data can \& cannot constrain (the hinge)}
+
+\paragraph{F7 $\cdot$ KL divergence --- information gain per parameter.}
+\begin{center}\includegraphics[width=0.8\linewidth]{\dg/Yasso20/Yasso20_kl_divergence_20260710_102431.png}\end{center}
+\wh{posterior-vs-prior information gain by parameter; fractions gain $\approx$0 nats, $\sinput$ gains the most.}
+\ft{data constrains \textbf{inputs, not kinetics}. The identifiability lens; sets up the Trickster.}
+
+\paragraph{F8 $\cdot$ Fraction marginals --- prior-pinning + ridges.}
+\begin{center}\includegraphics[width=0.9\linewidth]{\dg/TP3/TP3_marginals_fractions_20260710_104904.png}\end{center}
+\wh{posterior $\approx$ prior for transfer fractions; near-perfect same-pool anti-correlations.}
+\ft{the non-identifiability signature made visible --- the Bayesian frame exposes it honestly instead of hiding it in a point estimate.}
+
+% =====================================================================
+\section*{Resolution / Discussion --- the $\sinput$ reveal (Trickster payoff)}
+
+\paragraph{F9 $\cdot$ Effective litter flux vs the physical ceiling --- before vs after. (NEW)}
+\begin{center}\includegraphics[width=0.95\linewidth]{figures/F9_effective_flux_vs_ceiling.png}\end{center}
+\wh{per model, effective flux $\sinput\times\bar{J}$ with the boreal NPP envelope [0.5, 8.7] shaded;
+unbounded (grey, before) vs flux-bounded (blue, after).}
+\ft{\textbf{the quantitative payoff of the Discussion.} Unbounded TP2/TP3 hit 34/50 tC/ha/yr (impossible);
+the bound caps them at $\sim$6.3, and \emph{only} their skill drops $\Rightarrow$ inputs, not kinetics, were doing the work.}
+
+\paragraph{F10 $\cdot$ $\sinit$ caterpillar (historical anchor).}
+\begin{center}\includegraphics[width=0.8\linewidth]{\mm/multimodel_sigma_init_\CID.png}\end{center}
+\wh{posterior $\sinit$ per model; every 95\% interval lies below 1.}
+\ft{the \emph{unrecoverable past} --- all models infer a below-equilibrium 1917 start (post-exploitation recovery). Two-pool models lean hardest (0.15--0.25) vs Yasso (0.5--0.7).}
+
+\paragraph{F10b $\cdot$ \texttt{[TO CREATE]} Finnish forest history --- post-war exploitation $\to$ managed growth ([History] thread; design TBD).}
+\wh{a context/timeline figure --- growing stock and management eras from the end of WWII to today.}
+\ft{the \emph{physical justification} for the non-equilibrium premise and the rising, non-stationary input history --- why $\sinit<1$ and why contemporary litter rises (F1). The [History] thread made concrete exactly where we discuss inputs.}
+
+% =====================================================================
+\section*{Resolution --- residual structure \& where to go next}
+
+\paragraph{F11 $\cdot$ RF importance heatmap (residual drivers).}
+\begin{center}\includegraphics[width=0.85\linewidth]{\mm/multimodel_rf_importance_heatmap_\CID.png}\end{center}
+\wh{residual random-forest importances; stand basal area is the leading, diffuse, shared driver (5/6 models).}
+\ft{what's left is site/productivity structure --- motivates stratifying the \textbf{forcing} (the optional strand), never the kinetics.}
+
+% =====================================================================
+\section*{Application / Policy --- wall-to-wall SOC (NextGenC)}
+\textit{The policy-relevant deliverable: the operational product feeding the Finnish GHG inventory.}
+
+\paragraph{F12 $\cdot$ National wall-to-wall SOC --- ensemble mean stock.}
+\begin{center}\includegraphics[width=0.5\linewidth]{\rep/SOC_maps/thumbnails/ENSEMBLE_SOC_mean.png}\end{center}
+\wh{kriged 2 km ensemble-mean SOC over Finland; south-high/north-low gradient (black = peat/water masked).}
+\ft{the headline policy output --- a wall-to-wall SOC stock estimate for the whole country.}
+
+\paragraph{F13 $\cdot$ Cross-model uncertainty (ensemble SD).}
+\begin{center}\includegraphics[width=0.5\linewidth]{\rep/SOC_maps/thumbnails/ENSEMBLE_SOC_sd.png}\end{center}
+\wh{between-model spread per cell --- where the six structures agree and where they don't.}
+\ft{honest uncertainty mapped in space; the spatial face of ``structure is a weak lever'' (modest, structured spread).}
+
+\paragraph{F14 $\cdot$ SOC change --- the ``health'' signal (ensemble 10-yr $\Delta$).}
+\begin{center}\includegraphics[width=0.5\linewidth]{\rep/SOC_maps/thumbnails/ENSEMBLE_SOC_delta10yr.png}\end{center}
+\wh{wall-to-wall 10-year SOC change --- gaining vs losing soils.}
+\ft{the SOC-\textbf{health} map: whether the sink is accumulating or turning, spatially --- the policy-facing payoff of F3 at national scale.}
+
+% =====================================================================
+\section*{Decisions still open}
+\begin{enumerate}\itemsep2pt
+\item \textbf{Side Arc A pitch: SETTLED.} We \emph{do} argue ``complexity buys nothing'' --- but
+  \textbf{scope-bounded and soft}: the claim holds for an applied, recalibratable, single-region
+  predictive task (accuracy + calibrated uncertainty), where trading cross-region transferability for
+  local fit is acceptable. The Yasso programme answers a \emph{different} loss function
+  (generality/standardization/transferability without recalibration), which this test does not measure
+  --- so the two coexist. Robustness rests on three legs: fair frame, holdout, and a named mechanism
+  for where the surplus DoF go.
+\item \textbf{$\sinput$ narrative inversion:} with the bound in Methods, ``13--20$\times$ impossible'' moves from a
+  posterior \emph{finding} to a \emph{counterfactual} + the $R^2$ cost as live evidence. F9 carries it.
+\item \textbf{F6b built} (\texttt{figures/build\_F6b\_skill\_vs\_complexity.R}). \textbf{F10b} (Finnish
+  forest-history timeline, [History] thread) still to be designed --- needs an external growing-stock
+  / management-era source.
+\end{enumerate}
+
+% =====================================================================
+\section*{Revision notes (2026-07-14) --- PENDING, not yet executed}
+\textit{User's figure notes + agreed plan. Full detail in memory \texttt{figure-revision-notes}.}
+\begin{enumerate}\itemsep2pt
+\item \textbf{F4 --- forecast divergence = the dominant structural uncertainty (BIGGEST).} Simple models
+  saturate less than Yasso; the \emph{future} accumulation diverges hugely (SP1$\to$133 vs Yasso15/20
+  $\sim$108 by 2084). Politically central; un-adjudicable from current data. Does NOT contradict
+  ``complexity buys shape not skill'' --- it \emph{sharpens} it: in-sample skill is blind to a structural
+  choice that dominates the projection the inventory needs. New axis beyond skill = \textbf{extrapolation
+  plausibility} (SP1's unbounded rise is physically implausible; saturating structures more consistent
+  with SOC saturation) --- but Yasso's plateau could be input-bound/humus-parking (most free DoF), not
+  skill. Honest output = the \textbf{ensemble spread} (F12--14) as irreducible structural uncertainty.
+  TODO: dedicated Discussion subsection; a \emph{third beat} on the Side Arc~A resolution; maybe elevate
+  F4(b)/a projection figure to keystone; future-work note on testing extrapolation.
+\item \textbf{F5 $\to$ supplementary} (sanity/robustness). Triage other figures for supp too.
+\item \textbf{F6 $\to$ denser:} main text shows \emph{holdout only} (calibration $\to$ supp); colour/class
+  the points (latitude band / species / basal-area class) --- ties to F11.
+\item \textbf{F7 $\to$ three Yasso panels} (07/15/20), text shrunk for readability; SP1/TP2/TP3 KL $\to$ appendix.
+\item \textbf{F8 $\to$ clarify + make readable:} state its role (non-identifiability signature =
+  prior-pinning + same-pool ridges = Side Arc~C; shows \emph{where} surplus DoF go); fix legibility.
+\item \textbf{F9 $\to$ clarify shadings:} green band = physical NPP envelope [0.5, 8.7]; white = outside.
+  Label the band on-figure; clarify before(grey)/after(blue) in caption.
+\item \textbf{F11 $\to$ central frontier arc:} basal area = \#1 residual driver $\Rightarrow$ residual
+  structure points to site productivity / \emph{inputs}, not kinetics; reinforces ``inputs are the lever''
+  (Side Arc~B) + motivates stratifying the forcing (red strand). Discuss as ``where to go next.''
+\item \textbf{F12--13 $\to$ merge} into one 2-panel figure (ensemble mean stock $\vert$ ensemble SD).
+\item \textbf{F14 $\to$ maybe add a pool-recalcitrance / vulnerability panel} (discuss). ``Health'' via
+  the pool distribution (labile/active vs stable share) = \emph{intrinsic vulnerability}, a different
+  axis from $\Delta$SOC (current trajectory). Caveats: strongly model-structure-dependent (where the
+  non-identified DoF live) so it carries large structural uncertainty; needs a common cross-model
+  definition (active-pool share). Prototype + check spatial correlation with $\Delta$SOC before
+  committing (distinct signal $\Rightarrow$ add panel; tracks $\Delta$SOC $\Rightarrow$ redundant).
+\end{enumerate}
+
+\end{document}
