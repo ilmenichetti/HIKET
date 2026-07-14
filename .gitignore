@@ -10,6 +10,12 @@
 # Calibration outputs
 #Calibration/progress_logs/
 #Calibration/diagnostics/
+# Regenerable diagnostics outputs (PNG/txt/csv) — keep on disk, not in git
+Calibration_real_data_transient/diagnostics/**/*.png
+Calibration_real_data_transient/diagnostics/**/*.txt
+Calibration_real_data_transient/diagnostics/**/*.csv
+# Ephemeral SLURM job logs (Roihu)
+Calibration_real_data_transient/progress_logs/
 Calibration/runs/
 Calibration/tests/
 Calibration_real_data/runs/
