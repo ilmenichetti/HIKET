@@ -13,12 +13,12 @@ coords <- site[, c("plot_id", "x_ETRS", "y_ETRS")]
 coords <- coords[stats::complete.cases(coords), ]
 
 bundles <- c(
-  SP1     = "SP1_posterior_predictive_20260608_015026.rds",
-  TP2     = "TP2_posterior_predictive_20260608_020212.rds",
-  TP3     = "TP3_posterior_predictive_20260608_020212.rds",
-  Yasso07 = "Yasso07_posterior_predictive_20260611_032825.rds",
-  Yasso15 = "Yasso15_posterior_predictive_20260611_032825.rds",
-  Yasso20 = "Yasso20_posterior_predictive_20260611_033140.rds")
+  SP1     = "SP1_posterior_predictive_20260710_104903.rds",
+  TP2     = "TP2_posterior_predictive_20260710_104904.rds",
+  TP3     = "TP3_posterior_predictive_20260710_104904.rds",
+  Yasso07 = "Yasso07_posterior_predictive_20260710_104902.rds",
+  Yasso15 = "Yasso15_posterior_predictive_20260710_104902.rds",
+  Yasso20 = "Yasso20_posterior_predictive_20260710_102431.rds")
 
 png(OUT, width = 2400, height = 1500, res = 200)
 par(mfrow = c(2, 3), mar = c(4.2, 4.4, 3, 1), mgp = c(2.4, 0.8, 0))

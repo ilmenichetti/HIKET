@@ -1,7 +1,7 @@
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 suppressMessages(library(BayesianTools))
-rid <- list(SP1="20260608_015026", TP2="20260608_020212", TP3="20260630_090644",
-            Yasso07="20260611_032825", Yasso15="20260611_032825", Yasso20="20260611_033140")
+rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
+            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
 littercols <- function(df){ grep("^(nwl_|fwl_|cwl_)", names(df), value=TRUE) }
 totlit <- function(df){
   if("J_total" %in% names(df)) return(mean(df$J_total))

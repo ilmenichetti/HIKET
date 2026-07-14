@@ -18,16 +18,17 @@ OUTDIR <- file.path(PROJ, "Reporting", "NextgenC_report")
 dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
 # --- model -> predictive bundle (latest production RUN_IDs) ---
-# TP3 is the EXACT-integrator re-calibration (RUN 20260630_090644, synced from
-# Puhti 2026-07-01). Its mean-SOC trajectory now shows the genuine (physical)
-# interannual oscillation of the fast active pool, not the former Euler ringing.
+# All six from the Roihu flux_pair re-calibration (physically-bounded litter input;
+# RUN 20260710_*, synced 2026-07-13). TP3 uses the exact matrix-exp integrator, so
+# its mean-SOC trajectory shows the genuine (physical) interannual oscillation of the
+# fast active pool, not the former Euler ringing.
 bundles <- c(
-  SP1     = "SP1_posterior_predictive_20260608_015026.rds",
-  TP2     = "TP2_posterior_predictive_20260608_020212.rds",
-  TP3     = "TP3_posterior_predictive_20260630_090644.rds",
-  Yasso07 = "Yasso07_posterior_predictive_20260611_032825.rds",
-  Yasso15 = "Yasso15_posterior_predictive_20260611_032825.rds",
-  Yasso20 = "Yasso20_posterior_predictive_20260611_033140.rds"
+  SP1     = "SP1_posterior_predictive_20260710_104903.rds",
+  TP2     = "TP2_posterior_predictive_20260710_104904.rds",
+  TP3     = "TP3_posterior_predictive_20260710_104904.rds",
+  Yasso07 = "Yasso07_posterior_predictive_20260710_104902.rds",
+  Yasso15 = "Yasso15_posterior_predictive_20260710_104902.rds",
+  Yasso20 = "Yasso20_posterior_predictive_20260710_102431.rds"
 )
 
 # --- pivot posterior_summary -> plot x year matrix for one value column ---

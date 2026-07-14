@@ -126,11 +126,16 @@ cd /scratch/project_2019134/HIKET/ && git pull
 # Recompile .so if any .f90 changed (see Fortran section below)
 
 # Data (gitignored) → Roihu: from Mac (or one-time rsync from Puhti while it lives)
-rsync -av "<mac-repo>/Data/" menichet@roihu-cpu.csc.fi:/scratch/project_2019134/HIKET/Data/
+# NOTE: use the `roihu:` SSH alias, NOT `menichet@roihu-cpu.csc.fi` — only the alias
+# carries `CertificateFile ~/.ssh/cert.pub`; the raw hostname fails `Permission denied
+# (publickey)` because it never presents the daily-signed cert.
+rsync -av "<mac-repo>/Data/" roihu:/scratch/project_2019134/HIKET/Data/
 
-# Results → Mac
-rsync -av menichet@roihu-cpu.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data_transient/runs/ ./Calibration_real_data_transient/runs/
-rsync -av menichet@roihu-cpu.csc.fi:/scratch/project_2019134/HIKET/Calibration_real_data_transient/diagnostics/ ./Calibration_real_data_transient/diagnostics/
+# Results → Mac (also sync Data/model_inputs/ — the predictive stage hard-loads the
+# input bundle keyed to each posterior's RUN_ID)
+rsync -av roihu:/scratch/project_2019134/HIKET/Calibration_real_data_transient/runs/ ./Calibration_real_data_transient/runs/
+rsync -av roihu:/scratch/project_2019134/HIKET/Calibration_real_data_transient/diagnostics/ ./Calibration_real_data_transient/diagnostics/
+rsync -av roihu:/scratch/project_2019134/HIKET/Data/model_inputs/ ./Data/model_inputs/
 ```
 
 ---

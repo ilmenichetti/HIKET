@@ -1640,7 +1640,9 @@ pool, reaches the same observed stocks from a milder deficit (medians near
 $0.5$--$0.7$). This gradient is the mirror image of the litter-multiplier result
 (§\ref{sec:identifiability}): the models that infer the largest historical
 deficit also rescale contemporary inputs the hardest (TP2/TP3
-$\sigma_{\mathrm{input}}\approx 13$), because their fast pools store little
+$\sigma_{\mathrm{input}}\approx 2.5$, the highest in the ensemble and pressed
+against the physical flux ceiling; cf.\ $\approx 2.2$ for Yasso20 and
+$\approx 0.37$ for SP1), because their fast pools store little
 carbon per unit flux and must be fed harder to reach the observed stocks. So
 $\sigma_{\mathrm{init}}$ and $\sigma_{\mathrm{input}}$ are not independent
 findings but two coordinates of a single structural compensation: each model
@@ -1776,12 +1778,12 @@ annual-increment view (Figure \ref{fig:delta}) shows this from a different
 angle: TP2 and TP3 begin with the steepest accumulation rate, SP1 with the
 shallowest, and the Yasso family in between. This is the dynamical fingerprint
 of the input/initial-state compensation above (§\ref{sec:identifiability}). TP2
-and TP3 hold carbon in fast pools, so reaching the observed stocks forces an
-order-of-magnitude input inflation ($\sigma_{\mathrm{input}}\approx 13$) and a
-deep initial deficit ($\sigma_{\mathrm{init}}\approx 0.2$--$0.3$); starting far
-below a high, fast-turning equilibrium produces a large early increment that
-decays as the deficit closes. SP1, with a single slow pool, instead reaches the
-stocks by \emph{lowering} inputs ($\sigma_{\mathrm{input}}\approx 0.3$) and
+and TP3 hold carbon in fast pools, so reaching the observed stocks forces the
+input multiplier against its physical ceiling ($\sigma_{\mathrm{input}}\approx 2.5$)
+together with a deep initial deficit ($\sigma_{\mathrm{init}}\approx 0.15$--$0.25$);
+starting far below a high, fast-turning equilibrium produces a large early increment
+that decays as the deficit closes. SP1, with a single slow pool, instead reaches the
+stocks by \emph{lowering} inputs ($\sigma_{\mathrm{input}}\approx 0.37$) and
 turning over slowly: its target equilibrium is low and its approach gradual, so
 the increment is shallow and nearly flat. The spread in starting increments is
 therefore not noise but the same structural disagreement --- about \emph{how}
@@ -1808,24 +1810,24 @@ median-prediction metrics). \label{tab:calib}
 
 | Model    | $R^2$ | RMSE | Bias  | Param cov |
 |----------|------:|-----:|------:|----------:|
-| SP1      | 0.065 | 51.3 | $+8.2$  | 0.056 |
-| TP2      | 0.089 | 49.6 | $+6.2$  | 0.086 |
-| TP3      | **0.109** | 50.0 | $+6.2$  | 0.089 |
-| Yasso07  | 0.067 | 52.3 | $+9.3$  | 0.062 |
-| Yasso15  | 0.060 | 52.2 | $+8.8$  | 0.062 |
-| Yasso20  | 0.049 | 53.6 | $+11.7$ | 0.054 |
+| SP1      | 0.062 | 51.7 | $+8.9$  | 0.052 |
+| TP2      | 0.070 | 49.9 | $+6.2$  | 0.075 |
+| TP3      | **0.077** | 50.3 | $+7.0$  | 0.071 |
+| Yasso07  | 0.067 | 52.2 | $+9.0$  | 0.069 |
+| Yasso15  | 0.060 | 52.3 | $+8.9$  | 0.062 |
+| Yasso20  | 0.047 | 53.6 | $+11.6$ | 0.050 |
 
 Table: Calibrated predictive performance on the independent holdout (224 obs).
 \label{tab:holdout}
 
 | Model    | $R^2$ | RMSE | Bias  | Param cov |
 |----------|------:|-----:|------:|----------:|
-| SP1      | 0.027 | 60.4 | $+3.8$ | 0.071 |
-| TP2      | 0.036 | 59.1 | $+2.3$ | 0.071 |
-| TP3      | **0.052** | 58.4 | $+1.3$ | 0.098 |
-| Yasso07  | 0.027 | 61.9 | $+5.5$ | 0.062 |
-| Yasso15  | 0.026 | 60.5 | $+4.3$ | 0.080 |
-| Yasso20  | 0.016 | 62.3 | $+7.8$ | 0.062 |
+| SP1      | 0.026 | 60.8 | $+4.4$ | 0.054 |
+| TP2      | 0.027 | 59.2 | $+2.2$ | 0.080 |
+| TP3      | **0.037** | 58.4 | $+1.7$ | 0.076 |
+| Yasso07  | 0.027 | 61.8 | $+5.3$ | 0.076 |
+| Yasso15  | 0.026 | 60.5 | $+4.4$ | 0.085 |
+| Yasso20  | 0.015 | 62.3 | $+7.5$ | 0.067 |
 
 ```{r fig-obspred, fig.cap="Observed vs predicted SOC across the six calibrated models (calibration sample). Points are plot-level posterior medians; the spread of predictive skill between models is small. \\label{fig:obspred}", out.width="100%", fig.align="center"}
 show_fig(latest(mm_dir, "multimodel_obs_vs_pred_[0-9].*\\.png"))

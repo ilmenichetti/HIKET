@@ -51,14 +51,14 @@ OUTDIR <- file.path(INDIR, "SOC_maps")
 dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
 # --- model -> predictive bundle (keep in sync with build_soc_matrices.R) ---
-# TP3 = EXACT-integrator re-calibration (RUN 20260630_090644, synced 2026-07-01).
+# All six from the Roihu flux_pair re-calibration (RUN 20260710_*, synced 2026-07-13).
 bundles <- c(
-  SP1     = "SP1_posterior_predictive_20260608_015026.rds",
-  TP2     = "TP2_posterior_predictive_20260608_020212.rds",
-  TP3     = "TP3_posterior_predictive_20260630_090644.rds",
-  Yasso07 = "Yasso07_posterior_predictive_20260611_032825.rds",
-  Yasso15 = "Yasso15_posterior_predictive_20260611_032825.rds",
-  Yasso20 = "Yasso20_posterior_predictive_20260611_033140.rds"
+  SP1     = "SP1_posterior_predictive_20260710_104903.rds",
+  TP2     = "TP2_posterior_predictive_20260710_104904.rds",
+  TP3     = "TP3_posterior_predictive_20260710_104904.rds",
+  Yasso07 = "Yasso07_posterior_predictive_20260710_104902.rds",
+  Yasso15 = "Yasso15_posterior_predictive_20260710_104902.rds",
+  Yasso20 = "Yasso20_posterior_predictive_20260710_102431.rds"
 )
 MODELS <- names(bundles)
 
