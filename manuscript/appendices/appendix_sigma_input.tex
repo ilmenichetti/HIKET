@@ -62,6 +62,30 @@ engine, homogeneous across the six prior specifications.
 (otherwise prior-pinned) kinetics or into a visible $R^2$ hit, exposing structural
 inadequacy instead of hiding it in manufactured carbon.
 
+\paragraph{Before/after diagnostic.} The main text reports only the final,
+flux-bounded calibration. For completeness, Figure~\ref{fig:unbounded} contrasts it
+against the earlier \emph{unbounded} homogenized run (the calibration that motivated
+the bound). Without the physical ceiling, TP2 and TP3 reach median effective fluxes
+of $34$ and $50$~tC\,ha$^{-1}$\,yr$^{-1}$ --- 13--20$\times$ boreal NPP, physically
+impossible --- while SP1, Yasso07/15/20 already sit inside the envelope. Under the
+bound all six collapse into $[0.9,\,6.3]$, and, tellingly, \emph{only} the two
+runaway models lose predictive skill: confirmation that they had been buying fit by
+manufacturing carbon, not by resolving kinetics. The unbounded run is retained only
+as this diagnostic (git-tagged, not a maintained parallel pipeline); it is not part
+of the reported results.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/F9_effective_flux_vs_ceiling.png}
+  \caption{Effective litter flux $\sigma_{\mathrm{input}}\times\bar J$ per model, on a
+  log scale, against the physical NPP envelope $[0.5,\,8.7]$~tC\,ha$^{-1}$\,yr$^{-1}$
+  (green). Grey open points = the unbounded homogenized run (before); blue filled =
+  the flux-bounded run (after); points are posterior medians, whiskers the 95\%
+  interval. TP2/TP3 leave the envelope entirely when unbounded (34/50) and return
+  inside it under the bound.}
+  \label{fig:unbounded}
+\end{figure}
+
 \footnotesize\emph{Full derivation, per-model diagnostics, literature envelope and
 references: standalone note \texttt{sigma\_input\_physical\_bounds\_note}.}\normalsize
 

@@ -24,10 +24,14 @@ par(mar=c(4.6,6.2,2.4,1.4), xaxs="i")
 n <- length(models); ypos <- rev(seq_len(n))
 xlim <- c(0.5, 60)
 plot(NA, xlim=xlim, ylim=c(0.4,n+0.6), log="x", axes=FALSE, xlab="", ylab="")
-# physical envelope band
+# physical envelope band [LO, HI]
 rect(LO, 0.2, HI, n+0.8, col="#e6f2e6", border=NA)
-abline(v=HI, col="#2e7d32", lwd=1.6, lty=1)
+abline(v=HI, col="#2e7d32", lwd=1.6, lty=1)   # upper: boreal NPP ceiling
+abline(v=LO, col="#2e7d32", lwd=1.3, lty=2)   # lower bound
 abline(v=rawJ, col="grey45", lwd=1.1, lty=3)
+# on-figure label for the green band (what the shading means)
+text(sqrt(LO*HI), 1.5, "physical NPP envelope\n(inputs that boreal forest can supply)",
+     col="#2e7d32", font=3, cex=0.72)
 # axes
 xt <- c(0.5,1,2,5,10,20,50)
 axis(1, at=xt, labels=xt); axis(2, at=ypos, labels=models, las=1, tick=FALSE)
@@ -46,8 +50,9 @@ for(i in seq_len(n)){
   # annotate the impossible before-values
   if(B[i,2] > HI) text(B[i,2], y+off, sprintf("%.0f", B[i,2]), pos=3, offset=0.35, col="#c62828", font=2, cex=0.8)
 }
-# labels for ceiling / rawJ
-text(HI, n+0.55, "boreal NPP ceiling ≈ 8.7", col="#2e7d32", pos=2, cex=0.78, font=3)
+# labels for ceiling / lower bound / rawJ
+text(HI, n+0.55, "upper bound ≈ 8.7 (NPP ceiling)", col="#2e7d32", pos=2, cex=0.74, font=3)
+text(LO, n+0.55, "0.5", col="#2e7d32", pos=4, cex=0.74, font=3)
 text(rawJ, 0.55, expression("tree litter " * bar(J) %~~% "2.5"), col="grey35", pos=4, cex=0.78)
 legend("bottomright", inset=c(0.01,0.06), bty="n", cex=0.85,
        legend=c("unbounded run (before)","flux-bounded run (after)","physical envelope [0.5, 8.7]"),

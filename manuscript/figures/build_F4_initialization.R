@@ -10,8 +10,8 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 
 rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
             Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
-col <- c(SP1="#5d4037", TP2="#c9922b", TP3="#f2c200",
-         Yasso07="#1f6fb4", Yasso15="#d1495b", Yasso20="#2e8b57")
+source("manuscript/figures/model_palette.R")   # shared per-model palette (Temperature Diverging)
+col <- MODEL_COL
 CACHE <- "manuscript/figures/F4_cache.rds"
 
 if (!file.exists(CACHE)) {
@@ -140,7 +140,8 @@ points(cm$year, cm$m, pch=21, bg="firebrick", col="black", cex=1.5)
 text(cm$year, cm$lo, c("VMI8\n1985","Biosoil\n2006","Komeetta\n2024"), pos=c(4,1,2), offset=0.8, cex=0.68, col="firebrick")
 arrows(1986.4, cm$m[cm$year==1985], 1986.4, mstart, angle=90, code=3, length=0.04, col="grey20", lwd=1.6)
 text(1990, 72, sprintf("+%.0f tC/ha\n1985 over-prediction", gap), pos=4, cex=0.74, col="grey15", font=2)
-legend("bottomright", bty="n", cex=0.76, lwd=2, col=col, legend=names(col), title="model means", ncol=2)
+legend("bottomright", bty="n", cex=0.76, lwd=2, col=col, legend=names(col),
+       title="model means (simple -> complex)", ncol=2)
 
 ## (b) future forecast 2024-2084
 par(mar = c(4.0, 4.2, 3.2, 3.6))

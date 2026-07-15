@@ -72,6 +72,9 @@ manuscript/*.aux
 manuscript/*.log
 manuscript/*.toc
 manuscript/*.out
+manuscript/*.fls
+manuscript/*.fdb_latexmk
+manuscript/*.synctex.gz
 manuscript/appendices/*.aux
 manuscript/appendices/*.log
 manuscript/appendices/*.pdf

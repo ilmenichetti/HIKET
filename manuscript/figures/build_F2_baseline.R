@@ -22,7 +22,7 @@ cm <- aggregate(soc ~ year, obs, function(x)
 cm <- data.frame(year = cm$year, m = cm$soc[,"m"], lo = cm$soc[,"lo"], hi = cm$soc[,"hi"])
 
 png("manuscript/figures/F2_baseline.png", width = 8.4, height = 5.2, units = "in", res = 200)
-par(mar = c(4.0, 4.6, 3.0, 1.2), mgp = c(2.6, 0.7, 0), las = 1)
+par(mar = c(4.0, 4.6, 3.0, 1.2), mgp = c(2.6, 0.7, 0), las = 1, cex.axis = 1.05, cex.lab = 1.2, cex.main = 1.1)
 plot(NA, xlim = c(min(tj$year), max(tj$year) + 2), ylim = c(40, 118), xlab = "Year",
      ylab = "Mean SOC across plots (tC/ha)",
      main = "Uncalibrated baseline: published defaults miss the accumulation")
@@ -49,8 +49,9 @@ text(cm$year, cm$hi, c("VMI8", "Biosoil", "Komeetta"),
 text(2004, 54, "equilibrium start -> flat: no accumulation captured", col = "steelblue", font = 3, cex = 0.82, pos = 3)
 legend("topleft", inset = c(0.01, 0.02), bty = "n", cex = 0.85,
        legend = c("Yasso20 at published defaults (mean +/- SE, 447 plots)",
-                  "Observed campaign mean +/- 95% CI"),
-       pch = c(NA, 19), lwd = c(2.6, NA), col = c("steelblue", "firebrick"))
+                  "Observed campaign mean +/- 95% CI",
+                  "Model-observation gap (under-prediction deficit)"),
+       pch = c(NA, 19, NA), lwd = c(2.6, NA, 7), col = c("steelblue", "firebrick", "grey65"))
 dev.off()
 cat("Wrote manuscript/figures/F2_baseline.png\n")
 cat(sprintf("Baseline mean SOC: %.1f (1985) .. %.1f (2024);  obs %.0f -> %.0f -> %.0f\n",

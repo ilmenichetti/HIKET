@@ -7,11 +7,11 @@ models <- c("SP1","TP2","TP3","Yasso07","Yasso15","Yasso20")
 pools  <- c(1, 2, 3, 5, 5, 5)                       # structural pool count
 calib  <- c(0.062, 0.070, 0.077, 0.067, 0.060, 0.047)
 hold   <- c(0.026, 0.027, 0.037, 0.027, 0.026, 0.015)
-col_m  <- c(SP1="#5e35b1", TP2="#00897b", TP3="#00897b",
-            Yasso07="#e65100", Yasso15="#e65100", Yasso20="#e65100")
+source("manuscript/figures/model_palette.R")   # shared per-model palette
+col_m  <- MODEL_COL
 
 png("manuscript/figures/F6b_skill_vs_complexity.png", width=10, height=4.8, units="in", res=200)
-par(mfrow=c(1,2), mar=c(4.4,4.6,3.0,1.0), mgp=c(2.6,0.7,0))
+par(mfrow=c(1,2), mar=c(4.4,4.6,3.0,1.0), mgp=c(2.6,0.7,0), cex.axis=1.05, cex.main=1.15)
 yl <- c(0, 0.085)
 
 ## ---- Panel A: pool-complexity axis ----------------------------------------

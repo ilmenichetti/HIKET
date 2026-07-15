@@ -8,8 +8,8 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 
 rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
             Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
-col <- c(SP1="#5d4037", TP2="#c9922b", TP3="#f2c200",
-         Yasso07="#1f6fb4", Yasso15="#d1495b", Yasso20="#2e8b57")
+source("manuscript/figures/model_palette.R")   # shared per-model palette
+col <- MODEL_COL
 roll <- function(x,k=5){ n<-length(x); s<-rep(NA,n); h<-(k-1)/2
   for(i in seq_len(n)){ s[i]<-mean(x[max(1,i-h):min(n,i+h)]) }; s }
 mt <- list()

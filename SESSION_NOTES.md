@@ -656,3 +656,132 @@ fin outline + peat overlay onto the raster CRS instead of assuming 3067.
   right-sizing, run stages 2–4 (`run_hiket_pipeline.R --skip-calibration`), refresh NextGenC
   (TP3 RUN_ID), update docs/manuscript with the bounded-run numbers (the sigma_input R²-hit
   payoff). All committed + pushed through 18d739d; tree clean.
+
+## Session 2026-07-14 — Manuscript figure storyboard: F10b, F9+F10 merge (option B), F9 palette
+
+**Branch `manuscript-figures-storyboard`. NOTHING COMMITTED this session — left for user review.**
+(The 2026-07-13 flux_pair run landing + full downstream/NextGenC/docs refresh is captured in
+memories [[sigma-input-physical-bounds]], [[project-hiket]]; not re-logged here.)
+
+Short session, several storyboard items on `manuscript/FIGURE_STORYBOARD_DRAFT.tex` + `figures/`
++ `appendices/`:
+
+### F10b — Finnish forest-history timeline (BUILT, draft)
+- `figures/build_F10b_forest_history.R` → `F10b_forest_history.png`: NFI total growing stock
+  VMI1–VMI13 (mid-century low → ~70% rise since 1970), three management-era bands (post-war
+  exploitation / forest-improvement / modern managed growth), 1917 pre-init anchor + VMI8(1985)/
+  Biosoil(2006) SOC-campaign markers. The [History] thread made concrete.
+- **⚠ OPEN DATA TO-DO (user-flagged):** growing-stock values are DIGITIZED approximations from
+  memory — must source the real Luke/NFI VMI1–VMI13 total-growing-stock series (Luke official
+  statistics / Metsätilastollinen) before the manuscript version.
+
+### F9 quick-win + F9+F10 merge (option B)
+- First: F9 label quick-win — `build_F9_effective_flux.R` gained the on-figure green-envelope
+  label + the lower-bound (0.5) line (was only the 8.7 ceiling).
+- Then user chose **option B**: the UNBOUNDED "before" run leaves the main story (M&M/repeatability
+  cost of two runs); it becomes an APPENDIX diagnostic only (the "before" is just the earlier
+  homogenized run, already in git — not a maintained parallel pipeline).
+- Executed: before/after figure moved into `appendices/appendix_sigma_input.tex` (new
+  "Before/after diagnostic" para + figure). F9 and F10 (σ_init caterpillar) MERGED into one
+  two-panel plate `figures/build_F9_auxiliary_sigmas.R` → `F9_auxiliary_sigmas.png`: (a) σ_input
+  as effective flux, BOUNDED-ONLY, vs green NPP envelope; (b) σ_init forest plot, all <1. Story
+  reframed to "both auxiliary σ's physically interpretable once bounded."
+- **F9 palette:** recolored both panels with the canonical per-model palette (SP1 #5d4037,
+  TP2 #c9922b, TP3 #f2c200, Yasso07 #1f6fb4, Yasso15 #d1495b, Yasso20 #2e8b57) — matches F4 +
+  delta appendix; green envelope + neutral grey reference kept semantic.
+- Storyboard §header now "auxiliary-σ reveal (σ_input & σ_init)"; both docs recompile clean
+  (storyboard 13pp, HIKET_story_outline 17pp, no undefined refs).
+
+### Open items for next session
+1. **F10b data** — get real Luke NFI growing-stock numbers (above).
+2. **Side Arc B prose caveat** — with before/after now in the appendix, the selective-skill-drop
+   counterfactual (only TP2/TP3 lose R² when bounded) must be stated in the main TEXT (citing the
+   appendix figure), else the story asserts "inputs were the lever" without the cleanest proof.
+3. **Quick-wins queue** ([[figure-revision-notes]]): F5→supplementary; F12–13 merge into one
+   2-panel plate; F2 grey-bars legend. Then meaty: F6 holdout+basal-area, F7 three-Yasso, F14
+   vulnerability prototype.
+4. **Commit** the batch (F10b + F9 merge/label + appendix) once user has reviewed the figures.
+
+## Session 2026-07-15 — F10b real NFI growing-stock data sourced
+
+**Branch `manuscript-figures-storyboard`. Still NOTHING COMMITTED — the 2026-07-14 batch
++ this session's F10b edit are all uncommitted, awaiting user review.**
+
+### F10b — digitized guesses replaced with a real citable source
+- Top open blocker resolved: `manuscript/figures/build_F10b_forest_history.R` growing-stock
+  values were "digitized from memory". Sourced them from **Korhonen, Räty et al. (2024)
+  "Forests of Finland 2019–2023 and their development 1921–2023", Silva Fennica 58(4) art.
+  24045** (open access; pulled the raw full text + supplements to confirm). See memory
+  [[nfi-growing-stock-source]].
+- **Numeric anchors quoted in the paper:** NFI1 (1921–24) ≈1400 M m³ (recalculated with modern
+  volume functions — "1.4 G m³", +84% to current), NFI11 2356, NFI12 2475, NFI13 **2552** (SE 13).
+  NFI2–NFI10 read off the paper's Fig. 10 (±~30 M m³ — narrative accuracy is enough). Old
+  VMI13 was 2510 → corrected to 2552; NFI1 1454 → 1400.
+- **Narrative correction:** the recalculated NFI1 (1400) is now the *lowest* point, so
+  "mid-century low" was wrong. Reframed everywhere to "a depleted, near-stationary base into
+  the 1970s, then a sustained ~70% rise" (recovery from centuries of exploitation). Updated:
+  R script data block + header provenance comment + subtitle + a new on-figure source line;
+  storyboard `FIGURE_STORYBOARD_DRAFT.tex` §F10b caption (source citation, corrected phrasing).
+- Figure regenerated; storyboard recompiled clean (exit 0, no undefined refs).
+
+### Quick-wins batch — DONE 2026-07-15 (same session)
+1. **Side Arc B prose caveat** — added the selective-skill-drop counterfactual to `HIKET_story_outline.tex`
+   §"The multiplier crosses a physical line": bounding a *shared* input nuisance costs skill for *only*
+   TP2/TP3 (the runaways) ⇒ cleanest proof inputs, not kinetics, were the lever; hedged "consistent with,
+   not proof"; cites `Appendix~\ref{app:input-bounds}` + `Fig~\ref{fig:unbounded}` (both resolve).
+2. **F5 → supplementary** — moved out of the main H1 results flow in the storyboard into a new
+   "Supplementary figures" section (relabeled S1), with the supp-triage candidates listed.
+3. **F12–13 merge** — combined into one 2-panel plate (mean | SD) in the storyboard (LaTeX side-by-side of
+   the two NextGenC thumbnails). F14 kept its number (heavily referenced elsewhere); landing still "F12–F14".
+4. **F2 grey-bars legend** — added "Model–observation gap (under-prediction deficit)" legend entry to
+   `build_F2_baseline.R`; re-rendered.
+- Both PDFs recompile clean, no undefined refs. Storyboard 13→**12pp**, outline 17→**18pp**.
+
+### Still open (to reason through together next)
+- **F4 forecast-divergence Discussion subsection** (the big one, politically central, under-developed).
+- Meaty figure rebuilds: F6 (holdout-only + basal-area classes), F7 (3-Yasso KL), F8 (readable + role), F11
+  (elevate to frontier arc), F14 vulnerability prototype (labile-pool-share map, correlate w/ ΔSOC).
+- Supplement set assembly (MCMC convergence, residual diagnostics, integrator check).
+- Then real prose. **Commit** the whole storyboard batch once the user has reviewed.
+
+### Continued same session — F4 beat, F14 build+reframe, F6/F7/F8/F11 (storyboard now 15pp)
+- **F4 forecast-divergence beat WRITTEN** (outline §"Structure is a weak lever in-sample, but it dominates the
+  forecast" + Side Arc A third beat + a 2-sentence forward-pointer on how to *test* the divergence). Decisions:
+  cautious lean to saturation (keep Yasso humus-parking caveat), brief policy mention, no new keystone figure.
+- **F14 vulnerability BUILT then REFRAMED.** Prototype (Yasso labile share vs ΔSOC) → r=0.48, ρ=0.64, R²=0.23 =
+  distinct signal. Built kriged map `Reporting/NextgenC_report/build_vulnerability_map.R` → `ENSEMBLE_vulnerability.tif`
+  + thumbnail (EPSG:3035, NextGenC pipeline). **Reframe (user, decisive):** NOT "vulnerability"/"warming sensitivity"
+  (carbon-quality–temperature ⇒ recalcitrant SOC has higher Q10 ⇒ label reads backwards; sign contested; Yasso ξ
+  uniform across pools). Land-use framing also rejected (no LUC mechanism; peat masked out). Reframed as descriptive
+  **stabilization/turnover state**, storyline hook = **inputs** (labile pool tracks recent litter).
+- **Map section = two 2-panel plates:** F12 mean|SD, F13 ΔSOC|labile-fraction (F14/F14b labels retired).
+- **F6 rebuilt** (`build_F6_obs_vs_pred_holdout.R`): holdout-only 2×3, basal-area-tertile classed; calib → S2 supp.
+- **F7** three-Yasso KL stacked (interim; merged-panel polish needs a KL recompute). **F8** role clarified (Side Arc C);
+  readability rebuild + which-model still open. **F11** elevated to "the frontier" (forcing not kinetics).
+- Both docs recompile clean. **Still UNCOMMITTED** — awaiting user review.
+
+### Continued — F7/F8 faithful rebuild, F4 palette, T1 table (session end; storyboard 16pp)
+- **F7/F8 REBUILT properly** (`manuscript/figures/build_F7F8_kl_marginals.R`). Method: saved posterior is already
+  physical-space; prior reproduced exactly by sourcing each model's calibration setup preflight-style (to_original/
+  best_x/sigma_ppm), reusing engine `plot_one_marginal_honest`/`classify_param`/`class_cols`. **F7** = shared-axis
+  3-panel KL (Y07/15/20): fractions ~0 nats, σ_input highest (~5.5 in Y20). **F8** = BOTH Yasso20 (12 fractions,
+  clean prior-pinning) + TP3 (5 kinetics; α's tighten, p_S/p_H shift → less prior-pinned). **OPEN: user picks F8 model.**
+- **F4 palette** → two-colour complexity-ordered ramp (light SP1 → dark Yasso20); readable, encodes the pool axis.
+  Diverges from the canonical per-model palette (accepted tradeoff for F4).
+- **T1 summary table** (`build_T1_model_summary.R` → `figures/T1_model_summary.tex`, \input after F4): per-model
+  pools/free-params/R²(cal,hold)/RMSE/eff-flux/σ_init. Restores the performance F4's redesign dropped. Numbers:
+  complexity ↑ (pools 1→5, params 6→26) but R²cal ↓ 0.079→0.062; effJ all physical 0.9–6.2; σ_init all <1; 2084 133→108.
+- Storyboard 16pp / outline 18pp, both compile clean. Untracked latexmk aux (.fls/.fdb_latexmk) appeared — gitignore
+  candidates. **Whole batch UNCOMMITTED on `manuscript-figures-storyboard`; user is reviewing before commit.**
+
+### Next session (after user review)
+1. **Resolve F8 model choice** (TP3 vs Yasso20) → finalize F8.
+2. **Supplement / robustness triage — DISCUSS (user flagged at session end).** So far only S1 (old F5, per-plot
+   trajectories) + S2 (calibration obs-vs-pred) are in the supplement. Candidate set to decide together (from
+   [[figure-revision-notes]] "DECISIONS part 2"): CORE THREE = (a) MCMC convergence (R-hat/ESS/traces per model),
+   (b) residual diagnostics (resid-vs-fitted + QQ + hist from multimodel_residuals), (c) TP3 exact-vs-Euler
+   integrator check (doublechecks/); PLUS non-Yasso KL (SP1/TP2/TP3, the appendix half of F7); OPTIONAL = prior
+   pushforward / forward-at-defaults, predictive-coverage (param-CV) caveat. Decide which to actually build.
+3. Optional polish flagged: F13(b) between-Yasso spread; F7/F8 any tweaks.
+4. **Full manuscript figure re-render** once the set is final (core-capped), then commit the batch.
+5. Then real prose.

@@ -39,7 +39,7 @@ cyr <- as.integer(names(Tm))
 
 png("manuscript/figures/F1_inputs.png", width = 8.6, height = 9.6, units = "in", res = 200)
 layout(matrix(c(1,1, 2,2, 3,4), nrow = 3, byrow = TRUE), heights = c(1.15, 1.0, 0.62))
-par(mar = c(3.4, 4.6, 2.4, 1.2), mgp = c(2.5, 0.7, 0), las = 1)
+par(mar = c(3.4, 4.6, 2.4, 1.2), mgp = c(2.5, 0.7, 0), las = 1, cex.axis = 1.05, cex.lab = 1.2, cex.main = 1.15)
 
 ## (a) temporal composition -- stacked size classes -------------------------
 ccol <- c(nonwoody = "#2e7d32", finewoody = "#8d6e63", coarsewoody = "#4e342e")
