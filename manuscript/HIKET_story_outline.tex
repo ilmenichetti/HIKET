@@ -589,6 +589,21 @@ calibrated under uncertainty. The thread closes here: better history $\to$
 sharper prior $\to$ a start that is assumed less and inferred more. The
 generalizable recommendation.
 
+\paragraph{Concrete near-term step (to explore next session).}
+% Use the NFI growing-stock history (F10b / storyline note Fig.1) as the pre-1985
+% litter interpolation SHAPE, replacing the linear ramp. Litter scales with standing
+% biomass, so the growing-stock curve (depleted mid-century -> rise) is a physically
+% grounded, essentially free reconstruction of the input history -- turns the [History]
+% thread into an actual model input and targets the coarse pre-1985 phase behind the
+% +26 tC/ha 1985 over-prediction. The cheapest realisation of "reconstruct the input
+% history"; a candidate improvement to the transient-init pre-run.
+The transient-init pre-run currently ramps litter \emph{linearly} from the 1917
+anchor to 1985. A near-term improvement is to use the \emph{shape} of the NFI
+growing-stock history (\S[History]) as that interpolation function instead: since
+litter scales with standing biomass, the growing-stock recovery curve is a
+physically grounded, essentially cost-free reconstruction of the pre-observation
+input path, and it targets the coarse pre-1985 phase directly.
+
 % =====================================================================
 %  OPTIONAL STRATIFIED-CALIBRATION STRAND  (red; drop entirely with \stratfalse)
 %  Self-contained: removing it leaves the storyline whole, just smaller.
