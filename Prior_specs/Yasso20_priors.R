@@ -39,7 +39,7 @@ YASSO20_FREE_DEFAULTS <- c(
   r      =  0.250000,
   # Auxiliary uncertainty parameters
   sigma_init  = 1.00,
-  sigma_input = 1.00
+  sigma_input = 1.30   # C4b: re-centred >1 for missing (understorey-dominated) litter (D2)
 )
 
 # Published Viskari 2022 parameter vector — used by run_yasso20_baseline.R only.

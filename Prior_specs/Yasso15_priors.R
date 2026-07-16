@@ -39,7 +39,7 @@ YASSO15_FREE_DEFAULTS <- c(
   r      = 0.25687,
   # Auxiliary uncertainty parameters
   sigma_init  = 1.00,
-  sigma_input = 1.00
+  sigma_input = 1.30   # C4b: re-centred >1 for missing (understorey-dominated) litter (D2)
 )
 
 # sigma_ppm in unconstrained (transformed) space. All free params listed
