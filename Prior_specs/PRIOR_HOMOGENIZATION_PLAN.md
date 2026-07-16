@@ -315,14 +315,48 @@ and will explode the same way under transient init. They have no published
 calibration of their own, and their climate centres were already borrowed from
 the Yasso07 MAP.
 
-**Plan [TODO]:** put their climate widths on the same Yasso07 empirical scale
-(now the 1σ numbers) — `beta1 ≈ 0.26` (log), `beta2 ≈ 0.00065`, `gamma ≈ 0.20`
-— matching their already-borrowed Yasso07 centres. Their rate/structural
-parameters (`alpha_*`, `p_H`, `p_S`) keep their model-specific
-weakly-informative widths, narrowed only if they prove to be harmful-wide.
-SP1 has no transfer fractions; TP2/TP3 have `p_H`/`p_S` (logit) that should
-follow the Tier-2 logit-0.4 rule. **Verify each model's `beta1` transform type
-before applying** (assumed `log`, as in the Yasso models).
+**Climate (DONE 2026-06-06):** climate widths on the Yasso07 empirical scale
+(1σ) — `beta1 ≈ 0.26` (log), `beta2 ≈ 0.00065`, `gamma ≈ 0.20` — matching their
+borrowed Yasso07 centres.
+
+### 5.1 Round-1 kinetic homogenization — ICBM anchor (finalized + validated 2026-07-16)
+
+The 2026-06 note left the simple-model **rates** (`alpha_*`) at model-specific
+weakly-informative widths (log-SD 0.5). That is the "under-informed simple models"
+confound: Yasso's rates carry litterbag calibration, the simple rates were loosely
+pinned around borrowed centres, so "complexity buys no skill" was confounded with
+"the simple ladder was under-constrained." Round-1 closes it by mirroring **how
+Yasso is parameterized** — *Yasso fixes its rate vector and calibrates its lateral
+fractions* (`FIXED_RATE_NAMES` in `run_Yasso07_*`). Two classes:
+
+- **Intrinsic rates → externally anchored, not fit** (analog of Yasso's fixed
+  `a`-vector). Anchor = Ultuna bare-fallow ICBM (Andrén & Kätterer 1997: `k1=0.8`,
+  `k2=0.00605`, `h=0.13`; `r=1`). The *fast* rate (`alpha_A`; SP1's fast component)
+  is **fixed**; the *slow* rate (`alpha_H`, TP3 `alpha_S`; SP1's slow-dominated
+  single rate) carries a **very-informative prior** centred at the ICBM value —
+  free-but-pinned, so the SOC data can nudge the one weak link (`k2`, optimized on
+  *arable* soil) and its posterior width is a boreal-transferability diagnostic.
+  Rate constants are set **once** at the β centre with a one-time `/xi_Ultuna`
+  (~6%) offset (no per-draw derivation; Yasso does not renormalize its fixed rates).
+- **Humification fractions → FREE, Tier-2 logit SD 0.4, re-centred at `h≈0.13`**
+  (analog of Yasso's free lateral fractions — the simple models' A→S→H flows are
+  sequential *partitioning*, which is what Yasso calibrates). `p_H` (TP2); `p_S`,
+  `p_H` (TP3). SP1 has no split. Fixing them would leave the simple models *more*
+  constrained than Yasso, the opposite of homogeneity.
+
+Per-model centres (reference; `/xi_Ultuna` applied to rate constants):
+
+| Model | Fixed | Very-informative prior (slow) | Free (logit 0.4, centre 0.13) |
+|-------|--------------|-------------------------------|-------------------------------|
+| SP1 | — | `alpha ≈ 0.044` (bulk MRT, slow-dominated) | — |
+| TP2 | `alpha_A = 0.8` | `alpha_H = 0.00605` | `p_H` |
+| TP3 | `alpha_A = 0.8` | `alpha_H = 0.00605`, `alpha_S ≈ 0.0070` (k2-scale) | `p_S`, `p_H` |
+
+**TP3 `alpha_S` must be k2-scale** (`≈k2/(1−p_H)`), NOT intermediate — an
+intermediate value starves the cascade (verified). **Validated**
+(`doublechecks/icbm_anchor_sanity.R`, 447 plots, σ_input=1): all three reach
+observed SOC (median 71) at bulk MRT ~24 yr and **σ_input 1.05–1.36** — physical,
+inside the understorey window. Full record: `manuscript/REVISION_PLAN.md` §C1.
 
 ---
 

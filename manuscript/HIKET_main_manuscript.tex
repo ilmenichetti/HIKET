@@ -272,10 +272,12 @@ operational model.
 Plot-level litter is taken from the Tupek et al.\ dataset
 (Zenodo \texttt{10.5281/zenodo.19736499}), already expressed in
 tC\,ha$^{-1}$\,yr$^{-1}$ and fractionated into the AWEN quality classes required
-by Yasso: a non-woody component (foliage and fine root) plus fine- and
-coarse-woody components. It is a \emph{tree}-litter product --- understorey and
-ground-vegetation inputs are not represented, which becomes relevant to
-$\sigma_{\mathrm{input}}$ below. The population mean rises from $\sim\!2.1$ to a mid-2000s peak of
+by Yasso: a non-woody component (foliage and fine roots) plus fine- and
+coarse-woody components (branches, coarse roots, stem bark, stumps). It is a
+\emph{tree}-litter product covering the full living-tree biomass-component
+turnover --- so belowground litter (fine \emph{and} coarse roots) is included ---
+but understorey/ground-vegetation litter and aboveground tree mortality (deadwood)
+are not represented, which becomes relevant to $\sigma_{\mathrm{input}}$ below. The population mean rises from $\sim\!2.1$ to a mid-2000s peak of
 $\sim\!3.0$ and then plateaus near $\sim\!2.8$~tC\,ha$^{-1}$\,yr$^{-1}$, with a
 strong south--north gradient across plots. This rise-then-plateau history is
 load-bearing twice over: it is the forcing that drives the observed
@@ -423,42 +425,56 @@ Priors are homogenized in \emph{construction, scale, constraint, and degrees of
 freedom} --- not in raw value (identical numbers, tried first, broke Yasso07).
 A three-tier scheme applies to every model: (i)~climate and size parameters take
 per-model centres and widths from that model's \emph{own} published calibration,
-homogeneous in method and scale rather than magnitude; (ii)~the twelve
-inter-pool transfer fractions share a common weakly-informative logit prior
-(SD~$0.4$) with per-model published centres, wired by explicit per-fraction
-listing; and (iii)~the auxiliary parameters $\sigma_{\mathrm{init}}$ and
+homogeneous in method and scale rather than magnitude; (ii)~every inter-pool
+partitioning fraction --- the twelve lateral transfer fractions in the Yasso
+family and the one or two sequential humification fractions in TP2/TP3 --- shares
+a common weakly-informative logit prior (SD~$0.4$) with per-model external
+centres, wired by explicit per-fraction listing; and (iii)~the auxiliary
+parameters $\sigma_{\mathrm{init}}$ and
 $\sigma_{\mathrm{input}}$ use an identical construction everywhere. Because the
 construction is common, any surviving divergence is attributable to structure
 and data, not to prior asymmetry. Full parameter-class $\times$ prior-criteria
 tables in Appendix~\ref{app:priors}.
 
 \subsubsection{Degrees of freedom, set by external information}
-% ROUND-1 REVISION: the simple-model rates are now EXTERNALLY ANCHORED (Ultuna
-% bare-fallow ICBM), not left loosely calibrated. This closes the earlier rate
-% asymmetry: every model now carries external kinetic constraint of comparable
-% weight (litterbag for Yasso, ICBM for the simple ladder), so the ladder is on
-% equal INFORMATION footing, not merely equal degrees of freedom. Numbers/tables
-% land with the production recalibration; see REVISION_PLAN.md §C1.
+% ROUND-1 REVISION (finalized + validated 2026-07-16): the simple-model kinetics
+% are homogenized with HOW YASSO IS ALREADY PARAMETERIZED. Yasso does not fit its
+% decomposition rates --- the rate vector is held fixed at its litterbag values;
+% what Yasso calibrates is its inter-pool (partitioning) fractions, climate, size,
+% and the two sigmas. The simple models now mirror that: intrinsic rates externally
+% anchored (fast fixed, slow via a very-informative prior), partitioning
+% fractions free. Anchor validated in doublechecks/icbm_anchor_sanity.R (sigma_input
+% lands 1.05-1.36, inside the physical understorey window). See REVISION_PLAN.md §C1.
 The fair frame requires not just equal degrees of freedom but equal external
-\emph{information}. The inter-pool transfer fractions are equal-DoF --- all free,
-under the common logit prior --- in every multi-pool model, so no model splits a
-pool's outflow more freely than another. The base decomposition rates are
-\emph{anchored to external calibrations} in every model, of comparable
-evidential weight: Yasso's rates come from its litterbag calibration (Tuomi et
-al.\ 2009/2011), and the simple-model rates are anchored to the Ultuna
-bare-fallow ICBM calibration (Andr\'en \& K\"atterer 1997; $k_1=0.8$,
-$k_2=0.00605$~yr$^{-1}$, humification $h=0.13$). How completely a structure can
-be anchored is set by whether its time-scale structure matches an existing
-calibration: TP2 (two time-scales) maps onto ICBM one-to-one; SP1 (one
-time-scale) is anchored to the ICBM bulk residence time; and TP3 (three
-time-scales) anchors its fast pool and its slow-subsystem \emph{aggregate}
-residence time to ICBM, leaving only the internal slow/humus split --- the one
-genuinely non-identified degree of freedom --- free. The auxiliary parameters
-($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$) and the climate response
-remain calibrated in every model. Thus each model spends its freedom on the same
-things (fractions, inputs, initial state, climate) and pins its rates to the
-best external evidence available for its structure; identifiability then tracks
-information, by design rather than by accident.
+\emph{information}, and the cleanest way to secure it is to parameterize every
+model the same way Yasso already is: \emph{its decomposition rates are not fit to
+the soil-carbon data at all}. In Yasso the rate vector is held fixed at its
+litterbag-calibrated values (Tuomi et al.\ 2009/2011); what Yasso calibrates is
+the twelve inter-pool transfer fractions, the climate response, the woody-size
+modifier, and the two auxiliary uncertainty parameters. The simple models are
+brought onto the same footing. Their \emph{intrinsic decomposition rates} are
+anchored to the Ultuna bare-fallow ICBM calibration (Andr\'en \& K\"atterer 1997;
+$k_1=0.8$, $k_2=0.00605$~yr$^{-1}$): the fast rate --- litterbag-grounded and
+well transferable --- is held fixed, while the single poorly-transferable slow
+rate ($k_2$, optimized on arable soil) carries a very-informative prior, so the
+data may nudge it and the posterior width reports how far a boreal forest soil
+departs from that anchor. Their \emph{humification fractions}, by contrast, are
+the analogue of Yasso's free lateral fractions --- sequential partitioning of
+outflow into the next, slower pool --- and are therefore left \emph{free} under
+the same common logit prior, re-centred on the ICBM humification value. Fixing
+them too would leave the simple models with less partitioning freedom than Yasso,
+not more homogeneity. How completely a structure's rates can be anchored is set by
+whether its time-scale structure matches an existing calibration: TP2 (two
+time-scales) maps onto ICBM one-to-one; SP1 (one time-scale) inherits the ICBM
+bulk residence time; and TP3 (three time-scales) places both of its slow pools at
+the ICBM ``old'' subsystem scale, its fast pool at the young scale. The result is
+uniform across all six models: \emph{no model fits its kinetics to the SOC data},
+and every model spends its calibrated freedom on the same four things --- the
+partitioning fractions, the climate response, the litter input, and the initial
+state. Climbing the pool-complexity ladder therefore adds only free partitioning
+degrees of freedom (none in SP1, one in TP2, two in TP3, twelve in the Yasso
+family); identifiability then tracks information, by design rather than by
+accident.
 \stratnote{[strand] This convention is also what makes the stratified extension
 Yasso-only: with rates anchored, Yasso's stratifiable knobs are inputs + the
 humus-formation fraction --- see the optional strand in the Outlook.}
@@ -488,10 +504,11 @@ and the coupled $1917$ pre-run flux --- to a boreal NPP envelope
 bounded re-parameterisation of the $\sigma_{\mathrm{init}}/\sigma_{\mathrm{input}}$
 pair (a scaled-logit ``flux-pair'' transform) rather than a hard truncation, so
 the sampler still mixes across the boundary. In addition, because the litter
-product is a tree-litter model that structurally omits understorey/ground-vegetation
-and mycorrhizal inputs, the $\sigma_{\mathrm{input}}$ prior is centred on the
-physically expected correction ($>1$) rather than on one, so its posterior is
-read against expected total litter rather than against the tree-only baseline.
+product, though it includes belowground (root) litter, structurally omits
+understorey/ground-vegetation and mycorrhizal inputs (and aboveground tree
+mortality), the $\sigma_{\mathrm{input}}$ prior is centred on the physically
+expected correction ($>1$) rather than on one, so its posterior is read against
+expected total litter rather than against the tree-only baseline.
 Rationale, envelope and mechanism in Appendix~\ref{app:input-bounds}.
 
 \subsubsection{Sampler and diagnostics}
@@ -636,10 +653,16 @@ Root/rhizodeposition inputs poorly known; a further axis of the same problem.
 % [TEMP notes from the new sources (2026-07-16) — fold into prose later.]
 \paragraph{[TEMP] Missing understorey litter (why $\sigma_{\mathrm{input}}$ > 1 is expected).}
 \begin{itemize}
-\item The litter product used here is \emph{tree-litter only}; understorey/ground
-  vegetation and mycorrhizal inputs are not represented. So a multiplier above one is
-  a physical expectation, not manufactured carbon --- hence the prior is re-centred at
-  $\sim$1.3 rather than 1.
+\item The litter product used here is \emph{tree litter} --- it covers the full
+  living-tree biomass-component turnover, so \emph{roots (fine and coarse) are
+  included} (confirmed by B.\ Tupek and the dataset size-class table:
+  \texttt{nwl}=foliage+fine roots, \texttt{fwl}=branches+coarse roots+stem bark,
+  \texttt{cwl}=stumps). What is \emph{not} represented, in order of magnitude:
+  understorey/ground-vegetation (incl.\ moss) litter (dominant); mycorrhizal
+  mycelial turnover/exudates (large, uncertain); and aboveground tree mortality
+  (deadwood), a genuine omission but small in managed forest. So a multiplier above
+  one is a physical expectation, not manufactured carbon --- hence the prior is
+  re-centred at $\sim$1.3 (understorey-dominated) rather than 1.
 \item Grounding: Lehtonen et al.\ (2016) found understorey litter \emph{underestimated}
   in Yasso07, especially in the north (bryophytes 20--60\% of NDVI at high latitude);
   Finnish litterfall studies put understorey at $\sim$15\% (south) to $\sim$33\% (north)

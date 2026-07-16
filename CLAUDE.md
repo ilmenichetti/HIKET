@@ -190,6 +190,36 @@ All models must have **equal degrees of freedom** in flow fractions. Any
 structural asymmetry (fixed vs. free parameters) confounds climate computation
 differences with calibration asymmetry and makes results uninterpretable.
 
+### Round-1 kinetic homogenization — ICBM anchor (finalized + validated 2026-07-16)
+Refines the principle above to **equal external *information***, not just equal DoF,
+by parameterizing the simple models (SP1/TP2/TP3) the way Yasso already is. **Yasso
+does not fit its decomposition rates** — the `a`-vector is a fixed constant
+(`run_Yasso07_*`: `FIXED_RATE_NAMES <- c("alpha_A","alpha_W","alpha_E","alpha_N",
+"p_H","alpha_H")`), injected in `assemble_model_params`; what Yasso *calibrates* is the
+12 lateral transfer fractions, climate (β), woody size, and the two σ's. So the simple
+models split kinetics into two classes:
+- **Intrinsic rates → externally anchored, NOT fit to SOC data** (ICBM, Andrén &
+  Kätterer 1997: `k1=0.8`, `k2=0.00605`, `h=0.13`; Ultuna `r=1`). *Fast* rate
+  (`alpha_A`/SP1 fast) **fixed** (litterbag-grounded, transferable); *slow* rate
+  (`alpha_H`, TP3 `alpha_S`, SP1's slow-dominated single rate) gets a **very-informative
+  prior** — free but tightly pinned at ICBM, so the data can nudge the one weak link
+  (`k2`, arable→forest) and the posterior width is a transferability diagnostic.
+- **Humification fractions → FREE** (analog of Yasso's free lateral fractions): `p_H`
+  (TP2), `p_S`+`p_H` (TP3) keep the Tier-2 logit prior (SD 0.4), **re-centred at
+  `h≈0.13`**. Fixing them would make the simple models *more* constrained than Yasso.
+
+Free set is then **identical across SP1/TP2/TP3** (`β1,β2,γ,σ_input,σ_init`); complexity
+adds only free *partitioning* splits (0→1→2→12). Rates are fixed/pinned **constants** set
+**once** at the β centre with a one-time `/xi_Ultuna` (~6%) offset — **no per-draw
+derivation, no TP3 reparam** (both superseded). **TP3 critical detail:** `alpha_S` must be
+**k2-scale** (`≈k2/(1−p_H)≈0.0070`), NOT intermediate — an intermediate value starves the
+cascade (two 0.13 humification steps → MRT ~6 yr, σ_input 4–5×). **Validated** by
+`doublechecks/icbm_anchor_sanity.R` (447 plots, σ_input=1): SP1/TP2/TP3 all reach observed
+SOC (median 71) at bulk MRT ~24 yr and **σ_input 1.05–1.36** — physical, inside the
+understorey window, closing the σ_input escape hatch via kinetics. Implements C1 of
+`manuscript/REVISION_PLAN.md`; edits land in `Prior_specs/{SP1,TP2,TP3}_priors.R` +
+each `assemble_model_params`. Memory: [[icbm-anchor-validated]], [[revision-round1-plan]].
+
 ### Yasso20 structural fix
 All 12 inter-pool transfer fractions are **free parameters** (previously 6 were
 fixed as structural zeros and 3 algebraically derived following Viskari 2022).

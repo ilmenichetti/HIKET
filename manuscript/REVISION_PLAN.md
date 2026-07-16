@@ -37,7 +37,7 @@ until ~mid-Aug 2026; Mikko Peltoniemi approachable meanwhile for litter/stock qu
 
 ## 2. Changes to implement BEFORE recalibration
 
-### C1 — ICBM-anchored kinetic priors for the simple models (SP1/TP2/TP3)
+### C1 — ICBM-anchored kinetics for the simple models (SP1/TP2/TP3)
 **Why.** The intercomparison is "equal degrees of freedom" but *not* equal prior
 *information*: Yasso kinetics carry litterbag calibration (tight priors); the simple
 models' rates are loosely pinned (log-SD 0.5) around borrowed centres. So "complexity
@@ -47,6 +47,51 @@ fallow ICBM calibration** (Andrén & Kätterer 1997): `k1 = 0.8`, `k2 = 0.00605`
 `h = 0.13` yr⁻¹, reference `r = 1`. Reframe as a *result*: external constraint is
 available in proportion to how well a model's **timescale structure** matches an existing
 calibration.
+
+**DESIGN — finalized 2026-07-16 (supersedes the "derived per-draw rate" scheme below).**
+The guiding principle became *maximum homogeneity with how Yasso is already
+parameterized*. Yasso does **not** calibrate its decomposition rates — the whole `a`-vector
+is a **fixed constant** injected in `assemble_model_params` (`run_Yasso07_*`:
+`FIXED_RATE_NAMES <- c("alpha_A","alpha_W","alpha_E","alpha_N","p_H","alpha_H")`); what
+Yasso leaves *free* is the 12 **lateral** inter-AWEN transfer fractions, climate (β),
+woody size, and the two σ's. So the homogeneous simple-model parameterization splits into
+two classes:
+- **Intrinsic decomposition rates → externally anchored, NOT fit to SOC data** (the analog
+  of Yasso's fixed `a`-vector). The *fast* rate (`k1` → SP1 fast component, TP2/TP3
+  `alpha_A`) is **fixed** (litterbag-grounded, well transferable). The *slow* rate
+  (`k2` → `alpha_H`, TP3 `alpha_S`; and SP1's slow-dominated single rate) carries a **very
+  informative prior** centred at the ICBM value — free but tightly pinned, so the SOC data
+  *can* nudge it and the posterior width becomes a **transferability diagnostic** for the
+  one weak link (`k2` was optimized on *arable* Ultuna, the least transferable to boreal
+  forest). This hybrid = "fix what's solid, let the data speak a little on what's uncertain."
+- **Humification fractions → FREE** (the analog of Yasso's free lateral fractions, *not* of
+  its fixed into-humus `p_H`; the simple models have only sequential humification-into-a-
+  slower-pool flows, which is the partitioning Yasso calibrates). `p_H` (TP2) and `p_S`,
+  `p_H` (TP3) keep the **common Tier-2 logit prior (SD 0.4)**, **re-centred at ICBM
+  `h ≈ 0.13`**. Fixing them would leave the simple models with *zero* partitioning freedom
+  while Yasso keeps twelve — i.e. *more* constrained than Yasso, the opposite of homogeneity.
+
+**No per-draw derivation, no TP3 single-knob reparam.** Rates are fixed/tight **constants**
+computed **once** at the β prior centre (Yasso does not re-normalize its fixed rates each
+draw; neither do we). The ICBM `r=1` reference sits at our `xi_Ultuna ≈ 0.94` (Yasso07 xi
+form, β-centre, half-range `T_amp≈10`), so the fixed constant is `alpha = k_ICBM /
+xi_Ultuna` applied **once** — a ~6% offset, not a per-draw computation. Effective rate at a
+plot is then `alpha · xi_FI(β)`, exactly as Yasso scales its fixed `a`-vector by the free xi.
+
+**VERIFIED 2026-07-16 — `doublechecks/icbm_anchor_sanity.R`** (447 real plots, `σ_input=1`,
+observed SOC median 71, IQR 55–90). The ICBM anchor reproduces boreal stocks at a *physical*
+input multiplier — no escape hatch needed:
+- **SP1** bulk MRT 23.8 yr → stock 59.5, `σ_input`≈**1.18**.
+- **TP2** MRT 21.5–23.8 yr → 55–60, `σ_input`≈**1.18–1.36**.
+- **TP3** *only if `alpha_S` is pinned SLOW (k2-scale), not intermediate.* At
+  `alpha_S = k2/(1−p_H) ≈ 0.0070` (S+H = ICBM "old" subsystem) TP3 gives the **identical**
+  23.8-yr bulk MRT and `σ_input`≈**1.18** as SP1/TP2 → the "all three share one bulk MRT"
+  property emerges. (Intermediate `alpha_S`≈0.05–0.1 starves the cascade — two sequential
+  0.13 humification steps → MRT ~6 yr, `σ_input` 4–5×; this was a design-error catch.)
+- **C2 (xi on H)** moves TP3 stock by ~0.6 tC/ha — confirmed a fairness/consistency fix, not
+  a stock lever.
+All models land at `σ_input` 1.05–1.36 = right inside the physical understorey correction
+(D2, ~1.3): the kinetics close the σ_input escape hatch, and the D2 re-centre is corroborated.
 
 **Grounded ICBM values (verified against the source paper, 2026-07-15).** Andrén, O.
 & Kätterer, T. (1997), *ICBM: the introductory carbon balance model for exploration of
@@ -66,8 +111,12 @@ humification, forest may differ. Bulk MRT at reference = `1/k1 + h/k2 = 1.25 + 2
 22.7 yr` (→ SP1 rate ≈ 0.044); slow-subsystem MRT `1/k2 ≈ 165 yr` (→ TP3 anchor). Full
 citation in memory `icbm-parameters`.
 
-**xi-normalization — the critical implementation detail (decided 2026-07-15).** ICBM's
-rates are defined at `r=1` = *central-Sweden* climate; our `xi` (Yasso07 form:
+**xi-normalization — ⚠ SUPERSEDED 2026-07-16 by the DESIGN block above.** The per-draw
+`alpha = k/xi_Ultuna(β)` derivation below was replaced by a **one-time** fixed-constant
+offset (rates no longer leave the parameter vector as "derived"; fast = fixed constant,
+slow = very-informative-prior free param, both set once at the β centre). Retained here for
+the rationale on why the ICBM `r=1` reference must be placed on our `xi`. Original note:
+ICBM's rates are defined at `r=1` = *central-Sweden* climate; our `xi` (Yasso07 form:
 `mean(exp(β1 T + β2 T²)) · (1 − exp(γ P/1000))`) has **no normalization constant** — the
 absolute scale is absorbed by the rates. So the ICBM rate cannot be dropped in as
 `alpha = k` directly; it must be placed at Ultuna's climate on *our* `xi`:
@@ -89,17 +138,29 @@ T_amp≈11, P=520, β)`. Then Finnish climate scales it: effective rate `= k · 
   also the concrete answer to the coauthor's pg-4 "are T/moisture sensitivities fixed across
   models?" — they are calibrated, but on a common `xi` form with a common climate reference.
 
-| Model | Anchor | New centres | Current centres |
-|-------|--------|-------------|-----------------|
-| **TP2** (2 timescales — exact match) | direct ICBM | `alpha_A=0.8`, `alpha_H=0.00605`, `p_H=0.13` | 0.73, 0.0015, 0.028 |
-| **SP1** (1 timescale) | ICBM **bulk MRT** | `alpha ≈ 1/22.7 ≈ 0.044` (single pool collapses two timescales; state this openly) | 0.09 (≈2× too fast) |
-| **TP3** (3 timescales) | A←Young; S+H aggregate←Old | `alpha_A=0.8`, `p_S=0.13`; constraint `1/alpha_S + p_H/alpha_H ≈ 165 yr` (= 1/k2); **internal S/H split left free** = the non-identified DoF | 0.73, 0.10, 0.0015, p_S=0.028, p_H=0.50 |
+Per-model parameter status under the finalized design (centres shown at reference; the
+one-time `/xi_Ultuna` offset is applied to the rate constants):
 
-**TP3 constraint mechanism (design decision, OPEN):** either (a) reparameterize TP3 to
-`(subsystem MRT, split fraction)` coordinates and put a tight prior on the MRT + a loose
-one on the split; or (b) set centres satisfying the 165-yr sum with tight priors on the
-rates and a loose prior on the split. (a) is cleaner; (b) is less code. Decide at
-implementation.
+| Model | FIXED | Very-informative prior (slow, free-but-pinned) | FREE (logit SD 0.4, centre 0.13) | Old (loose) centres |
+|-------|-------------|-----------------------------------------------|----------------------------------|---------------------|
+| **SP1** (1 timescale) | — | `alpha ≈ 1/22.7 ≈ 0.044` (bulk MRT; slow-dominated → pinned, not fixed) | — (no split) | 0.09 (≈2× too fast) |
+| **TP2** (2 timescales) | `alpha_A = 0.8` | `alpha_H = 0.00605` | `p_H` | 0.73, 0.0015, p_H 0.028 |
+| **TP3** (3 timescales) | `alpha_A = 0.8` | `alpha_H = 0.00605`, `alpha_S ≈ k2/(1−p_H) ≈ 0.0070` (both k2-scale = ICBM "old" subsystem) | `p_S`, `p_H` | 0.73, alpha_S 0.10, alpha_H 0.0015, p_S 0.028, p_H 0.50 |
+
+Free set is then **identical across SP1/TP2/TP3** for everything non-kinetic: `{β1, β2, γ,
+σ_input, σ_init}`. Complexity adds only free *partitioning* splits (SP1 0 → TP2 1 → TP3 2),
+mirroring Yasso's 12 free lateral fractions — the honest "complexity = more partitioning
+DoF" ladder. SP1's single rate is slow-dominated (`h/k2 = 21.5` of the 22.7-yr bulk MRT),
+so it inherits the `k2` uncertainty → very-informative prior rather than a fixed constant.
+
+**TP3 constraint mechanism → RESOLVED 2026-07-16 = option (b), simplified.** No
+reparameterization. `alpha_A` fixed; `alpha_S` and `alpha_H` are **very-informative-
+prior** free params **centred at the k2-scale ICBM "old" subsystem** (`alpha_S ≈
+k2/(1−p_H_centre) ≈ 0.0070`, `alpha_H ≈ k2`); `p_S`, `p_H` **free** (logit SD 0.4, centre
+0.13). The ~165-yr subsystem MRT is thus set by the rate *centres*, not pinned by a hard
+identity — the free splits let it drift (partitioning freedom, like Yasso's fractions). The
+sanity check confirms the centres give the shared ~24-yr bulk MRT. This keeps the "fix
+intrinsic rates, free the fractions" rule uniform with SP1/TP2 (no TP3-only machinery).
 
 **Consequences / cross-checks:**
 - All three simple models then share **one common ICBM bulk MRT** (≈22.7 yr at reference)
@@ -143,11 +204,24 @@ Make the estimate robust and interpretable:
 - **C4a Stock QC (do first, cheap):** verify Biosoil/Komeetta depth & layers; 10 kgC/m²
   is high (coauthor #12). If the target is biased high, σ_input shrinks for free.
 - **C4b Re-centre the σ_input prior on a physical expectation >1**, not on 1: the Tupek
-  product is a *tree*-litter model, structurally omitting understorey/ground vegetation
-  (~20–40% of boreal litter), fine-root turnover, mycorrhizal/exudate flux. Build an
-  independent estimate of the missing fraction and centre σ_input there (~1.3–1.6) so the
-  posterior is read against *expected total litter*. Converts σ_input from a fudge into an
-  estimate of unmodelled input.
+  product is a *tree*-litter model. **What it OMITS (corrected 2026-07-16 against the source
+  + author confirmation, B. Tupek):** (i) **understorey/ground-vegetation (incl. moss)
+  litter** — the dominant missing term, ~15–35% of total boreal litter (larger N); (ii)
+  **mycorrhizal mycelial turnover / root exudates** — large but very uncertain; (iii)
+  **aboveground tree mortality (deadwood/CWD from whole-tree death)** — a genuine omission,
+  but a *small* soil-input term in managed Finnish forests (harvest removes stems, natural
+  mortality suppressed) that also enters measured soil C only partly and slowly. **What it
+  INCLUDES — roots.** Fine roots (in `nwl`) AND coarse roots (in `fwl`) are covered, along
+  with foliage, branches, stem bark, stumps: J is the full living-tree biomass-component
+  turnover, not aboveground-only. (The earlier "omits fine-root turnover" here was WRONG —
+  Boris confirms roots are in his estimates; only aboveground mortality and understorey are
+  out. See `HIKET_data_preparation.Rmd` size-class table: `nwl`=foliage+fine roots,
+  `fwl`=branches+coarse roots+stem bark, `cwl`=stumps.) Build an independent estimate of the
+  missing fraction (understorey-dominated) and centre σ_input there (~1.3) so the posterior
+  is read against *expected total litter*. Converts σ_input from a fudge into an estimate of
+  unmodelled input. **NB the Zenodo DOI 10.5281/zenodo.19736499 is not yet registered
+  (embargoed 2026 deposit) — this comparison is against our local derivation + the author's
+  statement; re-verify against the public M&M when it lands.**
 - **C4c (paper-2 / optional):** external input anchor via stock→input inversion or
   NPP-allometric total litter (coauthor #5, "Julius inversion").
 
@@ -198,16 +272,24 @@ anchors + the transient dynamics carry the initial state.
 
 ## 4. Implementation order, verification, launch
 1. **C4a stock QC** — DONE (local sanity check; see D3). Authoritative QC = someone else.
-2. **C1** ICBM priors (SP1/TP2/TP3 `Prior_specs/*_priors.R`) + xi-normalization (rates
-   derived per-draw as `k/xi_Ultuna`); TP3 single-knob.
+1b. **ICBM anchor validation** — DONE 2026-07-16 (`doublechecks/icbm_anchor_sanity.R`;
+   see C1 VERIFIED block). Confirms σ_input lands 1.05–1.36 (physical) and `alpha_S` must
+   be k2-scale.
+2. **C1** ICBM kinetics (SP1/TP2/TP3 `Prior_specs/*_priors.R` + each `assemble_model_params`):
+   **fast rate fixed** (`alpha_A`/SP1 fast) as a constant like Yasso's `fixed_rates`;
+   **slow rate very-informative-prior** free (`alpha_H`, TP3 `alpha_S`; SP1 single rate);
+   **humification fractions free**, logit SD 0.4, re-centred at `h≈0.13` (`p_H`; TP3 `p_S`,
+   `p_H`). One-time `/xi_Ultuna` offset on the rate constants; NO per-draw derivation, NO
+   TP3 reparam.
 3. **C2** TP3 climate-on-all-pools (`tp3_wrapper_transient.R`).
 4. **C3** historical input interpolation (all six transient inits).
-5. **C4b** σ_input prior re-centre (≈1.3).
+5. **C4b** σ_input prior re-centre (≈1.3) — corroborated by 1b.
 6. **C5** 1985 observation-variance inflation (~2×) in `calibration_engine_transient.R`
    + plot-meta `sigma_infl`.
-7. **Verify (local `doublechecks/`):** ICBM steady-state stock identical across SP1/TP2/TP3;
-   TP3 exact integrator still matches matrix-exp with xi on H; interpolation shape sanity;
-   σ_input prior pushforward (no forward blow-ups); flux stays in NPP envelope.
+7. **Verify (local `doublechecks/`):** ICBM steady-state stock ≈ shared across SP1/TP2/TP3
+   (DONE, 1b); TP3 exact integrator still matches matrix-exp with xi on H; interpolation
+   shape sanity; slow-rate very-informative prior pushforward (no forward blow-ups); flux
+   stays in NPP envelope.
 8. **Sync + recompile** on Roihu (recompile only if any `.f90` changed — C1–C5 are R-only,
    so no Fortran rebuild expected; still confirm `.so` currency per CLAUDE.md).
 9. **Launch** six-model calibration on Roihu; watch `Cores per chain: 40`.
@@ -215,26 +297,38 @@ anchors + the transient dynamics carry the initial state.
 
 ## 5. Decisions — sharpened for tomorrow's session
 
-**D1. TP3 constraint parameterization → DECIDED: single free knob (2026-07-15).**
-Pin `alpha_A = k1 = 0.8`, `p_S = h ≈ 0.13`, `alpha_H = k2 = 0.00605` (all tight, from
-Ultuna). Anchoring the slow-subsystem MRT to ICBM Old (`1/alpha_S + p_H/alpha_H = 1/k2`)
-with `alpha_H = k2` gives the clean identity `alpha_S = k2 / (1 - p_H)`. So **the only
-free TP3 kinetic parameter is `p_H`** (the S→H split), `alpha_S` is derived, and the
-subsystem MRT stays pinned at `1/k2 ≈ 165 yr` for *every* value of `p_H`. `p_H` carries
-a weak logit prior = the one genuinely non-identified DoF. Exact, minimal, makes "pin
-the identifiable, float the non-identified" literal. (Interacts with C2: with xi on H,
-`alpha_H = k2` is the reference-climate rate; boreal xi<1 lengthens the whole subsystem
-consistently — the 165-yr anchor is stated at reference.)
+**D1. TP3 parameterization → REVISED 2026-07-16 (supersedes the 2026-07-15 single-knob
+reparam).** Under the finalized "fix intrinsic rates, free the fractions" rule (homogeneous
+with Yasso, which fixes rates + frees its lateral fractions), TP3 needs **no
+reparameterization**: `alpha_A = k1 = 0.8` **fixed**; `alpha_H ≈ k2` and `alpha_S ≈
+k2/(1−p_H_centre) ≈ 0.0070` are **very-informative-prior** free params (both k2-scale = ICBM
+"old" subsystem); `p_S`, `p_H` **free** (logit SD 0.4, centre `h≈0.13`). The ~165-yr
+subsystem MRT is set by the rate *centres*, not pinned by a hard identity — the free splits
+let it drift (the partitioning DoF, exactly like Yasso's fractions). Rationale for dropping
+the single-knob reparam: it *fixed* `p_S` and derived `alpha_S`, leaving TP3 with only one
+free kinetic DoF and the simple models *more* constrained than Yasso; freeing both splits
+restores parity. The k2-scale `alpha_S` is essential (verified 1b: an intermediate `alpha_S`
+starves the cascade). (Interacts with C2: with xi on H, the k2-scale centres are the
+reference-climate rates; boreal xi<1 lengthens the whole subsystem consistently.)
 
-**D2. σ_input prior centre → SET ≈ 1.3 (log), literature-grounded 2026-07-15.**
-The litter product is confirmed **tree-litter only** (non-woody = foliage + fine root;
-fine/coarse woody) — understorey/ground-vegetation and mycorrhizal inputs are **not**
-represented. Boreal-Finland litterfall studies: understorey ≈ **15% (south) to 33%
+**D2. σ_input prior centre → SET ≈ 1.3 (log), literature-grounded 2026-07-15;
+CORROBORATED 2026-07-16.** The ICBM-anchor sanity check (1b) independently lands σ_input at
+**1.05–1.36** across all three simple models to reach observed SOC — the same window the
+missing-understorey argument predicts. Two independent lines (litter-completeness physics +
+the kinetic anchor) agree on ~1.3, so the re-centre is well-founded, not a tuning.
+The litter product is **tree-litter** (full living-tree biomass-component turnover:
+foliage, **fine roots**, branches, **coarse roots**, stem bark, stumps — so **roots ARE
+included**, confirmed by B. Tupek and the size-class table). **Not** represented, in order
+of magnitude: **understorey/ground-vegetation (incl. moss)** — the dominant term;
+**mycorrhizal mycelial turnover / exudates** — large but very uncertain; and **aboveground
+tree mortality (deadwood/CWD)** — genuinely omitted but a *small* soil-input term in managed
+Finnish forest (harvest removes stems; natural mortality suppressed; slow/partial entry to
+measured soil C). Boreal-Finland litterfall studies: understorey ≈ **15% (south) to 33%
 (north)** of aboveground litter (up to ~50% of total in Lapland), i.e. understorey/tree
 ratio ≈ 0.2–0.35 → a physically-expected multiplier ≈ **1.2–1.35** from ground vegetation
-alone; mycorrhizal mycelial turnover (also omitted, large but very uncertain) adds a
-further unquantified upward push. **Recommend centring σ_input at ≈ 1.3** (keep the
-flux-pair NPP bound on top). Caveat: the fraction rises strongly S→N, so a single national
+alone; mycorrhiza and the small mortality term add a further (mostly unquantified) upward
+push. **Recommend centring σ_input at ≈ 1.3** (understorey-dominated; keep the flux-pair NPP
+bound on top). Caveat: the fraction rises strongly S→N, so a single national
 multiplier cannot capture it — a limitation that motivates stratifying inputs by site
 class (future work). *To pin exact citation:* the 15/33% figures are from the boreal
 site-type-gradient litterfall literature — confirm the primary ref before the paper.

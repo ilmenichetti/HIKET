@@ -64,17 +64,27 @@ physical ceiling.
 
 # What `sigma_input` legitimately represents
 
-$J$ is **tree litter only** (foliage/needles + fine roots + branches + stumps).
-Two physical terms are *not* in $J$ and are what `sigma_input` should absorb:
+$J$ is **tree litter** covering the full living-tree biomass-component turnover:
+foliage/needles + **fine roots** + branches + **coarse roots** + stem bark +
+stumps. So **belowground (root) litter IS included** (confirmed by B. Tupek and
+the dataset size-class table: `nwl`=foliage+fine roots, `fwl`=branches+coarse
+roots+stem bark, `cwl`=stumps) --- $J$ is *not* aboveground-only. Physical terms
+*not* in $J$, which `sigma_input` should absorb, in order of magnitude:
 
-1. **Understory / ground-vegetation (incl. moss) litter** --- genuinely missing
-   from $J$. In Finnish boreal forest this is $\sim$15--35% of total litter
-   production (larger at northern, less productive sites): e.g. in a boreal
-   *Betula pendula* stand total soil-C input (tree + understory) was 2.83
-   tC/ha/yr with understory **35% $\approx$ 0.99 tC/ha/yr**. So
-   $\texttt{sigma\_input} \approx 1.2\text{--}1.5$ is *physically justified by
-   understory alone*.
-2. **Tree-litter-model bias** --- Tupek model error in the tree flux itself.
+1. **Understory / ground-vegetation (incl. moss) litter** --- the dominant missing
+   term. In Finnish boreal forest $\sim$15--35% of total litter production (larger
+   at northern, less productive sites): e.g. in a boreal *Betula pendula* stand
+   total soil-C input (tree + understory) was 2.83 tC/ha/yr with understory
+   **35% $\approx$ 0.99 tC/ha/yr**. So $\texttt{sigma\_input} \approx
+   1.2\text{--}1.5$ is *physically justified by understory alone*.
+2. **Mycorrhizal mycelial turnover / root exudates** --- also absent; large but
+   very uncertain, a further upward push.
+3. **Aboveground tree mortality (deadwood / CWD from whole-tree death)** ---
+   genuinely omitted (the dataset is turnover-based, not demographic), but a
+   *small* soil-input term in managed Finnish forest: harvest removes most stems,
+   natural mortality is suppressed, and deadwood enters measured soil C only
+   slowly and partly. Minor next to understory.
+4. **Tree-litter-model bias** --- Tupek model error in the tree flux itself.
 
 Neither mechanism can plausibly inflate soil input several-fold: a boreal
 forest's *total* detritus input to soil is capped by its net primary production.
