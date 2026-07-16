@@ -216,9 +216,11 @@ yasso20_transient_init <- function(model_params, lm, xi_mean, ...) {
                                  xi_ss       = xi_mean,
                                  precip_mean = lm$precip_mean)
 
-  # Build 68-row input_df with linearly interpolated AWEN columns
+  # Build 68-row input_df: AWEN columns follow the growing-stock shape (C3).
+  # fracs in [0,1]; linear fallback if the bundle lacks the shape.
   n_pre <- 68L
-  fracs <- (seq_len(n_pre) - 1L) / (n_pre - 1L)
+  fracs <- if (!is.null(lm$preinit_shape) && length(lm$preinit_shape) == n_pre)
+             lm$preinit_shape else (seq_len(n_pre) - 1L) / (n_pre - 1L)
   nwl_mat <- outer(1 - fracs, nwl_1917) + outer(fracs, nwl_1985)
   fwl_mat <- outer(1 - fracs, fwl_1917) + outer(fracs, fwl_1985)
   cwl_mat <- outer(1 - fracs, cwl_1917) + outer(fracs, cwl_1985)

@@ -10,7 +10,9 @@
 #   dA/dt = J            - k_A A
 #   dS/dt = p_S k_A A    - k_S S
 #   dH/dt = p_H k_S S    - k_H H
-#   with k_A = alpha_A * xi,  k_S = alpha_S * xi,  k_H = alpha_H  (H has no xi).
+#   with k_A = alpha_A * xi,  k_S = alpha_S * xi,  k_H = alpha_H * xi.
+#   (C2, 2026-07-16: xi now multiplies ALL pool rates including humus, so TP3's
+#    climate treatment matches TP2 and the Yasso family; previously H had no xi.)
 #
 # INTEGRATION (changed 2026-06: was explicit forward Euler).
 #   Each annual step is now solved EXACTLY, by the matrix exponential of the
@@ -27,7 +29,9 @@
 #   purely structural. See HIKET_calibration.Rmd section 13.8.
 #
 # Notes:
-#   - H has no climate modifier (xi), consistent with TP2 and Yasso conventions.
+#   - H IS climate-modified (k_H = alpha_H * xi), matching TP2 (which applies xi
+#     to both its pool rates) and the Yasso family. (Corrected C2 2026-07-16 — the
+#     earlier "H has no xi, consistent with TP2" note was wrong: TP2 has xi on H.)
 #   - p_S: fraction of A decomposition flux routed to S; remainder is respired.
 #   - p_H: fraction of S decomposition flux routed to H; remainder is respired.
 #   - xi is computed externally via compute_xi_yasso07 (same function as TP2/SP1).
@@ -37,7 +41,7 @@
 # Analytical steady state (within-year equilibrium of the dynamics above):
 #   A_ss = J / (alpha_A * xi)
 #   S_ss = p_S * J / (alpha_S * xi)
-#   H_ss = p_H * p_S * J / alpha_H
+#   H_ss = p_H * p_S * J / (alpha_H * xi)
 #
 # Exported functions:
 #   tp3_steady_state   (model_params, lm, xi_mean)            -> named numeric(3) [A,S,H]
@@ -52,9 +56,13 @@
 # Exact one-year update of the ASH cascade with J and xi held constant over the
 # step. Solves C(t+1) = C_ss + exp(M) (C(t) - C_ss), where C_ss is the
 # within-year equilibrium and exp(M) is the (closed-form) exponential of the
-# lower-triangular generator. The divided-difference formula is undefined when
-# two eigenvalues coincide; since alpha_A >> alpha_S >> alpha_H here that never
-# occurs in practice, but a 1e-6 nudge guards the degenerate case.
+# lower-triangular generator. The divided-difference exponential is computed in
+# a confluence-safe recursive form (expm1), so it stays exact when two eigenvalues
+# coincide. This matters after C1+C2: alpha_S and alpha_H are now BOTH at k2-scale
+# (kS ~ kH is a regular regime, not the "alpha_S >> alpha_H, never coincides" case
+# the earlier crude 1e-6 nudge assumed — that nudge gave ~1e-4 error near kS==kH).
+# The one truly catastrophic coincidence (kA == kH -> the l3-l1 denominator below)
+# is physically impossible (fast pool vs slow humus differ by ~100x) and guarded.
 # -----------------------------------------------------------------------------
 .tp3_step <- function(cA, cS, cH, kA, kS, kH, pS, pH, J) {
   # strip any names off the scalar inputs: if cA/cS/cH arrive named (e.g. via
@@ -63,10 +71,12 @@
   # both call sites (tp3_transient_init passes C["A"]; tp3_run passes scalars).
   cA <- unname(cA); cS <- unname(cS); cH <- unname(cH)
 
-  # keep eigenvalues distinct for the divided-difference exponential
-  if (abs(kA - kS) < 1e-6) kS <- kS + 1e-6
-  if (abs(kA - kH) < 1e-6) kH <- kH + 1e-6
-  if (abs(kS - kH) < 1e-6) kH <- kH + 2e-6
+  # Guard ONLY the fast-vs-slow coincidences (kA==kS, kA==kH): never physical
+  # (fast pool >> slow pair), but they would divide-by-zero in dd31's outer
+  # denominator (l3-l1 = kA-kH). kS~kH needs NO nudge — the recursion below is
+  # exact through it.
+  if (abs(kA - kS) < 1e-9) kS <- kS + 1e-9
+  if (abs(kA - kH) < 1e-9) kH <- kH + 1e-9
 
   # within-year equilibrium (litter J enters A only)
   Ass <- J / kA
@@ -76,12 +86,13 @@
   l1 <- -kA; l2 <- -kS; l3 <- -kH
   e1 <- exp(l1); e2 <- exp(l2); e3 <- exp(l3)
 
-  # exp(M) entries: diagonal e^li; off-diagonals = (path product) x divided diff
-  d21  <- (e2 - e1) / (l2 - l1)                       # 1st divided diff, nodes l1,l2
-  d32  <- (e3 - e2) / (l3 - l2)                       # 1st divided diff, nodes l2,l3
-  dd31 <- e1 / ((l1 - l2) * (l1 - l3)) +              # 2nd divided diff, nodes l1,l2,l3
-          e2 / ((l2 - l1) * (l2 - l3)) +
-          e3 / ((l3 - l1) * (l3 - l2))
+  # Divided differences of exp, confluence-safe:
+  #   f[li,lj] = (e_j - e_i)/(l_j - l_i) = e_i * expm1(l_j-l_i)/(l_j-l_i) -> e_i as l_j->l_i
+  #   f[l1,l2,l3] = (f[l2,l3] - f[l1,l2])/(l3 - l1)   (recursive 2nd divided diff)
+  ddx  <- function(li, lj, ei) { d <- lj - li; if (abs(d) < 1e-12) ei else ei * expm1(d) / d }
+  d21  <- ddx(l1, l2, e1)                 # 1st divided diff, nodes l1,l2
+  d32  <- ddx(l2, l3, e2)                 # 1st divided diff, nodes l2,l3 (exact when kS~kH)
+  dd31 <- (d32 - d21) / (l3 - l1)         # 2nd divided diff; l3-l1 = kA-kH always large
   a <- pS * kA            # M[2,1]
   cc <- pH * kS           # M[3,2]
 
@@ -103,7 +114,7 @@ tp3_steady_state <- function(model_params, lm, xi_mean) {
   J    <- lm$J_total_mean * model_params["sigma_input"]
   A_ss <- J / (model_params["alpha_A"] * xi_mean)
   S_ss <- model_params["p_S"] * J / (model_params["alpha_S"] * xi_mean)
-  H_ss <- model_params["p_H"] * model_params["p_S"] * J / model_params["alpha_H"]
+  H_ss <- model_params["p_H"] * model_params["p_S"] * J / (model_params["alpha_H"] * xi_mean)  # C2: xi on H
   c(A = unname(A_ss), S = unname(S_ss), H = unname(H_ss))
 }
 
@@ -133,16 +144,18 @@ tp3_transient_init <- function(model_params, lm, xi_mean) {
   # Start at analytical steady state under 1917 litter
   C <- c(A = unname(J_1917 / (alpha_A * xi_mean)),
          S = unname(p_S * J_1917 / (alpha_S * xi_mean)),
-         H = unname(p_H * p_S * J_1917 / alpha_H))
+         H = unname(p_H * p_S * J_1917 / (alpha_H * xi_mean)))  # C2: xi on H
 
   # 68-year pre-run: linearly interpolated J, constant xi, exact annual step
   kA <- alpha_A * xi_mean
   kS <- alpha_S * xi_mean
-  kH <- alpha_H
+  kH <- alpha_H * xi_mean   # C2: xi on H (was alpha_H)
+  # C3: J follows the growing-stock shape (linear fallback if the bundle lacks it)
   n_pre <- 68L
+  shape <- if (!is.null(lm$preinit_shape) && length(lm$preinit_shape) == n_pre)
+             lm$preinit_shape else (seq_len(n_pre) - 1L) / (n_pre - 1L)
   for (i in seq_len(n_pre)) {
-    frac <- (i - 1L) / (n_pre - 1L)
-    J    <- J_1917 + (J_1985 - J_1917) * frac
+    J    <- J_1917 + (J_1985 - J_1917) * shape[i]
     C    <- .tp3_step(C["A"], C["S"], C["H"], kA, kS, kH, p_S, p_H, J)
   }
   C
@@ -187,7 +200,7 @@ tp3_run <- function(inputs, model_params, C_init, xi_array) {
     J    <- inputs$J_total[t] * sig_inp
     xi_t <- xi_array[t]
     C    <- .tp3_step(C_A, C_S, C_H,
-                      alpha_A * xi_t, alpha_S * xi_t, alpha_H,
+                      alpha_A * xi_t, alpha_S * xi_t, alpha_H * xi_t,   # C2: xi on H
                       p_S, p_H, J)
     C_A <- C[["A"]]; C_S <- C[["S"]]; C_H <- C[["H"]]
     A[t] <- C_A; S[t] <- C_S; H[t] <- C_H

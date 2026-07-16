@@ -302,11 +302,13 @@ sp1_transient_init <- function(model_params, lm, xi_mean, ...) {
   k <- alpha * xi_mean
   C <- unname(J_1917 / k)
 
-  # 68-year pre-run: linearly interpolated J, constant xi (no pre-1985 climate)
+  # 68-year pre-run: J follows the growing-stock shape (C3), constant xi (no
+  # pre-1985 climate). shape[i] in [0,1]; linear fallback if the bundle lacks it.
   n_pre <- 68L
+  shape <- if (!is.null(lm$preinit_shape) && length(lm$preinit_shape) == n_pre)
+             lm$preinit_shape else (seq_len(n_pre) - 1L) / (n_pre - 1L)
   for (i in seq_len(n_pre)) {
-    frac <- (i - 1L) / (n_pre - 1L)
-    J    <- J_1917 + (J_1985 - J_1917) * frac
+    J    <- J_1917 + (J_1985 - J_1917) * shape[i]
     C_ss <- J / k
     C    <- C_ss + (C - C_ss) * exp(-k)   # exact annual step
   }
