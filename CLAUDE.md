@@ -532,6 +532,9 @@ multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
 | Toni Viskari | Yasso20 model author; structural clarifications |
 | Boris Tupek | Litter dataset author |
 | Jani Anttila | LUKE, GHG portal |
+| Aleksi Lehtonen | LUKE; **coauthor**; lead of the national soil-C inventory (Lehtonen et al. 2016, GMD — the steady-state approach HIKET extends). Frame that lineage collegially (evolving the group's own method), not as a critique. Natural owner of the stock QC (D3) & understorey litter (D2), BUT **on holiday until ~mid-Aug 2026 — proceed without him for now**. |
+| Samuli Launiainen | **coauthor**; gave the round-1 review comments (annotated `manuscript/revisions/HIKET_storyline_note_sl.pdf`, incl. "ridiculously flawed"). Straightforward, clear-thinking; friends with Aleksi. His candid margin notes are internal — keep the manuscript prose measured. |
+| Mikko Peltoniemi | LUKE; author of the keystone Peltoniemi et al. 2004 (the direct antecedent — identified the non-equilibrium init problem). Close collaborator (~2 yr), on good terms — approachable for the litter/understorey/stock questions while Aleksi is away. |
 
 **GitHub:** `ilmenichetti/HIKET`  
 **Prior sources:** FMI Ryassofortran repository (`https://github.com/YASSOmodel/Ryassofortran/tree/master/data`); `Priors_model_matching.R` derives prior specs.

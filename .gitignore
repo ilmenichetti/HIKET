@@ -78,3 +78,6 @@ manuscript/*.synctex.gz
 manuscript/appendices/*.aux
 manuscript/appendices/*.log
 manuscript/appendices/*.pdf
+
+# Literature PDFs (copyright + size); keep the tracked catalogue literature/README.md
+literature/*.pdf
