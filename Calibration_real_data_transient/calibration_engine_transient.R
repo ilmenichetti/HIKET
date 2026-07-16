@@ -135,7 +135,12 @@ make_likelihood <- function(n_cores,
                SOC_hat * sqrt(sigma_obs_fixed^2 + sigma_init^2),
                SOC_hat * sigma_obs_fixed)
       }
-      
+
+      # C5: per-observation SD inflation (down-weight the suspect 1985 campaign).
+      # meta$sigma_infl is 1 everywhere except 1985 obs (SIGMA_1985_INFL). Absent
+      # in older input bundles -> treated as 1 (no effect), so this is backward-safe.
+      if (!is.null(meta$sigma_infl)) sd_vec <- sd_vec * meta$sigma_infl
+
       sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = sd_vec, log = TRUE))
       
     }, mc.cores = n_cores)

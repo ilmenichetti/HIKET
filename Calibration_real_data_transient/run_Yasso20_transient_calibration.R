@@ -387,6 +387,12 @@ litter_means <- lapply(plots_real, function(pid) {
 })
 names(litter_means) <- plots_real
 
+# C3: attach the growing-stock-derived pre-run input shape (one source of truth,
+# Data/forest_history/nfi_growing_stock.csv; saved with the bundle -> predictive inherits it).
+source("./Model_functions_real_data_transient/preinit_input_shape.R")
+PREINIT_SHAPE <- growing_stock_preinit_shape()   # 1917->1985, 68 steps, [0,1]
+litter_means  <- lapply(litter_means, function(x) { x$preinit_shape <- PREINIT_SHAPE; x })
+
 # --- Inject J_bar into the flux_pair transform (needs litter_means) ----------
 # J_bar = cross-plot mean TOTAL litter (sum of AWEN pool means): the units bridge
 # between the physical flux window and the dimensionless sigma_input multiplier.
@@ -415,7 +421,8 @@ obs_meta <- lapply(plots_real, function(pid) {
   list(
     idx      = match(obs_plot$year, inp_plot$year),
     soc_obs  = obs_plot$soc_obs_tCha,
-    is_first = obs_plot$obs_rank == 1L
+    is_first = obs_plot$obs_rank == 1L,
+    sigma_infl = ifelse(obs_plot$year == 1985L, SIGMA_1985_INFL, 1.0)   # C5: down-weight VMI8
   )
 })
 names(obs_meta) <- plots_real

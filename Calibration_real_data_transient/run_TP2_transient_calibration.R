@@ -92,7 +92,7 @@ message("=============================================================\n")
 # physical interpretation change (see free_defaults section below).
 
 param_spec <- list(
-  list(names = "alpha_A",     type = "log"),
+  # alpha_A is FIXED (C1) — not free; injected in assemble_model_params below.
   list(names = "alpha_H",     type = "log"),
   list(names = "p_H",         type = "logit"),
   list(names = "beta1",       type = "log"),
@@ -126,10 +126,14 @@ message("Transform round-trip: OK")
 
 
 # =============================================================================
-# 2.  Parameter assembly (pass-through; unchanged from original)
+# 2.  Parameter assembly — inject the FIXED fast rate (C1)
 # =============================================================================
+# alpha_A (fast pool) is externally anchored to ICBM and held FIXED, exactly as
+# Yasso holds its a-vector fixed (run_Yasso07_*: fixed_rates). It is injected here
+# so it leaves the calibrated parameter vector; the wrapper reads it from
+# model_params["alpha_A"]. Constant = TP2_ALPHA_A_FIXED (Prior_specs/TP2_priors.R).
 
-assemble_model_params <- function(p_free) p_free
+assemble_model_params <- function(p_free) c(p_free, alpha_A = TP2_ALPHA_A_FIXED)
 
 
 # =============================================================================
@@ -223,6 +227,12 @@ litter_means <- lapply(plots_real, function(pid) {
 })
 names(litter_means) <- plots_real
 
+# C3: attach the growing-stock-derived pre-run input shape (one source of truth,
+# Data/forest_history/nfi_growing_stock.csv; saved with the bundle -> predictive inherits it).
+source("./Model_functions_real_data_transient/preinit_input_shape.R")
+PREINIT_SHAPE <- growing_stock_preinit_shape()   # 1917->1985, 68 steps, [0,1]
+litter_means  <- lapply(litter_means, function(x) { x$preinit_shape <- PREINIT_SHAPE; x })
+
 # --- Inject J_bar into the flux_pair transform (needs litter_means) ----------
 # J_bar = cross-plot mean litter: the units bridge between the physical flux
 # window and the dimensionless sigma_input multiplier. Fixed for the whole run.
@@ -245,7 +255,8 @@ obs_meta <- lapply(plots_real, function(pid) {
   list(
     idx      = match(obs_plot$year, clim$year),
     soc_obs  = obs_plot$soc_obs_tCha,
-    is_first = obs_plot$obs_rank == 1L
+    is_first = obs_plot$obs_rank == 1L,
+    sigma_infl = ifelse(obs_plot$year == 1985L, SIGMA_1985_INFL, 1.0)   # C5: down-weight VMI8
   )
 })
 names(obs_meta) <- plots_real
@@ -483,7 +494,7 @@ message(sprintf("\nAll chains complete. Wallclock: %.1f min\n", t_run / 60))
 # =============================================================================
 
 HIGHLIGHT <- FREE_NAMES
-GROUP1    <- c("alpha_A", "alpha_H", "p_H")
+GROUP1    <- c("alpha_H", "p_H")   # alpha_A now FIXED (C1) — not sampled
 GROUP2    <- c("beta1", "beta2", "gamma", "sigma_init", "sigma_input")
 
 diag_out <- run_diagnostics(
