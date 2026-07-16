@@ -54,6 +54,13 @@ Data/Water_extension/*
 !Data/Water_extension/*.R
 !Data/Water_extension/*.md
 
+# Forest history: track the distilled NFI growing-stock series (small, citable,
+# a pipeline source of truth) + readme; ignore the raw Korhonen 2024 supplement xlsx
+!Data/forest_history/
+Data/forest_history/*
+!Data/forest_history/*.csv
+!Data/forest_history/*.md
+
 # Zenodo deposit archive (build artifact)
 Reporting/NextgenC_report/*.zip
 

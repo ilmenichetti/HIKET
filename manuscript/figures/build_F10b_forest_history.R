@@ -5,22 +5,17 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 # shaded, the two SOC campaigns we calibrate against marked.
 #
 # SOURCE: Korhonen, Raty et al. (2024) "Forests of Finland 2019-2023 and their
-# development 1921-2023", Silva Fennica 58(4) art. 24045 (open access).
-# Total growing stock on productive + poorly productive forest land, whole country.
-# NUMERIC ANCHORS quoted in that paper: NFI1 (1921-24) ~1400 (recalculated with modern
-# volume functions; paper: "1.4 G m3", 84% increase to 2552), NFI11 (2009-13) 2356,
-# NFI12 (2014-18) 2475, NFI13 (2019-23) 2552 (SE 13, 0.53%). Intermediate NFI2-NFI10
-# read from the paper's development curve (Fig. 10) / the standard published NFI series
-# (Tomppo/Henttonen), approximate to ~+-30 mill. m3 — narrative accuracy is sufficient
-# here; the anchors and the mid-century-low-then-rise shape are the load-bearing content.
+# development 1921-2023", Silva Fennica 58(5) art. 24045 (open access). Total growing
+# stock on productive + poorly productive forest land, whole country. Series now read
+# from the single sourced data file (endpoints exact from the paper; NFI2-NFI10
+# digitized from Fig 10a) so this figure and the C3 pre-run share ONE source of truth.
+# Provenance per point: Data/forest_history/nfi_growing_stock.csv + its README.
 
 # --- NFI total growing stock, mill. m3 (inventory midpoint year) -------------
-vmi <- data.frame(
-  year  = c(1922, 1937, 1952, 1962, 1967, 1974, 1980, 1990, 2000, 2006, 2011, 2016, 2021),
-  stock = c(1400, 1518, 1508, 1524, 1479, 1519, 1660, 1883, 1937, 2189, 2356, 2475, 2552),
-  label = c("VMI1","VMI2","VMI3","VMI4","VMI5","VMI6","VMI7","VMI8",
-            "VMI9","VMI10","VMI11","VMI12","VMI13")
-)
+gs  <- read.csv("Data/forest_history/nfi_growing_stock.csv")
+vmi <- data.frame(year  = gs$midpoint_year,
+                  stock = gs$total_stock_Mm3,
+                  label = paste0("VMI", gs$nfi))
 
 # --- management eras (shading) ----------------------------------------------
 eras <- list(

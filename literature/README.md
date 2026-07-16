@@ -108,6 +108,24 @@ plots (space-for-time, NOT repeated same-plot measurements).
 
 ---
 
+## 5. Korhonen, Räty et al. (2024) — Forests of Finland / NFI growing stock
+`Korhonen_etal_2024_ForestsOfFinland_SilvaFennica_24045.pdf`
+Korhonen K.T., Räty M., Haakana H., Heikkinen J., Hotanen J.-P., Kuronen M., Pitkänen J.
+(2024). *Forests of Finland 2019–2023 and their development 1921–2023.* Silva Fennica
+58(5) art. 24045. https://doi.org/10.14214/sf.24045 (open access).
+
+**Role:** the [History] thread's quantitative backbone — the **rising, non-stationary
+growing-stock base** that physically justifies a below-equilibrium 1917 start
+(`sigma_init < 1`) and rising litter inputs; the source for the **F10b** figure and the
+**C3** growing-stock-shaped pre-run interpolation.
+**Anchors:** total growing stock 1.4 G m³ (NFI1, recalculated) → 2.6 G m³ (NFI13),
+**+84% over 100 yr**; "most of the increase … after the end of the 1960s" (§3.5.2, Fig 10a).
+Series lives *only* as Fig 10a + endpoints (no per-NFI table) → digitized into
+`Data/forest_history/nfi_growing_stock.csv` (endpoints exact, NFI2–NFI10 read ±~50; see
+that folder's README). Supplement S2 Table 55 = NFI13 detailed breakdown (not the series).
+
+---
+
 ## The one-line answer to the coauthor (comments #2/#3)
 Yes: the steady-state convention rests on a lineage (Peltoniemi 2004 chronosequence → YASSO
 development, Palosuo 2008 → operational inventory, Lehtonen 2016) that **lacked repeated soil
