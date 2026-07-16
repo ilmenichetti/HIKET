@@ -1,6 +1,8 @@
 % =====================================================================
-%  HIKET — manuscript STORY-STRUCTURE outline (scaffold only)
-%  Placeholders + brief notes. Headings to be collapsed/merged later.
+%  HIKET — MAIN MANUSCRIPT (working draft; renamed from HIKET_story_outline)
+%  Materials & Methods written out in detail (living section, updated as the
+%  analysis proceeds); the remaining parts stay sketched here and are developed
+%  in the storyline note, then migrated in. Headings to be collapsed later.
 %
 %  PUBLIC narrative schema = Schimel OCAR (Opening / Challenge / Action /
 %  Resolution), used as the four \part divisions below.
@@ -82,7 +84,7 @@
   \large Starting from the past: transient initialization and the
   input-history problem in soil carbon models}
 \author{Lorenzo Menichetti \and [co-authors TBD]}
-\date{Draft outline --- \today}
+\date{Working draft --- \today}
 
 \begin{document}
 \maketitle
@@ -124,6 +126,30 @@ became default.
 \paragraph{Why it is rarely examined}
 It is invisible precisely because it is standard. Set up the reader to
 recognize their own practice.
+
+% -------------------------------------------------------------------
+% [TEMP notes from the new keystone sources (2026-07-16) — coarse statements +
+%  refs to fold into prose later. Full PDFs + anchors in literature/README.md.]
+\paragraph{[TEMP] The convention in the Finnish inventory (sources to fold in).}
+\begin{itemize}
+\item The steady-state start is the \emph{operational} convention of the Finnish
+  national soil-C inventory: Yasso07 is run ``into a steady state'', assuming
+  ``the average level of inputs and climate has remained steady over centuries''
+  (Lehtonen et al.\ 2016, Geosci.\ Model Dev.\ 9:4169). $\Rightarrow$ precisely the
+  assumption HIKET relaxes.
+\item It rests on the \emph{absence of repeated stocks}: repeated soil sampling is
+  ``the most straightforward way'' to see change but ``too expensive'' for forest
+  soils, so dynamics were inferred indirectly (Palosuo 2008, Diss.\ Forestales 61).
+\item It was flagged early: Peltoniemi et al.\ (2004, Glob.\ Change Biol.\ 10:2078)
+  modelled soil-C change over stand age from a \emph{chronosequence} and noted soils
+  may sit \emph{below} equilibrium (historical slash-and-burn), and that ``the
+  long-term trend \dots\ cannot be distinguished from the measured data unless the
+  measurements cover at least two rotations.'' HIKET is the successor this called
+  for: repeated campaigns (VMI8/Biosoil/Komeetta) + a calibrated initial state.
+  (Aleksi Lehtonen, HIKET coauthor, is acknowledged in Peltoniemi 2004 — frame the
+  lineage collegially.)
+\end{itemize}
+% -------------------------------------------------------------------
 
 \subsubsection{The non-equilibrium reality}
 Real ecosystems are transient; they carry the imprint of disturbance,
@@ -228,19 +254,52 @@ the data and its uncertainty speak. Plant the thread; pay it off in Methods.
 \subsection{Study system and data}
 
 \subsubsection{Plots and SOC campaigns}
-Finnish NFI plots; three temporally separated SOC campaigns as targets.
-Brief.
+The calibration set is $447$ permanent forest plots drawn from the Finnish
+National Forest Inventory (NFI) and its associated soil surveys
+(BioSoil/MUSTIKKA/Komeetta lineage), spanning the boreal south--north gradient.
+Each plot carries mineral-soil organic carbon stocks from up to three
+temporally separated campaigns, which serve as the calibration and validation
+targets: VMI8 ($1985$--$86$), BioSoil ($2006$), and Komeetta ($\sim\!2024$).
+The repeated stocks --- two to three observations per plot separated by decades
+--- are what make the accumulation \emph{dynamic} observable rather than a
+single snapshot; this is the empirical basis for testing a transient against a
+steady-state start. Plots with zero modelled litter, without an organic
+F/H~layer, or with an implied mean residence time $>100$~yr are excluded. The
+end use is the Finnish national greenhouse-gas inventory, for which Yasso is the
+operational model.
 
 \subsubsection{Litter inputs}
-Plot-level AWEN-fractionated inputs; note the population-mean rise then
-plateau (load-bearing later).
+Plot-level litter is taken from the Tupek et al.\ dataset
+(Zenodo \texttt{10.5281/zenodo.19736499}), already expressed in
+tC\,ha$^{-1}$\,yr$^{-1}$ and fractionated into the AWEN quality classes required
+by Yasso: a non-woody component (foliage and fine root) plus fine- and
+coarse-woody components. It is a \emph{tree}-litter product --- understorey and
+ground-vegetation inputs are not represented, which becomes relevant to
+$\sigma_{\mathrm{input}}$ below. The population mean rises from $\sim\!2.1$ to a mid-2000s peak of
+$\sim\!3.0$ and then plateaus near $\sim\!2.8$~tC\,ha$^{-1}$\,yr$^{-1}$, with a
+strong south--north gradient across plots. This rise-then-plateau history is
+load-bearing twice over: it is the forcing that drives the observed
+accumulation-then-saturation (Results), and its level is what the input
+multiplier $\sigma_{\mathrm{input}}$ later interrogates (Discussion).
 
 \subsubsection{Climate forcing}
-Gridded daily climate; per-model temporal aggregation.
+Climate is gridded daily weather over $1961$--$2025$, aggregated per plot into
+each model's climate modifier $\xi$. Because $\xi$ is a nonlinear function of
+temperature (and, in Yasso15/20, precipitation), the annual modifier is
+evaluated year by year and then averaged --- $\xi(\overline{\text{climate}})
+\neq \overline{\xi_{\text{annual}}}$, a Jensen-inequality bias of $5$--$15\%$ in
+boreal settings that we correct explicitly rather than aggregate climate first.
 
 \subsection{The model ladder}
-Six models on two crossed axes (pool complexity; climate integration), so no
-conclusion rests on one structure.
+We span six models on two crossed axes --- pool complexity and climate
+integration --- so that no conclusion rests on a single structure. The roles are
+asymmetric by design and stated up front: \textbf{Yasso is the primary,
+operational model} (it is the Finnish GHG-inventory model, so it is the one that
+matters for the application), while \textbf{SP1/TP2/TP3 form a structural
+robustness ladder}. The simpler models are not competitors for a ``best'' model
+but a sensitivity test --- a check that the transient-initialization and
+input-uncertainty conclusions survive across model structure. This reframes the
+complexity axis as robustness rather than an optimal-complexity search.
 % MODEL ROLES (state up front): Yasso is the PRIMARY / operational model --- it is
 % the Finnish GHG-inventory model, so it is the one that matters for the application.
 % SP1/TP2/TP3 are a structural ROBUSTNESS ladder: hypothesis-testing that the
@@ -249,107 +308,230 @@ conclusion rests on one structure.
 % robustness/sensitivity rather than an optimal-complexity search.
 
 \subsubsection{Pool-complexity axis}
-SP1 $\to$ TP2 $\to$ TP3 $\to$ Yasso07. One sentence each. [placeholder]
+Four structures of increasing pool count, all linear donor-controlled
+compartment systems: \textbf{SP1}, a single bulk SOC pool (one time-scale);
+\textbf{TP2}, an active and a humus pool in the ICBM two-pool form (fast litter
+turnover feeding a slow reservoir through a humification fraction);
+\textbf{TP3}, a three-pool active$\to$slow$\to$humus sequential cascade; and
+\textbf{Yasso07}, the five-pool AWEN+humus structure in which litter is split by
+chemical quality. Climbing the ladder adds internal structure while the
+forcing, data, and likelihood are held fixed.
 
 \subsubsection{Climate-integration axis}
-Yasso07 $\to$ Yasso15 $\to$ Yasso20. One sentence each. [placeholder]
+Three five-pool Yasso variants that share the AWEN+humus structure but differ in
+how climate enters the decomposition rates: \textbf{Yasso07} (temperature
+response of Tuomi et al.\ 2009), \textbf{Yasso15} (recalibrated, with an
+explicit precipitation term), and \textbf{Yasso20} (the Viskari et al.\ 2022
+structure). For Yasso20 we free all twelve inter-pool transfer fractions
+(previously six fixed as structural zeros and three algebraically derived); the
+original constraints reflected a warm-site global dataset, and fixing them here
+would confound climate-integration differences with a calibration asymmetry.
 
 \subsection{Bayesian calibration: the enabling machinery}
 % [Bayes] — the thread's payoff. State of the art, routinely applied; here it
 % is what makes transient init possible. Implementation detail, but fundamental.
-The inference framework that lets the unknown start be calibrated rather than
-assumed. Keep it brief and matter-of-fact; its role is enabling, not headline.
+Each model is calibrated in a Bayesian framework (the \texttt{BayesianTools}
+DEzs differential-evolution sampler): five chains of $50{,}000$ iterations each,
+the first $5{,}000$ discarded as burn-in, with a fixed seed for
+reproducibility. The posterior combines the multiplicative-normal likelihood
+(below) with the homogenized priors; inference returns full joint posteriors
+over rates, fractions, and the two auxiliary uncertainty parameters. The role of
+the Bayesian frame here is enabling rather than novel: it is the machinery that
+turns the unknown initial state from a fixed assumption into a calibrated
+quantity.
 
 \subsubsection{Why a Bayesian frame is the natural fit}
-Priors encode what little is known about the past; the posterior carries
-uncertainty forward instead of collapsing it to a point.
+The initialization problem is fundamentally one of \emph{incomplete
+information} about the past: we have no record of the forcing that produced the
+pre-observation state. A Bayesian frame is the natural fit because the prior
+encodes what little is known about that history and the posterior carries the
+residual uncertainty forward, instead of collapsing it to a single assumed
+value as the steady-state convention does.
 
 \subsubsection{Uncertainty that propagates, not a likelihood patch}
-$\sigma_{\mathrm{init}}$ is a prior on the historical state; its spread flows
-into both the initial condition and the forward dynamics. Distinguish from a
-mere error term added at the end.
+$\sigma_{\mathrm{init}}$ is a prior on the strength of the historical (initial)
+carbon state, not a term added to the likelihood at the end. Its spread
+therefore propagates into \emph{both} the initial condition and the forward
+dynamics: a wider $\sigma_{\mathrm{init}}$ legitimately widens the
+posterior-predictive envelope because it represents genuine ignorance about the
+starting point, not observation noise. This distinction --- a propagated prior
+on the state versus a fitted error term --- is what makes the transient start an
+inferential object rather than a numerical fix.
 
 \subsection{Transient initialization (the protagonist)}
 
 \subsubsection{Pushing the equilibrium assumption back in time}
-Initialize at analytical steady state in the past, run transiently forward to
-$t_0$ so the imprint dissipates and the model arrives at $t_0$ still
-accumulating.
+Rather than assume equilibrium at the observation start $t_0$ (VMI8, $1985$),
+each draw initializes the pools at their analytical steady state under a much
+earlier historical flux (the pre-initialization year $1917$) and then runs the
+model \emph{transiently} forward from $1917$ to $t_0$. The equilibrium
+assumption is thus displaced $\sim\!70$~years into the past, where it is far
+less consequential: by $t_0$ the imprint of that assumed start has largely
+dissipated, and the model arrives at the observation window still accumulating
+--- the state an equilibrium start at $t_0$ can never occupy.
 
 \paragraph{The fast/slow relaxation argument}
-Fast pools fully relax; only the slow humus pool retains memory --- it
-``remembers'' the equilibrium start. Why the pre-run works, and where its
-memory lives.
+The pre-run works because the pools relax on separated time-scales. The fast
+pools turn over in years and fully forget their initial value within the
+$68$-year spin-up; only the slow humus pool, with a residence time of a century
+or more, still ``remembers'' the assumed start at $t_0$. Displacing the
+equilibrium assumption backwards therefore confines its residual influence to
+the one pool where it is least resolvable --- and it is exactly this pool whose
+uncertain strength $\sigma_{\mathrm{init}}$ absorbs.
 
 \subsubsection{Calibrating the historical anchor}
 % [Bayes]
-$\sigma_{\mathrm{init}}$ as a Bayesian-calibrated strength on the historical
-start, not a fixed choice --- the concrete place the thread meets the
-protagonist. Full pre-run construction in Appendix~\ref{app:transient}.
+The pre-observation forcing is not known, so it is not fixed. The strength of
+the $1917$ historical state enters as the calibrated parameter
+$\sigma_{\mathrm{init}}$ (a proportional scaling on the initial carbon state,
+log-transformed, prior centred at $1$), which every draw infers jointly with
+the rest. The \emph{shape} of the input path between $1917$ and $t_0$ is no
+longer a bare linear ramp: it follows the reconstructed NFI growing-stock
+history, since
+litter scales with standing biomass --- a physically grounded, near-free
+reconstruction of the pre-observation input trajectory that targets the coarse
+pre-$1985$ phase (see the forest-history discussion and the growing-stock
+figure). Full pre-run construction in Appendix~\ref{app:transient}.
 
 \subsection{A fair frame for intercomparison}
 The design principle: any residual difference must be attributable to
 structure alone.
 
 \subsubsection{Shared data, likelihood, forcing, filtering}
-Brief enumeration.
+All six models see exactly the same inputs: the same $447$ plots, the same
+litter and climate forcing, the same multiplicative-normal likelihood, the same
+plot-exclusion filtering, the same holdout split, and the same fixed seed. Any
+residual difference between models is therefore attributable to structure, not
+to a difference in what each model was shown.
 
 \subsubsection{Exact integration in every model}
-All six integrate their linear system exactly; differences are structural,
-not numerical. Solvers and the discarded Euler path in
-Appendix~\ref{app:exact}.
+All six models integrate their linear pool system \emph{exactly}, so that
+differences between them are structural rather than numerical: SP1 and TP2 use
+the closed-form per-step solution; TP3 uses the closed-form matrix exponential
+of its lower-triangular cascade generator (divided differences of the pool
+eigenvalues); and the Yasso variants use a Fortran matrix-exponential
+back-end. This matters because TP3 was previously the sole approximate
+integrator --- an explicit forward-Euler step that rings when the active pool
+turns over faster than the annual step ($\alpha_A\xi>1$), producing an
+interannual oscillation once mistaken for a climate response. With exact
+integration that numerical artefact is removed; a bounded, genuinely physical
+fast-pool oscillation survives (Discussion). Solvers and the discarded Euler
+path in Appendix~\ref{app:exact}.
 
 \subsubsection{Homogenized priors: method, not number}
-Tiered scheme; identical in construction/scale/DoF, not in raw values. Full
-parameter-class $\times$ prior-criteria tables in Appendix~\ref{app:priors}.
+Priors are homogenized in \emph{construction, scale, constraint, and degrees of
+freedom} --- not in raw value (identical numbers, tried first, broke Yasso07).
+A three-tier scheme applies to every model: (i)~climate and size parameters take
+per-model centres and widths from that model's \emph{own} published calibration,
+homogeneous in method and scale rather than magnitude; (ii)~the twelve
+inter-pool transfer fractions share a common weakly-informative logit prior
+(SD~$0.4$) with per-model published centres, wired by explicit per-fraction
+listing; and (iii)~the auxiliary parameters $\sigma_{\mathrm{init}}$ and
+$\sigma_{\mathrm{input}}$ use an identical construction everywhere. Because the
+construction is common, any surviving divergence is attributable to structure
+and data, not to prior asymmetry. Full parameter-class $\times$ prior-criteria
+tables in Appendix~\ref{app:priors}.
 
 \subsubsection{Degrees of freedom, set by external information}
-Flow fractions are equal-DoF (all free) in every multi-pool model --- the
-fair-frame core. Rates differ BY DESIGN, and the reason is information, not
-inconsistency:
-% Yasso FIXES its base rates (published, authoritative -> preserves each pool's
-% chemical definition) and spends its freedom on fractions + climate + size.
-% SP1/TP2/TP3 CALIBRATE their rates because no authoritative rate constants exist to
-% fix them to (they have priors, but no external value worth pinning). So the ladder
-% spans externally-anchored (Yasso) -> fully-calibrated (simple): identifiability
-% tracks how much external information a structure carries. State openly --- a
-% careful reader WILL notice the rate asymmetry; framed this way it is a deliberate,
-% information-driven choice, and it doubles as an illustration of the equifinality
-% theme (see Discussion excursus).
-Pin what external knowledge lets you pin; calibrate the rest.
+% ROUND-1 REVISION: the simple-model rates are now EXTERNALLY ANCHORED (Ultuna
+% bare-fallow ICBM), not left loosely calibrated. This closes the earlier rate
+% asymmetry: every model now carries external kinetic constraint of comparable
+% weight (litterbag for Yasso, ICBM for the simple ladder), so the ladder is on
+% equal INFORMATION footing, not merely equal degrees of freedom. Numbers/tables
+% land with the production recalibration; see REVISION_PLAN.md §C1.
+The fair frame requires not just equal degrees of freedom but equal external
+\emph{information}. The inter-pool transfer fractions are equal-DoF --- all free,
+under the common logit prior --- in every multi-pool model, so no model splits a
+pool's outflow more freely than another. The base decomposition rates are
+\emph{anchored to external calibrations} in every model, of comparable
+evidential weight: Yasso's rates come from its litterbag calibration (Tuomi et
+al.\ 2009/2011), and the simple-model rates are anchored to the Ultuna
+bare-fallow ICBM calibration (Andr\'en \& K\"atterer 1997; $k_1=0.8$,
+$k_2=0.00605$~yr$^{-1}$, humification $h=0.13$). How completely a structure can
+be anchored is set by whether its time-scale structure matches an existing
+calibration: TP2 (two time-scales) maps onto ICBM one-to-one; SP1 (one
+time-scale) is anchored to the ICBM bulk residence time; and TP3 (three
+time-scales) anchors its fast pool and its slow-subsystem \emph{aggregate}
+residence time to ICBM, leaving only the internal slow/humus split --- the one
+genuinely non-identified degree of freedom --- free. The auxiliary parameters
+($\sigma_{\mathrm{init}}$, $\sigma_{\mathrm{input}}$) and the climate response
+remain calibrated in every model. Thus each model spends its freedom on the same
+things (fractions, inputs, initial state, climate) and pins its rates to the
+best external evidence available for its structure; identifiability then tracks
+information, by design rather than by accident.
 \stratnote{[strand] This convention is also what makes the stratified extension
-Yasso-only: with rates fixed, Yasso's stratifiable knobs are inputs + the
+Yasso-only: with rates anchored, Yasso's stratifiable knobs are inputs + the
 humus-formation fraction --- see the optional strand in the Outlook.}
 
 \subsection{Calibration and inference}
 
 \subsubsection{Error model}
-Multiplicative-normal likelihood. Flag the asymmetry briefly (paid back in
-Discussion).
+The likelihood is multiplicative-normal (proportional error): the observation
+standard deviation scales with the predicted stock rather than being constant.
+This is the appropriate form for SOC stocks, which span an order of magnitude
+across plots, and it operates on the log scale where residuals are near-Gaussian.
+One consequence is an asymmetric penalisation of under- versus over-prediction,
+which leaves a small systematic offset in the fitted bias; we flag it here and
+return to it in the Discussion, where the $\sim\!11\%$ over-prediction is shown
+to be a property of this error model rather than of the biogeochemistry.
 
 \subsubsection{Physically-bounded input priors}
 % Now a METHODS choice (implemented for the production re-calibration), not only
 % an Outlook refinement. The effective litter flux is bounded to the boreal
 % NPP envelope, homogeneous across models, via a bounded re-parameterisation.
-The effective litter flux is bounded to a boreal NPP envelope, homogeneous across
-models, so the input multiplier cannot manufacture unphysical carbon; the
-auxiliary $\sigma_{\mathrm{init}}$/$\sigma_{\mathrm{input}}$ pair is
-re-parameterised rather than truncated. Rationale, envelope and mechanism in
-Appendix~\ref{app:input-bounds}. [placeholder]
+Left as a scale-free multiplier centred at one, $\sigma_{\mathrm{input}}$ can
+drag the effective litter flux to physically impossible levels (the unbounded
+prior let two models reach $13$--$20\times$ boreal net primary production). We
+therefore bound the \emph{effective flux} --- $\sigma_{\mathrm{input}}\times J$,
+and the coupled $1917$ pre-run flux --- to a boreal NPP envelope
+($\sim\!0.5$--$8.7$~tC\,ha$^{-1}$\,yr$^{-1}$), homogeneous across models, via a
+bounded re-parameterisation of the $\sigma_{\mathrm{init}}/\sigma_{\mathrm{input}}$
+pair (a scaled-logit ``flux-pair'' transform) rather than a hard truncation, so
+the sampler still mixes across the boundary. In addition, because the litter
+product is a tree-litter model that structurally omits understorey/ground-vegetation
+and mycorrhizal inputs, the $\sigma_{\mathrm{input}}$ prior is centred on the
+physically expected correction ($>1$) rather than on one, so its posterior is
+read against expected total litter rather than against the tree-only baseline.
+Rationale, envelope and mechanism in Appendix~\ref{app:input-bounds}.
 
 \subsubsection{Sampler and diagnostics}
-MCMC settings; convergence and identifiability diagnostics used.
+Sampling uses the DEzs differential-evolution sampler (five chains,
+$50{,}000$~iterations, $5{,}000$~burn-in). Mixing is checked by the
+Gelman--Rubin $\hat{R}$ (target $<1.05$) and effective sample size, and the
+proposal infinity-rate is monitored to catch prior-driven forward blow-ups. We
+distinguish mixing from \emph{identifiability}: with healthy mixing the sampler
+traverses the non-identified ridges cleanly, so a fraction can show good
+$\hat{R}$ yet remain data-uninformed. The genuine non-identifiability signature
+is therefore read elsewhere --- prior-pinning, near-perfect same-pool
+anti-correlation ridges, and low KL divergence of posterior from prior
+($<1$~nat) --- not from poor $\hat{R}$.
 
 \subsubsection{Holdout split and validation}
-Plot-level holdout excluded from the likelihood; separate predictive metrics.
-[placeholder]
+A fixed subset of plots is held out of the likelihood entirely and used only for
+out-of-sample evaluation. Predictive skill (R$^2$, RMSE, bias) is reported
+separately for the calibration and holdout sets, so that in-sample fit and
+genuine predictive performance are never conflated --- the distinction that
+later separates in-sample skill from the forecast divergence.
 
 \subsubsection{Software, compute and reproducibility}
-Engine, samplers, exact-integration back-ends; fixed seeds; HPC production run.
-[placeholder]
+The pipeline is implemented in R, with the Yasso decomposition solved by a
+compiled Fortran matrix-exponential back-end and the simple models solved in
+closed form. All stochastic steps use a fixed seed (\texttt{set.seed(2025)}),
+and the production calibration runs on an HPC cluster (one job per model). Code
+is version-controlled and the final outputs are archived openly; per-model
+posterior and predictive bundles are keyed by run identifier so that each
+predictive run is traceable to its calibration.
 
 \subsection{Predictive and residual analysis}
-Posterior-predictive trajectories; residual analysis against site covariates.
+For each model we draw posterior-predictive SOC trajectories (an ensemble of
+parameter draws pushed through the forward model, initial state included), from
+which the campaign-year stocks, skill metrics, and forecast envelopes are taken.
+Plot-level residuals are then regressed against candidate site covariates
+(soil chemistry, texture, climate summaries, stand basal area, litter quality)
+by random forest, to locate where recoverable signal remains after calibration.
+Across models the leading, shared driver is stand basal area --- a productivity
+and input proxy, not a kinetic variable --- pointing the refinement toward
+better inputs rather than more pool structure.
 
 \section{Results}
 
@@ -450,6 +632,24 @@ uncertainty.
 \subsubsection{Belowground inputs and other ramifications}
 Root/rhizodeposition inputs poorly known; a further axis of the same problem.
 
+% -------------------------------------------------------------------
+% [TEMP notes from the new sources (2026-07-16) — fold into prose later.]
+\paragraph{[TEMP] Missing understorey litter (why $\sigma_{\mathrm{input}}$ > 1 is expected).}
+\begin{itemize}
+\item The litter product used here is \emph{tree-litter only}; understorey/ground
+  vegetation and mycorrhizal inputs are not represented. So a multiplier above one is
+  a physical expectation, not manufactured carbon --- hence the prior is re-centred at
+  $\sim$1.3 rather than 1.
+\item Grounding: Lehtonen et al.\ (2016) found understorey litter \emph{underestimated}
+  in Yasso07, especially in the north (bryophytes 20--60\% of NDVI at high latitude);
+  Finnish litterfall studies put understorey at $\sim$15\% (south) to $\sim$33\% (north)
+  of aboveground litter. Peltoniemi et al.\ (2004) give component turnover rates for
+  dwarf shrubs/bryophytes/herbs/lichen (S.\ Finland).
+\item Caveat: the fraction rises strongly S$\to$N, so a single national multiplier cannot
+  capture it --- an argument for stratifying inputs by site class (future work).
+\end{itemize}
+% -------------------------------------------------------------------
+
 \subsection{A short excursus: why this class of models is non-identifiable}
 % ~1/3 page. Side story that connects to the sigma_input reveal.
 
@@ -535,6 +735,25 @@ uncertainty.
 \subsubsection{The flat-vs-rising litter tension}
 Plot-level inputs vs.\ national reconstructions; present data cannot settle
 it. State openly.
+
+% -------------------------------------------------------------------
+% [TEMP notes from the new sources (2026-07-16) — fold into prose later.]
+\subsubsection{[TEMP] Between-campaign stock consistency (VMI8 vs Biosoil)}
+\begin{itemize}
+\item The apparent VMI8$\to$Biosoil sink ($\sim$184 gC\,m$^{-2}$\,yr$^{-1}$) is
+  implausibly large; the paired 1985--2006 plots show the \emph{organic} layer
+  stable but \emph{mineral} soil C nearly doubling (incl.\ deep 20--40\,cm) $\Rightarrow$
+  a between-campaign mineral-soil measurement inconsistency, not accumulation.
+\item Independent support: Peltoniemi et al.\ (2004) found \emph{mineral soil C does
+  not change with stand age} (only the organic layer does), and a careful total of
+  $6.8$\,kgC\,m$^{-2}$ to 1\,m ($\approx$ our VMI8 $\sim$63\,tC\,ha$^{-1}$; makes
+  Biosoil/Komeetta $\sim$100+ look high). Cite for this caveat.
+\item Handling (Methods): the 1985 stocks are \emph{down-weighted} via inflated
+  observation variance ($\sim$2$\times$), not dropped; authoritative QC is ongoing
+  (LUKE). Consequence: the ``$+26$ tC\,ha$^{-1}$ 1985 over-prediction'' is likely a
+  low VMI8 measurement, not a model bias.
+\end{itemize}
+% -------------------------------------------------------------------
 
 \subsection{A managed landscape out of equilibrium: Finnish forest history}
 % [History] — the detailed examination promised in the Intro; justifies the
