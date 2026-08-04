@@ -10,6 +10,13 @@
 \usepackage{float}\usepackage[hidelinks]{hyperref}
 \usepackage{tikz}\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds}
 \usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+
+% Methodological note box (a light-blue "reading note", visually distinct from the figures)
+\definecolor{notebg}{HTML}{EAF2FB}\definecolor{noterule}{HTML}{2C6FB5}
+\newtcolorbox{methodnote}{colback=notebg, colframe=noterule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=8pt, after skip=8pt}
 
 \newcommand{\sinit}{\sigma_{\mathrm{init}}}
 \newcommand{\sinput}{\sigma_{\mathrm{input}}}
@@ -162,12 +169,41 @@ sink. The payoff comes with an honest caveat visible in the reconstructed trajec
 (Fig.~\ref{fig:init}): the models converge on a 1985 stock some 26~tC\,ha$^{-1}$ above the observed start, a
 consequence of the coarse, unrecorded pre-1985 phase --- a live question, not a failure of the method.
 
+\begin{methodnote}
+\textbf{Reading note --- the SOC observations have been rebuilt; these figures predate the rebuild.}
+The campaign points in this and the next figure are \emph{whole-profile} carbon --- organic layer plus mineral soil,
+not the 0--40\,cm inventory total --- but they were produced from our earlier SOC assembly, which we have since
+replaced. Two defects were found (2026-08-03) and corrected. First, the mineral layers carried no coarse-fragment
+(stoniness) correction, which inflated mineral carbon by a near-constant factor of $\approx$1.6; with a median
+stoniness of 43\%, $1/(1-0.43)$ accounts for it. Second, the three campaigns were processed along separate paths
+that had drifted apart, so part of the 1985$\to$2006 change was protocol rather than dynamics.
+
+All three campaigns now come from one LUKE source (organic $+$ mineral, stoniness- and bulk-density-corrected),
+reproducing the official national stocks exactly, with the deep tail extrapolated per plot only as far as augering
+actually reached rather than to a flat 1\,m. The corrected target rises gently --- campaign medians 59.4, 66.7,
+67.4\,tC\,ha$^{-1}$ --- where the old one gave 63, 102, 105, i.e.\ a 62\% jump between 1985 and 2006 that was an
+artefact. Section~\ref{sec:socdata} of the main manuscript documents this in full.
+
+\smallskip
+\noindent\textbf{What this means for the figures below.} They stand as the argument's \emph{shape} --- the
+accumulation-then-saturation, the model ordering, the initialization gap --- but their SOC levels, and any number
+quoted against a campaign mean (including the 26\,tC\,ha$^{-1}$ 1985 offset above), are tied to the superseded
+target and will be restated once the six models are recalibrated on the corrected data. Read the levels as
+provisional; read the structure as the result.
+\end{methodnote}
+
 \begin{figure}[htbp]\centering
 \includegraphics[width=0.80\linewidth]{\fig/F3_mean_soc.png}
 \caption{\textbf{The central result.} Cross-plot mean SOC, all six models, 1985--2024: rise then bend toward
 saturation, tracking the Biosoil/Komeetta campaign means. Colour runs from the simple models (green) to the Yasso
 family (warm).}\label{fig:meansoc}
 \end{figure}
+
+\begin{methodnote}
+\textbf{Reading note --- depth basis.} As in Fig.~\ref{fig:meansoc}, the observed campaign stocks (panel a) are
+whole-profile values (measured organic $+$ 0--40\,cm, plus a modelled deep tail), and they too come from the
+superseded SOC assembly described in the note above. Levels provisional, structure robust.
+\end{methodnote}
 
 \begin{figure}[htbp]\centering
 \includegraphics[width=0.98\linewidth]{\fig/F4_initialization.png}

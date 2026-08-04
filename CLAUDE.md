@@ -8,7 +8,7 @@ The scientific question: do divergent model projections of Finnish forest carbon
 sink saturation reflect genuine structural differences, or calibration artefacts?
 
 **Models in scope:** SP1, TP2, TP3, Yasso07, Yasso15, Yasso20  
-**Application:** Finnish National Forest Inventory (~350–400 permanent plots)  
+**Application:** Finnish National Forest Inventory (520 calibration-ready permanent plots)  
 **End use:** Finnish greenhouse gas inventory
 
 ---
@@ -404,15 +404,48 @@ intercomparison result in its own right.
 
 | Dataset | Description |
 |---|---|
-| NFI/Biosoil/MUSTIKKA/Komeetta plots | ~350–400 calibration-ready Finnish plots |
+| NFI/Biosoil/MUSTIKKA/Komeetta plots | **520** calibration-ready Finnish plots (416 calib / 104 holdout) |
 | Litter inputs | Tupek et al., Zenodo DOI: 10.5281/zenodo.19736499 |
 | Climate | `nfi_plot_weather_data_1961_2025.nc` (gridded daily) |
-| SOC campaigns | VMI8 (1985–86), Biosoil (2006), Komeetta (pending) |
+| SOC campaigns | VMI8 (1985–86), Biosoil (2006), Komeetta (2024) — all three wired |
 
 **Litter units:** `input_raw_monthly.csv` is already in **tC/ha/yr** — no
 multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
 
-**Excluded plots:** zero-litter plots, OFH-absent plots, MRT > 100 years.
+### SOC calibration target — homogenized baseline (✅ wired 2026-08-04)
+
+`soc_obs_tCha` comes from `Data/SOC_homogeneized/` (built by
+`build_soc_homogenized.R` from H. Ilvesniemi's LUKE workbook), **not** from the
+retired `Data/SOC/soilC1985_2006.csv` + separate Komeetta ingest. Why it changed:
+the old assembly applied **no coarse-fragment (stoniness) correction** to the
+mineral layers, over-counting mineral C by a near-constant **~1.6×** (median
+stoniness 43%; 1/(1−0.43)=1.76), and the three campaigns ran through separate,
+drifted processing paths (the 2024 ingest was coded against the *1985* layer
+protocol). The baseline reproduces LUKE's official national stocks **exactly**
+(org+0–40, weighted: 2006 = 59.1, 2024 = 61.0 Mg/ha, n=446).
+
+- **Target = `soc_profile_Mgha`**: measured organic + measured mineral 0–40 cm +
+  modelled deep tail, integrated only to `z_cap = min(100 cm, depth augering
+  reached)` — a per-plot **variable** depth, not a fixed 1 m. The old fixed-1 m
+  rule invented ~14 tC/ha below bedrock on 38 refusal-at-10/20/40 cm plots.
+  Extrapolation validated against the **measured** 40–80 cm Biosoil layer
+  (Krs 204, 501 plots, held out): median pred/obs **0.96**, bias −2.5 Mg/ha.
+- **Campaign medians now 59.4 / 66.7 / 67.4 tC/ha** (was 63 / 102 / 105 — the
+  62% 1985→2006 jump was a cross-campaign artefact, and the old 2006 value
+  contradicted the official same-year figure by 1.7×).
+- Observation CV (fixed likelihood σ_obs) drops **0.472 → 0.440**.
+- `Data_work.R` §1.0b (Komeetta append) and the in-script §1.3b depth fit are
+  **removed**; §1.3b now merges the baseline. Backup of the pre-swap script:
+  `Data/Data_work_pre_SOC_swap_20260804.R`. Full M&M rationale lives in the
+  METHODS & MATERIALS block at the end of `Data_work.R` (canonical text) and in
+  §"SOC stocks: a single homogenized basis" of `manuscript/HIKET_main_manuscript.tex`.
+
+**Excluded plots:** zero-litter, OFH-absent (`organic_missing`/`organic_zero`),
+peatland (Cajander KA 11–13), MRT > 100 years, and **`soc_outlier`** (whole-profile
+stock > 250 Mg/ha in any campaign; 4 plots: 29232, 31751, 33631, 49571 — applied and
+documented in `Data_work.R`, not silently upstream). The companion flag `high_change`
+(|rate| > 3 tC/ha/yr, 23 plots) is **recorded but NOT excluded** — read as resampling
+noise the error model should absorb, not as data error.
 
 ---
 
@@ -433,6 +466,29 @@ multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
 ---
 
 ## Known outstanding items
+
+- **🚩 NEXT ACTION — six-model Roihu re-calibration on the corrected SOC target.**
+  The SOC baseline swap is **DONE and pre-flighted** (2026-08-04, see Data §"SOC
+  calibration target"). Everything downstream now predates it. State:
+  - ✅ `Data_work.R` rewired + re-run; 66/66 sanity checks pass; 520 calib-ready
+    (416/104); `soc_obs_tCha` == `soc_profile_Mgha` exactly; 0 raw-sum fallbacks.
+  - ✅ Pre-flight gate cleared: `preflight_prior_pushforward.R` (K=300, full N) on the
+    NEW target — forward sanity **PASS in all six**; blow-up rate **0%** for
+    SP1/TP2/TP3/Yasso15/Yasso20 and **0.6%** for Yasso07 (1 of 156 constraint-passing
+    draws; historically ~2–3%, a `delta2`/σ baseline effect, not `beta2`). Notably
+    **TP3 went 10–12% → 0%**: the ICBM rate anchors and `flux_pair` σ_input bounds
+    were tuned on the old inflated target, and they survive the gentler one. The
+    feared σ_input lower-bound clamp did **not** materialise (window [0.021, 3.647],
+    J̄ = 2.386 tC/ha/yr). (The 144/86/86 "prior_rejects" in the Yasso models are
+    stick-breaking simplex rejections — legitimate, never visited by the sampler.)
+  - ⬜ **TODO:** sync `Data/` + code to Roihu, launch all six calibrations, then
+    stages 2–4 locally. Expect: σ_input to fall further (target no longer inflated);
+    a possible R² shift; the 1985 over-prediction gap to change (1985 is now
+    59.4 vs 2006 66.7, not 63 vs 102) — **the "26 tC/ha above observed 1985" figure
+    and every level quoted against a campaign mean must be restated.**
+  - ⬜ **Then refresh:** all figures F1–F14 + S1–S7, T1/T2, the NextGenC report
+    bundle, `HIKET_calibration.Rmd`, and drop the provisional-levels reading note in
+    `manuscript/HIKET_storyline_note.tex`.
 
 - **🚩 ROIHU-PHASE PRIORITY — physically-bounded input priors (re-calibration).**
   *Decided 2026-07-01. A SessionStart hook (`.claude/settings.json`) auto-surfaces

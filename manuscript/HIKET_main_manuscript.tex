@@ -254,19 +254,62 @@ the data and its uncertainty speak. Plant the thread; pay it off in Methods.
 \subsection{Study system and data}
 
 \subsubsection{Plots and SOC campaigns}
-The calibration set is $447$ permanent forest plots drawn from the Finnish
+The calibration set is $520$ permanent forest plots drawn from the Finnish
 National Forest Inventory (NFI) and its associated soil surveys
 (BioSoil/MUSTIKKA/Komeetta lineage), spanning the boreal south--north gradient.
-Each plot carries mineral-soil organic carbon stocks from up to three
+Each plot carries soil organic carbon stocks from up to three
 temporally separated campaigns, which serve as the calibration and validation
 targets: VMI8 ($1985$--$86$), BioSoil ($2006$), and Komeetta ($\sim\!2024$).
 The repeated stocks --- two to three observations per plot separated by decades
 --- are what make the accumulation \emph{dynamic} observable rather than a
 single snapshot; this is the empirical basis for testing a transient against a
 steady-state start. Plots with zero modelled litter, without an organic
-F/H~layer, or with an implied mean residence time $>100$~yr are excluded. The
+F/H~layer, on peatland vegetation types, or with an implied mean residence time
+$>100$~yr are excluded, as are four plots whose whole-profile stock exceeds
+$250$~Mg\,ha$^{-1}$ in any campaign (see below). A fixed $20\%$ of the
+calibration-ready plots is held out for validation. The
 end use is the Finnish national greenhouse-gas inventory, for which Yasso is the
 operational model.
+
+\subsubsection{SOC stocks: a single homogenized basis}\label{sec:socdata}
+All three campaigns are drawn from one LUKE source (a workbook maintained by
+H.~Ilvesniemi) rather than from campaign-specific files processed along separate
+paths, so that the differences between $1985$, $2006$ and $2024$ carry dynamics
+rather than protocol. The stocks are LUKE's own, carrying both a bulk-density and
+a coarse-fragment (stoniness) correction; applying LUKE's cleaning rules to this
+source reproduces the official national figures exactly ($59.1$ and
+$61.0$~Mg\,ha$^{-1}$ for organic\,$+$\,$0$--$40$~cm, region-weighted, in $2006$
+and $2024$ over $446$ plots).
+
+This matters because it corrects a bias we had carried. Our previous SOC
+assembly applied no coarse-fragment correction to the mineral layers, and since
+stoniness is volumetric it inflates mineral carbon multiplicatively while leaving
+the organic layer alone --- precisely the signature we found, a near-constant
+factor of $1.60$--$1.66$ across all three mineral layers in both years against an
+organic-layer ratio of $0.86$. With a median coarse-fragment content of $43\%$,
+$1/(1-0.43)=1.76$ accounts for the discrepancy. Campaign-specific processing had
+also drifted: the $2024$ ingest was coded against the $1985$ layer protocol.
+
+Because the models carry bulk SOC, the calibration target is a whole-profile
+stock: measured organic layer, plus measured mineral $0$--$40$~cm, plus a
+modelled deep tail. The tail follows an exponential depth model
+$C(z)=C_0\exp(-\lambda z)$ with one $\lambda$ per soil class (profiles pooled,
+$C_0$ concentrated out analytically) and $C_0$ then re-solved per profile against
+its own measured layers. Crucially the tail is integrated only to
+$z_{\mathrm{cap}}=\min(100\,\mathrm{cm},\,\text{depth augering reached})$, so the
+target is a per-plot \emph{variable} depth matching how each profile was actually
+measured; under a fixed $1$~m rule, $38$ plots that hit augering refusal at
+$10$--$40$~cm were each assigned some $14$~tC\,ha$^{-1}$ of carbon below bedrock.
+The extrapolation is checked against ground truth rather than assumed: the
+BioSoil $40$--$80$~cm layer, measured on $501$ plots and held out of the fit, is
+predicted with a median ratio of $0.96$ and a bias of $-2.5$~Mg\,ha$^{-1}$ ---
+mildly conservative.
+
+The resulting target rises gently and is internally consistent, with campaign
+median stocks of $59.4$, $66.7$ and $67.4$~tC\,ha$^{-1}$. The earlier assembly
+gave $63$, $102$ and $105$: a $62\%$ jump between $1985$ and $2006$ that was an
+artefact of cross-campaign inconsistency rather than a dynamic, and a $2006$
+value contradicting the official same-year figure by a factor of $1.7$.
 
 \subsubsection{Litter inputs}
 Plot-level litter is taken from the Tupek et al.\ dataset
@@ -400,7 +443,7 @@ The design principle: any residual difference must be attributable to
 structure alone.
 
 \subsubsection{Shared data, likelihood, forcing, filtering}
-All six models see exactly the same inputs: the same $447$ plots, the same
+All six models see exactly the same inputs: the same $520$ plots, the same
 litter and climate forcing, the same multiplicative-normal likelihood, the same
 plot-exclusion filtering, the same holdout split, and the same fixed seed. Any
 residual difference between models is therefore attributable to structure, not
