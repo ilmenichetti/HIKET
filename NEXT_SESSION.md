@@ -241,3 +241,40 @@ goes NEGATIVE here because of the ~+10 tC/ha over-prediction. Both are now print
 order as before, NOT a collapse. The componentwise posterior median was checked and IS
 representative (0.37 sd from the nearest draw vs 3.48 typical), so none of this is an artefact
 of evaluating at the median.
+
+---
+
+## 8. STATUS 2026-08-05 afternoon — ROIHU IS RUNNING
+
+**Jobs 474800–474805 launched 13:24, all six models, all RUNNING.** Verified live in the
+`.err` files: `Cores per chain: 40` (the OOM trap avoided), `5 chains x 50000 iterations`
+(no ablation env vars leaked), and all six reached `Chain 1 / 5` — which means
+`assert_inputs_current()` passed, forward sanity passed, and the Yasso `.so` files loaded.
+
+**⚠ Checklist correction:** the guard output goes to **`.err`**, not `.out` — R's `message()`
+writes to stderr. `.out` only carries the prior tables. Grep the `.err` files, and restrict
+the glob to the job IDs (`*_4748*.err`) or you will be reading July's 98 KB logs.
+
+### Decided and implemented today
+- **C5 WITHDRAWN.** `SIGMA_1985_INFL` default 2.0 → 1.0. Rationale in `calib_config.R` at the
+  point of use, in `REVISION_PLAN.md` §C5, and in full in the working document.
+- **δ-offset tested and also rejected** — identifiable (so the revision plan's
+  "non-identifiable" claim was wrong) but a misfit sink.
+- **8 constant-litter plots excluded**; calib-ready 520 → 512. Plots 39251/67631 borderline
+  and deliberately kept.
+- Pre-flight re-cleared on 512 plots with C5 off; Yasso07 blow-ups 2.5% (historical band).
+- Committed as `7fc0c82`.
+
+### Local runs still going
+Yasso07 ablation `A1` (~15:50), then a watcher stops the driver before `A5` — `A0`/`A1` used
+the 520-plot bundle and anything launching now would use 512. Yasso20 leg cancelled. Fold the
+`A0`-vs-`A1` result into the working document when it lands.
+
+### Docs status (audited 2026-08-05)
+- ✅ current: `CLAUDE.md`, `Data/Data_work.R` (M&M), `manuscript/HIKET_main_manuscript.tex`,
+  `manuscript/HIKET_data_and_ablation_tests.tex`, `manuscript/REVISION_PLAN.md`, this file.
+- ⬜ **`Calibration_real_data_transient/documentation/HIKET_calibration.Rmd`** — NOT updated for
+  the SOC target, the litter reconstruction, the constant-litter exclusion or the C5 withdrawal.
+  **The largest remaining doc gap.** Best done after the run, when the numbers are final.
+- ⬜ `manuscript/HIKET_storyline_note.tex` — carries the SOC "levels are provisional" note but
+  not the litter fix. Its figures are all stale anyway; rewrite once figures are rebuilt.

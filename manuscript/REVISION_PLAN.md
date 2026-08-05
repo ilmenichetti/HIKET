@@ -225,7 +225,40 @@ Make the estimate robust and interpretable:
 - **C4c (paper-2 / optional):** external input anchor via stock→input inversion or
   NPP-allometric total litter (coauthor #5, "Julius inversion").
 
-### C5 — Down-weight the suspect 1985 (VMI8) stocks via inflated observation variance
+### C5 — Down-weight the suspect 1985 (VMI8) stocks — ❌ WITHDRAWN 2026-08-05
+
+> **STATUS: NOT IMPLEMENTED. C5 was built, tested, and dropped.** The text below is kept as
+> the original design record; it no longer describes the pipeline. `SIGMA_1985_INFL` default
+> is **1.0** (kept as a switch so the sensitivity stays reproducible).
+>
+> **Why it was dropped.** Its premise — that the VMI8 mineral stocks read systematically low —
+> was diagnosed on the OLD data, where 1985→2006 rose +61%. The SOC homogenization (2026-08-04)
+> traced most of that jump to a missing coarse-fragment correction and cross-campaign
+> processing drift, leaving a physical +12%. Ablations then showed C5 to be inert for
+> prediction and consequential in the wrong way:
+> - turning it off moves trusted-campaign (2006+2024) RMSE by **0.45%** (TP2) / **0.25%** (SP1),
+>   against a ~2% noise floor;
+> - but it moves `sigma_init` by **~4×** (0.199 at C5=3 → 0.780 with 1985 withheld) — a
+>   researcher degree of freedom on a headline parameter;
+> - with 1985 fully trusted the model over-predicts it by only **+3.2** tC/ha over its general
+>   bias, and **+6.3** when it has never seen it (LOCO): no anomaly to correct;
+> - the mechanism never matched the claim — inflating *independent* per-observation σ averages
+>   away over 441 plots, whereas a protocol difference is a *shared* offset.
+>
+> **The δ-offset alternative was tested too.** Contrary to the note below, a campaign-level
+> offset **IS identifiable** (δ = −0.137 [−0.197, −0.080], posterior sd 0.030 vs prior 0.25) —
+> the "non-identifiable vs sigma_init" claim was too strong. But it is informed *only* by the
+> 1985 residual, needs `sigma_init` ≈ 0.98 (80% of draws past the pre-run inversion threshold,
+> i.e. a *declining* reconstructed history), and implies no accumulation ever occurred. A
+> misfit sink, not a measurement diagnostic — so δ is not adopted either.
+>
+> **What survives:** 2006/2024 were validated against official LUKE stocks and 1985 could not
+> be, and the layer protocols differ (VMI8 0–5/5–20 cm vs 0–10/10–20 cm). That is a real
+> concern and goes to the **limitations as a stated sensitivity**, not into a tuning constant.
+> Full record: `manuscript/HIKET_data_and_ablation_tests.pdf`.
+
+#### Original design (superseded)
+
 *(DECIDED 2026-07-15 — this is how we handle the D3 mineral-soil artifact; supersedes
 dropping/ignoring VMI8.)* The 1985 mineral measurement is systematically suspect (D3), so
 rather than drop it we **inflate its observation error** and let the trusted 2006/2024
@@ -284,7 +317,7 @@ anchors + the transient dynamics carry the initial state.
 3. **C2** TP3 climate-on-all-pools (`tp3_wrapper_transient.R`).
 4. **C3** historical input interpolation (all six transient inits).
 5. **C4b** σ_input prior re-centre (≈1.3) — corroborated by 1b.
-6. **C5** 1985 observation-variance inflation (~2×) in `calibration_engine_transient.R`
+6. ~~**C5** 1985 observation-variance inflation (~2×)~~ — **WITHDRAWN 2026-08-05, see §C5**
    + plot-meta `sigma_infl`.
 7. **Verify (local `doublechecks/`):** ICBM steady-state stock ≈ shared across SP1/TP2/TP3
    (DONE, 1b); TP3 exact integrator still matches matrix-exp with xi on H; interpolation
