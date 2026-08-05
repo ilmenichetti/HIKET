@@ -1,0 +1,456 @@
+% HIKET -- WORKING DOCUMENT: data corrections and ablation tests, August 2026.
+%
+% Purpose: a durable record of the tests run in the run-up to the Roihu
+% recalibration, the numbers they produced, and the decisions taken as a result.
+% It is deliberately NOT written as manuscript prose -- it records what was done,
+% what it showed, what remains uncertain, and where the analysis went wrong before
+% it went right. Material may or may not migrate into the paper; the point is that
+% nothing has to be reconstructed from memory later.
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{xcolor}
+\usepackage{booktabs}\usepackage{longtable}
+\usepackage{float}\usepackage[hidelinks]{hyperref}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+
+\definecolor{decbg}{HTML}{EAF7EE}\definecolor{decrule}{HTML}{2E8B57}
+\newtcolorbox{decision}[1]{colback=decbg, colframe=decrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  title={\bfseries DECISION --- #1}, coltitle=decrule, fonttitle=\small\bfseries,
+  attach title to upper=\par, before skip=9pt, after skip=9pt}
+
+\definecolor{cavbg}{HTML}{FDF3E7}\definecolor{cavrule}{HTML}{C87A2F}
+\newtcolorbox{caveat}{colback=cavbg, colframe=cavrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=9pt, after skip=9pt}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+\newcommand{\sobs}{\sigma_{\mathrm{obs}}}
+
+\title{HIKET --- data corrections and ablation tests\\
+  \large Working document: what was tested, what it showed, what was decided}
+\author{}
+\date{August 2026 --- working document, not for circulation}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Record of the pre-recalibration work of 4--5 August 2026. Two upstream data errors
+were found and corrected --- a missing coarse-fragment correction in the SOC stocks, and an
+artefactual first year in the litter series --- and a set of ablation experiments was run to
+attribute the effects of the round-1 changes (C1--C5) before committing cluster time. The
+headline consequence of the data work is that the observed 1985$\rightarrow$2006 rise in soil
+carbon falls from $+61\%$ to $+12\%$. The headline consequence of the ablations is that C5,
+the down-weighting of the 1985 campaign, changes predictive skill by under $1\%$ while moving
+$\sinit$ by a factor of about four, and is therefore dropped. Eight plots whose litter series is
+a single repeated value are also excluded, leaving $512$ calibration-ready plots.
+\end{abstract}
+
+\tableofcontents
+
+% =====================================================================
+\section{Two upstream data errors}
+
+Both were present in every calibration since April 2026, including the production
+posteriors \texttt{20260710\_*}. Both were invisible to the existing checks. Full
+methods text lives in the \textsc{Methods \& Materials} block of \texttt{Data/Data\_work.R}
+and in the manuscript; only the essentials are repeated here.
+
+\subsection{SOC stocks: missing coarse-fragment correction}
+The mineral layers carried no stoniness correction, over-counting mineral carbon by a
+near-constant factor of $1.60$--$1.66$ across all three mineral layers in both years, against
+an organic-layer ratio of $0.86$. With a median coarse-fragment content of $43\%$,
+$1/(1-0.43)=1.76$ accounts for the gap. Separately, the three campaigns had drifted onto
+different processing paths --- the 2024 ingest was coded against the \emph{1985} layer protocol.
+
+The fix was to take all three campaigns from one LUKE source (H.~Ilvesniemi's workbook),
+which reproduces the official national figures exactly ($59.1$ and $61.0$~Mg\,ha$^{-1}$ for
+organic $+$ 0--40\,cm, region-weighted, 2006 and 2024, $n=446$). The calibration target is a
+whole-profile stock capped at the depth augering actually reached, rather than extrapolated to
+a fixed 1\,m; the deep tail is validated against the \emph{measured} 40--80\,cm BioSoil layer
+(held out, 501 plots, median pred/obs $0.96$).
+
+\begin{table}[H]\centering\small
+\caption{Effect on the calibration target (campaign medians, tC\,ha$^{-1}$).}
+\begin{tabular}{lccc}\toprule
+ & 1985 & 2006 & 2024\\\midrule
+superseded target & 63.3 & 102.0 & 105.3\\
+homogenized target & \textbf{59.4} & \textbf{66.7} & \textbf{67.4}\\
+change & $-6\%$ & $-35\%$ & $-36\%$\\\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Calibration-ready plots rise $447 \rightarrow 520$ (and then to $512$ after the
+constant-litter exclusion below); the observation CV used for the fixed likelihood $\sobs$
+falls $0.472 \rightarrow 0.440$.
+
+\subsection{Litter: an artefactual first year}
+The first year of the Tupek litter product is not usable. Source median total litter is
+$0.060$~tC\,ha$^{-1}$\,yr$^{-1}$ in 1985 against $1.398$ in 1986 --- a factor of 23 --- with an
+\emph{identical} record count (2805 site-years) in both, uniformly across months, plots and all
+three size classes. No ecological process produces a single year at $4\%$ of the next and then
+recovers.
+
+This mattered disproportionately because 1985 is $t_0$, so one bad year contaminated four
+quantities at once: the pre-run \emph{endpoint} $J_{t_0}$ (a fifth of its five-year window),
+the 1917 anchor $J_{\mathrm{full}}$, the flux bridge $J_{\mathrm{bar}}$ that converts the
+physical litter window into the $\sinput$ multiplier, and the forward run's own first year ---
+which lands exactly on the VMI8 observation. Uncorrected, $J_{t_0}$ was $1.543$ instead of
+$1.863$: the spin-up terminated $\approx 21\%$ below the true 1985 litter level, biasing the
+initial carbon state \emph{low} in all six models.
+
+The fix is a per-plot, per-component linear backcast of the 1986--1990 trend to 1985, giving
+$1.754$ against 1986's $1.838$. A flat multi-year mean was rejected because litter rises across
+that window, so averaging would place 1985 \emph{above} 1986 and contradict the growing-stock
+history used elsewhere in the initialization.
+
+\begin{caveat}
+\textbf{Unconfirmed mechanism.} The collapse is consistent with litter estimated from
+between-inventory biomass increments, whose first year has no predecessor to difference
+against, but this has \emph{not} been confirmed with the dataset author. The treatment does
+not depend on the mechanism --- the value is unusable either way --- but the wording should be
+checked with B.~Tupek before it reaches coauthors.
+\end{caveat}
+
+\subsection{Consequence for the argument}
+The two corrections together flatten the observed trajectory. The apparent
+1985$\rightarrow$2006 sink falls from $+61\%$ to $+12\%$.
+
+This cuts both ways and should be stated as such. The data are \emph{sounder}: a $+61\%$ jump
+in two decades was never physical, and the QC now explains it as cross-campaign inconsistency
+rather than soil carbon. But the effect the paper is built on is \emph{smaller} --- roughly a
+fifth of what the old figures implied. The argument survives, because a steady-state start
+predicts a flat trajectory and the data show $+12\%$ then flat, but the rhetoric must be
+recalibrated to the true effect size.
+
+% =====================================================================
+\section{Test 1 --- C3 (non-linear historical inputs), forward-only}
+
+\subsection{Design}
+C3 replaces the linear 1917$\rightarrow$1985 litter ramp with a shape derived from the NFI
+growing-stock reconstruction. Because it changes the spin-up \emph{forcing}, its effect is
+visible with all parameters \emph{held fixed} --- no MCMC needed. The engine's own forward path
+was run twice per plot at identical parameters, once with the growing-stock shape and once with
+it stripped so the wrappers fall back to linear.
+
+A faithfulness guard reconstructs the total log-likelihood from the forward pass and refuses to
+report unless it matches the engine's \texttt{ll\_fn} exactly. It matched to $0$ --- after
+catching two errors in the harness (below).
+
+\subsection{Result: C3 is second-order}
+The effect on the initial state, by $\sinit$, across all six models:
+
+\begin{table}[H]\centering\small
+\caption{C3 effect on \texttt{C\_init} (tC\,ha$^{-1}$): growing-stock shape minus linear ramp.}
+\begin{tabular}{lrrrrrr}\toprule
+$\sinit$ & SP1 & TP2 & TP3 & Yasso07 & Yasso15 & Yasso20\\\midrule
+0.20 & $-9.9$ & $-3.4$ & $-3.4$ & $-7.3$ & $-6.4$ & $-3.5$\\
+0.30 & $-7.1$ & $-2.3$ & $-2.3$ & $-6.0$ & $-5.5$ & $-2.7$\\
+0.50 & $-2.5$ & $-0.7$ & $-0.7$ & $-1.2$ & $-1.7$ & $-1.4$\\
+0.70 & $+1.8$ & $+0.5$ & $+0.5$ & $+2.9$ & $+2.6$ & $+1.1$\\
+1.00 & $+9.5$ & $+2.7$ & $+2.7$ & $+7.4$ & $+7.5$ & $+3.8$\\\bottomrule
+\end{tabular}
+\end{table}
+
+Three findings, consistent across all six models. C3 moves the initial state by only
+$2$--$10$~tC\,ha$^{-1}$, whereas $\sinit$ moves the same quantity by $40$--$80$ over its
+plausible range --- an order of magnitude more leverage. C3's effect \emph{changes sign} at
+$\sinit \approx 0.6$--$0.7$, the same crossover in every model. And TP2 and TP3 are numerically
+near-identical at the ICBM anchor, which is C1 working as designed (TP3's S$+$H subsystem
+together represent ICBM's ``old'' pool), not a bug.
+
+\begin{caveat}
+\textbf{A framing error, corrected.} This was initially written up as ``C3 fails to explain the
+$+26$~tC\,ha$^{-1}$ over-prediction''. That misstates C3's purpose. \texttt{REVISION\_PLAN.md}
+justifies C3 as \emph{the physically honest pre-observation forcing}, with the gap test as a
+hoped-for consequence. The linear ramp was indefensible regardless of what replacing it does to
+the gap. The correct reading is milder and more useful: C3 is conceptually right \emph{and}
+quantitatively second-order, so it neither needs defending on fit grounds nor much confounds the
+1985 attribution.
+\end{caveat}
+
+\subsection{A structural point that emerged}
+$\sinit$ is not merely ``uncertainty on the initial state''. Because
+$J_{1917} = J_{\mathrm{full}}\!\cdot\!\sinit\!\cdot\!\sinput$ while
+$J_{1985} = J_{t_0}\!\cdot\!\sinput$, and $J_{\mathrm{full}} > J_{t_0}$ (litter rises after
+1985), $\sinit$ silently controls whether the reconstructed 1917$\rightarrow$1985 history
+\emph{rises or falls}. The threshold is $\sinit \approx 0.826$ on the median plot; above it the
+pre-run declines, contradicting the growing-stock history C3 encodes. The threshold is
+plot-specific (IQR $0.57$--$1.00$) while $\sinit$ is global, so no single value satisfies all
+plots. Worth a sentence in the methods regardless of what else is decided.
+
+% =====================================================================
+\section{Test 2 --- the ablation suite}
+
+\subsection{Design and what is comparable}
+Six configurations per model, each differing from the reference in exactly one factor:
+\texttt{A0} reference; \texttt{A1} C5 off; \texttt{A2} C5$=$1.5; \texttt{A3} C5$=$3.0;
+\texttt{A4} C3 off; \texttt{A5} the 1985 campaign withheld from the likelihood entirely (LOCO).
+Control is by environment variable, with defaults bit-identical to production when unset.
+
+\begin{caveat}
+\textbf{Log-likelihoods are not comparable across C5 settings.} C5 changes the observation SD
+and therefore the normalising constant of the density itself, so a config with inflated SD gets
+a mechanically different $\ell$ regardless of fit. Nothing read off the likelihood (DIC, WAIC,
+chain $\ell$ spread) can rank these configurations. Judgement rests on \emph{unweighted}
+per-campaign RMSE and bias computed after the fact.
+
+\textbf{Two $R^2$ definitions are in play.} \texttt{run\_*\_predictive.R} reports
+$\mathrm{cor}(\text{obs},\text{pred})^2$, which ignores bias entirely --- that is the source of
+the documented ``$R^2$ 0.05--0.11''. Variance-explained $R^2$ is far harsher and goes negative
+here because of the systematic $\approx +10$~tC\,ha$^{-1}$ over-prediction. Both are now
+reported. On the production metric TP2's reference scores $0.023$: low, but the same order as
+before, not a collapse.
+\end{caveat}
+
+\subsection{Convergence: what is usable}
+\begin{table}[H]\centering\small
+\caption{Convergence at 3 chains $\times$ 6000 iterations.}
+\begin{tabular}{lll}\toprule
+model & max $\hat{R}$ & status\\\midrule
+TP2 & 1.025--1.081 & \textbf{clean --- all six configs usable}\\
+SP1 & 1.051--1.376 & usable except \texttt{A0}/\texttt{A4} ($\hat{R}$ 1.34/1.38)\\
+Yasso07 & 1.399--2.314 & \textbf{not converged --- excluded}\\
+Yasso20 & 1.524--2.225 & \textbf{not converged --- excluded}\\\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The setting was calibrated on TP2's seven free parameters and is inadequate for the
+Yasso models' $\approx 19$. Their configurations \texttt{A0}, \texttt{A1} and \texttt{A5} are
+being re-run at 20\,000 iterations; the 6000-iteration results are not reported anywhere.
+
+\begin{caveat}
+\textbf{A process error worth recording.} TP2's \texttt{A1} was lost because the run scripts
+were edited \emph{while the suite was launching processes from them}; it read a truncated file
+and never saved a posterior. \texttt{A2} crashed after saving and its posterior is valid. Both
+were re-checked, and \texttt{A1} was re-run. Rule: never edit run scripts while a suite is live.
+\end{caveat}
+
+% =====================================================================
+\section{Results --- C5}
+
+\subsection{The complete sweep (TP2, all configs converged)}
+\begin{table}[H]\centering\small
+\caption{Unweighted fit at each configuration's posterior median. ``Trusted'' is the
+2006$+$2024 campaigns; ``1985 excess'' is the 1985 bias minus the model's bias on the campaigns
+it did see.}
+\begin{tabular}{lrrrr}\toprule
+configuration & trusted RMSE & 1985 excess & $\sinit$ & $\sinput$\\\midrule
+\texttt{A1} C5 off   & 44.83 & $+3.19$  & --- & ---\\
+\texttt{A2} C5 $=1.5$ & 45.03 & $-1.68$  & 0.381 & 1.633\\
+\texttt{A0} C5 $=2.0$ & 44.63 & $-5.43$  & 0.285 & 1.887\\
+\texttt{A3} C5 $=3.0$ & 45.26 & $-10.29$ & 0.199 & 2.211\\
+\texttt{A5} LOCO      & 45.75 & $+6.32$  & 0.780 & 1.224\\
+\texttt{A4} C3 off    & 43.26 & $+3.00$  & 0.469 & 1.548\\\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{C5 does not affect predictive fit.} Turning it off entirely changes trusted-campaign
+RMSE from $44.63$ to $44.83$: \textbf{0.45\%}, against a $\approx 2\%$ noise floor at this chain
+length. The full range spans $1.4\%$. SP1 independently gives a spread of \textbf{0.25\%}
+($47.35$--$47.47$) across the same settings.
+
+\paragraph{There is no 1985 anomaly to correct.} The bias-controlled excess is small from both
+directions: forced to take 1985 fully seriously (C5 off) the model over-predicts it by $+3.2$
+relative to its general bias; never having seen it (LOCO) by $+6.3$. Both are below the
+$+8$--$10$ threshold set \emph{before} the results were seen. SP1's LOCO gives $+13.0$, which
+would support C5 --- but from $\sinit = 1.126$, i.e.\ a 1917 flux exceeding the whole-record
+mean, past the inversion threshold and contradicting the growing-stock history. That answer
+comes from an unphysical corner and is read as SP1's single pool straining without the 1985
+anchor.
+
+\paragraph{But C5 substantially moves the reported parameters.} $\sinit$ ranges $0.199$ to
+$0.780$ across the C5 settings --- nearly a factor of four --- and $\sinput$ from $2.211$ to
+$1.224$. These are the paper's headline quantities.
+
+\begin{caveat}
+\textbf{The bias control is a judgement, made explicit.} The pre-agreed rule was ``LOCO predicts
+1985 above observed by $\geq 8$--$10$''. Raw, LOCO gives $+18.85$, which clears it. But the same
+configuration over-predicts 2006 by $+14.13$ and 2024 by $+10.75$ --- campaigns it \emph{did}
+see. Without controlling for that general bias, any positively-biased model would ``prove'' that
+VMI8 reads low. The controlled excess is $+6.3$. The adjustment changes the answer, so it is
+recorded rather than absorbed silently.
+\end{caveat}
+
+\subsection{Why C5 no longer stands up}
+Its supports fail one by one. The original justification --- that VMI8 mineral stocks read
+systematically low --- is now \emph{contradicted}: the SOC homogenization removed most of the
+1985$\rightarrow$2006 jump, and neither endpoint of the sweep finds an anomaly at 1985. The
+factor $2.0$ was grounded in the $\approx 30\%$ discrepancy that the stoniness fix removed, so
+the number has no remaining basis. And the mechanism does not match the claim: inflating
+\emph{independent} per-observation $\sigma$ mostly averages away over 441 plots (the campaign
+mean's SE scales as $\sigma/\sqrt{n}$), whereas a protocol difference produces a \emph{shared}
+offset whose uncertainty does not shrink with $n$ at all.
+
+What remains is a legitimate concern of a different kind: 2006 and 2024 were validated against
+official LUKE figures and 1985 could not be, and the protocols genuinely differ (VMI8 samples
+0--5 and 5--20\,cm; the later campaigns 0--10 and 10--20\,cm). That is a statement about
+confidence in the data. It is real, and it belongs in the limitations --- not in a tuning
+constant that reshapes $\sinit$ without improving prediction.
+
+\begin{decision}{C5 is dropped}
+The 1985 campaign is \textbf{not} down-weighted. \texttt{SIGMA\_1985\_INFL} is set to 1.0 and
+C5 is removed from the pipeline before the Roihu recalibration.
+
+\smallskip
+\emph{Rationale.} C5 changes predictive skill by under $1\%$ while moving $\sinit$ by nearly a
+factor of four. A knob that does not improve prediction but substantially moves the reported
+parameters is a researcher degree of freedom. The correction it was built to make has already
+been made \emph{in the data}, which is where it belongs.
+
+\smallskip
+\emph{What replaces it.} The sensitivity is reported rather than a value chosen: down-weighting
+the VMI8 campaign changes predictive skill by under $1\%$ but shifts $\sinit$ from $0.29$ to
+$0.78$ across the plausible range. Inferences about the initial state are correspondingly
+sensitive to confidence in the 1985 campaign. This is strictly more informative than picking a
+factor, and it costs nothing now that the sweep exists.
+\end{decision}
+
+% =====================================================================
+\section{Side findings}
+
+\subsection{C3 costs a little fit}
+\texttt{A4} (C3 off) gives the best trusted-campaign RMSE in both usable models: TP2 $43.26$ vs
+$44.63$ ($3.2\%$), SP1 $44.72$ vs $47.43$ ($6.1\%$). Two qualifications matter. Both SP1
+configurations in that comparison are among the ones that did not converge
+($\hat{R}$ 1.34/1.38), so only TP2's $3.2\%$ is trustworthy. And the configurations differ in
+more than the pre-run shape --- the calibration re-optimised around it ($\sinit$ $0.285
+\rightarrow 0.469$, $\sinput$ $1.887 \rightarrow 1.548$) --- so most of the gap is a bias
+reduction attributable to that shift, not to C3 in isolation.
+
+The clean attribution remains the forward-only test, where C3 moved \texttt{C\_init} by
+$2$--$10$~tC\,ha$^{-1}$ at fixed parameters. A $\approx 3\%$ RMSE effect, partly absorbed by
+recalibration, is consistent with that. It is a footnote for the robustness appendix, not a
+reason to reconsider C3.
+
+\begin{decision}{C3 is kept}
+C3 stays. It is justified by the growing-stock record, not by fit; the linear ramp was
+indefensible regardless. The $\approx 3\%$ fit cost is reported honestly rather than omitted.
+\end{decision}
+
+\subsection{$\sinput$ diverges sharply by structure}
+SP1 lands at $0.23$--$0.61$ --- tree litter roughly twice too \emph{much} --- while TP2 lands at
+$1.2$--$2.2$, too little. SP1 is therefore in direct conflict with the C4b prior centred at
+$1.30$ on the argument that understorey litter is \emph{missing}. This sharpens the existing
+$\sinput$ result rather than contradicting it, but the conflict should be addressed rather than
+noted in passing.
+
+\subsection{Input QC sweep}
+A repeatable sweep (\texttt{doublechecks/input\_data\_qc.R}) was written on the principle that
+the 1985 artefact survived every existing check because none was looking at the \emph{ends} of
+series, year-on-year steps, or per-plot constancy. Results: no negative or missing litter, no
+duplicate rows, complete coverage, sane climate, and no anomalous year-steps.
+
+Two findings. First, 37 plots with near-zero litter through 1985--1995 are \emph{real} ---
+young or recently clearcut stands, 36 of 37 recovering more than tenfold. These were initially
+flagged as a serious problem on the grounds that $J_{t_0}$ collapses for them; that reasoning
+was wrong, applying a steady-state argument to a transient pre-run in which humus retains
+carbon from earlier years. Tested directly, these plots fit 1985 \emph{better} than the rest
+($-1.7$ vs $+16.9$~tC\,ha$^{-1}$ bias). A genuine point survives: the 1985 residual correlates
+with $J_{t_0}$ ($r = 0.47$), so the modelled initial state is anchored on \emph{recent} litter
+and recently-disturbed plots carry no memory of the previous rotation. Here that offsets the
+general over-prediction by coincidence, not correctness.
+
+Second, and \textbf{unresolved}: ten calibration-ready plots have \emph{literally constant}
+litter for 39 years, identical to four decimal places, constant in the source as well. No stand
+produces identical litter for 39 consecutive years; the litter model most likely returned a
+fixed value where the underlying biomass series was static. They inject a spurious ``no temporal
+change'' forcing into a study whose subject is the temporal change. Plots: 19571, 35391, 37591,
+39251, 41351, 43651, 43771, 45331, 61591, 67631. To be raised with B.~Tupek alongside the 1985
+question; flag-and-keep versus exclude is not yet decided.
+
+% =====================================================================
+\section{The delta-offset test}
+
+C5's mechanism never matched its claim: inflating \emph{independent} per-observation
+$\sigma$ averages away over 441 plots, whereas a protocol difference is a \emph{shared}
+offset whose uncertainty does not shrink with $n$. The faithful form is a campaign-level
+offset, $\mathrm{obs}_{1985}\sim\mathcal{N}\!\left((1+\delta)\widehat{\mathrm{SOC}},\,
+(1+\delta)\widehat{\mathrm{SOC}}\,\sobs\right)$, with $\delta<0$ meaning VMI8 reads low.
+\texttt{REVISION\_PLAN} had ruled this out as non-identifiable against $\sinit$. It was tested
+with C5 off and a deliberately wide prior, $\delta \sim \mathcal{N}(0, 0.25)$; the likelihood
+was validated against the engine's own to $|\Delta| = 0$ at $\delta = 0$ before sampling.
+
+\paragraph{$\delta$ \emph{is} identifiable --- the revision plan was too strong.}
+Posterior $\delta = -0.137$ $[-0.197, -0.080]$, sd $0.030$ against a prior sd of $0.25$
+(ratio $0.12$), $\hat{R} = 1.004$, $P(\delta<0) = 1.000$.
+
+\paragraph{But it is not trustworthy as a measurement offset.} Three things disqualify it.
+The trusted campaigns are \emph{identical} with and without $\delta$ (RMSE $44.18$, bias
+$+9.30$ either way), because $\delta$ touches only 1985 --- so it is informed by the 1985
+residual alone, and improving that residual by adding a free 1985 parameter is circular.
+It buys its fit with an unphysical history: $\sinit$ rises to $0.98$, with $80\%$ of draws
+past the pre-run inversion threshold, i.e.\ a reconstructed 1917--1985 litter trajectory that
+\emph{declines}. And $\mathrm{cor}(\delta, \sinit) = -0.64$ confirms the trade-off the
+revision plan anticipated.
+
+\paragraph{Taken at face value it would erase the phenomenon.} $\delta = -0.137$ implies a
+true 1985 stock of $68.8$~tC\,ha$^{-1}$, making the trajectory $68.8 \rightarrow 66.7
+\rightarrow 67.4$: declining, then flat --- no accumulation at all. That is a far larger claim
+than C5 ever made, and it contradicts the homogenized data validated exactly against the
+official LUKE figures ($51.8$ in 1985 vs $58.8$ in 2006, measured 0--40\,cm).
+
+\begin{decision}{$\delta$ is not adopted either}
+Both C5 and $\delta$ are mechanisms for distrusting 1985. The faithful one, given freedom,
+returns an implausible answer and pays for it with a history we know to be wrong. A bias
+parameter informed only by the residual it explains is a misfit sink. Confidence in the 1985
+campaign is handled in the limitations.
+
+\smallskip
+\emph{Worth reporting regardless:} if the model is allowed to treat 1985 as offset, it
+concludes there was no accumulation. The accumulation signal depends on trusting that
+campaign --- a striking sensitivity, and an honest one to state.
+\end{decision}
+
+% =====================================================================
+\section{Constant-litter plots}
+
+The input QC sweep found plots whose modelled litter is a single value repeated unchanged for
+1986--2024 (relative SD $<10^{-6}$), constant in the source as well. No stand produces
+identical litter for 39 consecutive years; this is the litter model returning a fixed value
+where the underlying biomass record was static. It is the same class of defect as the
+artefactual first year --- plausible, positive, finite and wrong --- and it survived every
+earlier check because nothing tested per-plot constancy.
+
+Sixty-four such plots exist dataset-wide; eight were calibration-ready.
+
+\begin{decision}{Eight constant-litter plots excluded}
+Excluded rather than flagged: a constant series injects a spurious ``no temporal change''
+forcing into a study whose subject \emph{is} the temporal change. Cost: 8 of 520 plots.
+Calibration-ready falls $520 \rightarrow 512$. Detected by rule rather than hard-coded, so it
+survives a change in the litter product.
+
+\smallskip
+\emph{Borderline, deliberately kept:} plots 39251 and 67631 take only three distinct litter
+values across 39 years (relative SD $\sim\!4$--$7\times10^{-3}$). Suspiciously quantised but
+not constant, so outside the rule. Recorded so the boundary is visible rather than implicit.
+\end{decision}
+
+% =====================================================================
+\section{What remains open}
+
+\begin{itemize}\setlength{\itemsep}{2pt}
+\item \textbf{Yasso07 and Yasso20 ablations} re-running at 20\,000 iterations. They are
+  confirmatory now that C5 is decided, but they test structurally different models --- Yasso
+  parks carbon in slow humus --- so a contrary result would be worth knowing.
+\item \textbf{The $\delta$-offset test.} The faithful representation of a protocol difference is
+  a campaign-level offset $\mathrm{obs}_{1985} = (1+\delta)\,\widehat{\mathrm{SOC}}$ rather than
+  inflated independent noise. The revision plan ruled this out as non-identifiable against
+  $\sinit$; that may be too strong, since $\sinit$ affects all three campaigns while $\delta$
+  affects only 1985. Cheap to test and would settle whether the concern can be expressed
+  faithfully at all.
+\item \textbf{C1 remains unattributed.} The largest round-1 change, and its headline claim ---
+  that anchoring rates externally makes $\sinput$ fall \emph{as a consequence} --- is untested.
+\item \textbf{The measured-only ($0$--$40$\,cm) target} would retire the depth-extrapolation
+  question entirely for the robustness appendix. Cheap: a column swap.
+\item \textbf{Confirmation from B.~Tupek} on the 1985 first-year artefact and the ten
+  constant-litter plots.
+\item \textbf{Corroboration of the stock QC} from A.~Lehtonen and J.~Heikkinen. The QC itself is
+  ours and was performed here; their role is review.
+\end{itemize}
+
+\end{document}

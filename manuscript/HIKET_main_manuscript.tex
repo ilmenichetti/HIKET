@@ -254,7 +254,7 @@ the data and its uncertainty speak. Plant the thread; pay it off in Methods.
 \subsection{Study system and data}
 
 \subsubsection{Plots and SOC campaigns}
-The calibration set is $520$ permanent forest plots drawn from the Finnish
+The calibration set is $512$ permanent forest plots drawn from the Finnish
 National Forest Inventory (NFI) and its associated soil surveys
 (BioSoil/MUSTIKKA/Komeetta lineage), spanning the boreal south--north gradient.
 Each plot carries soil organic carbon stocks from up to three
@@ -266,7 +266,10 @@ single snapshot; this is the empirical basis for testing a transient against a
 steady-state start. Plots with zero modelled litter, without an organic
 F/H~layer, on peatland vegetation types, or with an implied mean residence time
 $>100$~yr are excluded, as are four plots whose whole-profile stock exceeds
-$250$~Mg\,ha$^{-1}$ in any campaign (see below). A fixed $20\%$ of the
+$250$~Mg\,ha$^{-1}$ in any campaign (see below) and eight whose modelled litter is a
+single value repeated unchanged across all $39$ years of the series --- a fixed output of
+the litter model where the underlying biomass record was static, rather than a measured
+time series, and therefore uninformative about the temporal change under study. A fixed $20\%$ of the
 calibration-ready plots is held out for validation. The
 end use is the Finnish national greenhouse-gas inventory, for which Yasso is the
 operational model.
@@ -326,6 +329,25 @@ strong south--north gradient across plots. This rise-then-plateau history is
 load-bearing twice over: it is the forcing that drives the observed
 accumulation-then-saturation (Results), and its level is what the input
 multiplier $\sigma_{\mathrm{input}}$ later interrogates (Discussion).
+
+The first year of the series, $1985$, is \emph{reconstructed rather than observed}. In the
+source product the $1985$ values collapse to a median $0.060$~tC\,ha$^{-1}$\,yr$^{-1}$
+against $1.398$ in $1986$ --- a factor of $23$ --- with an identical number of records in
+both years, uniformly across months, plots and all three size classes. No ecological process
+produces a single year at $4\%$ of the next and then recovers; the first year of the series
+simply does not carry a turnover signal, whatever its origin (a plausible route is estimation
+from between-inventory biomass increments, where the first year has no predecessor to
+difference against, but the treatment below does not depend on that). This matters because $1985$ is $t_0$: it is
+simultaneously the year the transient pre-run terminates, the year of the first SOC
+campaign, and part of every litter anchor computed from the head of the series. Left
+uncorrected it placed the end of the spin-up some $21\%$ below the true $1985$ litter
+level. We therefore fit a linear trend to $1986$--$1990$ for each plot and litter
+component and backcast one year. A plain multi-year average was rejected because litter is
+rising across that window, so averaging would place $1985$ \emph{above} $1986$ and
+contradict the growing-stock history used elsewhere in the initialization; the backcast
+places it just below ($1.754$ against $1.838$~tC\,ha$^{-1}$\,yr$^{-1}$). The three
+defensible reconstructions differ by $\sim\!3\%$ in their effect, against the $\sim\!21\%$
+error being removed, so nothing downstream depends on which is chosen.
 
 \subsubsection{Climate forcing}
 Climate is gridded daily weather over $1961$--$2025$, aggregated per plot into
@@ -443,7 +465,7 @@ The design principle: any residual difference must be attributable to
 structure alone.
 
 \subsubsection{Shared data, likelihood, forcing, filtering}
-All six models see exactly the same inputs: the same $520$ plots, the same
+All six models see exactly the same inputs: the same $512$ plots, the same
 litter and climate forcing, the same multiplicative-normal likelihood, the same
 plot-exclusion filtering, the same holdout split, and the same fixed seed. Any
 residual difference between models is therefore attributable to structure, not

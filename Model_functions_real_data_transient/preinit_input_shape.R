@@ -21,6 +21,13 @@
 growing_stock_preinit_shape <- function(preinit_year = 1917L, t0_year = 1985L,
                                         n_pre = 68L,
                                         csv = "Data/forest_history/nfi_growing_stock.csv") {
+  # Ablation switch (doublechecks/run_ablation.R): HIKET_PREINIT_LINEAR=1 returns
+  # the OLD linear ramp, so C3 can be turned off for all six models from one place
+  # without touching the run scripts. Unset => growing-stock shape, as in production.
+  if (identical(Sys.getenv("HIKET_PREINIT_LINEAR"), "1")) {
+    message("[C3 ABLATION] preinit shape forced LINEAR (HIKET_PREINIT_LINEAR=1)")
+    return((seq_len(n_pre) - 1L) / (n_pre - 1L))
+  }
   gs    <- read.csv(csv)
   years <- seq(preinit_year, t0_year, length.out = n_pre)
   # linear interpolation of the NFI series; rule=2 holds the NFI1 level flat back

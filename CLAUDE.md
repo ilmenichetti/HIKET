@@ -8,7 +8,7 @@ The scientific question: do divergent model projections of Finnish forest carbon
 sink saturation reflect genuine structural differences, or calibration artefacts?
 
 **Models in scope:** SP1, TP2, TP3, Yasso07, Yasso15, Yasso20  
-**Application:** Finnish National Forest Inventory (520 calibration-ready permanent plots)  
+**Application:** Finnish National Forest Inventory (512 calibration-ready permanent plots)  
 **End use:** Finnish greenhouse gas inventory
 
 ---
@@ -404,13 +404,32 @@ intercomparison result in its own right.
 
 | Dataset | Description |
 |---|---|
-| NFI/Biosoil/MUSTIKKA/Komeetta plots | **520** calibration-ready Finnish plots (416 calib / 104 holdout) |
+| NFI/Biosoil/MUSTIKKA/Komeetta plots | **512** calibration-ready Finnish plots |
 | Litter inputs | Tupek et al., Zenodo DOI: 10.5281/zenodo.19736499 |
 | Climate | `nfi_plot_weather_data_1961_2025.nc` (gridded daily) |
 | SOC campaigns | VMI8 (1985–86), Biosoil (2006), Komeetta (2024) — all three wired |
 
 **Litter units:** `input_raw_monthly.csv` is already in **tC/ha/yr** — no
 multiplier needed in pipeline scripts (fix applied upstream in `Data_work.R`).
+
+**⚠ 1985 litter is RECONSTRUCTED, not observed (fixed 2026-08-04).** The Tupek product's
+**first year is unusable**: source median 0.060 tC/ha/yr in 1985 vs 1.398 in 1986, with an
+*identical* record count (2805) in both — not missing data, the values collapse. Signature
+of litter derived from between-inventory biomass increments (first year has no predecessor
+to difference against; **confirm with B. Tupek** before this wording goes in the paper).
+Critical because 1985 is **t0** — it contaminated *four* things at once: `J_t0_mean` (pre-run
+ENDPOINT, 1/5 of its window), `J_full_mean` (1917 anchor), `J_total_mean` → **`J_bar`** (the
+flux_pair units bridge, so the σ_input physical window shifted too), and the forward run's
+own first year, which lands exactly on the VMI8 observation. Uncorrected, `J_t0_mean` was
+**1.543 vs 1.863** → the spin-up ended ~21% too low, biasing `C_init` low in all six models.
+**Fix:** per plot × AWEN component, fit 1986–1990 linear trend and **backcast one year**
+(`Data_work.R` §2, before the monthly expansion). Chosen over a flat 1986–1990 mean because
+litter *rises* through that window — a mean would put 1985 *above* 1986 and contradict the
+growing-stock history used for the C3 pre-run shape. Backcast puts it just below
+(1.754 vs 1.838). All three options (carry-back 1.890 / mean 1.918 / backcast 1.863) agree
+within ~3% vs the 21% error corrected, so the choice doesn't matter — using the artefact did.
+Dropping 1985 outright was rejected: same answer, but moves t0 to 1986 and forces all
+**441 VMI8 observations** to be re-mapped.
 
 ### SOC calibration target — homogenized baseline (✅ wired 2026-08-04)
 
@@ -441,7 +460,10 @@ protocol). The baseline reproduces LUKE's official national stocks **exactly**
   §"SOC stocks: a single homogenized basis" of `manuscript/HIKET_main_manuscript.tex`.
 
 **Excluded plots:** zero-litter, OFH-absent (`organic_missing`/`organic_zero`),
-peatland (Cajander KA 11–13), MRT > 100 years, and **`soc_outlier`** (whole-profile
+peatland (Cajander KA 11–13), MRT > 100 years, **`const_litter`** (litter identical to
+rel. SD < 1e-6 over 1986–2024 — a fixed repeated value, not a measured series; 8 plots,
+detected by rule not hard-coded; borderline plots 39251/67631 deliberately kept), and
+**`soc_outlier`** (whole-profile
 stock > 250 Mg/ha in any campaign; 4 plots: 29232, 31751, 33631, 49571 — applied and
 documented in `Data_work.R`, not silently upstream). The companion flag `high_change`
 (|rate| > 3 tC/ha/yr, 23 plots) is **recorded but NOT excluded** — read as resampling
@@ -466,6 +488,18 @@ noise the error model should absorb, not as data error.
 ---
 
 ## Known outstanding items
+
+- **✅ C5 WITHDRAWN 2026-08-05** — the 1985 (VMI8) campaign is NOT down-weighted;
+  `SIGMA_1985_INFL` default is now **1.0**. Ablations: turning C5 off changes trusted-campaign
+  RMSE by 0.45% (TP2) / 0.25% (SP1) vs a ~2% noise floor, while it moves σ_init by ~4×. Its
+  premise (VMI8 reads low) is contradicted once the SOC homogenization is in: with 1985 fully
+  trusted the model over-predicts it by only +3.2 tC/ha over its general bias, +6.3 when it has
+  never seen it. The faithful δ-offset version IS identifiable (the revision plan's
+  "non-identifiable" claim was too strong) but behaves as a misfit sink — δ = −0.137 requires
+  σ_init ≈ 0.98 (80% of draws past the pre-run inversion threshold) and implies no accumulation
+  ever happened. Residual concern (1985 unverifiable vs official LUKE stocks; different layer
+  protocol) → **limitations, as a stated sensitivity**. Record:
+  `manuscript/HIKET_data_and_ablation_tests.pdf`.
 
 - **🚩 NEXT ACTION — six-model Roihu re-calibration on the corrected SOC target.**
   The SOC baseline swap is **DONE and pre-flighted** (2026-08-04, see Data §"SOC
@@ -618,7 +652,7 @@ noise the error model should absorb, not as data error.
 | Toni Viskari | Yasso20 model author; structural clarifications |
 | Boris Tupek | Litter dataset author |
 | Jani Anttila | LUKE, GHG portal |
-| Aleksi Lehtonen | LUKE; **coauthor**; lead of the national soil-C inventory (Lehtonen et al. 2016, GMD — the steady-state approach HIKET extends). Frame that lineage collegially (evolving the group's own method), not as a critique. Natural owner of the stock QC (D3) & understorey litter (D2), BUT **on holiday until ~mid-Aug 2026 — proceed without him for now**. |
+| Aleksi Lehtonen | LUKE; **coauthor**; lead of the national soil-C inventory (Lehtonen et al. 2016, GMD — the steady-state approach HIKET extends). Frame that lineage collegially (evolving the group's own method), not as a critique. Corroborator for the stock QC (D3) & natural owner of understorey litter (D2). **NB the stock QC is OURS, not delegated** — we did it 2026-08-04 by moving to a standardized source (see Data §SOC target) and we keep verifying it; Aleksi's role is to review and confirm, not to perform it. On holiday until ~mid-Aug 2026. |
 | Samuli Launiainen | **coauthor**; gave the round-1 review comments (annotated `manuscript/revisions/HIKET_storyline_note_sl.pdf`, incl. "ridiculously flawed"). Straightforward, clear-thinking; friends with Aleksi. His candid margin notes are internal — keep the manuscript prose measured. |
 | Mikko Peltoniemi | LUKE; author of the keystone Peltoniemi et al. 2004 (the direct antecedent — identified the non-equilibrium init problem). Close collaborator (~2 yr), on good terms — approachable for the litter/understorey/stock questions while Aleksi is away. |
 

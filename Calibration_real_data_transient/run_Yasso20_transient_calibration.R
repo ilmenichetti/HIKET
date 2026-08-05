@@ -250,6 +250,11 @@ message("Loading data...")
 input_raw <- read.csv("./Data/model_inputs/input_raw_monthly.csv")
 site_raw  <- read.csv("./Data/model_inputs/site_raw.csv")
 
+# Fail fast if Data/ was not re-synced (gitignored -> does NOT arrive via git pull).
+assert_inputs_current(input_raw)
+message(sprintf("C5 sigma_1985 inflation: %.2fx  (production default 2.00)",
+                SIGMA_1985_INFL))
+
 litter_cols <- grep("^C_nwl|^C_fwl|^C_cwl", names(input_raw), value = TRUE)
 annual_litter <- input_raw %>%
   group_by(plot_id, year) %>%
@@ -342,6 +347,25 @@ SOC_obs_all <- input_calib %>%
   group_by(plot_id) %>%
   mutate(obs_rank = row_number()) %>%
   ungroup()
+
+# --- LOCO hook (doublechecks/run_ablation.R) ---------------------------------
+# HIKET_DROP_CAMPAIGN=<year> withholds one whole SOC campaign from the LIKELIHOOD,
+# so the model is fitted to the remaining campaigns and its prediction for the
+# held-out year becomes an out-of-sample test. Used to interrogate C5's premise:
+# C5 down-weights 1985 because the VMI8 mineral stocks look systematically low,
+# but varying the weight can never test that diagnosis -- only withholding can.
+# obs_rank is computed BEFORE the drop, so `is_first` keeps its original meaning.
+# Unset => no effect (production behaviour unchanged).
+.drop_campaign <- Sys.getenv("HIKET_DROP_CAMPAIGN", "")
+if (nzchar(.drop_campaign)) {
+  .dy <- as.integer(.drop_campaign)
+  .n0 <- nrow(SOC_obs_all)
+  SOC_obs_all <- SOC_obs_all[SOC_obs_all$year != .dy, ]
+  message(sprintf(paste0("[LOCO] campaign %d WITHHELD from the likelihood: ",
+                         "%d of %d observations dropped, %d plots left with none"),
+                  .dy, .n0 - nrow(SOC_obs_all), .n0,
+                  sum(!(unique(input_calib$plot_id) %in% unique(SOC_obs_all$plot_id)))))
+}
 
 obs_cv          <- sd(SOC_obs_all$soc_obs_tCha) / mean(SOC_obs_all$soc_obs_tCha)
 sigma_obs_fixed <- obs_cv

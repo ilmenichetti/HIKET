@@ -150,3 +150,58 @@ make_likelihood <- function(n_cores,
     sum(log_liks) + log_jac
   })
 }
+
+# =============================================================================
+# assert_inputs_current()  (2026-08-04)
+#
+# FAIL-FAST GUARD AGAINST A STALE INPUT BUNDLE.
+#
+# Data/ is gitignored, so the SOC-baseline swap and the 1985 litter
+# reconstruction (both 2026-08-04) do NOT travel with `git pull`. On a cluster
+# updated from git alone, the code would be current while
+# Data/model_inputs/*.csv were months old -- and the run would complete
+# NORMALLY, producing plausible-looking posteriors fitted to the wrong target.
+# That is the same failure shape as the stale-.so incident: right code, wrong
+# data, silent garbage, discovered only after the compute is spent.
+#
+# Two cheap invariants separate current from stale inputs unambiguously:
+#   SOC target  : homogenized median ~64 tC/ha; the superseded (stoniness-
+#                 inflated, 1m-extrapolated) target ran ~100.
+#   1985 litter : reconstructed ~1.75 tC/ha/yr; the raw artefactual first year
+#                 of the Tupek series is ~0.09.
+#
+# Called immediately after the input bundle is read in every run_*_calibration.R.
+# =============================================================================
+assert_inputs_current <- function(input_raw,
+                                  soc_median_max = 80,
+                                  litter_1985_min = 0.5) {
+  soc <- input_raw$soc_obs_tCha
+  soc <- soc[!is.na(soc)]
+  if (!length(soc)) stop("assert_inputs_current: no soc_obs_tCha in the bundle.")
+  soc_med <- median(soc)
+
+  lit_cols <- grep("^C_(nwl|fwl|cwl)_", names(input_raw), value = TRUE)
+  j85 <- input_raw[input_raw$year == 1985L, lit_cols, drop = FALSE]
+  # rows are MONTHLY (annual/12) -> sum the 12 months to get tC/ha/yr per plot
+  j85_annual <- tapply(rowSums(j85), input_raw$plot_id[input_raw$year == 1985L], sum)
+  j85_med <- median(j85_annual, na.rm = TRUE)
+
+  message(sprintf("Input currency check: median soc_obs = %.1f tC/ha | 1985 litter = %.2f tC/ha/yr",
+                  soc_med, j85_med))
+
+  if (soc_med > soc_median_max)
+    stop(sprintf(paste0("STALE INPUT BUNDLE: median soc_obs = %.1f tC/ha (expected ~64, limit %.0f).\n",
+                        "  This looks like the SUPERSEDED stoniness-inflated SOC target.\n",
+                        "  Re-run Data/Data_work.R and rsync Data/model_inputs/ -- Data/ is gitignored\n",
+                        "  and does NOT arrive via git pull."),
+                 soc_med, soc_median_max))
+
+  if (!is.finite(j85_med) || j85_med < litter_1985_min)
+    stop(sprintf(paste0("STALE INPUT BUNDLE: median 1985 litter = %.3f tC/ha/yr (expected ~1.75).\n",
+                        "  The artefactual first year of the Tupek series (~0.09) is still present;\n",
+                        "  the 1986-1990 backcast has not been applied. Re-run Data/Data_work.R\n",
+                        "  and rsync Data/model_inputs/."),
+                 j85_med))
+
+  invisible(TRUE)
+}

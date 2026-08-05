@@ -88,3 +88,8 @@ manuscript/appendices/*.pdf
 
 # Literature PDFs (copyright + size); keep the tracked catalogue literature/README.md
 literature/*.pdf
+
+# Ablation artefacts (regenerable; posteriors are large)
+doublechecks/ablation_logs/
+doublechecks/ablation_runs/
+doublechecks/delta_offset_*.rds

@@ -1,7 +1,8 @@
 # TP3 prior specification — HIKET pipeline
 # Hand-set defaults: no published global calibration exists.
-# Extends TP2 with a Slow pool; alpha_S intermediate between alpha_A and
-# alpha_H; p_S matches TP2's p_H; p_H neutral at 0.50.
+# Extends TP2 with a Slow pool. NOTE: alpha_S is NOT intermediate between alpha_A
+# and alpha_H, and p_H is NOT neutral at 0.50 — both were superseded by C1 below
+# (an intermediate alpha_S starves the cascade; see the C1 note).
 # Climate widths on the Yasso07 empirical scale (Tuomi 2009 T3, 1σ); p_S/p_H on
 # the Tier-2 logit SD 0.4 (see PRIOR_HOMOGENIZATION_PLAN.md).
 # All other widths weakly informative — Finnish data dominates.
