@@ -501,7 +501,16 @@ noise the error model should absorb, not as data error.
   protocol) → **limitations, as a stated sensitivity**. Record:
   `manuscript/HIKET_data_and_ablation_tests.pdf`.
 
-- **🚩 NEXT ACTION — six-model Roihu re-calibration on the corrected SOC target.**
+- **🚀 ROIHU RECALIBRATION RUNNING — jobs 474800–474805, launched 2026-08-05 13:24.**
+  First run to include C1–C4 *and* both data corrections. ~36 h → expect ~01:00 on 2026-08-07.
+  Verified at launch: `Cores per chain: 40` (OOM trap avoided), `5 chains x 50000` (no ablation
+  env vars leaked), all six reached `Chain 1/5` → the input guard, forward sanity and the Yasso
+  `.so` all passed. **NB guard output goes to `.err`, not `.out`** (R `message()` → stderr), and
+  restrict globs to `*_4748*` or you read July's logs.
+  **→ `NEXT_SESSION.md` has the full check / sync / refresh sequence.** Everything downstream
+  (figures F1–F14, S1–S7, T1/T2, NextGenC bundle, `HIKET_calibration.Rmd`) is stale until it lands.
+
+- **✅ SUPERSEDED — six-model Roihu re-calibration (was: next action).**
   The SOC baseline swap is **DONE and pre-flighted** (2026-08-04, see Data §"SOC
   calibration target"). Everything downstream now predates it. State:
   - ✅ `Data_work.R` rewired + re-run; 66/66 sanity checks pass; 520 calib-ready
