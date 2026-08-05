@@ -276,6 +276,37 @@ VMI8 reads low. The controlled excess is $+6.3$. The adjustment changes the answ
 recorded rather than absorbed silently.
 \end{caveat}
 
+\subsection{Confirmation on a third model (Yasso07, 20\,000 iterations)}
+The 6000-iteration Yasso runs did not converge ($\hat{R}$ up to $2.31$) and were discarded.
+Re-run at 20\,000 iterations they are clean ($\hat{R}$ $1.002$--$1.034$ for \texttt{A0},
+$1.001$--$1.106$ for \texttt{A1}), and they reproduce the result:
+
+\begin{table}[H]\centering\small
+\caption{Yasso07, C5 on vs off. Fitted on the 520-plot bundle (before the constant-litter
+exclusion); both configurations are scored identically, so the contrast is internally valid.}
+\begin{tabular}{lrrrr}\toprule
+configuration & trusted RMSE & 1985 excess & $\sinit$ & $\sinput$\\\midrule
+\texttt{A0} C5 $=2.0$ & 46.39 & $-5.31$ & 0.440 & 1.320\\
+\texttt{A1} C5 off    & 46.25 & $+4.98$ & 0.767 & 0.945\\\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Turning C5 off changes trusted-campaign RMSE by $0.30\%$. Across the three models
+that converged the effect is $0.45\%$ (TP2), $0.25\%$ (SP1) and $0.30\%$ (Yasso07) --- all far
+inside the noise floor, in a two-pool model, a single-pool model and a Yasso structure that
+parks carbon in slow humus. The bias-controlled 1985 excess with C5 off is likewise small
+everywhere: $+3.19$, $+2.92$ and $+4.98$. And $\sinit$ moves substantially in every case
+($0.440 \rightarrow 0.767$ here), confirming that C5's real effect is on the reported
+parameters rather than on prediction.
+
+\begin{caveat}
+\textbf{Yasso07's $\sinput$ falls below 1 when C5 is removed} ($1.320 \rightarrow 0.945$),
+joining SP1 ($0.23$--$0.61$) on the wrong side of the C4b prior, which is centred at $1.30$ on
+the argument that understorey litter is \emph{missing}. With C5 off, $\sinit$ also reaches
+$0.767$, close to the $0.826$ pre-run inversion threshold. Neither blocks the C5 decision, but
+both belong in the discussion of what $\sinput$ is really absorbing.
+\end{caveat}
+
 \subsection{Why C5 no longer stands up}
 Its supports fail one by one. The original justification --- that VMI8 mineral stocks read
 systematically low --- is now \emph{contradicted}: the SOC homogenization removed most of the
