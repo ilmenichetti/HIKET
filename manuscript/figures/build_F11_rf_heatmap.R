@@ -1,11 +1,11 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F11 (rebuild) -- RF residual-predictor importance heatmap, with NICELY FORMATTED
 # predictor names (the pipeline PNG used raw variable names). Relative importance
 # (within-model max = 1), rows = union of each model's top-15, sorted by mean.
 # Data: <MODEL>_rf_importance_<RUN_ID>.csv + <MODEL>_rf_summary_<RUN_ID>.rds (OOB R2).
 
-rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+rid <- as.list(RID)
 MODELS <- names(rid); DG <- "Calibration_real_data_transient/diagnostics"
 
 # --- nice predictor labels (raw variable -> readable); fallback prettifies ---

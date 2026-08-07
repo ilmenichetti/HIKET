@@ -281,7 +281,8 @@ sp1_run <- function(inputs, model_params, C_init, xi_array) {
 # sp1_transient_init
 #
 # 68-year pre-run (1917 -> 1985) with linearly interpolated litter:
-#   J_1917 = J_full_mean * sigma_init * sigma_input  (historical anchor)
+#   J_1917 = J_t0_mean * sigma_init * sigma_input  (historical anchor; P1 2026-08-07:
+#            was J_full_mean -- see the note at the assignment below)
 #   J_1985 = J_t0_mean   * sigma_input               (observed-period start)
 # Starts at analytical steady state under J_1917; returns terminal pool state.
 # sigma_init encodes historical productivity relative to the contemporary mean.
@@ -295,7 +296,15 @@ sp1_transient_init <- function(model_params, lm, xi_mean, ...) {
   sigma_input <- unname(model_params["sigma_input"])
 
   # Fully-scaled litter endpoints
-  J_1917 <- lm$J_full_mean * sigma_init * sigma_input
+# P1 (2026-08-07): the 1917 anchor now uses J_t0_mean, NOT J_full_mean.
+# WHY: J_full_mean is the mean over the WHOLE 1986-2024 litter record and J_t0_mean
+# the mean over its first five years. Anchoring the two ends of the pre-run to
+# DIFFERENT aggregates meant sigma_init was not the 1917/1985 flux ratio but that
+# ratio times J_t0/J_full (median 0.818) -- so sigma_init = 1 silently asserted a
+# 1917 flux 22% ABOVE 1985, contradicting the growing-stock record the ramp shape
+# (C3) is built from. With a common anchor, sigma_init IS the ratio and the
+# pre-run inverts at sigma_init > 1 rather than at 0.818.
+  J_1917 <- lm$J_t0_mean * sigma_init * sigma_input
   J_1985 <- lm$J_t0_mean   * sigma_input
 
   # Start at analytical steady state under 1917 litter

@@ -201,9 +201,17 @@ yasso20_transient_init <- function(model_params, lm, xi_mean, ...) {
   params      <- model_params[YASSO20_PARAM_NAMES]
 
   # Fully-scaled AWEN litter endpoints
-  nwl_1917 <- lm$nwl_full_mean * sigma_init * sigma_input
-  fwl_1917 <- lm$fwl_full_mean * sigma_init * sigma_input
-  cwl_1917 <- lm$cwl_full_mean * sigma_init * sigma_input
+# P1 (2026-08-07): the 1917 anchor now uses J_t0_mean, NOT J_full_mean.
+# WHY: J_full_mean is the mean over the WHOLE 1986-2024 litter record and J_t0_mean
+# the mean over its first five years. Anchoring the two ends of the pre-run to
+# DIFFERENT aggregates meant sigma_init was not the 1917/1985 flux ratio but that
+# ratio times J_t0/J_full (median 0.818) -- so sigma_init = 1 silently asserted a
+# 1917 flux 22% ABOVE 1985, contradicting the growing-stock record the ramp shape
+# (C3) is built from. With a common anchor, sigma_init IS the ratio and the
+# pre-run inverts at sigma_init > 1 rather than at 0.818.
+  nwl_1917 <- lm$nwl_t0_mean * sigma_init * sigma_input
+  fwl_1917 <- lm$fwl_t0_mean * sigma_init * sigma_input
+  cwl_1917 <- lm$cwl_t0_mean * sigma_init * sigma_input
   nwl_1985 <- lm$nwl_t0_mean   * sigma_input
   fwl_1985 <- lm$fwl_t0_mean   * sigma_input
   cwl_1985 <- lm$cwl_t0_mean   * sigma_input

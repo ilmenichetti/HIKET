@@ -1,176 +1,136 @@
 # NEXT SESSION — start here
 
-**Rewritten 2026-08-05 evening**, superseding the running checklist kept during 4–5 August.
-Current as of commit `0277ad7`.
+**Rewritten 2026-08-07 (evening).** Supersedes the earlier 2026-08-07 version and
+`manuscript/REVISION_PLAN.md`, which has been removed (recoverable from git commit `5324383`;
+its C1–C5 decisions are summarised in §5).
+
+> **Read `manuscript/M&M_parameterization_working_document.pdf` first** (15 pp). It states every
+> parameterisation assumption, the four defects, the proposals and the evidence for each.
 
 ---
 
-## 0. State in one paragraph
+## 1. What this run is
 
-Two upstream data errors were found and fixed (SOC stocks missing a coarse-fragment
-correction; the litter product's first year unusable), eight constant-litter plots were
-excluded, and C5 was withdrawn after ablation testing. The six-model Roihu recalibration
-launched **2026-08-05 13:24** (jobs **474800–474805**) with all of that in, and is the first
-run to include C1–C4. Everything downstream — every figure, table, metric and the NextGenC
-bundle — predates it and is stale. Nothing is running locally.
+The first calibration with a **correctly specified error model**, plus the initialisation defect
+fixed. Three changes:
 
----
-
-## 1. FIRST THING: check the Roihu jobs
-
-Launched 13:24 on 2026-08-05, ~36 h, so expect completion around **01:00 on 2026-08-07**.
-
-```bash
-ssh roihu                      # needs a freshly signed cert (24 h validity)
-squeue -u menichet
-sacct -u menichet --starttime 2026-08-05 --format=JobID,JobName%16,State,Elapsed,ExitCode
-```
-
-If finished, check health before trusting anything:
-
-```bash
-cd /scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs
-grep -H -E "R-hat|inf_rate|Wallclock" *_4748*.err
-```
-
-> **The guard output goes to `.err`, not `.out`** — R's `message()` writes to stderr; `.out`
-> only has the prior tables. And restrict globs to `*_4748*` or you will be reading July's
-> 98 KB logs, which is what happened the first time.
-
-**Already verified at launch:** `Cores per chain: 40` (the OOM trap avoided),
-`5 chains x 50000 iterations` (no ablation env vars leaked), and all six reached `Chain 1 / 5`
-— which means `assert_inputs_current()` passed, forward sanity passed, and the Yasso `.so`
-files loaded correctly.
-
-### Then sync back
-
-```bash
-# from the Mac. Use the `roihu:` ALIAS -- the bare hostname has no certificate.
-rsync -av roihu:/scratch/project_2019134/HIKET/Calibration_real_data_transient/runs/ \
-  ./Calibration_real_data_transient/runs/
-rsync -av roihu:/scratch/project_2019134/HIKET/Calibration_real_data_transient/diagnostics/ \
-  ./Calibration_real_data_transient/diagnostics/
-rsync -av roihu:/scratch/project_2019134/HIKET/Data/model_inputs/ ./Data/model_inputs/
-```
-
-The third is not optional: the predictive stage hard-loads
-`Data/model_inputs/<MODEL>_inputs_<RUN_ID>.rds` with no fallback.
-
-**Before running anything downstream:**
-
-```bash
-Rscript doublechecks/quarantine_ablation_runs.R
-```
-
-`run_*_predictive.R` picks its posterior by sorting filenames and taking the newest, with no
-notion of what kind of run produced it. The local ablation posteriors sit in the same
-directory and would be picked up silently.
-
----
-
-## 2. What to look at in the results
-
-Four numbers carry most of the meaning.
-
-- **σ_input.** Expect ~1.0–1.2. The old pathology (TP2/TP3 at 13–20×, manufacturing carbon)
-  should be gone twice over — once from the flux bound, once from an honest target.
-  ⚠ **Watch the other direction too**: in the ablations SP1 landed at 0.23–0.61 and Yasso07 at
-  0.945 once C5 was removed — i.e. *too much* litter, against a C4b prior centred at 1.30
-  precisely because understorey litter is **missing**. Two of three models on the wrong side of
-  that prior is a live tension, not a rounding error.
-- **σ_init vs 0.826.** Above that threshold the reconstructed 1917→1985 pre-run *declines*,
-  contradicting the growing-stock history C3 encodes. Ablations put it at 0.29–0.78 depending
-  on configuration; the upper end is close.
-- **The 1985 gap.** The old "+26 tC/ha above observed 1985" figure is tied to the superseded
-  target and **must be re-derived**. Do not quote it.
-- **Skill.** Metric trap: `run_*_predictive.R` reports `cor(obs,hat)^2`, which ignores bias —
-  that is the source of the documented "R² 0.05–0.11". Variance-explained R² is much harsher
-  and goes negative here because of the ~+10 tC/ha over-prediction. Both are printed by
-  `doublechecks/ablation_fit_by_campaign.R`. Do not quote one against the other.
-
----
-
-## 3. Then: refresh everything downstream
-
-- [ ] Stages 2–4 locally: `Rscript Calibration_real_data_transient/run_hiket_pipeline.R --skip-calibration`
-- [ ] Figures **F1–F14** and **S1–S7**, tables **T1/T2** — all predate the rebaseline
-- [ ] NextGenC bundle (`Reporting/NextgenC_report/`: `build_soc_matrices.R` → RUN_IDs →
-      `plot_soc_trajectories.R` → `build_soc_maps.R`)
-- [ ] **Restate every number quoted against a campaign mean.** The observed 1985→2006 rise fell
-      from **+61% to +12%**: the effect the paper rests on is real but roughly a fifth of what
-      the old figures implied. State it at its true size rather than softening it.
-
----
-
-## 4. Documentation status (audited 2026-08-05)
-
-**Current:** `CLAUDE.md`; `Data/Data_work.R` (M&M block — the canonical methods text);
-`manuscript/HIKET_main_manuscript.tex`; `manuscript/HIKET_data_and_ablation_tests.tex` (the
-working record, 9 pp); `manuscript/REVISION_PLAN.md`; this file; memory.
-
-**Still to do:**
-
-- [ ] **`Calibration_real_data_transient/documentation/HIKET_calibration.Rmd`** — not updated
-      for the SOC target, the litter reconstruction, the constant-litter exclusion or the C5
-      withdrawal. **The largest remaining doc gap.** Deliberately deferred: it is the methods
-      document and should carry final numbers rather than be rewritten twice.
-- [ ] **`manuscript/HIKET_storyline_note.tex`** — carries the SOC "levels are provisional"
-      reading note but not the litter fix. Its figures are all stale; rewrite once figures are
-      rebuilt, and drop the provisional caveat then.
-
----
-
-## 5. Decisions taken 4–5 August (all committed)
-
-| | decision | why |
+| change | why | evidence |
 |---|---|---|
-| SOC target | homogenized three-campaign baseline | mineral C over-counted ~1.6× (missing stoniness); campaigns on drifted paths |
-| Litter 1985 | reconstructed by 1986–1990 backcast | first year unusable (0.060 vs 1.398); it is t₀, so it corrupted four quantities |
-| 8 plots | excluded (`const_litter`) | litter identical to ~15 s.f. for 39 years — not a measured series |
-| **C5** | **withdrawn** | inert for prediction (0.25–0.45% across three models), moves σ_init ~4× |
-| δ-offset | tested, **not adopted** | identifiable, but a misfit sink |
-| C3 | **kept** | justified by the growing-stock record; ~3% fit cost reported honestly |
+| **log-normal likelihood** | the multiplicative normal sets the variance from the parameter being estimated, so a prediction widens its own error bar and the location estimate is contaminated by dispersion | TP2 refit: bias **+12.7 → −0.9** tC/ha; median log-residual **−0.205 → −0.023** |
+| **common pre-run anchor** | the two ends of the pre-run used different litter aggregates (`J_full` vs `J_t0`), so σ_init was the 1917/1985 ratio × 0.75 — a centre of 1.00 silently asserted **33% more** litter in 1917 than 1985 | plain defect; wrappers are shared, so calibration and prediction follow together |
+| **ratio prior centre 0.90** | NFI growing stock with the fitted litter–growing-stock elasticity (ε ≈ 0.45–0.66 ⇒ litter ~ √GS; GS₁₉₁₇/GS₁₉₈₅ = 0.789 ⇒ R ≈ 0.90) | meaningful only *together with* the common anchor |
 
-Full reasoning, including where the analysis went wrong before it went right, is in
-`manuscript/HIKET_data_and_ablation_tests.pdf`.
+**Implementation state.** The log-normal is a switch (`HIKET_LOGNORMAL_LIK=1`, default off) — it
+must be set explicitly in the SLURM scripts. The common anchor and the 0.90 centre are **direct
+edits and live by default**. The `20260805` posteriors are therefore no longer reproducible from
+current code; wrapper backups are in the session scratchpad.
 
----
+### Deliberately not included
 
-## 6. Open questions / people
-
-- [ ] **B. Tupek** — confirm (a) that the 1985 litter collapse is a first-year differencing
-      artefact, and (b) the constant-litter plots. Both treatments are defensible without him
-      — the values cannot be real either way — but the *stated mechanism* is an inference, and
-      it is now load-bearing in the M&M.
-- [ ] **A. Lehtonen** (back ~mid-Aug) — corroborate the stock QC, own the understorey question.
-      NB the QC itself is **ours** and was performed here; his role is review, not execution.
-- [ ] **Understorey fraction** still rests on a literature range (~15–35%); pinning it down
-      needs the LUKE MUSTIKKA ground-vegetation data, absent locally. This matters more now
-      that two models put σ_input *below* 1.
+- **Plain priors** (drop `flux_pair` for two lognormals) — tested safe (identical pre-flight
+  blow-ups in all six models, 0% prior mass above the NPP ceiling) but it changes the prior
+  *shape* as well as its centre, which would make this run unattributable. Next.
+- **Free slow rate** — tested, and it does **not** fix the trend (§3). Left at C1.
+- **Ratio coordinate** — superseded; the common anchor achieves the same thing more simply.
 
 ---
 
-## 7. Tests scoped but not run
+## 2. What to check when it lands
 
-- **C1 ablation** — the largest round-1 change and still completely unattributed; its headline
-  claim (anchoring rates makes σ_input fall *as a consequence*) is untested. Most invasive.
-- **SOC-target ablation** (old vs new) — the only *destructive* test: it regenerates the old
-  bundle and overwrites `Data/model_inputs/`. Do it deliberately, with a backup.
-- **Measured-only (0–40 cm) target** — retires the depth-extrapolation question for the
-  robustness appendix. Cheap: a column swap.
-- **Yasso `A5` (LOCO) and the whole Yasso20 leg** — deliberately not run: the bundle changed to
-  512 plots mid-batch, so anything launching later would not have been comparable. Re-run on
-  the final data if wanted for the record.
-- **Free post-processing** on the new posteriors: pre-run direction diagnostic, KL information
-  gain per parameter, posterior-predictive coverage *with* observation error (the long-standing
-  "Param cov ≈ 0.05" artefact).
+| | expectation |
+|---|---|
+| **Level** | bias near zero at all three campaigns (TP2 achieved −0.9) |
+| **Yasso15/20 sink sign** | should turn positive; they were −0.063 and −0.155 against observed +0.312 |
+| **Yasso trajectory shape** | rise then flatten (saturation), as in `20260710` — *not* monotonic decline |
+| **F9, Yasso** | effective flux well inside the NPP envelope — **non-negotiable** |
+| **F9, SP1/TP2/TP3** | high flux tolerable; report as a finding |
+| **Trend** | within roughly a third of the observed **+0.312 ± 0.035**; report +0.209 (LUKE-validated campaigns only) as sensitivity |
+| **σ_init** | inversion threshold is now **1.0**, not 0.818 — the common anchor removed the conversion |
+
+**Before launching**: run `preflight_prior_pushforward.R` at full N. The common anchor lowers
+every plot's 1917 flux by ~25%, so the initial state changes everywhere. This is the gate that
+caught the `beta2` detonation.
 
 ---
 
-## 8. Two process lessons worth keeping
+## 3. What changed the framing
 
-1. **Never edit run scripts while a suite is launching processes from them.** TP2's `A1` read a
-   half-written file (`mcmc_c_chains` = garbled `run_mcmc_chains`) and was lost.
-2. **The run scripts source `calib_config.R` without `local=`**, so its `N_ITER` / `N_CHAINS`
-   land in the global environment and will silently overwrite same-named variables in any
-   harness that sources the setup. Prefix harness variables (`TEST_*`).
+**The level bias was ours, not the models'.** ~20%, uniform across all six, caused by the error
+model. Every level-based number from `20260805` carries it.
+
+**The trend is invisible to the likelihood.** A *perfect* trend fit is worth **3.4 nats**; the
+parameter move delivering it costs **8.9** even at a widened prior. The calibration correctly
+ignores it — confirmed empirically: freeing the slow rate sent `alpha_H` *down* (0.0053 → 0.0031)
+and moved the trend only 0.116 → 0.130 against an observed 0.309. **No reparameterisation fixes
+the trend.** Fitting it needs a change to what the likelihood targets — paired per-plot
+differences, or the aggregate stock change as an explicit observation with its own (0.035)
+uncertainty.
+
+**The trend deficit is not new.** In `20260710` the models captured 25–50% of the observed rate;
+now 42%. What changed is that the old inflated target coincided with the models' levels at
+2006/2024, so F4 *looked* right. Yasso15/20 already had negative 2006→2024 trends in July.
+
+**The two families fail differently.** Yasso's effective response time (17–38 yr) is adequate but
+it starts at or above its own equilibrium; TP2/TP3 start sensibly but are far too slow
+(τ ≈ 195 yr). Only the Yasso failure is fixable by initialisation — and Yasso's fix is
+**flux-neutral**, whereas the cascades' would cost input.
+
+**Simple structures *can* fit.** TP2 reaches the observed level and trend with `alpha_H` ≈ 0.025,
+`p_H` ≈ 0.30, σ_input ≈ 2.3 — flux 5.8 against a ceiling of 8.7. The solution exists; the
+likelihood just doesn't reward it. The ICBM anchor wasn't making the comparison fair, it was
+pinning a parameter the data has almost no opinion about.
+
+**σ_init is conditionally identified.** The data narrows it 2–7× and shifts the median up to 44%
+off the prior — it is *not* blind. But the information sits almost entirely in the 1985 campaign,
+so the inference is conditional: *given that VMI8 is taken at face value…*. C5 moved it 4× while
+trusted-campaign RMSE moved 0.45%. A scope condition, not a defect.
+
+**Retracted today**: the historical-depletion hypothesis (litter raking, slash-and-burn). It came
+from a fixed-equilibrium fit that ignored the rising litter. Litter rises ×1.35 over the window,
+and a soil merely *tracking* that rise reproduces the observed accumulation with no
+below-equilibrium start. The hypothesis may be true; the SOC record doesn't demand it.
+
+---
+
+## 4. Next session
+
+1. **Analyse the run** against §2.
+2. **Plain priors** — drop `flux_pair`, two lognormals plus a flux guard. Tested; deferred only
+   for attribution.
+3. **Predictive-stage defects**, cheap and independent:
+   - the coverage column is a parameter-CI mislabelled as posterior-predictive (omits observation
+     error — the "Param cov ≈ 0.05" artefact)
+   - no achieved-plot-count assertion (this is what let the `alpha_A` bug run silently)
+   - Yasso20 lacks the `tryCatch` guards Yasso15 has
+4. **NextGenC** — still on stale `20260710` RUN_IDs in `build_soc_matrices.R`,
+   `build_soc_maps.R`, `build_vulnerability_map.R`, `diagnostic_semivariogram.R`. They run
+   *successfully* on stale data because those posteriors were deliberately kept.
+5. **For collaborators**: B. Tupek — is the litter product derived from biomass? If so the
+   elasticity behind R = 0.90 is internal to it rather than independent evidence; this is the
+   load-bearing caveat. A. Lehtonen — stock-QC corroboration and understorey.
+
+---
+
+## 5. C1–C5, for the record (`REVISION_PLAN.md` removed)
+
+| | what | status |
+|---|---|---|
+| C1 | ICBM-anchored kinetics for SP1/TP2/TP3 (fast rate fixed, slow rate pinned at SD 0.15) | in. Its transferability diagnostic **fired** — posteriors sit 1.6–2.2σ off the anchor. But relaxing it does **not** fix the trend |
+| C2 | TP3 climate response on all pools | in |
+| C3 | growing-stock *shape* for the pre-run ramp | in. Its *level* was never taken from the same record — that is what the common anchor and ratio prior now fix |
+| C4 | σ_input reframe; C4b re-centred at 1.30 | in. Note the σ_input prior is nearly irrelevant: the likelihood decides it by ~112:1 |
+| C5 | down-weight the 1985 campaign | **withdrawn**. See the 2026-08-07 addendum in `HIKET_data_and_ablation_tests.pdf` — it was adjudicated on stock RMSE, which is blind to the stock *change* it actually controls |
+
+---
+
+## 6. Housekeeping
+
+- **The 2026-08-07 diagnostic posteriors are in `runs/`** (`TP2_posterior_20260807_142117`,
+  `_145728`, plus a Yasso20). They sort newest and **will be auto-selected by every downstream
+  script** — the `run_ids.R` resolver already refused once because of it. Quarantine before
+  running anything downstream.
+- **Uncommitted code from this session**: TP2/TP3 predictive `alpha_A` fix; two auto-selecting
+  doublechecks; the error-model and rate-prior switches; the common anchor; the 0.90 centre;
+  `preflight_naive_priors.R`, `prerun_direction.R`, `ablation_stock_change.R`,
+  `production_fit_by_campaign.R`, `build_F5_stock_change.R`, `run_ids.R`, and the figure-builder
+  auto-selection pass.

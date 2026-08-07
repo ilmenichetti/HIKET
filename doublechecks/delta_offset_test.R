@@ -14,7 +14,7 @@
 #     obs_1985  ~  Normal( (1 + delta) * SOC_hat ,  (1 + delta) * SOC_hat * sigma_obs )
 # with delta < 0 meaning "VMI8 reads LOW relative to the model".
 #
-# REVISION_PLAN ruled this out as "non-identifiable vs sigma_init". That may be too
+# The revision plan (removed; NEXT_SESSION.md §5) ruled this out as "non-identifiable vs sigma_init". That may be too
 # strong: sigma_init sets C_init and propagates through ALL THREE campaigns (humus
 # MRT ~165 yr, so most of it persists to 2024), whereas delta shifts ONLY the 1985
 # comparison. Different signatures => 2006/2024 should partially separate them.

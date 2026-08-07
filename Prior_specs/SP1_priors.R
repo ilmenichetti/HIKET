@@ -13,13 +13,18 @@
 # our xi via the one-time /xi_Ultuna offset:
 #   alpha = (1 / (1/k1 + h/k2)) / xi_Ultuna = 0.0440 / 0.9397 = 0.0468
 # (ICBM Andren & Katterer 1997 k1=0.8, k2=0.00605, h=0.13; xi_Ultuna at the beta
-# centre, Ultuna T=5.4, T_amp=10 half-range, P=520). See REVISION_PLAN.md §C1.
+# centre, Ultuna T=5.4, T_amp=10 half-range, P=520). See NEXT_SESSION.md §5 (C1).
 SP1_FREE_DEFAULTS <- c(
   alpha       = 0.0468,   # ICBM bulk-MRT anchor (was 0.09, ~2x too fast)
   beta1       = 0.095,
   beta2       = -0.00014,
   gamma       = -1.21,
-  sigma_init  = 1.00,
+  # P3 (2026-08-07): 0.90 = J_1917/J_1985 from the NFI growing-stock record with the
+  # fitted litter-growing-stock elasticity (eps 0.45-0.66 over 1986-2023 => litter
+  # scales ~ sqrt(growing stock); GS_1917/GS_1985 = 0.789 => R = 0.789^eps ~ 0.90).
+  # Meaningful only together with P1 (common J_t0 anchor in the wrappers): before
+  # P1, sigma_init = R * 0.818 and a centre of 1.00 silently asserted R = 1.22.
+  sigma_init  = 0.90,
   sigma_input = 1.30   # C4b: re-centred >1 for missing (understorey-dominated) litter (D2)
 )
 

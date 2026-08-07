@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F7 + F8 rebuild -- faithful KL + marginal recompute.
 # The saved posterior (runs/<MODEL>_posterior_<RUNID>.rds) is already PHYSICAL-space
@@ -8,8 +9,7 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 #   F7 -> merged 3-panel KL barplot, the three Yasso models (shared y-axis).
 #   F8 -> readable fraction marginals for BOTH TP3 and Yasso20 (user picks which to feature).
 
-RUNID <- c(TP3="20260710_104904", Yasso07="20260710_104902",
-           Yasso15="20260710_104902", Yasso20="20260710_102431")
+RUNID <- unlist(RID[c("TP3","Yasso07","Yasso15","Yasso20")])
 
 # --- source a model's calibration setup (up to MCMC launch) into a fresh env -------
 setup_model <- function(MODEL) {

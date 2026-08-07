@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # T1 -- per-model results-at-a-glance table (the performance values that F4's redesign
 # dropped, plus the structural + auxiliary-sigma + forecast columns that carry the story).
@@ -5,13 +6,20 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 # inputs (effective litter flux sigma_input x J-bar) | init (sigma_init) | forecast (2084).
 # Writes a LaTeX booktabs-free tabular fragment for \input, and prints the numbers.
 
-rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+rid <- as.list(RID)
 pools <- c(SP1=1, TP2=2, TP3=3, Yasso07=5, Yasso15=5, Yasso20=5)   # AWENH = 5 for Yasso
 JBAR  <- 2.472                                                     # shared mean litter (flux_pair)
 runs  <- "Calibration_real_data_transient/runs"
 
-cache <- readRDS("manuscript/figures/F4_cache.rds")               # for the 2084 forecast
+# RUN_ID-keyed cache written by build_F4_initialization.R (run that first). It used to
+# be a fixed filename, which silently served the PREVIOUS calibration's forecast after a
+# re-calibration -- the 2084 column looked current and was not.
+.f4_cache <- sprintf("manuscript/figures/F4_cache_%s.rds",
+                     substr(paste(RID[FIG_MODELS], collapse = "-"), 1, 120))
+if (!file.exists(.f4_cache))
+  stop("F4 cache for the current RUN_IDs is missing -- run build_F4_initialization.R first:\n  ",
+       .f4_cache, call. = FALSE)
+cache <- readRDS(.f4_cache)                                       # for the 2084 forecast
 row <- function(m) {
   b  <- readRDS(sprintf("%s/%s_posterior_predictive_%s.rds", runs, m, rid[[m]]))
   po <- readRDS(sprintf("%s/%s_posterior_%s.rds", runs, m, rid[[m]]))

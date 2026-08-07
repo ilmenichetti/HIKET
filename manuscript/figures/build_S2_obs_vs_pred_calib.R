@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # S2 (supplement) -- calibration obs-vs-pred, the in-sample companion to the main-text
 # holdout F6. COLOUR CODING (per user, 2026-07-15):
@@ -8,12 +9,12 @@ source("manuscript/figures/model_palette.R")
 
 runs <- "Calibration_real_data_transient/runs"
 bundles <- c(
-  SP1     = "SP1_posterior_predictive_20260710_104903.rds",
-  TP2     = "TP2_posterior_predictive_20260710_104904.rds",
-  TP3     = "TP3_posterior_predictive_20260710_104904.rds",
-  Yasso07 = "Yasso07_posterior_predictive_20260710_104902.rds",
-  Yasso15 = "Yasso15_posterior_predictive_20260710_104902.rds",
-  Yasso20 = "Yasso20_posterior_predictive_20260710_102431.rds")
+  SP1     = sprintf("SP1_posterior_predictive_%s.rds", RID[["SP1"]]),
+  TP2     = sprintf("TP2_posterior_predictive_%s.rds", RID[["TP2"]]),
+  TP3     = sprintf("TP3_posterior_predictive_%s.rds", RID[["TP3"]]),
+  Yasso07 = sprintf("Yasso07_posterior_predictive_%s.rds", RID[["Yasso07"]]),
+  Yasso15 = sprintf("Yasso15_posterior_predictive_%s.rds", RID[["Yasso15"]]),
+  Yasso20 = sprintf("Yasso20_posterior_predictive_%s.rds", RID[["Yasso20"]]))
 
 dat <- list(); r2c <- c(); bias <- c()
 for (m in names(bundles)) {

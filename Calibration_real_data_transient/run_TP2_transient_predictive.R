@@ -17,6 +17,7 @@ source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yass
 # compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
 source("./Model_functions_real_data_transient/Decomposition_functions/SimpleModels/tp2_wrapper_transient.R")
 source("./Model_functions_real_data_transient/input_compatibility_layer.R")
+source("./Prior_specs/TP2_priors.R")   # TP2_ALPHA_A_FIXED (see Section 2)
 
 library(dplyr)
 library(parallel)
@@ -88,10 +89,15 @@ message(sprintf("Loaded plots:       %d", length(plots_real)))
 
 
 # =============================================================================
-# 2.  Parameter assembly (pass-through: all TP2 params free)
+# 2.  Parameter assembly
 # =============================================================================
+# alpha_A (fast pool) is externally anchored to ICBM and held FIXED, exactly as
+# Yasso holds its a-vector fixed. It is absent from the posterior, so it must be
+# re-injected here to match run_TP2_transient_calibration.R -- without it the
+# wrapper reads model_params["alpha_A"] as NA and tp2_transient_init fails for
+# every plot. Constant = TP2_ALPHA_A_FIXED (Prior_specs/TP2_priors.R).
 
-assemble_model_params <- function(p_free) p_free
+assemble_model_params <- function(p_free) c(p_free, alpha_A = TP2_ALPHA_A_FIXED)
 
 
 # =============================================================================

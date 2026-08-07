@@ -1,0 +1,962 @@
+% HIKET -- WORKING DOCUMENT: parameterization assumptions, August 2026.
+%
+% Purpose: state, in one consistent package and in near-manuscript form, every
+% assumption that goes into the HIKET parameterization -- what each parameter IS,
+% where its prior comes from, and what constrains it. Written after the 2026-08-07
+% diagnostic session, which found that several of these assumptions are mutually
+% inconsistent. Sections 2-3 describe what is CURRENTLY implemented; section 4
+% states the defects; section 5 proposes the replacement package; section 6 derives
+% the one genuinely new number. Nothing here is implemented yet.
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}\usepackage{xcolor}
+\usepackage{booktabs}\usepackage{longtable}
+\usepackage{float}\usepackage[hidelinks]{hyperref}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+
+\definecolor{decbg}{HTML}{EAF7EE}\definecolor{decrule}{HTML}{2E8B57}
+\newtcolorbox{proposal}[1]{colback=decbg, colframe=decrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  title={\bfseries PROPOSAL --- #1}, coltitle=decrule, fonttitle=\small\bfseries,
+  attach title to upper=\par, before skip=9pt, after skip=9pt}
+
+\definecolor{cavbg}{HTML}{FDF3E7}\definecolor{cavrule}{HTML}{C87A2F}
+\newtcolorbox{caveat}{colback=cavbg, colframe=cavrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=9pt, after skip=9pt}
+
+\definecolor{defbg}{HTML}{FBEAEA}\definecolor{defrule}{HTML}{B03A3A}
+\newtcolorbox{defect}[1]{colback=defbg, colframe=defrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  title={\bfseries DEFECT --- #1}, coltitle=defrule, fonttitle=\small\bfseries,
+  attach title to upper=\par, before skip=9pt, after skip=9pt}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+\newcommand{\sobs}{\sigma_{\mathrm{obs}}}
+\newcommand{\Jfull}{\bar{J}_{\mathrm{full}}}
+\newcommand{\Jto}{\bar{J}_{t_0}}
+
+\title{HIKET --- parameterization assumptions\\
+  \large Working document: what each parameter is, where its prior comes from,\\
+  and a proposed consistent package}
+\author{}
+\date{7 August 2026 --- working document, not for circulation}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent This document states every parameterization assumption in the HIKET calibration in
+one place, in the form they would take in a Methods section, and proposes a revised package.
+It was written after a diagnostic session (2026-08-07) on the first recalibration to include
+all round-1 changes and both upstream data corrections. That session found the assumptions to
+be individually defensible but \emph{mutually inconsistent}: the same external evidence (the
+national growing-stock record) is used to set the \emph{shape} of the pre-run litter ramp and
+simultaneously contradicted by the prior that sets its \emph{level}; the two ends of the pre-run
+are referenced to different litter aggregates, so the parameter that controls the initial state
+does not mean what its name and documentation say; and the constraint introduced to keep litter
+fluxes physical bounds a quantity orthogonal to the failure it is now being asked to prevent.
+Sections~\ref{sec:principle}--\ref{sec:current} describe what is implemented;
+section~\ref{sec:defects} states the defects; section~\ref{sec:package} proposes the
+replacement; section~\ref{sec:R} derives the one new quantity it requires. A separate,
+unresolved problem --- a uniform $\sim$20\,\% over-prediction shared by all six models --- is
+recorded in section~\ref{sec:open} because it conditions how the proposal should be read. A paired pre-flight (plain priors) additionally shows the bounded transform to be removable without cost, allowing the whole parameterization to collapse to four ordinary priors.
+\end{abstract}
+
+\begin{caveat}
+\textbf{Naming.} Earlier drafts numbered the proposals P1--P5. They are now referred to by name,
+because the numbering repeatedly caused confusion with the model names (TP2/TP3) and with the
+C1--C5 revision series. The mapping, for cross-reference with older notes: P1 = \textsc{common
+anchor}; P2 = \textsc{ratio coordinate} (now superseded); P3 = \textsc{ratio prior};
+P4 = \textsc{plain priors}; P5 = \textsc{free slow rate}.
+\end{caveat}
+
+
+% =====================================================================
+\section{The principle a prior has to satisfy here}\label{sec:principle}
+
+The HIKET priors were built on a three-tier homogenization scheme whose stated aim is that
+priors be homogeneous in \emph{construction method, scale, constraint and degrees of freedom}
+--- not in numerical value. Tier~1 (climate, size) takes each model's centre from its own
+published calibration; Tier~2 (transfer fractions) applies a common weakly-informative logit
+prior; Tier~3 was the two auxiliary litter parameters, treated as nuisance quantities with an
+identical weak prior in every model.
+
+That scheme has since been extended piecemeal. The auxiliary parameters acquired a physical
+window (the \texttt{flux\_pair} transform, July 2026) and one of them acquired a physical
+centre (C4b), without a stated rule governing when a Tier-3 nuisance becomes a physical
+quantity. The result is the inconsistency this document addresses.
+
+The rule we propose to adopt explicitly is:
+
+\begin{quote}
+\emph{A parameter with a physical referent takes its prior from external evidence about that
+referent, expressed in that referent's own units. A parameter without a physical referent
+should not be given an informative prior at all --- and if it cannot be given one, that is a
+reason to reparameterize until the sampled quantity does have a referent.}
+\end{quote}
+
+The second clause is the operative one. Both auxiliary parameters currently carry priors that
+are informative in practice, and one of them is a derived ratio whose prior cannot be stated in
+physical units at all.
+
+\paragraph{A sharper operational version (added 2026-08-07).} The rule above is about
+\emph{referents}. In practice what determines how much a prior matters is the \emph{curvature of
+the likelihood along it}, and the two auxiliary parameters sit in opposite regimes:
+
+\begin{table}[H]\centering\small
+\begin{tabular}{lrrl}
+\toprule
+ & likelihood cost of a 15\,\% move & prior cost & decided by\\
+\midrule
+$\sinput$ & $69.3$ nats & $0.62$ nats & \textbf{likelihood} ($\approx 112:1$)\\
+$\sinit$ / $R$ & weak, and concentrated in the 1985 obs & --- & \textbf{jointly} (see \S\ref{sec:cond1985})\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent So: \emph{a prior needs justification in proportion to how flat the likelihood is along
+it.} $\sinput$ can carry a weak or even stale justification --- the data overrules it by two
+orders of magnitude, which is why re-centring it from $1.30$ to $1.00$ leaves the posterior at
+$1.308$ either way. $R$ needs a defensible one, because the likelihood constrains it far more weakly ---
+though \emph{not} negligibly, see \S\ref{sec:cond1985}. This explains why the initialisation
+parameters have been the difficult ones throughout, and it means effort spent justifying C4b's
+$\sinput$ centre is largely wasted while effort spent on $R$ is not.
+
+% =====================================================================
+\section{What is currently implemented}\label{sec:current}
+
+\begin{caveat}
+\textbf{Everything in this section describes code that runs today} --- it is the parameterization
+behind the \texttt{20260805} calibration, not a proposal. The proposed changes are in
+section~\ref{sec:package} and are clearly marked as such. Section~\ref{sec:defects} is the bridge:
+it states what is wrong with what follows here.
+\end{caveat}
+
+\subsection{Decomposition rates}
+Yasso07/15/20 do not fit their decomposition rates: the $a$-vector is fixed at published
+values and injected as a constant, and what is calibrated is the twelve lateral transfer
+fractions, the climate parameters, woody size, and the two auxiliary $\sigma$'s.
+
+C1 (round~1) made the simple models homogeneous with that treatment. The fast rate is
+\textbf{hard-fixed} at the ICBM value $k_1 = 0.8$ with a one-time reference-climate offset
+($\alpha_A = k_1/\xi_{\mathrm{Ultuna}} = 0.851$); the slow rate stays free under a
+\textbf{very-informative} prior centred on $k_2/\xi_{\mathrm{Ultuna}}$, on the argument that
+$k_2$ is the one weak link (it is measured on Ultuna \emph{arable bare fallow}) and that the
+posterior width would then serve as an arable$\rightarrow$forest transferability diagnostic.
+Prior SD was tightened from $0.50$ to $0.15$ on the log scale.
+
+\subsection{Humification and transfer fractions}
+Free in every model, under the common Tier-2 logit prior with SD $0.4$, re-centred for the
+simple models at the ICBM humification coefficient $h = 0.13$. Fixing them would have made the
+simple models \emph{more} constrained than Yasso, which the intercomparison design forbids.
+
+\subsection{The two auxiliary litter parameters}
+$\sinput$ multiplies litter inputs; $\sinit$ scales the litter flux at the start of the
+$1917\rightarrow1985$ pre-run.
+
+\paragraph{Why they are not sampled directly.} A prior placed on $\sinput$ cannot express a
+physical belief, because $\sinput$ is a bare multiplier with no referent --- ``$\sinput = 3$'' is
+neither plausible nor implausible until you know what it multiplies. What \emph{is} physically
+meaningful is the resulting litter \textbf{flux}, which has a boreal NPP envelope. So the
+\texttt{flux\_pair} transform makes the two \emph{fluxes} the sampled quantities and recovers the
+multipliers from them.
+
+\paragraph{How the constraint works.} The sampler proposes two ordinary unconstrained real
+numbers $x_1, x_2 \in (-\infty,\infty)$ --- it never sees a bound and never rejects a proposal.
+Each is passed through the logistic, which maps the whole real line into $(0,1)$, and the result
+is rescaled onto the physical window $(a,b)$:
+\begin{equation}
+F \;=\; a + (b-a)\,\frac{1}{1+e^{-x}} \;\in\; (a,b) \quad\text{for every } x\in\mathbb{R}.
+\label{eq:squash}
+\end{equation}
+The bound is therefore a property of the \emph{coordinate system}, not a rule enforced during
+sampling: an out-of-envelope flux is not rejected, it is unreachable. As $x\to\pm\infty$ the flux
+approaches $a$ or $b$ asymptotically but never attains them. A Jacobian term
+$\log|\mathrm{d}F/\mathrm{d}x|$ is added to the posterior so that this stretching does not
+silently distort the prior.
+
+\paragraph{The pair.} Applying eq.~\eqref{eq:squash} to both coordinates and recovering the
+model parameters:
+\begin{align}
+F_{\mathrm{now}}  &= a + (b-a)\,\mathrm{logit}^{-1}(x_1), &
+\sinput &= F_{\mathrm{now}}/\bar{J}, \label{eq:fp1}\\
+F_{1917} &= a + (b-a)\,\mathrm{logit}^{-1}(x_2), &
+\sinit  &= F_{1917}/F_{\mathrm{now}}, \label{eq:fp2}
+\end{align}
+with $[a,b] = [0.05,\,8.7]$\,tC\,ha$^{-1}$\,yr$^{-1}$ and $\bar{J} = 2.48$\,tC\,ha$^{-1}$\,yr$^{-1}$
+the cross-plot mean litter, which converts an absolute flux into a dimensionless multiplier. It
+is called a \emph{pair} because the two are coupled: $\sinit$ is not sampled at all but emerges
+as the ratio of the two fluxes, and therefore depends on $x_1$ as well as $x_2$.
+
+\paragraph{Worked example (Yasso20, current posterior).} $\sinput = 1.388$ implies
+$F_{\mathrm{now}} = 1.388 \times 2.48 = 3.44$; $\sinit = 1.236$ implies
+$F_{1917} = 1.236 \times 3.44 = 4.26$. Both sit inside $[0.05,\,8.7]$, so nothing in the
+transform objects --- even though the second says 1917 forests produced 24\,\% more litter than
+the contemporary flux. This is the concrete form of defect D3 below.
+
+\begin{caveat}
+\textbf{Two different ratios appear in this document and they are not the same number.}
+$\sinit = F_{1917}/F_{\mathrm{now}} = 1.24$ compares the 1917 flux to the \emph{contemporary}
+one. The quantity that decides whether the pre-run rises or falls is
+$J_{1917}/J_{1985} = \sinit/0.818 = 1.51$, which compares it to the \emph{1985} flux. They differ
+because the two ends of the pre-run are referenced to different litter aggregates --- which is
+defect D1, and the reason this parameter is so easy to misread.
+\end{caveat}
+
+\paragraph{Where the priors actually live.} They are normal with SD $0.50$ on the
+\emph{unconstrained} coordinates $x_1, x_2$, centred at the values that map to $\sinput = 1.30$
+(C4b, raised above~1 to stand in for the missing understorey component) and $\sinit = 1.0$. A
+consequence worth stating: because the prior sits on $x$ rather than on the flux, its shape in
+physical units is not lognormal or anything else nameable --- it is a logit-normal on the window,
+so its spread in tC\,ha$^{-1}$\,yr$^{-1}$ depends on where in the window it sits. This is why
+neither of us could say what the $\sinit$ prior \emph{was} until we read the transform code.
+
+\paragraph{It fixed what it was built for.} With a weak prior on the abstract multiplier, TP2 and
+TP3 had driven $\sinput$ to $13$--$20\times$, implying effective litter fluxes of $34$ and
+$50$\,tC\,ha$^{-1}$\,yr$^{-1}$ --- above boreal NPP. After \texttt{flux\_pair}, effective fluxes
+are $0.9$--$3.5$ in all six models. That pathology is genuinely gone, which is also why the hard
+bound may no longer be load-bearing (section~\ref{sec:package}, decision 3).
+
+\subsection{Transient initialisation}
+Each plot is started at steady state under a 1917 flux and the flux is then ramped to its 1985
+value over 68 years:
+\begin{equation}
+J_{1917} = \Jfull \,\sinit\, \sinput, \qquad
+J_{1985} = \Jto \, \sinput,
+\label{eq:anchors}
+\end{equation}
+where $\Jfull$ is the plot's mean litter over the \emph{whole} 1986--2024 series and $\Jto$ its
+mean over the \emph{first five} years. The ramp between them follows the national growing-stock
+trajectory (C3, Korhonen et al.\ 2024), which replaced a linear ramp; the source file states
+explicitly that ``litter scales with standing biomass'' and equally explicitly that ``the
+calibrated endpoints $J_{1917}/J_{1985}$ are UNCHANGED; only the shape between moves.''
+
+\subsection{Likelihood}
+Multiplicative normal, with the SD proportional to the prediction and its coefficient fixed:
+\begin{equation}
+\mathrm{SOC}^{\mathrm{obs}} \sim \mathcal{N}\!\left(\widehat{\mathrm{SOC}},\;
+\left(\widehat{\mathrm{SOC}}\cdot\sobs\right)^{2}\right), \qquad \sobs = 0.4416 .
+\label{eq:lik}
+\end{equation}
+$\sobs$ is estimated externally from the observation campaigns and held fixed. There is no
+separate model-error term.
+
+% =====================================================================
+\section{Defects identified 2026-08-07}\label{sec:defects}
+
+\begin{defect}{D1 --- the two ends of the pre-run use different litter aggregates}
+In eq.~\eqref{eq:anchors} the 1917 flux is referenced to $\Jfull$ (the 1986--2024 mean) and the
+1985 flux to $\Jto$ (the 1986--1990 mean). Since litter rises through the record,
+$\Jto/\Jfull$ has median $0.818$ over the 512 plots. Therefore
+\[
+\frac{J_{1917}}{J_{1985}} \;=\; \sinit \cdot \frac{\Jfull}{\Jto} \;=\; \frac{\sinit}{0.818},
+\]
+so $\sinit$ is \emph{not} the 1917/1985 flux ratio: it is that ratio scaled by an arbitrary
+choice of reference aggregate. $\sinit = 1$ does not mean ``1917 like 1985''; it means ``1917
+flux 22\,\% above 1985''. \texttt{CLAUDE.md} additionally still describes $\sinit$ as a
+``proportional SD on the initial carbon state (log-transformed)'', which was true before
+\texttt{flux\_pair} and is now wrong in both respects.
+\end{defect}
+
+\begin{defect}{D2 --- the initialisation prior is informative in the wrong direction}
+The default $\sinit = 1.0$ therefore asserts a 1917 litter flux 22\,\% \emph{above} 1985.
+The growing-stock record --- the same source used for the ramp shape --- implies a ratio below
+one (section~\ref{sec:R}). The prior centre is roughly $1.5\times$ too high on the quantity
+that sets the initial carbon state. This is not a weak prior that the data can overrule: the
+posterior $\sinit$ moves $+0.00\sigma$ (Yasso15) to $+0.42\sigma$ (Yasso20) from that centre.
+\end{defect}
+
+\begin{defect}{D3 --- the constraint bounds levels, not the ratio}
+\texttt{flux\_pair} bounds $F_{\mathrm{now}}$ and $F_{1917}$ each to $[a,b]$, but the pre-run
+\emph{direction} depends on their ratio, which can take any value in $[a/b,\,b/a] = [0.006,\,174]$
+without approaching a boundary. In the current run Yasso20 has $F_{1917} = 4.26$ against
+$F_{\mathrm{now}} = 3.44$ --- more litter in 1917 than today --- with both fluxes comfortably
+inside the envelope. The constraint is orthogonal to the failure.
+
+Consequences in the current run: the pre-run declines for 78\,\% (Yasso15) and 92\,\% (Yasso20)
+of plots, those two models over-predict the 1985 stock by $+19.0$ and $+23.5$\,tC\,ha$^{-1}$,
+and both report a soil carbon \emph{source} ($-0.063$, $-0.155$\,tC\,ha$^{-1}$\,yr$^{-1}$)
+where the three campaigns show a \emph{sink} ($+0.312$). The sign error survives dropping the
+1985 campaign entirely.
+\end{defect}
+
+\begin{defect}{D4 --- the likelihood conflates observation error with model error}
+$\sobs$ in eq.~\eqref{eq:lik} is fixed at the observation CV, and no model-error term exists.
+Actual residuals exceed the assumed SD by a factor $1.19$--$1.21$ in \emph{all six} models.
+Because the SD is proportional to the prediction, the only way the fit can widen its error
+bars is to raise the predictions.
+\end{defect}
+
+% =====================================================================
+\section{Proposed package --- NOT IMPLEMENTED}\label{sec:package}
+
+\begin{caveat}
+\textbf{Nothing in this section is in the code.} Section~\ref{sec:current} is what runs today;
+this is what we propose to replace it with. the common anchor is a defect correction we would make regardless;
+the ratio coordinate and the ratio prior are conditional on the unresolved level offset (section~\ref{sec:open}) --- see
+section~\ref{sec:effect} for why they make two models visibly worse until that is understood.
+\end{caveat}
+
+The three proposals below are stated as a package because they are not independent: the ratio coordinate is
+what makes the ratio prior expressible, and the common anchor is what makes the ratio coordinate mean what it says.
+
+\begin{proposal}{COMMON ANCHOR --- reference both ends of the pre-run to the same aggregate}
+Replace eq.~\eqref{eq:anchors} with
+\begin{equation}
+J_{1985} = \Jto\,\sinput, \qquad J_{1917} = \Jto\,\sinput\,R ,
+\label{eq:newanchor}
+\end{equation}
+so that $R$ \emph{is} the 1917/1985 litter ratio. $\Jfull$ ceases to be used as a historical
+anchor, which it should never have been: it is a modern-record mean standing in for a
+historical quantity. $\sinit$ is retired and replaced by $R$.
+
+\smallskip
+\emph{Justification.} This is a defect correction, not a modelling choice. It should be made
+regardless of what is decided about priors or bounds.
+\end{proposal}
+
+\begin{proposal}{RATIO COORDINATE --- make the second \texttt{flux\_pair} coordinate the ratio}
+Keep the NPP envelope on the contemporary flux; sample the ratio rather than the 1917 flux:
+\begin{align*}
+F_{\mathrm{now}} &= a + (b-a)\,\mathrm{logit}^{-1}(x_1), & \sinput &= F_{\mathrm{now}}/\bar{J},\\
+R &= R_{\mathrm{lo}} + (R_{\mathrm{hi}}-R_{\mathrm{lo}})\,\mathrm{logit}^{-1}(x_2), &
+J_{1917} &= \Jto\,\sinput\,R,
+\end{align*}
+with $[R_{\mathrm{lo}}, R_{\mathrm{hi}}] \approx [0.25,\,1.25]$. The Jacobian gains a bounded
+term for $R$ and loses the $-\log F_{\mathrm{now}}$ term, since the ratio no longer depends on
+the contemporary flux. A guard returns $-\infty$ if $J_{1917}$ leaves the NPP envelope; with
+$F_{\mathrm{now}} \approx 3.2$ this is far from binding, but it preserves the physical
+guarantee explicitly rather than by assumption.
+
+\smallskip
+\emph{Justification.} The pre-run direction is the quantity that fails, and it is the quantity
+for which external evidence exists. Placing the prior on it is the only way to state that prior
+in physical units.
+\end{proposal}
+
+\begin{proposal}{RATIO PRIOR --- derive the prior on $R$ from the growing-stock record}
+$R \sim \mathrm{Lognormal}(\log 0.90,\ 0.15\text{--}0.20)$, derived in section~\ref{sec:R}.
+
+\smallskip
+\emph{Justification.} It uses the same NFI source, and the same interpolation, that already
+sets the ramp shape --- removing the inconsistency in which the pipeline invokes ``litter scales
+with standing biomass'' for the shape and abandons it for the level.
+\end{proposal}
+
+\begin{caveat}
+\textbf{This prior will do real work, and that must be stated.} The likelihood is nearly flat in
+this direction: a 20\,\% error in the 1985 stock is half of $\sobs$, and the C5 sweep moved
+$\sinit$ by a factor of four while changing trusted-campaign RMSE by $0.45\,\%$. A prior that
+dominates a direction the data cannot see is not a neutral choice.
+
+The defence is not that the prior is weak, but that \emph{the status quo also dominates that
+direction} --- asserting $R \approx 1.22$ --- and does so in contradiction with evidence the
+same pipeline already uses. Replacing an unjustified informative prior with a justified one
+removes an inconsistency rather than adding an assumption. The sensitivity should nevertheless
+be reported, as the C5 sensitivity now is.
+\end{caveat}
+
+\subsection*{plain priors --- can \texttt{flux\_pair} simply be removed?}
+
+the common anchor to the ratio prior keep the bounded transform and change what the second coordinate means. A simpler
+question is whether the transform is needed at all, since its cost is precisely that its priors
+cannot be stated in physical units (section~\ref{sec:current}).
+
+\paragraph{Why it might not be.} \texttt{flux\_pair} was introduced against a genuine pathology:
+under the old Tier-3 prior (log SD $0.50$) TP2/TP3 drove $\sinput$ to $13$--$20\times$. But an
+SD-$0.50$ lognormal places $\approx 2.4\,\%$ of its mass above the NPP ceiling, whereas an
+SD-$0.30$ lognormal places $\approx 0\,\%$. The containment may therefore be achievable with a
+tighter \emph{ordinary} prior. Indeed the prior currently implied by the transform is nearly
+indistinguishable from $\mathrm{Lognormal}(\log 1.30,\,0.30)$: quartiles $1.04/1.30/1.58$ against
+$1.06/1.30/1.59$, differing only in a slightly thinner right tail ($2.14$ vs $2.34$ at 97.5\,\%).
+
+\paragraph{Test.} \texttt{doublechecks/preflight\_naive\_priors.R} patches the real calibration
+script to swap \texttt{flux\_pair} for two \texttt{log} parameters at
+$\mathrm{SD} = 0.30$ / $0.20$, leaving everything else --- anchoring, centres, data --- untouched,
+and pushes $K=200$ prior draws through the genuine \texttt{ll\_fn} at full $N$. Both
+configurations use the same seed, so the comparison is paired.
+
+\begin{table}[H]\centering\small
+\caption{Prior-pushforward, $K=200$ draws at full $N=410$. ``rejects'' are legitimate
+stick-breaking simplex rejections; ``blow-ups'' are non-finite $\ell$ among constraint-passing
+draws --- the MCMC \texttt{inf\_rate} proxy.}
+\begin{tabular}{lccc}
+\toprule
+model & naive (no \texttt{flux\_pair}) & production (\texttt{flux\_pair}) & rejects (both)\\
+\midrule
+SP1     & 0 / 200        & 0 / 200        & 0\\
+TP2     & 0 / 200        & 0 / 200        & 0\\
+TP3     & 0 / 200        & 0 / 200        & 0\\
+Yasso07 & 5 / 101 (5.0\,\%) & 5 / 101 (5.0\,\%) & 99\\
+Yasso15 & 0 / 145        & 0 / 145        & 55\\
+Yasso20 & 0 / 145        & 0 / 145        & 55\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent \textbf{Identical in every model.} Yasso07's five blow-ups occur in both configurations
+among the same 101 constraint-passing draws, so they are the known Yasso07 $\delta_2/\sigma$
+baseline rather than a consequence of removing the bound. Implied effective flux under the naive
+prior is median $2.97$--$3.35$ with 97.5\,\% at $4.94$--$6.34$\,tC\,ha$^{-1}$\,yr$^{-1}$, and
+\textbf{$0\,\%$ of prior mass exceeds the NPP ceiling in all six} --- the bound would have had
+nothing to remove.
+
+\begin{proposal}{PLAIN PRIORS --- the simplified parameterization}
+\begin{align*}
+\sinput &\sim \mathrm{Lognormal}(\log m,\ 0.30) & &\text{$m$: see decision 5}\\
+R &\sim \mathrm{Lognormal}(\log 0.90,\ 0.20) & &\text{growing-stock elasticity, \S\ref{sec:R}}\\
+J_{1985} &= \Jto\,\sinput, \qquad J_{1917} = \Jto\,\sinput\,R\\
+\text{guard} &: \text{reject if the effective flux exceeds the NPP ceiling}
+\end{align*}
+Four statements, each expressible in one sentence of Methods, each carrying a prior on a
+quantity with a referent. It subsumes the common anchor to the ratio prior and \emph{dissolves} D1 and D3 rather than
+repairing them: there is no level-versus-ratio mismatch left to have.
+\end{proposal}
+
+\begin{caveat}
+\textbf{This tests the prior, not the posterior.} The pre-flight confirms the forward model stays
+finite across prior mass. It cannot rule out the sampler wandering into a large-$\sinput$ region
+that the bound would have blocked --- a lognormal has an infinite tail where the logistic has a
+wall, and the $13$--$20\times$ excursions were a \emph{posterior} phenomenon. Only a real
+calibration settles that, which is why the guard is retained as a truncation that should never
+fire. Removing \texttt{flux\_pair} would also require reframing the F9 result, currently stated
+as ``the flux bound closed the $\sinput$ escape hatch''; the honest replacement is that the
+escape hatch was a symptom of an inflated SOC target and a starved cascade, and that once those
+were corrected an informative physical prior sufficed.
+\end{caveat}
+
+% =====================================================================
+\section{Deriving \texorpdfstring{$R$}{R}}\label{sec:R}
+
+\paragraph{Why not the volume ratio.} The NFI record gives growing stock $1400$\,Mm$^3$ at 1917
+(NFI1, 1922, held flat back over a near-stationary period) and $1775$\,Mm$^3$ at 1985, a ratio
+of $0.789$. Taking $R = 0.789$ assumes litter is \emph{proportional} to standing volume. Three
+arguments say it is not: foliage and fine-root litter scale sub-linearly with stem volume
+because leaf area saturates as stands close; woody litter tracks mortality rather than standing
+stock, and the mortality regime of cut-over unmanaged forest differs; and understorey litter ---
+absent from the litter product entirely --- is proportionally \emph{larger} in sparse stands.
+All three bias $R$ upward relative to the volume ratio.
+
+\paragraph{Empirical elasticity.} Rather than assume an exponent, it can be fitted. Both series
+exist over 1986--2023: national mean litter from the input bundle, and growing stock
+interpolated from the same NFI file used for the ramp shape. Fitting $J \propto \mathrm{GS}^{\epsilon}$
+and extrapolating $R = (\mathrm{GS}_{1917}/\mathrm{GS}_{1985})^{\epsilon}$:
+
+\begin{table}[H]\centering\small
+\caption{Litter--growing-stock elasticity over 1986--2023 (growing stock $+42\,\%$, mean litter
+$+35\,\%$ over the window), and the implied 1917/1985 litter ratio.}
+\begin{tabular}{lrrr}
+\toprule
+fit & $\epsilon$ & $R = 0.789^{\epsilon}$ & $R^2$\\
+\midrule
+annual, all years          & 0.467 & 0.895 & 0.370\\
+5-year block means         & 0.448 & 0.899 & 0.401\\
+endpoints only (5-yr means)& 0.661 & 0.855 & ---\\
+\midrule
+\emph{naive proportionality} & \emph{1.000} & \emph{0.789} & ---\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The elasticity is close to $0.5$ --- litter scales roughly with the square root of
+growing stock --- and is stable against interannual climate noise, which the low $R^2$ of the
+annual fit makes the obvious concern. The regression SE on $\epsilon$ ($0.101$) alone would
+give $R \in [0.854, 0.938]$.
+
+\paragraph{Adopted value.} We propose centring at $R = 0.90$ with log SD $0.15$--$0.20$, wider
+than the regression SE alone would justify, to accommodate the caveats below.
+
+\begin{caveat}
+\textbf{Five caveats on this derivation.}
+(i) \emph{Possible circularity} --- if the litter product is itself derived from biomass, this
+elasticity is internal to the product rather than independent evidence. For the purpose of
+extrapolating \emph{that product} backwards consistently it is arguably the correct choice, but
+it requires confirmation from B.~Tupek on how the product is constructed. This is the caveat
+most likely to matter to a reviewer.
+(ii) \emph{Extrapolation} --- the relation is fitted over GS $1798$--$2552$ and applied at
+$1400$, $22\,\%$ below the fitted range.
+(iii) \emph{Understorey omitted} --- the product is tree litter only, so the total-litter ratio
+is biased \emph{upward} from this estimate, plausibly $0.92$--$0.95$. Our value is a lower bound.
+(iv) \emph{A national ratio applied per plot} --- individual plot histories differ from the
+national mean.
+(v) \emph{Non-stationarity} --- management, species composition and age structure changed over
+1917--1985, so the modern volume-to-litter relation need not have held historically.
+\end{caveat}
+
+% =====================================================================
+\section{What the package fixes, and what it does not}\label{sec:effect}
+
+\paragraph{Fixes.} $\sinit$ is retired in favour of a parameter with a referent and a
+stateable prior; the pre-run direction becomes evidence-constrained; the shape/level
+inconsistency in the C3 implementation disappears; and --- if the mechanism holds --- the
+Yasso15/20 pre-run inversion and their inverted sink go with it.
+
+\paragraph{It does not fix the level.} A uniform over-prediction of $17$--$20\,\%$ is shared by
+all six models (section~\ref{sec:open}), and the common anchor to the ratio prior do not address it.
+
+\paragraph{And it makes two models visibly worse.} At $R = 0.90$ the equivalent $\sinit$ is
+$\approx 0.74$. Against the current posteriors:
+
+\begin{table}[H]\centering\small
+\caption{Current $\sinit$ against the proposed centre (displacement at log SD $0.20$).}
+\begin{tabular}{lrr}
+\toprule
+model & $\sinit$ & vs.\ proposed centre\\
+\midrule
+SP1     & 0.627 & $-0.8\sigma$\\
+TP2     & 0.564 & $-1.4\sigma$ \emph{(too low)}\\
+TP3     & 0.566 & $-1.4\sigma$ \emph{(too low)}\\
+Yasso07 & 0.768 & $+0.2\sigma$\\
+Yasso15 & 1.002 & $+1.5\sigma$\\
+Yasso20 & 1.236 & $+2.6\sigma$ \emph{(too high)}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The constraint pulls Yasso15/20 down, which is the intended repair, but pulls TP2/TP3
+\emph{up}, giving them more 1917 input and worsening their level over-prediction. TP2 and TP3
+have evidently been suppressing their 1917 input below what the forest history supports,
+partially offsetting the level bias. Pinning $R$ removes that compensation and forces the
+misfit into the open --- the same logic by which the \texttt{flux\_pair} bound became a result
+rather than a cosmetic fix. It does, however, mean the two problems cannot be adjudicated
+independently: if $R$ is pinned before the level offset is understood, the simple models will
+get visibly worse and it will not be clear whether that is the constraint working as intended
+or a second error compounding.
+
+% =====================================================================
+\section{Open: the uniform level offset}\label{sec:open}
+
+All six models over-predict by $17$--$20\,\%$ (median log-residual $-0.176$ to $-0.206$;
+campaign means $+22$--$38\,\%$ at 1985 falling to $+7$--$14\,\%$ at 2024). Three explanations
+were tested on 2026-08-07 and none is fully satisfactory.
+
+\begin{itemize}
+\item \emph{Not the input data.} $\sinput$ is a free per-model multiplier on exactly that
+quantity and demonstrably moves (SP1 sits $2.6\sigma$ from its prior centre; no flux bound
+binds). Any uniform input bias is absorbed by construction.
+\item \emph{Not the $\sinput$ prior centre.} SP1 is $2.6\sigma$ \emph{below} the C4b centre and
+still over-predicts by $24\,\%$; and the excess is $23$--$28\,\%$ in all six models while
+$\sinput$ itself spans $0.35$--$1.39$.
+\item \emph{Not insufficient kinetic freedom.} The rates moved $1.6$--$2.2\sigma$ against a
+prior of SD $0.15$ --- but \emph{toward longer} residence times ($+28$ to $+38\,\%$), i.e.\
+\emph{raising} SOC. Both available routes to lowering the level were left unused or used in the
+opposite direction.
+\item \emph{Partly the likelihood form.} Under eq.~\eqref{eq:lik} the optimal uniform rescaling
+of the predictions is $k = 1.019$: the likelihood positively prefers the current
+over-prediction. Freeing $\sobs$ within the same form moves this only to $k = 0.960$; changing
+the form to log-normal moves it to $k = 0.848$, against $0.811$ for matching the observed
+median. So the \emph{form} accounts for most of the offset and the \emph{width} for little ---
+but this is inference from fitted predictions, not a refit.
+\end{itemize}
+
+\begin{caveat}
+The decisive test has not been run: refit one model (TP2) under a log-normal likelihood with
+nothing else changed. If the offset collapses and $\sinput$ lands near the $1.04$ the
+observations require, the fitting criterion is responsible. If it does not, the cause is
+neither the inputs, the priors, the kinetics nor the likelihood, and remains unidentified.
+\end{caveat}
+
+\paragraph{A note on the rate displacement.} C1's design states that the slow-rate posterior
+width would serve as an arable$\rightarrow$forest transferability diagnostic. That diagnostic
+has fired: all three simple models sit $1.6$--$2.2\sigma$ from the ICBM anchor, consistently
+slower, implying Finnish forest slow-pool turnover some $30\,\%$ slower than the Ultuna arable
+value. Whether this is a genuine transferability result or the rates absorbing misfit that
+belongs elsewhere is testable --- if the latter, correcting the level should pull them back
+toward the anchor.
+
+% =====================================================================
+\section{The level and the trend are different problems}\label{sec:leveltrend}
+% =====================================================================
+
+Section~\ref{sec:open} recorded a uniform $\sim$20\,\% over-prediction of unknown cause. It has
+since been identified, tested and largely removed --- and in doing so it separated cleanly from a
+second problem that it had been masking.
+
+\subsection{The level: an error-model artefact, now fixed}
+
+The multiplicative normal of eq.~\eqref{eq:lik} sets the variance from the parameter being
+estimated, so a prediction widens its own error bar. The penalty for a badly-missed plot
+therefore \emph{plateaus} rather than growing, and the fit buys tolerance for its worst plots by
+inflating everything. The consequence is a location estimate contaminated by dispersion. On data
+generated \emph{unbiased} by construction, the optimal scaling under this form drifts from $0.86$
+to $3.25$ as the residual CV rises from $0.05$ to $1.0$, while a log-normal returns $1.000$ at
+every spread.
+
+A refit of TP2 with the likelihood replaced by a log-normal (3 chains $\times$ 6000, C5 $=1.0$;
+control is the matched \texttt{A1\_C5\_off} ablation) confirms it:
+
+\begin{table}[H]\centering\small
+\caption{TP2 under the two error models, at posterior-median parameters.}
+\begin{tabular}{lrr}
+\toprule
+ & multiplicative normal & log-normal\\
+\midrule
+bias 1985 (tC\,ha$^{-1}$) & $+15.2$ & $+2.8$\\
+bias 2006 & $+11.6$ & $-2.2$\\
+bias 2024 & $+11.5$ & $-3.1$\\
+\textbf{bias overall} & $\mathbf{+12.7}$ & $\mathbf{-0.9}$\\
+median log-residual & $-0.205$ & $-0.023$\\
+\midrule
+paired trend 1985--2024 & $+0.168$ & $+0.116$\\
+\emph{observed} & \multicolumn{2}{c}{$+0.309$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The bias collapses to essentially zero. The implied rescaling, $0.834$, matches the
+$0.848$ predicted from the closed-form analysis to within 2\,\%. Convergence is acceptable
+(R-hat $1.009$--$1.033$, ESS $206$--$382$). \textbf{The level bias was ours, not the models'} ---
+which means every level-based number from the \texttt{20260805} run carries it.
+
+\begin{caveat}
+The route was not the one predicted. $\sinput$ barely moved ($1.290 \rightarrow 1.306$); the model
+took the level down through the climate parameters instead ($\beta_1$ $+35\,\%$). The
+\emph{magnitude} of a refit is predictable from a fixed-prediction rescaling analysis; the
+\emph{parameter that delivers it} is not. Relatedly, $\sinit$ rose ($0.563 \rightarrow 0.622$,
+$R$ $0.69 \rightarrow 0.76$), so part of the apparent ``the data already infers historical
+depletion'' signal was the biased likelihood.
+\end{caveat}
+
+\subsection{The trend: a response-time problem, with two distinct causes}
+
+Correcting the level did not fix the trend --- it slightly worsened it, and changed its
+signature from a uniform offset to the model \emph{crossing} the observations. That is expected:
+a trend is governed by how far below its own equilibrium a model starts, and that ratio is
+invariant under uniform rescaling.
+
+Fitting an exponential approach $C(t) = E - (E-C_0)e^{-t/\tau}$ to each model's own trajectory
+(1985 / 2024 / 2084) gives its effective response time:
+
+\begin{table}[H]\centering\small
+\caption{Effective response time and starting position, fitted per model. The observations
+require $\tau \approx 44$--$87$\,yr and a start at $\approx 0.73$ of equilibrium.}
+\begin{tabular}{lrrrr}
+\toprule
+model & $\tau$ (yr) & start/eq & gap closed in 39\,yr & 2024 if re-initialised at 61.5\\
+\midrule
+SP1     & 79  & 0.79 & 39\,\% & 75.4 \quad($+0.357$)\\
+TP2     & \textbf{195} & 0.68 & \textbf{18\,\%} & 70.8 \quad($+0.237$)\\
+TP3     & \textbf{194} & 0.68 & \textbf{18\,\%} & 70.9 \quad($+0.240$)\\
+Yasso07 & 38  & 0.93 & 64\,\% & 76.3 \quad($+0.381$)\\
+Yasso15 & \textbf{17}  & \textbf{1.03} & 90\,\% & 77.6 \quad($+0.412$)\\
+Yasso20 & 23  & \textbf{1.08} & 82\,\% & 76.3 \quad($+0.379$)\\
+\midrule
+\emph{observed} & \emph{44--87} & \emph{0.73} & \emph{36--57\,\%} & \emph{75.4 \quad($+0.309$)}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The failure has \textbf{two different causes}:
+
+\paragraph{Yasso (and SP1): an initialisation problem.} Their response times are already at or
+beyond the required range. All three Yasso models start at or \emph{above} their own equilibrium
+(start/eq $0.93$, $1.03$, $1.08$) and therefore decline or stagnate. Re-initialised at the
+observed 1985 stock, keeping each model's own $E$ and $\tau$, the three reach $+0.381$, $+0.412$
+and $+0.379$ against an observed $+0.309$, and SP1 lands on $75.4$ exactly. For this family the
+initialisation constraint (the ratio prior) is the operative fix and the rate anchor is irrelevant --- Yasso's
+rates are fixed by design.
+
+Note however that the Yasso response times ($17$--$38$\,yr) are \emph{faster} than the
+$44$--$87$\,yr the observations imply, so correcting the initialisation alone would leave them
+over-accumulating by $23$--$33\,\%$: they would swing from reporting a source to over-reporting a
+sink. That is a large improvement on a sign error, and the counterfactual holds $E$ fixed whereas
+a real recalibration would adjust it --- but ``necessary and sufficient'' overstates it. Necessary,
+and sufficient for the sign and the order of magnitude.
+
+\paragraph{TP2/TP3: a turnover problem.} At $\tau = 195$\,yr they close only 18\,\% of the gap
+and reach $70.8$ even when perfectly initialised. No initialisation fixes them. They require
+$\alpha_H$ some $2.3$--$4.7\times$ faster than the ICBM anchor, and --- because faster turnover
+also lowers the equilibrium --- the increase must be accompanied by a compensating rise in
+$\sinput$ so that the level is held while the response speeds up.
+
+\begin{proposal}{FREE SLOW RATE --- relax the slow-rate anchor for the simple models}
+Widen the C1 slow-rate prior (currently log SD $0.15$, centred on Ultuna arable $k_2$) so the
+data can select the turnover time. Report the displacement as the transferability result.
+
+\smallskip
+\emph{Why this is not a retreat from C1.} C1's stated design makes the slow-rate posterior width
+``the arable$\rightarrow$forest transferability diagnostic''. It has fired: all three simple
+models sit $1.6$--$2.2\sigma$ from the anchor, consistently slower, and the trend analysis says
+the required correction is $2.3$--$4.7\times$. The \emph{fast} rate stays hard-fixed --- it is
+litterbag-grounded and transferable; only the component whose provenance was flagged as weak
+(bare fallow, no fresh input, most recalcitrant fraction remaining) is freed.
+
+\smallskip
+\emph{It corrects an asymmetry rather than creating one.} The homogenisation principle is equal
+external \emph{information}. Yasso's rates are fixed because they were calibrated on forest data;
+the simple models' were anchored to arable data. Those are not of equal quality for a forest
+application, and freeing the latter restores the intended parity.
+
+\smallskip
+\emph{Independent corroboration.} Yasso's forest-calibrated rates give effective
+$\tau = 23$--$38$\,yr, against $195$\,yr for the ICBM-anchored cascades. Two independent
+sources --- Yasso's own calibration and the observed Finnish SOC trend --- agree that forest
+turnover is several times faster than the Ultuna arable value.
+\end{proposal}
+
+\begin{caveat}
+These response times are fitted from three trajectory points using the 2084 projection as an
+equilibrium proxy, on cross-plot means. Directionally solid; the magnitudes need an analytical
+treatment before publication. And the observed target is itself uncertain: on the two campaigns
+validated against official LUKE figures (2006$\rightarrow$2024) the observed rate is $+0.209$,
+not $+0.309$, so part of the apparent deficit may be the 1985 stock reading low --- the C5
+concern resurfacing on the trend rather than the level.
+\end{caveat}
+
+\subsection{Can the simple structures fit at all?}\label{sec:cansimplefit}
+
+The response-time analysis appears to condemn TP2/TP3: at $\tau = 195$\,yr they close only
+18\,\% of the gap and cannot reach the observed accumulation at any initial state. But that
+conclusion depends on which parameters are held fixed. TP2 has \emph{three} relevant free knobs,
+not one:
+\[
+E = J_{\mathrm{eff}}\left[\frac{1}{\alpha_A \xi} + \frac{p_H}{\alpha_H \xi}\right],
+\qquad \tau = \frac{1}{\alpha_H \xi},
+\]
+so $\alpha_H$ sets the response time, $p_H$ raises the equilibrium \emph{without} slowing the
+response, and $\sinput$ scales both. Faster turnover alone lowers $E$ proportionally and is
+self-defeating; faster turnover \emph{with} compensating $p_H$ or $\sinput$ is not.
+
+\begin{table}[H]\centering\small
+\caption{TP2 feasibility at $\tau = 45$\,yr (the fast end, best matching the observed
+deceleration), for the equilibrium $E = 85.5$ implied by $61.5 \rightarrow 75.4$ over 39\,yr.
+NPP ceiling $8.7$\,tC\,ha$^{-1}$\,yr$^{-1}$; $p_H$ displacement is against the Tier-2 prior
+(centre $0.13$, logit SD $0.4$).}
+\begin{tabular}{rrrrl}
+\toprule
+$p_H$ & $\sinput$ & flux & $p_H$ displacement & \\
+\midrule
+0.13 (ICBM) & 4.81 & 11.94 & $+0.0\sigma$ & \textbf{exceeds NPP}\\
+0.20        & 3.34 & 8.29  & $+1.3\sigma$ & ok, tight\\
+\textbf{0.30} & \textbf{2.33} & \textbf{5.77} & $+2.6\sigma$ & \textbf{comfortable}\\
+0.45        & 1.60 & 3.97  & $+4.3\sigma$ & very comfortable\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent \textbf{So the simple structures can fit.} TP2 reaches the observed level \emph{and}
+trend with $\alpha_H \approx 0.025$, $p_H \approx 0.30$ and $\sinput \approx 2.3$ --- an effective
+flux of $5.8$, comfortably inside the envelope. The apparent impossibility was an artefact of
+holding $p_H$ at its current value while varying $\alpha_H$.
+
+\paragraph{What it costs relative to the arable analogue.} Humus turnover $\approx 3.9\times$
+faster than Ultuna $k_2$; humification efficiency $0.13 \rightarrow 0.30$, a $2.6\sigma$ prior
+displacement but squarely inside the range usually quoted for humification efficiencies
+($0.1$--$0.3$); and litter input $2.3\times$ the measured product. Each is individually
+defensible; together they are a substantial departure from ICBM, and the departure is the
+interesting part --- particularly for $p_H$, where a forest organic layer humifying more
+efficiently than arable bare fallow is close to expected.
+
+\paragraph{Consequence for the intercomparison.} This inverts the reading of C1. The anchor was
+not making the comparison fair; it was preventing the simple models from reaching the region of
+parameter space that fits, and the $10\times$ response-time gap against Yasso was the symptom.
+With forest-appropriate kinetics the two-pool cascade \emph{can} represent Finnish SOC dynamics,
+which is a positive answer to the question the simple models were included to ask.
+
+\begin{caveat}
+This is a steady-state feasibility calculation on cross-plot means. It establishes that a
+solution \emph{exists} in parameter space --- not that the sampler finds it, nor that it holds
+plot-by-plot. The three knobs trade off along a ridge, so the calibration may land anywhere
+along it; watch $\alpha_H$, $p_H$ and $\sinput$ \emph{together}, not $\alpha_H$ alone.
+\end{caveat}
+
+\subsection{Correction: the trend is driven by rising litter, not by historical depletion}
+\label{sec:rising}
+
+Sections~\ref{sec:leveltrend}--\ref{sec:cansimplefit} analysed the trend as relaxation toward a
+\emph{fixed} equilibrium, and concluded that the models must start far below it --- with a
+required $R \approx 0.60$, well under the growing-stock value, motivating a historical-depletion
+hypothesis (litter raking, forest grazing, slash-and-burn). \textbf{That analysis was wrong and
+the conclusion is withdrawn.}
+
+The equilibrium is not fixed: national mean litter rises $\times 1.35$ over 1986--2024. A soil
+starting \emph{at} equilibrium and simply tracking that rise produces:
+
+\begin{table}[H]\centering\small
+\caption{SOC in 2024 for a soil at equilibrium with 1985 litter, tracking the observed litter
+rise with response time $\tau$. Observed: $75.4$, trend $+0.312$.}
+\begin{tabular}{rrr}
+\toprule
+$\tau$ (yr) & SOC 2024 & trend\\
+\midrule
+23 (Yasso20)  & 76.6 & $+0.387$\\
+30            & 74.8 & $+0.341$\\
+45            & 71.9 & $+0.267$\\
+195 (TP2)     & 64.6 & $+0.081$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent $\tau \approx 33$--$38$\,yr reproduces the observed accumulation exactly, with
+\textbf{no below-equilibrium start required}. The diagnostic error was the same one that gave
+SP1 a fitted $\tau$ of 79\,yr against its true value of 33: a three-point exponential fit
+assumes a stationary target, and the target is not stationary.
+
+\paragraph{Consequences.}
+\begin{itemize}
+\item The \textbf{historical-depletion hypothesis is not needed}. It may still be true, but the
+SOC record does not demand it, and no claim should rest on it.
+\item The \textbf{conflict over $R$ dissolves}. There is no competing trend requirement pulling
+$R$ below the growing-stock value, so $R \approx 0.90$ (section~\ref{sec:R}) stands uncontested
+and can be applied to all models without harming the cascades.
+\item The \textbf{two failure modes are now cleanly separated}, one per family and sharing no
+parameter: Yasso is initialised \emph{above} equilibrium ($R = 1.22$, $1.51$) and relaxes
+downward --- fixed by $R$; TP2/TP3 are too slow to track the rise ($\tau = 195$) --- fixed by
+$\alpha_H \approx 0.032$, roughly $4.9\times$ ICBM, and unrelated to $R$.
+\end{itemize}
+
+\paragraph{The mechanism, stated plainly.} Finnish forest soils are accumulating carbon because
+litter input is rising with the growing stock. A model reproduces that only if its turnover is
+fast enough to track the rise, and only if it is not initialised above its own equilibrium. Both
+observed failure modes follow from that one sentence.
+
+\subsection{$\sinit$ is conditionally identified, and the condition is the 1985 campaign}
+\label{sec:cond1985}
+
+It would be wrong to describe $\sinit$ as unidentified. Pushing the prior through the
+\texttt{flux\_pair} transform and comparing with the posteriors:
+
+\begin{table}[H]\centering\small
+\caption{Implied prior on $\sinit$ versus the fitted posteriors (\texttt{20260805} run).}
+\begin{tabular}{lrrr}
+\toprule
+ & median & 95\,\% width & narrowing\\
+\midrule
+\textbf{prior (implied)} & \textbf{1.000} & \textbf{1.950} & ---\\
+SP1     & 0.627 & 0.322 & $6.1\times$\\
+TP2     & 0.564 & 0.325 & $6.0\times$\\
+TP3     & 0.566 & 0.332 & $5.9\times$\\
+Yasso07 & 0.768 & 0.273 & $7.1\times$\\
+Yasso15 & 1.002 & 0.397 & $4.9\times$\\
+Yasso20 & 1.236 & 0.895 & $2.2\times$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The data narrows $\sinit$ by $2$--$7\times$ and moves the median by up to $44\,\%$
+(prior $1.00 \rightarrow$ TP2 $0.564$). Four of the six models pull it a long way down. This is a
+parameter the calibration genuinely informs.
+
+\paragraph{But the information sits almost entirely in one campaign.} 1985 is the observation
+closest to the initial state, so it carries most of the signal about it. The C5 sweep is the
+direct demonstration: changing how much the 1985 campaign is trusted moved $\sinit$ by a factor
+of \emph{four} while trusted-campaign RMSE moved $0.45\,\%$. The parameter is well determined
+\emph{given} a choice about 1985, and that choice is not itself determined by the data.
+
+\paragraph{This is a scope statement, not a defect.} The correct form of the inference is
+conditional: \emph{given that the VMI8 campaign is taken at face value, the reconstructed initial
+state is $X$}; down-weighting VMI8 shifts it by up to $4\times$ at negligible cost in predictive
+skill. Stating it that way is honest and it is exactly the sensitivity the C5 record was kept to
+support. It should not be presented as an unconditional estimate.
+
+It also \emph{localises} the initialisation problem usefully. The difficulty is not that soil
+carbon data cannot in principle constrain an initial state --- it demonstrably can, by a factor
+of $2$--$7$. It is that the constraint rests on the one campaign whose layer protocol differs
+(VMI8 samples $0$--$5$ and $5$--$20$\,cm; the later campaigns $0$--$10$ and $10$--$20$\,cm) and
+which could not be validated against official LUKE figures. That is a specific, addressable
+data question rather than a generic identifiability lament.
+
+\paragraph{And it explains Yasso20.} It is the \emph{least} constrained of the six --- $2.2\times$
+narrowing against $6$--$7\times$ elsewhere, and a posterior nearly three times wider. So Yasso20
+does not merely land in the wrong place; it is the model the data pins down least, which is why
+it drifts furthest and why the prior matters most there. That is a sharper diagnosis of the
+sink-sign failure than ``$\sinit$ is too high''.
+
+\subsection{Acceptance criteria agreed for the next run}
+
+\begin{table}[H]\centering\small
+\begin{tabular}{ll}
+\toprule
+Yasso, effective flux (F9) & must stay well inside the NPP envelope --- non-negotiable\\
+SP1/TP2/TP3, effective flux & high flux tolerable; report as a finding\\
+Trend, all models & ``reasonably close'': within roughly a third of observed\\
+Level, all models & aligned at 1985 (achieved by the likelihood fix)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The two families need qualitatively different fixes, and only one strains plausibility:
+\textbf{Yasso's correction is flux-neutral} (the R prior moves $\sinit$, not $\sinput$, so its
+contemporary flux of $2.4$--$3.5$ is untouched), whereas \textbf{the cascades' correction costs
+input} ($\sinput \approx 2.3$). For a study asking whether simpler structures suffice, that
+asymmetry is itself a result.
+
+\paragraph{Which observed trend to aim at.} Paired rates are $+0.458 \pm 0.048$ (1985--2006),
+$+0.209 \pm 0.065$ (2006--2024) and $+0.312 \pm 0.035$ (1985--2024). The observed deceleration
+factor of $2.19$ is steeper than pure approach-to-equilibrium predicts ($1.18$--$1.55$), which
+would be the signature of 1985 reading low --- but the two rates differ by only $\approx 2\sigma$,
+so the evidence is weak. We adopt $+0.312 \pm 0.035$ as the primary target (best determined,
+spans the whole record) and report $+0.209$ as the trusted-campaign sensitivity.
+
+% =====================================================================
+\section{Verification before any recalibration}\label{sec:verify}
+
+\begin{enumerate}
+\item Transform round-trip: \texttt{to\_unconstrained(to\_original(x)) == x} for the new pair.
+\item Jacobian checked numerically against a finite-difference determinant.
+\item \texttt{preflight\_prior\_pushforward.R} at full $N$: forward blow-up rate should remain
+$\approx 0\,\%$, as it did on the current target. This gate caught the \texttt{beta2} detonation
+and is the natural one here.
+\item Prior pushforward on $J_{1917}$ itself: confirm the implied 1917 flux distribution sits
+inside the NPP envelope without the guard firing appreciably.
+\item ESS on $R$ after the run --- a parameter against a boundary mixes worse, the caveat that
+applied to $\sinput$ under \texttt{flux\_pair}.
+\end{enumerate}
+
+% =====================================================================
+\section{Plan for the next calibration}
+
+\subsection*{Established --- goes in regardless}
+\begin{enumerate}
+\item \textbf{Log-normal likelihood.} Confirmed on TP2: bias $+12.7 \rightarrow -0.9$
+      tC\,ha$^{-1}$, median log-residual $-0.205 \rightarrow -0.023$. Implemented as
+      \texttt{HIKET\_LOGNORMAL\_LIK}, default off. This is the single largest correction and it
+      is not speculative.
+\item \textbf{the common anchor --- common pre-run anchor.} Reference both ends to $\Jto$ so the sampled ratio
+      \emph{is} the 1917/1985 ratio. A defect correction; neutral for fit.
+\item \textbf{plain priors --- collapse the auxiliary priors} to two ordinary lognormals. Paired
+      pre-flight shows identical blow-up rates with and without \texttt{flux\_pair} in all six
+      models, and $0\,\%$ prior mass above the NPP ceiling.
+\end{enumerate}
+
+\subsection*{Aimed at the trend --- family-specific}
+\begin{enumerate}\setcounter{enumi}{3}
+\item \textbf{the ratio prior --- growing-stock prior on $R$}, for the \textbf{Yasso family}. Necessary and
+      sufficient there: their $\tau$ is already right and only the starting position is wrong.
+      Expected to convert the reported source back into a sink.
+\item \textbf{the free slow rate --- relax the slow-rate anchor}, for \textbf{TP2/TP3}. The only lever on their
+      trend; irrelevant to Yasso, whose rates are fixed. \emph{Under test.}
+\end{enumerate}
+
+\subsection*{Still open}
+\begin{enumerate}\setcounter{enumi}{5}
+\item \textbf{$\sinput$'s centre.} C4b set it at $1.30$ before the SOC target was corrected
+      downward by a comparable factor. Deliberately not bundled: changing it alongside the
+      error model would make the run uninterpretable. Note the log-normal refit left $\sinput$
+      essentially unmoved, so this may matter less than it appeared.
+\item \textbf{$\sobs$ fixed} (D4). A correctness issue independent of everything above, and
+      partly superseded: under a log-normal the width no longer biases the location.
+\item \textbf{Whether the NPP envelope should apply to the 1917 flux at all} --- a modern
+      physiological ceiling extrapolated to a forest for which no NPP measurements exist.
+\item \textbf{The observed target itself.} On the two LUKE-validated campaigns the observed
+      trend is $+0.209$, not $+0.309$. Resolve before tuning models to close a gap that may be
+      a third smaller than it looks.
+\end{enumerate}
+
+\subsection*{Verification gate before launch}
+Transform round-trip; Jacobian against finite differences;
+\texttt{preflight\_prior\_pushforward.R} at full $N$ ($\approx 0\,\%$ blow-ups expected); prior
+pushforward on $J_{1917}$ itself; and ESS on $R$ after the run.
+
+\subsection*{Pending at the time of writing}
+Two short local runs were in progress: TP2 with log-normal $+$ widened slow-rate prior
+(predicting $\alpha_H \rightarrow 0.012$--$0.025$ and the trend from $+0.116$ toward $+0.24$),
+and Yasso20 with log-normal alone (testing whether the level fix generalises to a fixed-rate
+model, and whether the inverted sink survives a correctly specified likelihood). Results to be
+appended.
+
+\end{document}

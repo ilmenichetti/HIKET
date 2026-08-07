@@ -356,7 +356,7 @@ Per-model centres (reference; `/xi_Ultuna` applied to rate constants):
 intermediate value starves the cascade (verified). **Validated**
 (`doublechecks/icbm_anchor_sanity.R`, 447 plots, σ_input=1): all three reach
 observed SOC (median 71) at bulk MRT ~24 yr and **σ_input 1.05–1.36** — physical,
-inside the understorey window. Full record: `manuscript/REVISION_PLAN.md` §C1.
+inside the understorey window. Full record: `NEXT_SESSION.md` §5 (C1 row).
 
 ---
 

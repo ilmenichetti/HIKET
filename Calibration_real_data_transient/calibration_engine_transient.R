@@ -46,6 +46,22 @@ source("./Calibration_real_data/calibration_engine.R")
 
 # Override make_likelihood() with transient_init support.
 # Only the sd_vec line and function signature differ from the original.
+# Error-model switch, read once at source time (see the likelihood body below).
+# HIKET_LOGNORMAL_LIK=1 -> log-normal; unset/0 -> production multiplicative normal.
+# DEFAULT = log-normal (2026-08-07). Set HIKET_LOGNORMAL_LIK=0 to revert to the
+# old multiplicative normal, which is retained only for ablation/reproduction.
+#
+# The default was flipped rather than left as an opt-in switch because the SLURM
+# scripts pass environment variables into the r-env singularity container only
+# via a SINGULARITYENV_ prefix (see the OOM fix for SLURM_CPUS_PER_TASK). A plain
+# HIKET_LOGNORMAL_LIK=1 would never reach R, and the run would silently use the
+# biased likelihood for 13-19 h with only a missing log line to show for it.
+.hiket_lognormal_lik <- !identical(Sys.getenv("HIKET_LOGNORMAL_LIK"), "0")
+message(if (.hiket_lognormal_lik)
+          "[ERROR MODEL] LOG-NORMAL likelihood (default)"
+        else
+          "[ERROR MODEL] multiplicative normal (REVERTED via HIKET_LOGNORMAL_LIK=0)")
+
 make_likelihood <- function(n_cores,
                             to_original,
                             log_jacobian,
@@ -141,7 +157,27 @@ make_likelihood <- function(n_cores,
       # in older input bundles -> treated as 1 (no effect), so this is backward-safe.
       if (!is.null(meta$sigma_infl)) sd_vec <- sd_vec * meta$sigma_infl
 
-      sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = sd_vec, log = TRUE))
+      # -------------------------------------------------------------------
+      # ERROR-MODEL SWITCH (diagnostic, 2026-08-07). HIKET_LOGNORMAL_LIK=1
+      # replaces the multiplicative normal with a log-normal. Default OFF, so
+      # production behaviour is unchanged.
+      #
+      # WHY IT EXISTS. With sd = SOC_hat * sigma_obs, the parameter that sets
+      # the mean also sets the variance, so a prediction can widen its own
+      # error bar. The penalty for a badly-missed plot then PLATEAUS instead of
+      # growing, and the fit buys tolerance by inflating everything. The
+      # consequence is a location estimate contaminated by dispersion: on data
+      # generated UNBIASED, the optimal scaling drifts from 0.86 to 3.25 as the
+      # residual CV goes 0.05 -> 1.0, whereas the log-normal returns 1.000 at
+      # every spread. See manuscript/M&M_parameterization_working_document.pdf.
+      # -------------------------------------------------------------------
+      if (isTRUE(.hiket_lognormal_lik)) {
+        infl <- if (!is.null(meta$sigma_infl)) meta$sigma_infl else 1
+        sum(dnorm(log(meta$soc_obs), mean = log(SOC_hat),
+                  sd = sigma_obs_fixed * infl, log = TRUE))
+      } else {
+        sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = sd_vec, log = TRUE))
+      }
       
     }, mc.cores = n_cores)
     

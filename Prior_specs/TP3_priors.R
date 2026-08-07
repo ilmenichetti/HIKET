@@ -14,7 +14,7 @@
 # pool) and stay free with VERY-INFORMATIVE priors. CRITICAL: alpha_S must be
 # k2-scale (~0.0074), NOT intermediate — an intermediate value starves the cascade
 # (verified, icbm_anchor_sanity.R). p_S, p_H stay FREE (Tier-2 logit), re-centred at
-# ICBM h=0.13. ICBM: Andren & Katterer 1997. See REVISION_PLAN.md §C1.
+# ICBM h=0.13. ICBM: Andren & Katterer 1997. See NEXT_SESSION.md §5 (C1).
 TP3_FREE_DEFAULTS <- c(
   alpha_S     = 0.0074,   # k2/(1-p_H)/xi_Ultuna, k2-scale (was 0.10 = cascade-starving)
   alpha_H     = 0.00644,  # k2/xi_Ultuna (was 0.0015)
@@ -23,7 +23,12 @@ TP3_FREE_DEFAULTS <- c(
   beta1       = 0.095,
   beta2       = -0.00014,
   gamma       = -1.21,
-  sigma_init  = 1.00,
+  # P3 (2026-08-07): 0.90 = J_1917/J_1985 from the NFI growing-stock record with the
+  # fitted litter-growing-stock elasticity (eps 0.45-0.66 over 1986-2023 => litter
+  # scales ~ sqrt(growing stock); GS_1917/GS_1985 = 0.789 => R = 0.789^eps ~ 0.90).
+  # Meaningful only together with P1 (common J_t0 anchor in the wrappers): before
+  # P1, sigma_init = R * 0.818 and a centre of 1.00 silently asserted R = 1.22.
+  sigma_init  = 0.90,
   sigma_input = 1.30   # C4b: re-centred >1 for missing (understorey-dominated) litter (D2)
 )
 

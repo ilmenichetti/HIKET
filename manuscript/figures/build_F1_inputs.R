@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F1 (redesign) -- INPUTS-FIRST. The litter input is the protagonist of the opening;
 # climate is demoted to a supporting context strip. Three views of the inputs:
@@ -6,7 +7,7 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 #   (c) climate context        -- interannual only, no accumulation trend (support)
 # Data: Yasso20 bundle (only the Yasso bundles carry the nwl/fwl/cwl size-class split).
 
-pkg <- readRDS("Data/model_inputs/Yasso20_inputs_20260710_102431.rds")
+pkg <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))
 ib  <- do.call(rbind, pkg$inputs_by_plot); ib <- ib[ib$year >= 1986, ]
 cb  <- do.call(rbind, pkg$climate_by_plot); cb <- cb[cb$year >= 1986, ]
 pi  <- pkg$plot_info

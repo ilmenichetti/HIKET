@@ -1,12 +1,20 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F3 (rebuild) -- headline: cross-plot MEAN SOC trajectory 1985-2024, all six models,
 # tracking the campaign means. Uniform model palette (Temperature Diverging), larger text.
 # Reuses the F4 spin-up/trajectory cache (stored = posterior mean + 95% band per year).
 source("manuscript/figures/model_palette.R")
-cache <- readRDS("manuscript/figures/F4_cache.rds")$stored
+# Must match the RUN_ID-keyed cache written by build_F4_initialization.R (run that
+# first). Keyed so a re-calibration cannot leave this figure silently stale.
+.f4_cache <- sprintf("manuscript/figures/F4_cache_%s.rds",
+                     substr(paste(RID[FIG_MODELS], collapse = "-"), 1, 120))
+if (!file.exists(.f4_cache))
+  stop("F4 cache for the current RUN_IDs is missing -- run build_F4_initialization.R first:\n  ",
+       .f4_cache, call. = FALSE)
+cache <- readRDS(.f4_cache)$stored
 
 # observed campaign means +/- 95% CI (same source as F4)
-om <- readRDS("Data/model_inputs/Yasso20_inputs_20260710_102431.rds")$obs_meta
+om <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
 obs <- do.call(rbind, lapply(names(om), function(p){ z<-om[[p]]; if(!length(z$soc_obs)) return(NULL)
   data.frame(year=1984L+z$idx, soc=z$soc_obs) }))
 cm <- aggregate(soc~year, obs, function(x) c(m=mean(x), lo=mean(x)-1.96*sd(x)/sqrt(length(x)),

@@ -249,10 +249,14 @@ configuration & trusted RMSE & 1985 excess & $\sinit$ & $\sinput$\\\midrule
 \end{tabular}
 \end{table}
 
-\paragraph{C5 does not affect predictive fit.} Turning it off entirely changes trusted-campaign
-RMSE from $44.63$ to $44.83$: \textbf{0.45\%}, against a $\approx 2\%$ noise floor at this chain
-length. The full range spans $1.4\%$. SP1 independently gives a spread of \textbf{0.25\%}
-($47.35$--$47.47$) across the same settings.
+\paragraph{C5 does not affect predictive fit \emph{of the stock}.} Turning it off entirely
+changes trusted-campaign RMSE from $44.63$ to $44.83$: \textbf{0.45\%}, against a $\approx 2\%$
+noise floor at this chain length. The full range spans $1.4\%$. SP1 independently gives a spread
+of \textbf{0.25\%} ($47.35$--$47.47$) across the same settings.
+
+\emph{Corrected 2026-08-07: this holds for RMSE on the stock and fails for the stock
+\textbf{change}, which C5 controls strongly enough to flip its sign. See the addendum at the end
+of this document.}
 
 \paragraph{There is no 1985 anomaly to correct.} The bias-controlled excess is small from both
 directions: forced to take 1985 fully seriously (C5 off) the model over-predicts it by $+3.2$
@@ -483,5 +487,104 @@ not constant, so outside the rule. Recorded so the boundary is visible rather th
 \item \textbf{Corroboration of the stock QC} from A.~Lehtonen and J.~Heikkinen. The QC itself is
   ours and was performed here; their role is review.
 \end{itemize}
+
+% =====================================================================
+\section{Addendum, 2026-08-07: C5 was adjudicated on the wrong metric}
+% =====================================================================
+
+The C5 decision above stands, but one of its stated grounds does not. The claim that C5
+``does not affect predictive fit'' was established on trusted-campaign \textbf{RMSE}, which is
+a metric on the SOC \emph{stock}. $\sinit$ barely moves the stock. What it moves is the
+direction of the 1917$\rightarrow$1985 pre-run, and therefore the \textbf{stock change} --- the
+quantity a national greenhouse-gas inventory actually reports, and the one C5 turns out to
+control. The original sweep never measured it.
+
+\paragraph{The pre-run inverts at a threshold set by the litter record, not by any model.}
+The transient initialisation starts each plot at steady state under the 1917 flux
+$J_{1917} = J_{\mathrm{full}}\,\sinit\,\sinput$ and ramps it to the 1985 flux
+$J_{1985} = J_{t_0}\,\sinput$. Because the pre-run begins \emph{at} equilibrium and the flux
+then moves monotonically, SOC moves monotonically with it. The pre-run therefore declines
+exactly when
+\[
+  \sinit \;>\; J_{t_0}/J_{\mathrm{full}},
+\]
+with $\sinput$ cancelling. The per-plot ratio has median $0.818$ over the 512-plot bundle,
+reproducing the $0.826$ quoted earlier from the ablations. Nothing in this criterion depends on
+the decomposition model.
+
+\paragraph{Stock change crosses zero at that same threshold, in every model tested.}
+Re-running the ablation posteriors through the genuine forward model and computing paired
+per-plot stock change (only plots observed in both campaigns, so composition cannot drive it):
+
+\begin{table}[H]\centering\small
+\caption{Paired 1985--2024 stock change, tC\,ha$^{-1}$\,yr$^{-1}$, at each config's
+posterior-median parameters. Observed $+0.309$ on the same 256 paired plots.}
+\begin{tabular}{lrrrr}
+\toprule
+config & SP1 & TP2 & Yasso07 & Yasso20\\
+\midrule
+\texttt{A3} C5 $=3.0$   & $+0.638$ & $+0.625$ & ---      & $+0.441$\\
+\texttt{A0} C5 $=2.0$   & $+0.464$ & $+0.461$ & $+0.423$ & $+0.203$\\
+\texttt{A2} C5 $=1.5$   & $+0.349$ & $+0.333$ & ---      & $+0.058$\\
+\texttt{A1} C5 off      & $+0.164$ & $+0.167$ & $+0.098$ & $\mathbf{-0.103}$\\
+\texttt{A5} no 1985     & $\mathbf{-0.184}$ & $+0.054$ & --- & $\mathbf{-0.317}$\\
+\midrule
+\multicolumn{5}{l}{\emph{observed} $+0.309$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The predicted sink is monotone decreasing in $\sinit$ and crosses zero at
+$\sinit \approx 0.8$ in all four models --- SP1 (single pool) and Yasso20 (twelve free
+fractions) alike --- confirming that the threshold is a property of the litter data rather than
+of kinetic structure.
+
+\paragraph{Consequence for the production run.} With C5 off, the 2026-08-05 recalibration puts
+Yasso15 at $\sinit = 1.007$ and Yasso20 at $1.243$, both past the threshold: their reconstructed
+pre-runs decline for $78\%$ and $92\%$ of plots respectively. Their forward trajectories relax
+downward from an overshot 1985 stock, and they report a \textbf{source} where all three
+campaigns show a \textbf{sink} --- $-0.063$ and $-0.155$ against an observed $+0.312$. The sign
+error survives dropping 1985 entirely: on 2006--2024 alone, observed $+0.209$ against Yasso15
+$-0.183$ and Yasso20 $-0.220$.
+
+\paragraph{What this does and does not change.} It does not reinstate C5. Choosing the 1985
+weighting so that the stock change comes out right is circular, and the C5 value required to
+reproduce the observed change is not identical across models --- $\approx 1.7$ (SP1),
+$\approx 1.6$ (TP2), $\approx 1.7$ (Yasso07), $\approx 2.4$ (Yasso20). The clustering of three
+of the four is close enough that it admits the opposite reading --- that the 1985 campaign does
+warrant some down-weighting --- and that reading is recorded here rather than argued away. What
+separates the two routes is not arbitrariness but \emph{checkability}: a constraint on $\sinit$
+can be tested against independent NFI growing-stock data, whereas any C5 value can only be
+tested against the SOC observations being fitted.
+
+\begin{decision}{The $\sinit$ constraint replaces the C5 sensitivity as the live question}
+C5 stays withdrawn. The unresolved item is not the 1985 weighting but $\sinit$ itself, which is
+under-determined and currently free to take values that contradict the growing-stock record the
+pre-run shape (C3) is built from.
+
+\smallskip
+\emph{Proposed.} Constrain $\sinit$ on the \emph{national aggregate} ratio,
+$\sinit \le \mathrm{mean}(J_{t_0})/\mathrm{mean}(J_{\mathrm{full}}) \approx 0.82$, as a
+truncated or strongly informative prior rather than a hard cap. A per-plot form is not
+available: $\sinit$ is a single global scalar while the ratio spans $0.009$--$5.983$ across
+plots, so no global value can satisfy every plot. The bound binds only Yasso15 and Yasso20; the
+other four already sit inside it.
+
+\smallskip
+\emph{Caveats to carry into the text.} (i) Constraining $\sinit$ so the pre-run must rise partly
+\emph{imposes} the direction subsequently reported; the defence is that the constraint comes
+from independent NFI data, not from the SOC observations, and this must be stated rather than
+implied. (ii) $\sinit$ and $\sinput$ are already coupled by the \texttt{flux\_pair} transform,
+which bounds the \emph{level} of the 1917 flux but not its \emph{direction}; the combined
+feasible region should be checked before launching. (iii) A parameter pressed against a
+boundary mixes worse --- ESS on $\sinit$ needs watching, as it did for $\sinput$.
+\end{decision}
+
+\paragraph{Reproducibility.} \texttt{doublechecks/prerun\_direction.R} reports the threshold and
+the share of the posterior on the declining side per model;
+\texttt{doublechecks/ablation\_stock\_change.R} reproduces the table above from the quarantined
+ablation posteriors; \texttt{doublechecks/production\_fit\_by\_campaign.R} gives per-campaign
+fit of the production run under both $R^2$ definitions.
+
 
 \end{document}

@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F2 (redesign) -- the uncalibrated baseline, GENERAL (cross-plot mean, all 447 plots),
 # built like F3 rather than 4 example plots. Yasso20 run forward at published defaults
@@ -11,7 +12,7 @@ traj <- aggregate(total_soc ~ year, pred, function(x)
           c(m = mean(x), se = sd(x) / sqrt(length(x))))
 tj <- data.frame(year = traj$year, m = traj$total_soc[, "m"], se = traj$total_soc[, "se"])
 
-om <- readRDS("Data/model_inputs/Yasso20_inputs_20260710_102431.rds")$obs_meta
+om <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
 obs <- do.call(rbind, lapply(names(om), function(pid) {
   z <- om[[pid]]; if (length(z$soc_obs) == 0) return(NULL)
   data.frame(year = 1984L + z$idx, soc = z$soc_obs)

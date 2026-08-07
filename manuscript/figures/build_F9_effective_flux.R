@@ -1,3 +1,11 @@
+# PINNED ON PURPOSE -- do NOT auto-select. This figure is the before/after of ONE
+# intervention (the flux_pair bound closing the sigma_input escape hatch): "old" =
+# pre-flux_pair June runs, "new" = the 20260710 flux_pair run. Pointing "new" at a
+# later calibration would conflate flux_pair with the SOC rebaseline and C1-C4.
+# NOTE 2026-08-07: the "old" posteriors (20260608_*, 20260611_*) were deleted in the
+# runs/ cleanup, so this script can no longer be re-run. The committed PNG remains
+# valid -- the comparison is historical and does not change. Restore those runs from
+# a backup before attempting a rebuild.
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 suppressMessages(library(BayesianTools))
 new <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",

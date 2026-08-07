@@ -217,7 +217,7 @@ cascade (two 0.13 humification steps → MRT ~6 yr, σ_input 4–5×). **Validat
 `doublechecks/icbm_anchor_sanity.R` (447 plots, σ_input=1): SP1/TP2/TP3 all reach observed
 SOC (median 71) at bulk MRT ~24 yr and **σ_input 1.05–1.36** — physical, inside the
 understorey window, closing the σ_input escape hatch via kinetics. Implements C1 of
-`manuscript/REVISION_PLAN.md`; edits land in `Prior_specs/{SP1,TP2,TP3}_priors.R` +
+`NEXT_SESSION.md` §5 (REVISION_PLAN.md removed 2026-08-07); edits land in `Prior_specs/{SP1,TP2,TP3}_priors.R` +
 each `assemble_model_params`. Memory: [[icbm-anchor-validated]], [[revision-round1-plan]].
 
 ### Yasso20 structural fix
@@ -500,6 +500,29 @@ noise the error model should absorb, not as data error.
   ever happened. Residual concern (1985 unverifiable vs official LUKE stocks; different layer
   protocol) → **limitations, as a stated sensitivity**. Record:
   `manuscript/HIKET_data_and_ablation_tests.pdf`.
+  **⚠ CORRECTED 2026-08-07 (addendum in the same PDF):** the "changes RMSE by <1%" ground was
+  measured on **stock** RMSE only. σ_init barely moves the stock; it moves the **stock change**,
+  which C5 controls strongly enough to **flip its sign**. Paired 1985–2024 change (obs +0.309)
+  runs monotonically +0.638 → −0.184 (SP1) and +0.441 → −0.103 (Yasso20) as C5 weakens. C5 stays
+  withdrawn (choosing the 1985 weighting to make the sink come out right is circular), but the
+  **live question is now σ_init**, not the 1985 weighting. See "σ_init pre-run inversion" below.
+
+- **🚩 σ_init PRE-RUN INVERSION — the open defect (found 2026-08-07).**
+  The pre-run **declines** exactly when `σ_init > J_t0_mean/J_full_mean` (σ_input cancels; the
+  pre-run starts *at* equilibrium and the flux moves monotonically). Per-plot ratio median
+  **0.818** over 512 plots — this reproduces the 0.826 from the ablations and is a property of
+  the **litter record, not of any model**. Production run 20260805: Yasso15 σ_init **1.007**,
+  Yasso20 **1.243** → pre-run declines for **78% / 92%** of plots, and both report a **source**
+  (−0.063, −0.155) where observations show a **sink** (+0.312). Survives dropping 1985: on
+  2006–2024 alone obs +0.209 vs Yasso15 −0.183, Yasso20 −0.220. Stock change crosses zero at
+  σ_init ≈ 0.8 in **all four** models tested (SP1 single-pool through Yasso20). **Proposed fix:**
+  truncated/informative prior at the *national aggregate* ratio `σ_init ≲ 0.82` — a per-plot form
+  is impossible (σ_init is one global scalar; the ratio spans 0.009–5.983). Binds only
+  Yasso15/20. Caveats: it partly *imposes* the direction reported (defensible — the constraint is
+  independent NFI growing-stock data, not the SOC being fitted — but must be stated); check the
+  combined feasible region against `flux_pair` (which bounds the flux *level*, not its
+  *direction*); watch ESS on σ_init. Scripts: `doublechecks/prerun_direction.R`,
+  `ablation_stock_change.R`, `production_fit_by_campaign.R`.
 
 - **🚀 ROIHU RECALIBRATION RUNNING — jobs 474800–474805, launched 2026-08-05 13:24.**
   First run to include C1–C4 *and* both data corrections. ~36 h → expect ~01:00 on 2026-08-07.

@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # Robustness appendix figures R1 (MCMC convergence) + R2 (residual diagnostics).
 # R1: per-model max R-hat + min ESS (from metadata) vs the usual thresholds.
@@ -5,8 +6,7 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 #     log scale = the multiplicative-normal error model's natural scale.
 source("manuscript/figures/model_palette.R")
 
-rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+rid <- as.list(RID)
 runs <- "Calibration_real_data_transient/runs"; M <- names(rid)
 
 # ---- R1: convergence summary ----

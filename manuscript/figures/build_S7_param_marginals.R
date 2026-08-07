@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # S7 (appendix) -- posterior vs prior MARGINALS for the two most story-relevant
 # parameters (Yasso20): sigma_input (the input multiplier -- the Trickster) and
@@ -18,7 +19,7 @@ setup_model <- function(MODEL, RID) {
   list(prior = prior, post = post, marg = get("plot_one_marginal_honest", e))
 }
 cat("sourcing Yasso20 setup...\n")
-M <- setup_model("Yasso20", "20260710_102431")
+M <- setup_model("Yasso20", RID[["Yasso20"]])
 
 png("manuscript/figures/S7_param_marginals.png", width = 10, height = 4.6, units = "in", res = 200)
 par(mfrow = c(1, 2), mar = c(4.6, 4.6, 3.2, 1), mgp = c(2.7, 0.8, 0), cex.axis = 1.05, cex.lab = 1.2)

@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F8b -- the trade-off / ridge face of fraction non-identifiability, for each Yasso.
 #   (A) posterior correlation heatmap of the 12 transfer fractions (blocked by source
@@ -68,6 +69,6 @@ make_fig <- function(model, rid, outfile, do_table = FALSE) {
   }
 }
 
-make_fig("Yasso20", "20260710_102431", "manuscript/figures/F8b_fraction_ridges.png", do_table = TRUE)
-make_fig("Yasso07", "20260710_104902", "manuscript/figures/F8b_fraction_ridges_Yasso07.png")  # appendix
-make_fig("Yasso15", "20260710_104902", "manuscript/figures/F8b_fraction_ridges_Yasso15.png")  # appendix
+make_fig("Yasso20", RID[["Yasso20"]], "manuscript/figures/F8b_fraction_ridges.png", do_table = TRUE)
+make_fig("Yasso07", RID[["Yasso07"]], "manuscript/figures/F8b_fraction_ridges_Yasso07.png")  # appendix
+make_fig("Yasso15", RID[["Yasso15"]], "manuscript/figures/F8b_fraction_ridges_Yasso15.png")  # appendix

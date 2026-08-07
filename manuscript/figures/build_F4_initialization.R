@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F4 (redesign, 2-panel) -- THE INITIALIZATION PROBLEM (protagonist).
 #   (a) LEFT  : FULL trajectory incl. the transient-init spin-up 1917->1985 (median line;
@@ -8,11 +9,15 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 # Ribbons: posterior 2.5-97.5% of the cross-plot mean; same per-model colour, alpha 0.12.
 # Heavy reconstruction is cached to F4_cache.rds (delete it to recompute).
 
-rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+rid <- as.list(RID)
 source("manuscript/figures/model_palette.R")   # shared per-model palette (Temperature Diverging)
 col <- MODEL_COL
-CACHE <- "manuscript/figures/F4_cache.rds"
+# Cache key includes the RUN_IDs, so a re-calibration invalidates it automatically.
+# It used to be a fixed filename guarded by file.exists(), which meant that after a
+# re-calibration this script "rebuilt" the figure from the PREVIOUS run's cache and
+# reported success -- F4 and F3 (which reads this cache) were both silently stale.
+CACHE <- sprintf("manuscript/figures/F4_cache_%s.rds",
+                 substr(paste(RID[FIG_MODELS], collapse = "-"), 1, 120))
 
 if (!file.exists(CACHE)) {
   suppressMessages(library(BayesianTools))
@@ -78,6 +83,12 @@ if (!file.exists(CACHE)) {
     pkg <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", m, rid[[m]]))
     post <- readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds", m, rid[[m]]))
     pm <- apply(getSample(post), 2, median); SSY <- pkg$STEADY_STATE_YEARS; plots <- pkg$plots_real
+    # TP2/TP3: alpha_A is externally anchored to ICBM (C1) and held FIXED, so it is
+    # NOT a posterior column and must be re-injected exactly as the calibration and
+    # predictive scripts do. Without it the cascade coefficients are NA and the
+    # spin-up fails for every plot.
+    if (m == "TP2") { source("Prior_specs/TP2_priors.R"); pm["alpha_A"] <- TP2_ALPHA_A_FIXED }
+    if (m == "TP3") { source("Prior_specs/TP3_priors.R"); pm["alpha_A"] <- TP3_ALPHA_A_FIXED }
     stored[[m]] <- agg_stored(m)
     if(m %in% c("SP1","TP2","TP3")){
       step <- tolower(m); if(step=="sp1"){}
@@ -102,7 +113,7 @@ if (!file.exists(CACHE)) {
 cache <- readRDS(CACHE); spin <- cache$spin; stored <- cache$stored
 
 # observed campaign means +/- 95% CI
-om <- readRDS("Data/model_inputs/Yasso20_inputs_20260710_102431.rds")$obs_meta
+om <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
 obs <- do.call(rbind, lapply(names(om), function(p){ z<-om[[p]]; if(!length(z$soc_obs)) return(NULL)
   data.frame(year=1984L+z$idx, soc=z$soc_obs) }))
 cm <- aggregate(soc~year, obs, function(x) c(m=mean(x), lo=mean(x)-1.96*sd(x)/sqrt(length(x)), hi=mean(x)+1.96*sd(x)/sqrt(length(x))))

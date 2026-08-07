@@ -1,7 +1,15 @@
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 suppressMessages(library(BayesianTools))
-rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+# Track the newest production posterior per model. Previously hardcoded to the
+# 20260710 flux_pair run, which meant this check silently reported stale numbers
+# after a re-calibration. Ablation posteriors are quarantined out of runs/ by
+# doublechecks/quarantine_ablation_runs.R, so "newest" here is a production run.
+rid <- sapply(c("SP1","TP2","TP3","Yasso07","Yasso15","Yasso20"), function(m) {
+  fs <- list.files("Calibration_real_data_transient/runs",
+                   pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
+  if (!length(fs)) stop("no posterior found for ", m)
+  sub(sprintf("^%s_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
+}, simplify = FALSE)
 littercols <- function(df){ grep("^(nwl_|fwl_|cwl_)", names(df), value=TRUE) }
 totlit <- function(df){
   if("J_total" %in% names(df)) return(mean(df$J_total))

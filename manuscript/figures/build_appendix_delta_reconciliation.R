@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # Appendix reconciliation: the OLD cumulative-average-rate plot and the NEW absolute-stock
 # F4 are the SAME six trajectories under different transforms -- no contradiction.
@@ -6,8 +7,7 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 #   (c) instantaneous increment     -- dSOC/dt (5-yr mean)
 # (b)'s decline is (a)'s DECELERATION, not a loss of SOC; all three stay >0 early.
 
-rid <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+rid <- as.list(RID)
 source("manuscript/figures/model_palette.R")   # shared per-model palette
 col <- MODEL_COL
 roll <- function(x,k=5){ n<-length(x); s<-rep(NA,n); h<-(k-1)/2

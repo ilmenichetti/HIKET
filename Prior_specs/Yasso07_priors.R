@@ -36,7 +36,12 @@ YASSO07_FREE_DEFAULTS <- c(
   delta2 = 0.8585553765,
   r      = 0.3068014085,
   # Auxiliary uncertainty parameters
-  sigma_init  = 1.00,
+  # P3 (2026-08-07): 0.90 = J_1917/J_1985 from the NFI growing-stock record with the
+  # fitted litter-growing-stock elasticity (eps 0.45-0.66 over 1986-2023 => litter
+  # scales ~ sqrt(growing stock); GS_1917/GS_1985 = 0.789 => R = 0.789^eps ~ 0.90).
+  # Meaningful only together with P1 (common J_t0 anchor in the wrappers): before
+  # P1, sigma_init = R * 0.818 and a centre of 1.00 silently asserted R = 1.22.
+  sigma_init  = 0.90,
   sigma_input = 1.30   # C4b: re-centred >1 for missing (understorey-dominated) litter (D2)
 )
 

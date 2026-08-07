@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F9 (merged, was F9+F10) — the two auxiliary uncertainty parameters, one plate:
 #   (a) sigma_input as EFFECTIVE LITTER FLUX vs the physical NPP envelope (bounded run only)
@@ -7,8 +8,7 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 # the appendix (see build_F9_effective_flux.R -> appendix_unbounded_input.tex).
 suppressMessages(library(BayesianTools))
 
-new <- list(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904",
-            Yasso07="20260710_104902", Yasso15="20260710_104902", Yasso20="20260710_102431")
+new <- as.list(RID)
 models <- names(new); n <- length(models); ypos <- rev(seq_len(n))
 
 littercols <- function(df) grep("^(nwl_|fwl_|cwl_)", names(df), value=TRUE)

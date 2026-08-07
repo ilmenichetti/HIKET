@@ -1,3 +1,4 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # Robustness R3 -- TP3 integrator check. Two panels:
 #  (A) constant forcing: the OLD explicit-Euler cascade RINGS when alpha_A*xi>1
@@ -10,9 +11,15 @@ suppressMessages({
   source("Calibration_real_data_transient/calibration_engine_transient.R")
   source("Model_functions_real_data_transient/Decomposition_functions/SimpleModels/tp3_wrapper_transient.R")
 })
-RID <- "20260710_104904"
-post <- readRDS(sprintf("Calibration_real_data_transient/runs/TP3_posterior_%s.rds", RID))
+TP3_RID <- RID[["TP3"]]
+post <- readRDS(sprintf("Calibration_real_data_transient/runs/TP3_posterior_%s.rds", TP3_RID))
 mp <- apply(BayesianTools::getSample(post), 2, median)
+# alpha_A is externally anchored to ICBM (C1) and held FIXED, so it is NOT a
+# posterior column -- it must be re-injected exactly as the calibration and
+# predictive scripts do, or mp["alpha_A"] is NA and the cascade coefficients
+# below become NA. See Prior_specs/TP3_priors.R.
+source("Prior_specs/TP3_priors.R")
+if (is.na(mp["alpha_A"])) mp["alpha_A"] <- TP3_ALPHA_A_FIXED
 aA <- unname(mp["alpha_A"]); aS <- unname(mp["alpha_S"]); aH <- unname(mp["alpha_H"])
 pS <- unname(mp["p_S"]); pH <- unname(mp["p_H"])
 
@@ -32,7 +39,7 @@ for (t in 1:n) {
 ex_tot <- rowSums(ex); eu_tot <- rowSums(eu)
 
 # (B) real calibrated mean trajectory (exact integrator, from the predictive bundle)
-pp <- readRDS(sprintf("Calibration_real_data_transient/runs/TP3_posterior_predictive_%s.rds", RID))$posterior_summary
+pp <- readRDS(sprintf("Calibration_real_data_transient/runs/TP3_posterior_predictive_%s.rds", TP3_RID))$posterior_summary
 tr <- aggregate(soc_mean ~ year, pp, mean)
 
 png("manuscript/figures/R3_tp3_integrator.png", width=11, height=4.6, units="in", res=200)

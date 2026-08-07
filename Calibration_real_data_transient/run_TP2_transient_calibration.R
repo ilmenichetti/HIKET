@@ -340,6 +340,28 @@ tp2_run_engine <- function(inputs, model_params, C_init, xi_array) {
 
 sigma_ppm <- setNames(TP2_SIGMA_PPM[FREE_NAMES], FREE_NAMES)
 
+# --- Diagnostic override: HIKET_RATE_PRIOR_SD -------------------------------
+# C1 pins the slow rate with a VERY-INFORMATIVE prior (SD 0.15) centred on the
+# ICBM arable k2. Setting HIKET_RATE_PRIOR_SD widens that prior so the data can
+# choose the humus turnover time instead of having it pinned shut. Default unset
+# => production behaviour unchanged.
+#
+# WHY: TP2's humus holds ~96% of the carbon with a response time of ~210 yr, and
+# over 39 yr such a pool closes only 17% of any gap to its equilibrium -- so it
+# cannot reproduce the observed 1985->2024 accumulation at ANY initial state. The
+# observed trend implies tau ~ 44-87 yr, i.e. a rate 1.9-3.8x the arable value.
+# Ultuna k2 is measured on BARE FALLOW (no fresh input, most recalcitrant
+# fraction remaining), so faster turnover under continuous forest litter is
+# physically arguable. This switch tests it.
+.rate_sd <- Sys.getenv("HIKET_RATE_PRIOR_SD", NA_character_)
+if (!is.na(.rate_sd)) {
+  .rn <- intersect(c("alpha", "alpha_S", "alpha_H"), names(sigma_ppm))
+  sigma_ppm[.rn] <- as.numeric(.rate_sd)
+  message(sprintf("[RATE PRIOR] widened to SD %s for: %s",
+                  .rate_sd, paste(.rn, collapse = ", ")))
+}
+
+
 stopifnot(length(sigma_ppm) == N_FREE, all(sigma_ppm > 0),
           all(names(sigma_ppm) == FREE_NAMES))
 

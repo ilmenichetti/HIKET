@@ -1,9 +1,10 @@
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # Robustness R4 -- KL(posterior || prior) for the SIMPLE models SP1/TP2/TP3
 # (the appendix half of F7, which covers only the operational Yassos). Same faithful
 # recompute: saved posterior is physical; prior reproduced via each model's engine
 # setup (to_original/best_x/sigma_ppm); engine classify_param/class_cols for colours.
-rid <- c(SP1="20260710_104903", TP2="20260710_104904", TP3="20260710_104904")
+rid <- unlist(RID[c("SP1","TP2","TP3")])
 
 setup_model <- function(MODEL) {
   sp  <- file.path("Calibration_real_data_transient", sprintf("run_%s_transient_calibration.R", MODEL))
