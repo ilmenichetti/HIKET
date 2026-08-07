@@ -1424,6 +1424,23 @@ save_results <- function(chain_results, all_phys, run_config,
     wallclock_min   = t_elapsed / 60,
     r_version       = R.version$version.string,
     platform        = .Platform$OS.type,
+    # PROVENANCE (2026-08-07). Records WHICH CODE produced this posterior, so a
+    # posterior/code mismatch is detectable instead of silent. This is not
+    # hypothetical: on 2026-08-07 a set of posteriors fitted with one pre-run
+    # anchor was re-analysed with wrappers carrying a different one, and the
+    # comparison gave a wrong answer that looked entirely plausible. Also
+    # records the error model, which is now a default rather than a switch.
+    git_commit      = tryCatch(system("git rev-parse --short HEAD", intern = TRUE,
+                                      ignore.stderr = TRUE)[1],
+                               error = function(e) NA_character_),
+    git_dirty       = tryCatch(length(system("git status --porcelain", intern = TRUE,
+                                             ignore.stderr = TRUE)) > 0,
+                               error = function(e) NA),
+    error_model     = if (isTRUE(get0(".hiket_lognormal_lik", ifnotfound = TRUE)))
+                        "log-normal" else "multiplicative-normal",
+    env_overrides   = Sys.getenv(c("HIKET_LOGNORMAL_LIK","HIKET_RATE_PRIOR_SD",
+                                   "HIKET_SIGMA_1985_INFL","HIKET_PREINIT_LINEAR",
+                                   "HIKET_N_ITER","HIKET_N_CHAINS")),
     # Convergence summaries: stored as ranges for quick inspection
     rhat_range      = if (!is.null(gr))       range(gr$psrf[,1], na.rm=TRUE) else NA,
     ess_range        = if (!is.null(ess_vals)) range(ess_vals, na.rm=TRUE)   else NA,
