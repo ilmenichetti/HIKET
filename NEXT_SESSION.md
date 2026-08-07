@@ -9,6 +9,41 @@ its C1–C5 decisions are summarised in §5).
 
 ---
 
+## 0. RUN LAUNCHED — Roihu jobs 509638–509643, 2026-08-07 ~17:00
+
+| job | model |
+|---|---|
+| 509638 | SP1 |
+| 509639 | TP2 |
+| 509640 | TP3 |
+| 509641 | Yasso07 |
+| 509642 | Yasso15 |
+| 509643 | Yasso20 |
+
+All six queued (PD) at submission. ~13–19 h ⇒ expect completion **morning of 2026-08-08**.
+Code at commit `e7e56bb` (config in `44c2093`).
+
+**Verify once they start** — restrict the glob to `*_5096*.err` or you will read August 5th's
+logs. Output goes to `.err`, not `.out` (R `message()` → stderr):
+
+```bash
+cd /scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs
+grep -H -E "ERROR MODEL|Cores per chain|chains x|Forward-run sanity" *_5096*.err
+```
+
+Required in every model:
+- `[ERROR MODEL] LOG-NORMAL likelihood (default)` — the new likelihood is active
+- `Cores per chain: 40` — **not 383** (the OOM trap)
+- `5 chains x 50000 iterations` — no ablation env vars leaked
+- `Forward-run sanity: PASS` — the new pre-run anchor didn't break initialisation
+
+If any shows 383 cores or no ERROR MODEL line: `scancel <jobid>` and investigate.
+
+**This is the first run with a correctly specified error model.** Every level-based number from
+`20260805` carries a ~20% specification error that this removes.
+
+---
+
 ## 1. What this run is
 
 The first calibration with a **correctly specified error model**, plus the initialisation defect
@@ -20,10 +55,12 @@ fixed. Three changes:
 | **common pre-run anchor** | the two ends of the pre-run used different litter aggregates (`J_full` vs `J_t0`), so σ_init was the 1917/1985 ratio × 0.75 — a centre of 1.00 silently asserted **33% more** litter in 1917 than 1985 | plain defect; wrappers are shared, so calibration and prediction follow together |
 | **ratio prior centre 0.90** | NFI growing stock with the fitted litter–growing-stock elasticity (ε ≈ 0.45–0.66 ⇒ litter ~ √GS; GS₁₉₁₇/GS₁₉₈₅ = 0.789 ⇒ R ≈ 0.90) | meaningful only *together with* the common anchor |
 
-**Implementation state.** The log-normal is a switch (`HIKET_LOGNORMAL_LIK=1`, default off) — it
-must be set explicitly in the SLURM scripts. The common anchor and the 0.90 centre are **direct
-edits and live by default**. The `20260805` posteriors are therefore no longer reproducible from
-current code; wrapper backups are in the session scratchpad.
+**Implementation state.** All three are **live by default**. The log-normal was made the default
+rather than an opt-in switch (`HIKET_LOGNORMAL_LIK=0` reverts) because the SLURM scripts pass
+environment variables into the r-env singularity container only via a `SINGULARITYENV_` prefix —
+a plain `HIKET_LOGNORMAL_LIK=1` would never reach R, and the run would silently use the biased
+likelihood for 13–19 h. The `20260805` posteriors are no longer reproducible from current code;
+pre-P1 wrappers are recoverable via `git show 44c2093^:<wrapper path>`.
 
 ### Deliberately not included
 
@@ -47,9 +84,10 @@ current code; wrapper backups are in the session scratchpad.
 | **Trend** | within roughly a third of the observed **+0.312 ± 0.035**; report +0.209 (LUKE-validated campaigns only) as sensitivity |
 | **σ_init** | inversion threshold is now **1.0**, not 0.818 — the common anchor removed the conversion |
 
-**Before launching**: run `preflight_prior_pushforward.R` at full N. The common anchor lowers
-every plot's 1917 flux by ~25%, so the initial state changes everywhere. This is the gate that
-caught the `beta2` detonation.
+**Pre-flight: PASSED** (2026-08-07, K=200 at full N, all six). Blow-up rates identical to the
+pre-change baseline — 0/200 for SP1/TP2/TP3, 5/101 for Yasso07 (its known `delta2` baseline),
+0/145 for Yasso15/20. The common anchor lowers every plot's 1917 flux ~25%, so this was the gate
+that mattered; it is clear.
 
 ---
 

@@ -524,7 +524,17 @@ noise the error model should absorb, not as data error.
   *direction*); watch ESS on σ_init. Scripts: `doublechecks/prerun_direction.R`,
   `ablation_stock_change.R`, `production_fit_by_campaign.R`.
 
-- **🚀 ROIHU RECALIBRATION RUNNING — jobs 474800–474805, launched 2026-08-05 13:24.**
+- **🚀 ROIHU RUN LAUNCHED — jobs 509638–509643, 2026-08-07 ~17:00** (SP1 509638, TP2 509639,
+  TP3 509640, Yasso07 509641, Yasso15 509642, Yasso20 509643). Commit `e7e56bb`. ~13–19 h ⇒
+  results morning of 2026-08-08. **First run with a correct error model** (log-normal, now the
+  DEFAULT — `HIKET_LOGNORMAL_LIK=0` reverts), the common pre-run anchor, and the 0.90 ratio
+  prior. Verify with `grep -H -E "ERROR MODEL|Cores per chain|chains x" *_5096*.err` — must show
+  LOG-NORMAL, 40 cores, 5x50000. **Expect Yasso15/20 to still report a source**: the trend is
+  worth ~3.4 nats and the calibration correctly ignores it — that needs a likelihood that targets
+  the stock change, not a parameterisation fix. See `NEXT_SESSION.md` and
+  `manuscript/M&M_parameterization_working_document.pdf`.
+
+- **✅ SUPERSEDED — Roihu recalibration jobs 474800–474805, launched 2026-08-05 13:24.**
   First run to include C1–C4 *and* both data corrections. ~36 h → expect ~01:00 on 2026-08-07.
   Verified at launch: `Cores per chain: 40` (OOM trap avoided), `5 chains x 50000` (no ablation
   env vars leaked), all six reached `Chain 1/5` → the input guard, forward sanity and the Yasso
