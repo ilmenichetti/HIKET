@@ -1,0 +1,234 @@
+% HIKET -- NEXT SESSION: the level/trend discrepancy and the hypotheses for it.
+%
+% Companion to M&M_parameterization_working_document.pdf. That document states the
+% parameterisation assumptions and their evidence; this one states the problem that
+% remains after them, the candidate explanations, and what would test each.
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}\usepackage{xcolor}
+\usepackage{booktabs}\usepackage{longtable}
+\usepackage{float}\usepackage[hidelinks]{hyperref}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+
+\definecolor{hypbg}{HTML}{EEF3FA}\definecolor{hyprule}{HTML}{3A6EA5}
+\newtcolorbox{hyp}[1]{colback=hypbg, colframe=hyprule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  title={\bfseries #1}, coltitle=hyprule, fonttitle=\small\bfseries,
+  attach title to upper=\par, before skip=9pt, after skip=9pt}
+
+\definecolor{cavbg}{HTML}{FDF3E7}\definecolor{cavrule}{HTML}{C87A2F}
+\newtcolorbox{caveat}{colback=cavbg, colframe=cavrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=9pt, after skip=9pt}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+
+\title{HIKET --- next session\\
+  \large The level/trend discrepancy: what it is, and the hypotheses for it}
+\author{}
+\date{7 August 2026 --- working document, not for circulation}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Companion to \texttt{M\&M\_parameterization\_working\_document.pdf}. That document
+states the parameterisation assumptions and their evidence. This one states the problem that
+survives them. After correcting the error model and the pre-run anchor, the six models can
+reproduce the observed soil carbon \emph{stock} but not its \emph{rate of change}: the level and
+the trend make opposing demands, and no setting of the initialisation satisfies both. Six
+candidate explanations are recorded here with their status and the test that would decide each.
+None is ruled out except one, which was implemented and failed. A seventh issue --- the observed
+rate itself is not yet uniquely defined --- is listed first because every other gap is measured
+in its units.
+\end{abstract}
+
+% =====================================================================
+\section{Run in progress}
+
+Roihu jobs \textbf{509638--509643} launched 2026-08-07 $\approx$17:00 (SP1 509638, TP2 509639,
+TP3 509640, Yasso07 509641, Yasso15 509642, Yasso20 509643), commit \texttt{e7e56bb}, $\approx$13--19\,h.
+First run with a correctly specified error model, the common pre-run anchor, and the ratio prior
+at 0.90. Pre-flight passed ($K=200$, full $N$, blow-up rates identical to the pre-change
+baseline).
+
+\textbf{Expected:} levels correct across all six; \textbf{Yasso15/20 still reporting a source}.
+The single most informative output is where $\sinit$ lands under the corrected anchor at
+production length --- estimated $\approx$1.33, i.e. still inverted, but that is extrapolated from
+6000-iteration widths and could be wrong.
+
+% =====================================================================
+\section{The discrepancy}
+
+Sweeping the 1917 anchor at posterior-median parameters, the level and the trend cannot be
+satisfied together:
+
+\begin{table}[H]\centering\small
+\caption{$\sinit$ sweep. Observed: 1985 $=61.6$, 2024 $=73.8$, trend $+0.312$\,tC\,ha$^{-1}$\,yr$^{-1}$.}
+\begin{tabular}{lrr|rr}
+\toprule
+ & \multicolumn{2}{c|}{TP2} & \multicolumn{2}{c}{Yasso20}\\
+$\sinit$ & 1985 & trend & 1985 & trend\\
+\midrule
+0.25 & 26.8 & $+0.299$ & 23.3 & $+0.194$\\
+0.70 & \textbf{60.3} & $+0.137$ & 42.4 & $+0.082$\\
+1.10 & 90.2 & $-0.008$ & \textbf{59.4} & $-0.018$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Get the level right and the trend is a third to a tenth of observed; get the trend right
+and the 1985 stock is less than half of observed. This is the problem to explain.
+
+% =====================================================================
+\section{H6 first: the target is not yet defined}
+
+Every gap below is quoted against an observed rate that varies with two choices not yet made
+explicitly.
+
+\begin{table}[H]\centering\small
+\caption{Observed paired rate of SOC stock change (tC\,ha$^{-1}$\,yr$^{-1}$), plot set defined by
+the data alone.}
+\begin{tabular}{lrrrr}
+\toprule
+period & $n$ & mean & 10\,\% trimmed & median\\
+\midrule
+1985--2006 & 348 & $+0.458$ & $+0.409$ & $+0.410$\\
+2006--2024 & 409 & $+0.209$ & $+0.105$ & $+0.071$\\
+1985--2024 & 316 & $+0.312$ & $+0.260$ & $+0.229$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{hyp}{H6 --- the observed rate is ambiguous by a factor of $\sim$3}
+\emph{Statistic:} 1985--2024 spans $+0.229$ (median) to $+0.312$ (mean), a 36\,\% range; 2006--2024
+spans a factor of three. Per-plot changes are strongly right-skewed.
+
+\emph{Plot set:} a model-dependent subset (plots where the forward run succeeded) gave $+0.116$
+for 2006--2024 where the data-defined set gives $+0.209$. A target must not depend on which plots
+a model managed to run.
+
+\smallskip
+\emph{Test / action:} fix one plot set and one statistic, applied identically to observed and
+modelled rates. For an inventory the \textbf{mean} is defensible --- total stock change is what is
+reported, and the median discards the high-accumulation plots carrying the sink --- but the skew
+should be reported alongside: a mean--median gap this large is itself a result about the
+heterogeneity of accumulation.
+
+\smallskip
+\emph{Why first:} the target spans $\approx +0.07$ to $+0.31$, the same magnitude as the deficit
+being explained. Some of the discrepancy may be a choice rather than a mechanism.
+\end{hyp}
+
+% =====================================================================
+\section{The hypotheses}
+
+\begin{hyp}{H1 --- kinetics too slow to track the rising litter}
+The cascade models have an effective response time $\tau \approx 195$\,yr and close only 18\,\% of
+any gap over 39 years; the observations imply $\tau \approx 33$--$38$. Yasso is fast enough
+(17--38\,yr) but its rates are fixed by design, and its free transfer fractions only redistribute
+carbon among pools that all turn over within a decade --- the one slow reservoir (H, $\tau\approx855$\,yr)
+has a \emph{fixed} share. So Yasso's response time is close to a design constant.
+
+\emph{Status:} identified. Freeing the slow-rate prior (SD $0.15\rightarrow0.50$) made it
+\emph{worse} --- $\alpha_H$ drifted down $0.0053\rightarrow0.0031$ and the trend moved only
+$0.116\rightarrow0.130$ --- because the likelihood does not reward the trend (below).
+
+\emph{Test:} make the likelihood target the stock change, then see where the rates go. A perfect
+trend fit is currently worth $3.4$ nats against a parameter excursion costing $8.9$; adding the
+paired stock change as an explicit observation with its own SE ($0.035$) would be worth
+$\approx13$, which flips the balance.
+\end{hyp}
+
+\begin{hyp}{H2 --- the litter trend is understated}
+$\sinput$ absorbs any error in the litter \emph{level}, so only an understated \emph{rate of
+increase} causes under-accumulation. The product rises $\times1.35$ over 1986--2024 against a
+growing stock rising $\times1.42$.
+
+\emph{Status:} \textbf{untested}, and the only remaining input-side hypothesis that is testable
+with data in hand.
+
+\emph{Test:} sweep a multiplier on the litter trend (holding the level) and find what rise would
+be required; check it against the growing-stock rise and the fitted elasticity. Same shape as the
+$\sinit$ sweep and equally decisive.
+\end{hyp}
+
+\begin{hyp}{H3 --- the 1985 campaign reads low}
+VMI8 samples 0--5 and 5--20\,cm where the later campaigns sample 0--10 and 10--20\,cm, and it
+could not be validated against official LUKE figures. If it reads low, the observed trend is
+overstated.
+
+\emph{Status:} plausible and \textbf{not resolvable with these three campaigns.} The obvious test
+--- compare over 2006--2024, which excludes 1985 --- has almost no power: the total change there is
+$+3.8$\,tC\,ha$^{-1}$ on a stock of $\sim$70 ($3.2\sigma$), so a model capturing 50\,\% of the
+trend is statistically indistinguishable from one capturing 100\,\%. Essentially all the
+discriminating information sits in the 1985--2006 leg ($+9.6$\,tC\,ha$^{-1}$, $9.5\sigma$) --- the
+contested one.
+
+\emph{Consequence:} H1 and H3 predict the same observable. Record as a limit of the data, and as a
+stated sensitivity, rather than as an open analysis task.
+
+\emph{Exception:} Yasso20 predicts $-0.147$ against $+0.209$ over the trusted campaigns, a gap of
+$5.5$\,SE. Its failure stands regardless of 1985.
+\end{hyp}
+
+\begin{hyp}{H4 --- a missing input component with its own trend}
+Understorey litter is absent from the product entirely, and its share plausibly changed with
+canopy closure over the period. A missing component with a rising trend would look exactly like
+H2.
+
+\emph{Status:} untested; blocked on the LUKE MUSTIKKA ground-vegetation data, which is not held
+locally. Relevant that two models put $\sinput$ \emph{below} 1, against a C4b prior centred at
+1.30 precisely because understorey is missing.
+
+\emph{Test:} would appear as a productivity-dependent trend deficit, since understorey is
+proportionally largest where tree litter is smallest.
+\end{hyp}
+
+\begin{hyp}{H5 --- a missing process: stabilisation capacity}
+Clay adds $+0.050$ to the residual $R^2$ beyond litter ($n=456$, $p<10^{-7}$), with the right
+sign: less over-prediction on higher-clay soils. No model in the set has any edaphic control on
+decomposition --- a shared blind spot.
+
+\emph{Status:} evidence in hand, mechanism not implemented. Realistically the second paper.
+
+\emph{Caveat:} CEC adds more ($+0.087$) but is measured on the same samples as SOC and organic
+matter drives CEC --- circularity. Use clay.
+\end{hyp}
+
+\begin{hyp}{H0 --- REJECTED: historical depletion of the 1917 soil}
+That early-20th-century management (litter raking, forest grazing, slash-and-burn) removed organic
+matter before it entered the soil, leaving 1917 stocks below what a biomass proxy implies.
+
+\emph{Status:} \textbf{implemented and rejected} (\S2). The anchor sweep shows the level and the
+trend make opposing demands: no value of $\sinit$ satisfies both, in either family. The hypothesis
+may remain true as history, but it is not the mechanism behind the trend deficit.
+
+\emph{What survives:} initialisation controls the sink \emph{sign} --- Yasso20 spans $-0.09$ to
+$+0.23$ across the sweep --- but not its magnitude.
+\end{hyp}
+
+% =====================================================================
+\section{Suggested order}
+
+\begin{enumerate}
+\item \textbf{H6} --- fix the target. Cheap, and it may shrink the discrepancy before anything is
+      attributed to a mechanism. Everything else is measured in its units.
+\item \textbf{H2} --- the litter-trend sweep. The only remaining testable input hypothesis, and
+      the same shape as the sweep already run.
+\item \textbf{H1} --- change what the likelihood targets, then re-read the rates. Expensive, and
+      its answer depends on the target settled in (1).
+\item \textbf{H3} --- write up as a limit of the data with a stated sensitivity.
+\item \textbf{H4, H5} --- second paper, or as discussion; H4 needs external data.
+\end{enumerate}
+
+\begin{caveat}
+These are not exclusive. Several could contribute simultaneously, and the ordering above is by
+cost and dependency, not by expected importance. In particular H1 and H3 are observationally
+degenerate over the available campaigns, so neither can be confirmed by ruling the other out.
+\end{caveat}
+
+\end{document}

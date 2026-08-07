@@ -866,6 +866,119 @@ does not merely land in the wrong place; it is the model the data pins down leas
 it drifts furthest and why the prior matters most there. That is a sharper diagnosis of the
 sink-sign failure than ``$\sinit$ is too high''.
 
+\subsection{The initialisation cannot deliver the trend --- tested and rejected}
+\label{sec:sweep}
+
+Section~\ref{sec:leveltrend} attributed the Yasso trend failure to the initialisation. A direct
+sweep of the 1917 anchor, at posterior-median parameters, shows that initialisation controls the
+\emph{sign} but cannot deliver the \emph{magnitude}.
+
+\begin{table}[H]\centering\small
+\caption{Sweeping $\sinit$ at posterior-median parameters (log-normal fits). Observed:
+1985 $=61.6$, 2024 $=73.8$, trend $+0.312$.}
+\begin{tabular}{lrrr|rrr}
+\toprule
+ & \multicolumn{3}{c|}{TP2} & \multicolumn{3}{c}{Yasso20}\\
+$\sinit$ & 1985 & 2024 & trend & 1985 & 2024 & trend\\
+\midrule
+0.10 & 15.6 & 29.5 & $+0.353$ & 16.9 & 26.4 & $+0.231$\\
+0.25 & 26.8 & 38.5 & $+0.299$ & 23.3 & 31.3 & $+0.194$\\
+0.55 & 49.1 & 56.4 & $+0.191$ & 36.0 & 41.0 & $+0.119$\\
+0.70 & \textbf{60.3} & 65.4 & $+0.137$ & 42.4 & 45.8 & $+0.082$\\
+1.10 & 90.2 & 89.3 & $-0.008$ & \textbf{59.4} & 58.7 & $-0.018$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent \textbf{The level and the trend make opposite demands on the anchor.} Matching the 1985
+stock needs $\sinit \approx 0.70$ (TP2) or $\approx 1.15$ (Yasso20), which gives trends of
+$+0.137$ and $-0.02$. Matching the trend needs anchors that put the 1985 stock at $27$ and
+$17$\,tC\,ha$^{-1}$ respectively --- less than half the observed. \textbf{No anchor value satisfies
+both, in either family.}
+
+This rejects the historical-depletion hypothesis (litter raking, forest grazing, slash-and-burn)
+as an explanation for the trend: it is implementable, and it fails. The hypothesis may remain true
+as history; it is not the mechanism behind the trend deficit. What survives is that
+\emph{initialisation controls the sink sign} --- Yasso20 spans $-0.09$ to $+0.23$ across the sweep
+--- but not its magnitude.
+
+\subsection{The trusted-campaign comparison cannot adjudicate 1985}
+\label{sec:power}
+
+A natural test of ``VMI8 reads low'' is to compare models over 2006--2024, which excludes it. That
+test has almost no power:
+
+\begin{table}[H]\centering\small
+\caption{Observed paired rates and what a deficit over 2006--2024 could be detected.}
+\begin{tabular}{lrrrr}
+\toprule
+period & $n$ & rate & SE & rate/SE\\
+\midrule
+1985--2006 & 348 & $+0.458$ & 0.048 & 9.5\\
+2006--2024 & 409 & $+0.209$ & 0.065 & 3.2\\
+1985--2024 & 316 & $+0.312$ & 0.035 & 9.0\\
+\bottomrule
+\end{tabular}
+\quad
+\begin{tabular}{lr l}
+\toprule
+model captures & gap & \\
+\midrule
+30\,\% & $2.2$ SE & detectable\\
+50\,\% & $1.6$ SE & \emph{indistinguishable}\\
+70\,\% & $1.0$ SE & \emph{indistinguishable}\\
+90\,\% & $0.3$ SE & \emph{indistinguishable}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Over 2006--2024 the total change is $+3.8$\,tC\,ha$^{-1}$ on a stock of $\sim$70 --- a
+5\,\% change at $3.2\sigma$ --- so a model capturing only half the trend is statistically
+indistinguishable from one capturing all of it. Essentially all the discriminating information
+lives in the 1985--2006 leg ($+9.6$\,tC\,ha$^{-1}$ at $9.5\sigma$), which is the leg whose
+reliability is in question.
+
+\textbf{So ``is 1985 low, or are the cascades too slow?'' cannot be resolved with these three
+campaigns.} Both hypotheses predict the same observable, and the only period with power is the
+contested one. This is a limit of the data, not an open analysis task.
+
+(Yasso20 remains an exception: it predicts $-0.147$ against $+0.209$, a gap of $5.5$\,SE, so its
+failure on the trusted campaigns stands regardless of 1985.)
+
+\subsection{The target itself is not yet defined}\label{sec:target}
+
+Every model--data gap above is quoted against an observed rate that varies substantially with two
+choices we have not made explicitly.
+
+\begin{table}[H]\centering\small
+\caption{Observed paired rate, plot set defined by the data alone.}
+\begin{tabular}{lrrrr}
+\toprule
+period & $n$ & mean & 10\,\% trimmed & median\\
+\midrule
+1985--2006 & 348 & $+0.458$ & $+0.409$ & $+0.410$\\
+2006--2024 & 409 & $+0.209$ & $+0.105$ & $+0.071$\\
+1985--2024 & 316 & $+0.312$ & $+0.260$ & $+0.229$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent \textbf{Statistic:} the 1985--2024 rate spans $+0.229$ (median) to $+0.312$ (mean), a
+36\,\% range; over 2006--2024 the spread is a factor of three. The distribution of per-plot
+changes is right-skewed.
+
+\textbf{Plot set:} an earlier draft quoted $n = 328$ for 2006--2024, taken from plots where the
+forward model happened to run. That is not a legitimate target --- it lets the model influence
+what it is judged against. The data-defined set is $n = 409$.
+
+The target therefore spans roughly $+0.07$ to $+0.31$ across defensible choices, which is the same
+magnitude as the model deficit being explained. \textbf{One plot set and one statistic must be
+fixed, and applied identically to observed and modelled rates}, before any gap is attributed to a
+mechanism. For an inventory the mean is the defensible choice --- total stock change is what is
+reported, and the median discards the high-accumulation plots that carry the sink --- but the skew
+should be reported alongside, since a mean--median gap this large is itself a result about the
+heterogeneity of accumulation.
+
 \subsection{Acceptance criteria agreed for the next run}
 
 \begin{table}[H]\centering\small

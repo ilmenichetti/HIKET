@@ -4,8 +4,11 @@
 `manuscript/REVISION_PLAN.md`, which has been removed (recoverable from git commit `5324383`;
 its C1–C5 decisions are summarised in §5).
 
-> **Read `manuscript/M&M_parameterization_working_document.pdf` first** (15 pp). It states every
-> parameterisation assumption, the four defects, the proposals and the evidence for each.
+> **Two companion documents, read in this order:**
+> 1. `manuscript/HIKET_next_session.pdf` (4 pp) — the level/trend discrepancy and the six
+>    hypotheses for it, with status and the test that would decide each. **Start here.**
+> 2. `manuscript/M&M_parameterization_working_document.pdf` (17 pp) — every parameterisation
+>    assumption, the four defects, the proposals, and the evidence for each.
 
 ---
 
@@ -127,6 +130,36 @@ trusted-campaign RMSE moved 0.45%. A scope condition, not a defect.
 from a fixed-equilibrium fit that ignored the rising litter. Litter rises ×1.35 over the window,
 and a soil merely *tracking* that rise reproduces the observed accumulation with no
 below-equilibrium start. The hypothesis may be true; the SOC record doesn't demand it.
+
+---
+
+## 3e. The hypotheses for the level/trend discrepancy
+
+Full statement in `manuscript/HIKET_next_session.pdf`. The discrepancy: **the level and the trend
+make opposing demands on the initialisation** — get the 1985 stock right and the trend is a third
+to a tenth of observed; get the trend right and the 1985 stock is less than half of observed. No
+anchor value satisfies both, in either family.
+
+| | hypothesis | status |
+|---|---|---|
+| **H6** | **the observed target isn't defined** — spans +0.07 to +0.31 across statistic and plot-set choices | **do first**; everything else is measured in its units |
+| H1 | kinetics too slow (cascades τ≈195 vs the ~35 implied) | identified; freeing the rate made it *worse* |
+| H2 | litter **trend** understated (×1.35 vs growing stock ×1.42) | **untested; best next test** |
+| H3 | 1985 reads low | plausible, **not resolvable** with these campaigns |
+| H4 | missing input with its own trend (understorey) | blocked on MUSTIKKA data |
+| H5 | missing capacity process (clay +0.050 R²) | evidence in hand; paper 2 |
+| ~~H0~~ | ~~historical depletion of 1917 soils~~ | **implemented and REJECTED** — the sweep shows it cannot deliver level and trend together |
+
+**Two results worth carrying forward:**
+
+- **Initialisation controls the sink *sign* but not its *magnitude*.** Yasso20 spans −0.09 to
+  +0.23 across the anchor sweep, so where you put the anchor decides source-vs-sink; it cannot
+  reach the observed +0.312.
+- **H1 and H3 are observationally degenerate.** The test that would separate them — comparing over
+  2006–2024, which excludes 1985 — has almost no power: a model capturing 50% of that trend is
+  indistinguishable from one capturing 100% (1.6 SE). All the discriminating information is in the
+  1985–2006 leg, which is the contested one. *Exception:* Yasso20 misses the trusted-campaign
+  trend by 5.5 SE, so its failure stands regardless of 1985.
 
 ---
 
