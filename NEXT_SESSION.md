@@ -80,6 +80,15 @@ property of the published parameters.
 climate and AWEN × size composition), pure steady-state routine. Independent of `sigma_input`,
 `sigma_init` and the SOC data; verified invariant to `sigma_input` over a 12× range.
 
+⚠ **And MRT is conditional on the `sigma_input` prior.** MRT as a *function of parameters* is
+invariant to `sigma_input`, but as an *inferred quantity* it is not: the likelihood mainly pins the
+product `MRT × σ_input × J_raw` (= observed stock), so the σ_input prior decides the split.
+Yasso15 published kinetics need σ_input 1.305; ours sit at 2.432 — **ratios inverse to within 8%**.
+So *"MRT too short"* and *"σ_input too high"* are one finding stated from two ends, and F12 must be
+read against the σ_input posterior with the caption saying so. Not purely prior-driven, though:
+published kinetics with both auxiliaries optimised still lose 93 nats, i.e. there is information
+beyond the level (plot-distribution shape, temporal profile) that a global multiplier cannot absorb.
+
 ---
 
 ## 3. TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT

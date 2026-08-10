@@ -8,6 +8,13 @@ source("manuscript/figures/model_palette.R")
 # steady-state routine. No sigma_input, no sigma_init, no SOC observations, no
 # pre-run -- so this is a property of the model's generator, identical method for
 # our posterior and for the published MCMC samples.
+#
+# BUT: MRT as an INFERRED quantity IS conditional on the sigma_input prior. The
+# likelihood mainly pins the PRODUCT MRT x sigma_input x J_raw (= observed stock),
+# so the sigma_input prior decides how that product splits. Yasso15: published
+# kinetics need sigma_input 1.305, ours 2.432 -- ratios inverse to ~8%. So
+# 'MRT too short' and 'sigma_input too high' are ONE finding from two ends.
+# Read this figure against the sigma_input posterior, and say so in the caption.
 RES <- readRDS("doublechecks/intrinsic_mrt.rds")
 MODELS <- c("Yasso07","Yasso15","Yasso20")
 R <- RES$out; ref <- RES$ref
