@@ -188,7 +188,68 @@ principled route and belongs in the discussion even if not attempted.
 
 ---
 
-## 6. NEXT LEVERS, IF THE ERROR MODEL IS NOT ENOUGH
+## 6. NEXT ACTION — TIGHTEN THE `sigma_input` PRIOR (Lehtonen & Heikkinen 2015)
+
+**Do this regardless of how the error-model run comes out.** `sigma_input`'s prior is log SD
+**0.50** (±65%) on a quantity we can bound from the literature — that is *unused information*, the
+same class of defect as the Tuomi widths, not a lever pulled to get an answer.
+
+**Source** (`literature/lehtonen-heikkinen-2015-uncertainty-of-upland-soil-carbon-sink-estimate-for-finland.pdf`,
+Aleksi's pointer; Figs 2–3):
+
+- Total litter input (tree + understorey), 1990–2013: **~3.15 tC/ha/yr south, ~2.15 north**,
+  95% CI ≈ ±15–20% ⇒ **σ ≈ 8–10%**. *(Fig. 2 read by eye — ±0.2 on the levels.)*
+- **The spread is predominantly EMPIRICAL.** Their own decomposition: *"uncertainty about the
+  volumes of living trees due to sampling error in NFI was clearly more influential than the other
+  components … the effects of uncertainty in logging volumes, biomass models, litter rates, and
+  understorey litter were relatively small."* The stipulated CVs (5% logging, 10% understorey) are
+  the *small* ones. ⚠ That decomposition is reported for stock CHANGE, not for the litter band
+  itself — litter derives from tree volumes so the same term should dominate, but it is inference.
+- ⚠ It is a **floor**: leaf-to-fine-root ratios and AWEN proportions were excluded.
+- ⚠ The **year-to-year variation** that dominates their sensitivity analysis is assumed (5/10/20%
+  tested) and is **Fig. 3, not the Fig. 2 band** — do not import it as level uncertainty.
+
+**USE THE SPREAD, KEEP OUR CENTRE.** Their *total* (~2.7 national, area-weighted ~60/40) is
+essentially identical to our Tupek **tree-only** 1990–2013 mean of **2.697** — which is not
+agreement but a hidden discrepancy (Tupek's implied total exceeds theirs by the understorey). It
+cannot be resolved from the paper: the text points to Appendix A Table A1 for the understorey
+litter, but that table is *stem volumes*. So do **not** adopt their level. Keeping our centre works
+anyway:
+
+    sigma_input centre 1.30 x J_raw 2.697 = 3.51 tC/ha/yr
+    published kinetics matched the level at sigma_input ~1.305 -> 3.52
+
+**The centre was never the problem — the width was.** At 0.50 the posterior ran to 2.43
+(flux 6.56, ~2.4x Lehtonen's total).
+
+### Construction
+
+| | |
+|---|---|
+| quantity | the **contemporary** effective flux `sigma_input x J_bar` |
+| centre | **unchanged at 1.30** |
+| width | **0.50 → 0.15–0.20** (0.25 = exactly halving, the conservative choice) |
+| form | **two-sided informative prior**, not a ceiling — a conflict should show as a reportable displacement, not be clipped at a boundary that also mixes badly |
+| untouched | `sigma_init` and the **1917** flux |
+| backstop | NPP ceiling, now inactive |
+
+⚠ **Implementation trap:** `flux_pair` currently bounds BOTH `sigma_input x J_bar` AND
+`sigma_init x sigma_input x J_full` (the 1917 flux). Applying this naively would tighten the
+historical flux too, push `sigma_init`, and **leak straight into the trend**. Apply to the
+contemporary side only, and verify against the transform code first.
+
+### Expected effect — helps, but not decisive alone
+
+Static balance for Yasso15 at the current position: tightening to 0.20 raises the `sigma_input`
+prior penalty 0.8 → 4.9, so total prior cost ~21 → ~25, against a likelihood advantage of ~35 nats
+once the error model is in (93 at the old sigma). **Near balance, not past it.** The error model
+does the heavy lifting; this narrows the remainder. If BOTH together still fail to move it, that is
+the informative outcome — the data demanding the fast solution against two independent external
+constraints — and it should be reported as a conflict rather than met with a third lever.
+
+---
+
+## 7. FURTHER LEVERS
 
 In order:
 
@@ -207,7 +268,7 @@ In order:
 
 ---
 
-## 7. STILL OPEN
+## 8. STILL OPEN
 
 - **Level offset** +6–11%, direction unchanged since the log-normal switch.
 - **Predictive coverage** still a parameter-CI, not a posterior-predictive interval.
