@@ -24,8 +24,10 @@
 #
 # Precision note:
 #   Despite REAL(dp) declarations throughout the source, dp is defined as
-#   SELECTED_REAL_KIND(6, 37) = REAL(4) (single precision) in yasso15_mod.
-#   All .Fortran() calls use as.single() / single() accordingly.
+#   SELECTED_REAL_KIND(15, 307) = REAL(8) (double precision) in yasso15_mod.
+#   CHANGED 2026-08-10 from single; both sides MUST move together or the ABI
+#   mismatches. yasso07.f90 was already double.
+#   All .Fortran() calls use as.double() / double() accordingly.
 #   Outputs are cast back to double for R-side use.
 #
 # Steady-state xi note:
@@ -182,18 +184,18 @@ yasso15_steady_state <- function(params,
                                  diam_fwl = 2.0, diam_cwl = 15.0) {
   
   result <- .Fortran("yasso15_steady_state_r",
-                     params      = as.single(params),
-                     nwl_mean    = as.single(nwl_mean),
-                     fwl_mean    = as.single(fwl_mean),
-                     cwl_mean    = as.single(cwl_mean),
-                     xi_awe_mean = as.single(xi_ss$xi_awe),
-                     xi_n_mean   = as.single(xi_ss$xi_n),
-                     xi_h_mean   = as.single(xi_ss$xi_h),
-                     leac        = as.single(leac),
-                     precip_mean = as.single(precip_mean),
-                     diam_fwl    = as.single(diam_fwl),
-                     diam_cwl    = as.single(diam_cwl),
-                     C_init      = single(15)
+                     params      = as.double(params),
+                     nwl_mean    = as.double(nwl_mean),
+                     fwl_mean    = as.double(fwl_mean),
+                     cwl_mean    = as.double(cwl_mean),
+                     xi_awe_mean = as.double(xi_ss$xi_awe),
+                     xi_n_mean   = as.double(xi_ss$xi_n),
+                     xi_h_mean   = as.double(xi_ss$xi_h),
+                     leac        = as.double(leac),
+                     precip_mean = as.double(precip_mean),
+                     diam_fwl    = as.double(diam_fwl),
+                     diam_cwl    = as.double(diam_cwl),
+                     C_init      = double(15)
   )
   
   as.double(result$C_init)
@@ -206,7 +208,7 @@ yasso15_steady_state <- function(params,
 
 #' Run Yasso15 transient forward simulation via Fortran
 #'
-#' All inputs are cast to single precision before the Fortran call to match
+#' All inputs are cast to double precision before the Fortran call to match
 #' the original Järvenpää reference implementation. Output is cast back to
 #' double for R-side use.
 #'
@@ -233,21 +235,21 @@ yasso15_run <- function(input_df, params, C_init, xi_arrays,
   
   result <- .Fortran("yasso15_run_r",
                      n_years       = as.integer(n_years),
-                     params        = as.single(params),
-                     nwl_awen      = as.single(nwl_awen),
-                     fwl_awen      = as.single(fwl_awen),
-                     cwl_awen      = as.single(cwl_awen),
-                     xi_awe_array  = as.single(xi_arrays$xi_awe),
-                     xi_n_array    = as.single(xi_arrays$xi_n),
-                     xi_h_array    = as.single(xi_arrays$xi_h),
-                     leac          = as.single(leac),
-                     precip_array  = as.single(precip_array),
-                     diam_fwl      = as.single(diam_fwl),
-                     diam_cwl      = as.single(diam_cwl),
-                     C_init        = as.single(C_init),
-                     C_out         = single(n_years * 5),
-                     resp_out      = single(n_years),
-                     C_final       = single(15)        # terminal per-cohort state
+                     params        = as.double(params),
+                     nwl_awen      = as.double(nwl_awen),
+                     fwl_awen      = as.double(fwl_awen),
+                     cwl_awen      = as.double(cwl_awen),
+                     xi_awe_array  = as.double(xi_arrays$xi_awe),
+                     xi_n_array    = as.double(xi_arrays$xi_n),
+                     xi_h_array    = as.double(xi_arrays$xi_h),
+                     leac          = as.double(leac),
+                     precip_array  = as.double(precip_array),
+                     diam_fwl      = as.double(diam_fwl),
+                     diam_cwl      = as.double(diam_cwl),
+                     C_init        = as.double(C_init),
+                     C_out         = double(n_years * 5),
+                     resp_out      = double(n_years),
+                     C_final       = double(15)        # terminal per-cohort state
   )
   
   C_mat <- matrix(as.double(result$C_out), nrow = n_years, ncol = 5)

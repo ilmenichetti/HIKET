@@ -36,12 +36,39 @@ SP1_SIGMA_PPM <- c(
   alpha       = 0.15,     # C1: VERY-INFORMATIVE (was 0.50) — pins the ICBM bulk
                           # rate but lets SOC data nudge the k2-dominated centre;
                           # posterior width = arable->forest transferability signal
-  beta1       = 0.26,     # Yasso07 scale (was 0.20)
-  beta2       = 0.00065,  # Yasso07 scale (was 0.05 — explosive)
-  gamma       = 0.20,     # Yasso07 scale (was 0.30)
+  beta1       = 0.1326555,     # Yasso07 scale (was 0.20)
+  beta2       = 0.0003316,  # Yasso07 scale (was 0.05 — explosive)
+  gamma       = 0.10204270,     # Yasso07 scale (was 0.30)
   sigma_init  = 0.50,
   sigma_input = 0.50
 )
+
+# --- Fraction-prior tightening switch (2026-08-10) ----------------------------
+# HIKET_PRIOR_TIGHTEN=<f> multiplies the TRANSFER-FRACTION prior SDs by f, and
+# nothing else. The Tier-2 logit SD of 0.4 is the ONLY width in the whole scheme
+# chosen by us rather than derived from a source, so it is the only one we are
+# entitled to narrow arbitrarily. Justification: the fractions are weakly
+# identified (all within 1.6 sigma of prior) yet high-leverage -- a ~1 sigma move
+# in p_WA/p_WN halves bulk MRT.
+#
+# Climate and woody-size widths are NOT scaled here: they come from sources and
+# were corrected directly above (Tuomi tables) or are genuine posterior SDs
+# (Yasso15/20 .dat). Rate anchors and the two auxiliary sigmas are untouched.
+#
+# Unset or 1 => production behaviour unchanged.
+.hiket_tighten <- suppressWarnings(as.numeric(Sys.getenv("HIKET_PRIOR_TIGHTEN", "1")))
+if (!is.finite(.hiket_tighten) || .hiket_tighten <= 0)
+  stop("HIKET_PRIOR_TIGHTEN must be a positive number")
+if (!isTRUE(all.equal(.hiket_tighten, 1))) {
+  .fr <- grep("^p_", names(SP1_SIGMA_PPM), value = TRUE)
+  if (length(.fr)) {
+    SP1_SIGMA_PPM[.fr] <- SP1_SIGMA_PPM[.fr] * .hiket_tighten
+    message(sprintf("[PRIOR TIGHTENING] SP1 fraction SDs x %.3f (%d fractions)",
+                    .hiket_tighten, length(.fr)))
+  } else {
+    message("[PRIOR TIGHTENING] SP1 has no transfer fractions -- no effect")
+  }
+}
 
 # Physical litter-flux envelope (tC/ha/yr), homogeneous across all six models.
 # Bounds the EFFECTIVE flux sigma_input*J (and the 1917 flux) to the boreal NPP

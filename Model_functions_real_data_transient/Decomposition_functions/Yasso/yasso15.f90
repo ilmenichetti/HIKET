@@ -41,8 +41,21 @@ MODULE yasso15_mod
   IMPLICIT NONE
 
   ! Double precision kind -- 15 significant digits, exponent up to 307
-  !INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(15, 307)
-  INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(6, 37)   ! single precision
+  !
+  ! CHANGED 2026-08-10 single -> double. yasso07.f90 was already double, so the
+  ! ensemble was being computed at two different precisions: SP1/TP2/Yasso07 at
+  ! ~16 digits, Yasso15/Yasso20 (which shares this .so) at ~7. For a structural
+  ! intercomparison that is a confound -- and it bites hardest exactly here,
+  ! because the published Yasso parameterisation is near mass-conservative
+  ! (pool A respires 0.11% per pass, N 0.19%, E 0.92%), so the generator's
+  ! slowest mode sits close to zero and the condition number is large. At single
+  ! precision (eps ~ 6e-8) ~8% of published posterior draws returned steady-state
+  ! stocks of 1e9-1e18 tC/ha; those are numerically impossible, since every draw
+  ! satisfies per-pool dissipativity and therefore HAS a finite steady state.
+  ! NB TOL below is 1.0E-12, which is meaningful in double and ~5 orders below
+  ! resolution in single -- the zero-guards were not doing what they read as doing.
+  INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(15, 307)
+  !INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(6, 37)   ! single precision
   
   INTEGER, PARAMETER :: NPOOLS = 5      ! A, W, E, N, H
 

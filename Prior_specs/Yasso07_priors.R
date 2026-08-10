@@ -47,6 +47,9 @@ YASSO07_FREE_DEFAULTS <- c(
 
 # sigma_ppm in unconstrained (transformed) space. All free params listed
 # explicitly (decision #5: explicit per-fraction listing for traceability).
+# CORRECTED 2026-08-10: both tables state '95% confidence limits', but the
+# locked convention read '+-' as 1 sigma -- ~1.96x too wide. Widths below are
+# the published half-widths divided by 1.959964. Centres unchanged.
 # Climate/woody widths from Tuomi 2009 T3 / 2011 T4, "±" read as 1σ (§4.1).
 YASSO07_SIGMA_PPM <- c(
   # Transfer fractions (12) — Tier-2 common logit SD 0.4
@@ -54,17 +57,44 @@ YASSO07_SIGMA_PPM <- c(
   p_EW = 0.4, p_NW = 0.4, p_AE = 0.4, p_WE = 0.4,
   p_NE = 0.4, p_AN = 0.4, p_WN = 0.4, p_EN = 0.4,
   # Climate response (Tuomi 2009 Table 3)
-  beta1       = 0.26,     # log; rel SD 0.020/0.076 (paper MAP)
-  beta2       = 0.00065,  # unconstrained; T3 −8.9 ±6.5 ×10⁻⁴
-  gamma       = 0.20,     # unconstrained; T3 −1.27 ±0.20
+  beta1       = 0.1326555,     # log; rel SD 0.020/0.076 (paper MAP)
+  beta2       = 0.0003316,  # unconstrained; T3 −8.9 ±6.5 ×10⁻⁴
+  gamma       = 0.10204270,     # unconstrained; T3 −1.27 ±0.20
   # Woody size modifier (Tuomi 2011 Table 4)
-  delta1      = 0.16,     # unconstrained; T4 −1.71 ±0.16
-  delta2      = 0.12,     # log; rel SD 0.10/0.86
-  r           = 0.042,    # log; rel SD 0.013/0.306
+  delta1      = 0.0816342,     # unconstrained; T4 −1.71 ±0.16
+  delta2      = 0.0612256,     # log; rel SD 0.10/0.86
+  r           = 0.021429,    # log; rel SD 0.013/0.306
   # Auxiliary uncertainty
   sigma_init  = 0.50,
   sigma_input = 0.50
 )
+
+# --- Fraction-prior tightening switch (2026-08-10) ----------------------------
+# HIKET_PRIOR_TIGHTEN=<f> multiplies the TRANSFER-FRACTION prior SDs by f, and
+# nothing else. The Tier-2 logit SD of 0.4 is the ONLY width in the whole scheme
+# chosen by us rather than derived from a source, so it is the only one we are
+# entitled to narrow arbitrarily. Justification: the fractions are weakly
+# identified (all within 1.6 sigma of prior) yet high-leverage -- a ~1 sigma move
+# in p_WA/p_WN halves bulk MRT.
+#
+# Climate and woody-size widths are NOT scaled here: they come from sources and
+# were corrected directly above (Tuomi tables) or are genuine posterior SDs
+# (Yasso15/20 .dat). Rate anchors and the two auxiliary sigmas are untouched.
+#
+# Unset or 1 => production behaviour unchanged.
+.hiket_tighten <- suppressWarnings(as.numeric(Sys.getenv("HIKET_PRIOR_TIGHTEN", "1")))
+if (!is.finite(.hiket_tighten) || .hiket_tighten <= 0)
+  stop("HIKET_PRIOR_TIGHTEN must be a positive number")
+if (!isTRUE(all.equal(.hiket_tighten, 1))) {
+  .fr <- grep("^p_", names(YASSO07_SIGMA_PPM), value = TRUE)
+  if (length(.fr)) {
+    YASSO07_SIGMA_PPM[.fr] <- YASSO07_SIGMA_PPM[.fr] * .hiket_tighten
+    message(sprintf("[PRIOR TIGHTENING] Yasso07 fraction SDs x %.3f (%d fractions)",
+                    .hiket_tighten, length(.fr)))
+  } else {
+    message("[PRIOR TIGHTENING] Yasso07 has no transfer fractions -- no effect")
+  }
+}
 
 # Physical litter-flux envelope (tC/ha/yr), homogeneous across all six models.
 # Bounds the EFFECTIVE flux sigma_input*J (and the 1917 flux) to the boreal NPP

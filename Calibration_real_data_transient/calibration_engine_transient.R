@@ -57,6 +57,33 @@ source("./Calibration_real_data/calibration_engine.R")
 # HIKET_LOGNORMAL_LIK=1 would never reach R, and the run would silently use the
 # biased likelihood for 13-19 h with only a missing log line to show for it.
 .hiket_lognormal_lik <- !identical(Sys.getenv("HIKET_LOGNORMAL_LIK"), "0")
+
+# -----------------------------------------------------------------------------
+# TOTAL OBSERVATION+MODEL ERROR (2026-08-10).  HIKET_SIGMA_TOTAL=<s> replaces
+# sigma_obs_fixed in the likelihood with s.
+#
+# WHY. sigma_obs_fixed is the MEASUREMENT CV (0.442, from the SOC homogenisation)
+# but it is used as the TOTAL error. Measured log-residual spread is 0.708-0.735
+# across all six models -- 1.6x wider -- so the implied MODEL error (0.55-0.59)
+# is larger than the observation error and the likelihood represents neither.
+#
+# Consequences of the under-dispersion: posteriors too narrow; log-likelihood
+# differences inflated ~2.6x; and, because the level penalty goes as 1/sigma^2,
+# the pressure to match stock LEVELS is amplified 2.6x relative to the priors --
+# which is a candidate driver of the short bulk MRT.
+#
+# This is the cheap form of the fix (a fixed total). The principled form is a
+# free sigma_model with sigma_total^2 = sigma_obs^2 + sigma_model^2; it needs
+# ~25 edits across the six run scripts and six prior specs, so it is deferred
+# until this establishes whether the effect is worth it.
+# Unset => production behaviour unchanged.
+# -----------------------------------------------------------------------------
+.hiket_sigma_total <- suppressWarnings(as.numeric(Sys.getenv("HIKET_SIGMA_TOTAL", NA)))
+if (!is.na(.hiket_sigma_total) && (!is.finite(.hiket_sigma_total) || .hiket_sigma_total <= 0))
+  stop("HIKET_SIGMA_TOTAL must be a positive number")
+if (is.finite(.hiket_sigma_total))
+  message(sprintf("[ERROR MODEL] total sigma OVERRIDDEN: %.3f (sigma_obs_fixed ignored)",
+                  .hiket_sigma_total))
 message(if (.hiket_lognormal_lik)
           "[ERROR MODEL] LOG-NORMAL likelihood (default)"
         else
@@ -144,12 +171,13 @@ make_likelihood <- function(n_cores,
       #   (see *_wrapper_transient.R). Adding it again in sd_vec would
       #   double-count. All observations use sigma_obs_fixed only.
       # -------------------------------------------------------------------
+      sd_use <- if (is.finite(.hiket_sigma_total)) .hiket_sigma_total else sigma_obs_fixed
       sd_vec <- if (transient_init) {
-        SOC_hat * sigma_obs_fixed
+        SOC_hat * sd_use
       } else {
         ifelse(meta$is_first,
-               SOC_hat * sqrt(sigma_obs_fixed^2 + sigma_init^2),
-               SOC_hat * sigma_obs_fixed)
+               SOC_hat * sqrt(sd_use^2 + sigma_init^2),
+               SOC_hat * sd_use)
       }
 
       # C5: per-observation SD inflation (down-weight the suspect 1985 campaign).
@@ -174,7 +202,7 @@ make_likelihood <- function(n_cores,
       if (isTRUE(.hiket_lognormal_lik)) {
         infl <- if (!is.null(meta$sigma_infl)) meta$sigma_infl else 1
         sum(dnorm(log(meta$soc_obs), mean = log(SOC_hat),
-                  sd = sigma_obs_fixed * infl, log = TRUE))
+                  sd = sd_use * infl, log = TRUE))
       } else {
         sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = sd_vec, log = TRUE))
       }
