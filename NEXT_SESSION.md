@@ -122,7 +122,73 @@ Context: the product rises +51.7% over 1986–2006 while NFI growing stock rises
 
 ---
 
-## 5. NEXT LEVERS, IF THE ERROR MODEL IS NOT ENOUGH
+## 5. THE IDENTIFICATION PROBLEM — how to choose a lever
+
+**The role assignment is right and is empirically supported:**
+
+| knob | what it sets | evidence |
+|---|---|---|
+| `sigma_init` | the **trend** (how far below equilibrium 1985 sits) | orders the paired stock change monotonically across four structurally different models, crossing zero at σ_init ≈ 0.9 |
+| `sigma_input × MRT` | the **level** | the two ratios are inverse to within 8% (Yasso15: published 30.45×1.305 vs ours 17.68×2.432) |
+| `MRT` alone | the **responsiveness** (trajectory curvature) | fast models track the 2006 litter peak; slow ones smooth it |
+
+Three features — level, slope, curvature — against three knobs, with three campaigns to see them.
+**So it is identified in principle.** It fails in practice because the likelihood sums 1269
+plot-year observations at equal weight with residual spread 0.72: the level is worth ~93 nats, the
+whole 1985–2024 trend ~3.4, and curvature less still. **The knobs are right; the likelihood cannot
+see the features that separate them.**
+
+### ⚠ A standing claim that does NOT survive this
+
+"Models need 2–3× the measured litter to fit" is **not a finding at current values.** The test is
+whether *any* physically reasonable point on the ridge fits:
+
+- **σ_input 13–20× (pre-`flux_pair`, TP2/TP3):** no — closing it would need MRT ≈ 5 yr, absurd for
+  a whole profile. Every point on that ridge was impossible ⇒ **genuine finding, still stands**,
+  and `F9_effective_flux_vs_ceiling` keeps its meaning because it is pinned to that comparison.
+- **σ_input 2.4× (now):** yes — MRT ≈ 30 with σ_input ≈ 1.3 fits the level (scenario test). So the
+  model needs nothing; our prior placed us at one end of an unconstrained ridge. Reporting it as a
+  finding would attribute to Yasso what our own σ_input prior did.
+
+What may survive is much narrower: published kinetics with *both* auxiliaries optimised still lose
+93 nats (~35 at the corrected σ). That is a claim about plot-level distribution shape and timing,
+**not** about litter magnitude. Check whether it survives run 563524 at all.
+
+### Closing the ridge: two ends, not equally defensible
+
+- **(a) Narrow `sigma_input`** ⇒ the level then identifies MRT.
+- **(b) Narrow the kinetics** ⇒ the level then identifies σ_input.
+
+For **σ_input** we have a physical argument with bounds (the Tupek product excludes understorey;
+understorey is a reasonably constrained fraction of boreal litter) — independent of the SOC being
+fitted. For the **kinetics** the external information is weaker and its transferability is exactly
+what this study questions: the ICBM anchor is arable (Ultuna), and Yasso's values come from
+litterbag experiments elsewhere — Toni's own reason that local recalibration is right.
+
+**The current setup has this backwards.** The kinetics are already tightly constrained (Yasso rates
+fixed, fractions prior-pinned, ICBM anchors) while `sigma_input` sits at log SD **0.50** (±65%) —
+we constrain what we know less about and leave loose what we know better. That argues for (a)
+independently of which answer it produces.
+
+### (c) Add information instead of constraining
+
+MRT governs responsiveness, σ_input does not, so any observable measuring how sharply the system
+tracks forcing separates them. Candidates: **radiocarbon** (constrains turnover directly,
+independent of input magnitude), or the **vertical distribution** — the homogenised target already
+carries organic / mineral 0–40 / deep tail, and pool-resolved information would identify routing
+without touching the input. Layers are not pools so the mapping is not clean, but this is the
+principled route and belongs in the discussion even if not attempted.
+
+### Decision order
+
+1. See what the error model alone did (run 563524).
+2. If the ridge is still open, close it at the **σ_input** end and **measure what it costs**.
+3. If constraining σ_input to its physical range degrades the fit badly, that is a genuine conflict
+   between the litter estimate, the models and the SOC target — a **finding**, not a knob to turn.
+
+---
+
+## 6. NEXT LEVERS, IF THE ERROR MODEL IS NOT ENOUGH
 
 In order:
 
@@ -141,7 +207,7 @@ In order:
 
 ---
 
-## 6. STILL OPEN
+## 7. STILL OPEN
 
 - **Level offset** +6–11%, direction unchanged since the log-normal switch.
 - **Predictive coverage** still a parameter-CI, not a posterior-predictive interval.
