@@ -48,6 +48,26 @@
 \begin{document}
 \maketitle
 
+
+% ---------------------------------------------------------------------------
+% STATUS BLOCK inserted 2026-08-10. Delete once the run below has landed and
+% the affected passages have been rewritten.
+% ---------------------------------------------------------------------------
+\begin{center}
+\fbox{\begin{minipage}{0.93\textwidth}
+\small
+\textbf{DRAFT STATUS --- 2026-08-10.} \textbf{Defect D4 (the likelihood conflates
+observation with model error) is now quantified and is being addressed.} The measured log-residual
+spread is 0.708--0.735 across all six models against an assumed
+$\sigma_{\mathrm{obs}}=0.442$ --- a factor 1.6 --- so the implied \emph{model} error (0.55--0.59)
+exceeds the observation error. Because the level penalty scales as $1/\sigma^{2}$, this amplified
+the pressure to match stock \emph{levels} by ${\sim}2.6\times$ relative to the priors, which is a
+candidate driver of the short calibrated residence times. Roihu jobs 563524--563529 (commit
+\texttt{3b0d533}) test this with a total error scale of 0.72, the plug-in estimate; the fraction
+prior is deliberately left unchanged so the error model is tested as one factor.
+\end{minipage}}
+\end{center}
+
 \begin{abstract}
 \noindent This document states every parameterization assumption in the HIKET calibration in
 one place, in the form they would take in a Methods section, and proposes a revised package.

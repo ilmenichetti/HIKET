@@ -1,207 +1,142 @@
 # NEXT SESSION — start here
 
-**Rewritten 2026-08-07 (evening).** Supersedes the earlier 2026-08-07 version and
-`manuscript/REVISION_PLAN.md`, which has been removed (recoverable from git commit `5324383`;
-its C1–C5 decisions are summarised in §5).
+**Rewritten 2026-08-10 (evening).** Supersedes the 2026-08-07 version.
 
-> **Two companion documents, read in this order:**
-> 1. `manuscript/HIKET_next_session.pdf` (4 pp) — the level/trend discrepancy and the six
->    hypotheses for it, with status and the test that would decide each. **Start here.**
-> 2. `manuscript/M&M_parameterization_working_document.pdf` (17 pp) — every parameterisation
->    assumption, the four defects, the proposals, and the evidence for each.
+> **Companion documents:**
+> 1. `manuscript/HIKET_next_session.pdf` (4 pp) — the level/trend discrepancy and its six
+>    hypotheses. Still valid EXCEPT H2, now closed (see §4).
+> 2. `manuscript/M&M_parameterization_working_document.pdf` — the parameterisation assumptions and
+>    the four defects. **Defect #4 (likelihood conflates observation with model error) is the
+>    subject of the run now in flight.**
 
 ---
 
-## 0. RUN LAUNCHED — Roihu jobs 509638–509643, 2026-08-07 ~17:00
+## 0. RUN IN FLIGHT — Roihu jobs 563524–563529, launched 2026-08-10 ~15:30
 
-| job | model |
-|---|---|
-| 509638 | SP1 |
-| 509639 | TP2 |
-| 509640 | TP3 |
-| 509641 | Yasso07 |
-| 509642 | Yasso15 |
-| 509643 | Yasso20 |
+| job | model | | job | model |
+|---|---|---|---|---|
+| 563524 | SP1 | | 563527 | Yasso07 |
+| 563525 | TP2 | | 563528 | Yasso15 |
+| 563526 | TP3 | | 563529 | Yasso20 |
 
-All six queued (PD) at submission. ~13–19 h ⇒ expect completion **morning of 2026-08-08**.
-Code at commit `e7e56bb` (config in `44c2093`).
+Commit `3b0d533`. Verified at launch in all six: `total sigma OVERRIDDEN: 0.720`,
+`LOG-NORMAL likelihood (default)`, `Forward-run sanity: PASS`, `5 chains x 50000`,
+`Cores per chain: 40`. ~13–19 h ⇒ results morning of **2026-08-11**.
 
-**Verify once they start** — restrict the glob to `*_5096*.err` or you will read August 5th's
-logs. Output goes to `.err`, not `.out` (R `message()` → stderr):
+**ONE FACTOR CHANGED ON PURPOSE.** The fraction prior stays at 0.4 so the error model is tested
+alone. Everything in this run is a **defect fix**, not a design choice:
+
+1. **`HIKET_SIGMA_TOTAL=0.72`.** `sigma_obs_fixed` (0.442) is the *measurement* CV but was used as
+   the *total* error; measured log-residual spread is 0.708–0.735 in all six models, implying
+   model error 0.55–0.59 — larger than the observation error. Because the level penalty goes as
+   1/σ², this amplified stock-level pressure ~2.6× relative to the priors, a candidate driver of
+   the short bulk MRT. Set via `SINGULARITYENV_HIKET_SIGMA_TOTAL` in the SLURM scripts — **a bare
+   export never reaches R inside the r-env container.**
+2. **Double precision** in `yasso15.f90` + wrapper (Yasso15/20 were at ~7 significant digits while
+   SP1/TP2/Yasso07 were at ~16). Verified to change no result.
+3. **Prior widths corrected to source.** Tuomi 2009 T3 and 2011 T4 both state *95% confidence
+   limits*; the locked convention read "±" as 1σ, ~1.96× too wide. Corrected for Yasso07 and for
+   SP1/TP2/TP3 (which inherit "Yasso07 scale"). Yasso15/20 untouched — genuine posterior SDs.
+
+---
+
+## 1. POST-RUN CHECKLIST (in order)
 
 ```bash
-cd /scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs
-grep -H -E "ERROR MODEL|Cores per chain|chains x|Forward-run sanity" *_5096*.err
+rsync -av roihu:/scratch/project_2019134/HIKET/Calibration_real_data_transient/runs/ \
+          ./Calibration_real_data_transient/runs/
+rsync -av roihu:/scratch/project_2019134/HIKET/Calibration_real_data_transient/diagnostics/ \
+          ./Calibration_real_data_transient/diagnostics/
+rsync -av roihu:/scratch/project_2019134/HIKET/Data/model_inputs/ ./Data/model_inputs/
+Rscript --no-save Calibration_real_data_transient/run_hiket_pipeline.R --skip-calibration
 ```
 
-Required in every model:
-- `[ERROR MODEL] LOG-NORMAL likelihood (default)` — the new likelihood is active
-- `Cores per chain: 40` — **not 383** (the OOM trap)
-- `5 chains x 50000 iterations` — no ablation env vars leaked
-- `Forward-run sanity: PASS` — the new pre-run anchor didn't break initialisation
+Use the `roihu:` alias, not the raw hostname. Sync `Data/model_inputs/` too — the predictive stage
+hard-loads the bundle keyed to each RUN_ID.
 
-If any shows 383 cores or no ERROR MODEL line: `scancel <jobid>` and investigate.
+Then, in order:
 
-**This is the first run with a correctly specified error model.** Every level-based number from
-`20260805` carries a ~20% specification error that this removes.
-
----
-
-## 1. What this run is
-
-The first calibration with a **correctly specified error model**, plus the initialisation defect
-fixed. Three changes:
-
-| change | why | evidence |
-|---|---|---|
-| **log-normal likelihood** | the multiplicative normal sets the variance from the parameter being estimated, so a prediction widens its own error bar and the location estimate is contaminated by dispersion | TP2 refit: bias **+12.7 → −0.9** tC/ha; median log-residual **−0.205 → −0.023** |
-| **common pre-run anchor** | the two ends of the pre-run used different litter aggregates (`J_full` vs `J_t0`), so σ_init was the 1917/1985 ratio × 0.75 — a centre of 1.00 silently asserted **33% more** litter in 1917 than 1985 | plain defect; wrappers are shared, so calibration and prediction follow together |
-| **ratio prior centre 0.90** | NFI growing stock with the fitted litter–growing-stock elasticity (ε ≈ 0.45–0.66 ⇒ litter ~ √GS; GS₁₉₁₇/GS₁₉₈₅ = 0.789 ⇒ R ≈ 0.90) | meaningful only *together with* the common anchor |
-
-**Implementation state.** All three are **live by default**. The log-normal was made the default
-rather than an opt-in switch (`HIKET_LOGNORMAL_LIK=0` reverts) because the SLURM scripts pass
-environment variables into the r-env singularity container only via a `SINGULARITYENV_` prefix —
-a plain `HIKET_LOGNORMAL_LIK=1` would never reach R, and the run would silently use the biased
-likelihood for 13–19 h. The `20260805` posteriors are no longer reproducible from current code;
-pre-P1 wrappers are recoverable via `git show 44c2093^:<wrapper path>`.
-
-### Deliberately not included
-
-- **Plain priors** (drop `flux_pair` for two lognormals) — tested safe (identical pre-flight
-  blow-ups in all six models, 0% prior mass above the NPP ceiling) but it changes the prior
-  *shape* as well as its centre, which would make this run unattributable. Next.
-- **Free slow rate** — tested, and it does **not** fix the trend (§3). Left at C1.
-- **Ratio coordinate** — superseded; the common anchor achieves the same thing more simply.
+1. **σ self-consistency.** Recompute the log-residual spread. **≈0.72 ⇒ the plug-in choice is
+   validated retrospectively**; otherwise iterate once at the new value. This is what makes 0.72
+   defensible rather than circular — at convergence it *is* the free-σ answer.
+2. **TP3 (and TP2) R-hat.** The specific test of whether the weaker likelihood suppresses the
+   degenerate mode. **Fraction tightening did NOT** — see §3.
+3. **`Rscript doublechecks/intrinsic_mrt.R`** → rebuild F12 (`manuscript/figures/build_F12_mrt_yasso.R`).
+   Baseline to beat: ours **11.3 / 17.7 / 14.7** vs published **33.4 / 30.5 / 25.0** (Yasso07/15/20).
+4. **F3 shape, and BIAS separately from RMSE.** A wider σ penalises the systematic +6–11% level
+   offset less, so bias may persist or grow even as the trajectory shape improves.
 
 ---
 
-## 2. What to check when it lands
+## 2. ⚠ ALL MRT NUMBERS BEFORE 2026-08-10 ARE SUPERSEDED
 
-| | expectation |
-|---|---|
-| **Level** | bias near zero at all three campaigns (TP2 achieved −0.9) |
-| **Yasso15/20 sink sign** | should turn positive; they were −0.063 and −0.155 against observed +0.312 |
-| **Yasso trajectory shape** | rise then flatten (saturation), as in `20260710` — *not* monotonic decline |
-| **F9, Yasso** | effective flux well inside the NPP envelope — **non-negotiable** |
-| **F9, SP1/TP2/TP3** | high flux tolerable; report as a finding |
-| **Trend** | within roughly a third of the observed **+0.312 ± 0.035**; report +0.209 (LUKE-validated campaigns only) as sensitivity |
-| **σ_init** | inversion threshold is now **1.0**, not 0.818 — the common anchor removed the conversion |
+The engine binding named `steady_state` is **not** a steady state — for Yasso it is
+`*_transient_init` (1917 equilibrium + 68-year ramp to 1985). It is contaminated by `sigma_init`
+(25.05 at 0.90 vs 33.84 at 0.35) and diverges for near-conservative draws via `model_step`'s Euler
+fallback. That divergence is the failure Lorenzo originally reported to FMI, and it is **not** a
+property of the published parameters.
 
-**Pre-flight: PASSED** (2026-08-07, K=200 at full N, all six). Blow-up rates identical to the
-pre-change baseline — 0/200 for SP1/TP2/TP3, 5/101 for Yasso07 (its known `delta2` baseline),
-0/145 for Yasso15/20. The common anchor lowers every plot's 1917 flux ~25%, so this was the gate
-that mattered; it is clear.
+**Use `doublechecks/intrinsic_mrt.R` only**: unit litter input at a fixed reference (dataset-mean
+climate and AWEN × size composition), pure steady-state routine. Independent of `sigma_input`,
+`sigma_init` and the SOC data; verified invariant to `sigma_input` over a 12× range.
 
 ---
 
-## 3. What changed the framing
+## 3. TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT
 
-**The level bias was ours, not the models'.** ~20%, uniform across all six, caused by the error
-model. Every level-based number from `20260805` carries it.
+Its two modes fit within **4.2 nats** (the collapsed mode slightly *better*), posterior mass split
+60/40. So the data cannot distinguish a three-pool cascade from one effective pool with a flat
+climate response: **the third pool is not identifiable from two SOC observations per plot.**
+R-hat 18 is the correct output for a genuinely bimodal posterior, not a sampler failure.
 
-**The trend is invisible to the likelihood.** A *perfect* trend fit is worth **3.4 nats**; the
-parameter move delivering it costs **8.9** even at a widened prior. The calibration correctly
-ignores it — confirmed empirically: freeing the slow rate sent `alpha_H` *down* (0.0053 → 0.0031)
-and moved the trend only 0.116 → 0.130 against an observed 0.309. **No reparameterisation fixes
-the trend.** Fitting it needs a change to what the likelihood targets — paired per-plot
-differences, or the aggregate stock change as an explicit observation with its own (0.035)
-uncertainty.
+Structurally: TP2's bracket `[1/a_A + p_H/a_H]` has 2 free parameters (1-D ridge); TP3's
+`[1/a_A + p_S/a_S + p_S·p_H/a_H]` has 4 (3-D manifold). And `p_S → 0` empties S *and* H, freeing
+`a_S`, `a_H` and `p_H` at once — a 3-D flat region versus TP2's 1-D.
 
-**The trend deficit is not new.** In `20260710` the models captured 25–50% of the observed rate;
-now 42%. What changed is that the old inflated target coincided with the models' levels at
-2006/2024, so F4 *looked* right. Yasso15/20 already had negative 2006→2024 trends in July.
+The fraction tightening could not fix it because the degeneracy spans the **rates** too, and those
+were deliberately left at SD 0.15 as the ICBM transferability diagnostic. **You can have that
+diagnostic or TP3's convergence, not obviously both.**
 
-**The two families fail differently.** Yasso's effective response time (17–38 yr) is adequate but
-it starts at or above its own equilibrium; TP2/TP3 start sensibly but are far too slow
-(τ ≈ 195 yr). Only the Yasso failure is fixable by initialisation — and Yasso's fix is
-**flux-neutral**, whereas the cascades' would cost input.
-
-**Simple structures *can* fit.** TP2 reaches the observed level and trend with `alpha_H` ≈ 0.025,
-`p_H` ≈ 0.30, σ_input ≈ 2.3 — flux 5.8 against a ceiling of 8.7. The solution exists; the
-likelihood just doesn't reward it. The ICBM anchor wasn't making the comparison fair, it was
-pinning a parameter the data has almost no opinion about.
-
-**σ_init is conditionally identified.** The data narrows it 2–7× and shifts the median up to 44%
-off the prior — it is *not* blind. But the information sits almost entirely in the 1985 campaign,
-so the inference is conditional: *given that VMI8 is taken at face value…*. C5 moved it 4× while
-trusted-campaign RMSE moved 0.45%. A scope condition, not a defect.
-
-**Retracted today**: the historical-depletion hypothesis (litter raking, slash-and-burn). It came
-from a fixed-equilibrium fit that ignored the rising litter. Litter rises ×1.35 over the window,
-and a soil merely *tracking* that rise reproduces the observed accumulation with no
-below-equilibrium start. The hypothesis may be true; the SOC record doesn't demand it.
+Report the non-identifiability rather than fixing it: it gives the complexity thread a mechanism
+(SP1 and TP2 identifiable, TP3 not, boundary at the third pool) instead of only a skill comparison.
 
 ---
 
-## 3e. The hypotheses for the level/trend discrepancy
+## 4. LITTER — H2 CLOSED
 
-Full statement in `manuscript/HIKET_next_session.pdf`. The discrepancy: **the level and the trend
-make opposing demands on the initialisation** — get the 1985 stock right and the trend is a third
-to a tenth of observed; get the trend right and the 1985 stock is less than half of observed. No
-anchor value satisfies both, in either family.
+**The 2006 peak is real and the series stands as published** (confirmed with B. Tupek). A modest
+post-2006 decline in modelled SOC is therefore *expected and defensible*, not an artefact to
+remove — possibly weaker than currently simulated. Do not re-open.
 
-| | hypothesis | status |
-|---|---|---|
-| **H6** | **the observed target isn't defined** — spans +0.07 to +0.31 across statistic and plot-set choices | **do first**; everything else is measured in its units |
-| H1 | kinetics too slow (cascades τ≈195 vs the ~35 implied) | identified; freeing the rate made it *worse* |
-| H2 | litter **trend** understated (×1.35 vs growing stock ×1.42) | **untested; best next test** |
-| H3 | 1985 reads low | plausible, **not resolvable** with these campaigns |
-| H4 | missing input with its own trend (understorey) | blocked on MUSTIKKA data |
-| H5 | missing capacity process (clay +0.050 R²) | evidence in hand; paper 2 |
-| ~~H0~~ | ~~historical depletion of 1917 soils~~ | **implemented and REJECTED** — the sweep shows it cannot deliver level and trend together |
-
-**Two results worth carrying forward:**
-
-- **Initialisation controls the sink *sign* but not its *magnitude*.** Yasso20 spans −0.09 to
-  +0.23 across the anchor sweep, so where you put the anchor decides source-vs-sink; it cannot
-  reach the observed +0.312.
-- **H1 and H3 are observationally degenerate.** The test that would separate them — comparing over
-  2006–2024, which excludes 1985 — has almost no power: a model capturing 50% of that trend is
-  indistinguishable from one capturing 100% (1.6 SE). All the discriminating information is in the
-  1985–2006 leg, which is the contested one. *Exception:* Yasso20 misses the trusted-campaign
-  trend by 5.5 SE, so its failure stands regardless of 1985.
+Context: the product rises +51.7% over 1986–2006 while NFI growing stock rises +22.4%, then falls
+−12.8% over 2006–2021 while growing stock rises +16.0%. Net 1986–2021: litter ×1.32, stock ×1.42.
 
 ---
 
-## 4. Next session
+## 5. NEXT LEVERS, IF THE ERROR MODEL IS NOT ENOUGH
 
-1. **Analyse the run** against §2.
-2. **Plain priors** — drop `flux_pair`, two lognormals plus a flux guard. Tested; deferred only
-   for attribution.
-3. **Predictive-stage defects**, cheap and independent:
-   - the coverage column is a parameter-CI mislabelled as posterior-predictive (omits observation
-     error — the "Param cov ≈ 0.05" artefact)
-   - no achieved-plot-count assertion (this is what let the `alpha_A` bug run silently)
-   - Yasso20 lacks the `tryCatch` guards Yasso15 has
-4. **NextGenC** — still on stale `20260710` RUN_IDs in `build_soc_matrices.R`,
-   `build_soc_maps.R`, `build_vulnerability_map.R`, `diagnostic_semivariogram.R`. They run
-   *successfully* on stale data because those posteriors were deliberately kept.
-5. **For collaborators**: B. Tupek — is the litter product derived from biomass? If so the
-   elasticity behind R = 0.90 is internal to it rather than independent evidence; this is the
-   load-bearing caveat. A. Lehtonen — stock-QC corroboration and understorey.
+In order:
 
----
-
-## 5. C1–C5, for the record (`REVISION_PLAN.md` removed)
-
-| | what | status |
-|---|---|---|
-| C1 | ICBM-anchored kinetics for SP1/TP2/TP3 (fast rate fixed, slow rate pinned at SD 0.15) | in. Its transferability diagnostic **fired** — posteriors sit 1.6–2.2σ off the anchor. But relaxing it does **not** fix the trend |
-| C2 | TP3 climate response on all pools | in |
-| C3 | growing-stock *shape* for the pre-run ramp | in. Its *level* was never taken from the same record — that is what the common anchor and ratio prior now fix |
-| C4 | σ_input reframe; C4b re-centred at 1.30 | in. Note the σ_input prior is nearly irrelevant: the likelihood decides it by ~112:1 |
-| C5 | down-weight the 1985 campaign | **withdrawn**. See the 2026-08-07 addendum in `HIKET_data_and_ablation_tests.pdf` — it was adjudicated on stock RMSE, which is blind to the stock *change* it actually controls |
+1. **`HIKET_PRIOR_TIGHTEN=0.5`** — Tier-2 fraction SDs only (0.4 → 0.2). Already committed and
+   inert by default. The one width in the whole scheme *we* chose rather than sourced, so the one
+   we are entitled to narrow. Expect it to matter most for Yasso15/20 (fractions carry 58% and 94%
+   of their MRT gap) and not at all for Yasso07 (whose gap is 111% climate).
+2. **Free `sigma_model`** (`σ_total² = σ_obs² + σ_model²`). ~25 edits across 13 files; the two
+   model families build `sigma_ppm` differently. Buys a *reportable* quantity — σ_model ≈ 0.55,
+   i.e. structural error exceeds measurement error — and fixes the predictive-coverage caveat.
+   ⚠ A free per-model σ reintroduces variance inflation across models, so pair it with a common
+   fixed σ for cross-model comparison.
+3. **Emergency plan: uniform *relative* prior width ~0.05** on all structural parameters, centres
+   at published. ⚠ A uniform **0.2 in the transformed space is not feasible** — `beta2` would be
+   370–2500× looser and would reproduce the historical `beta2` detonation.
 
 ---
 
-## 6. Housekeeping
+## 6. STILL OPEN
 
-- **The 2026-08-07 diagnostic posteriors are in `runs/`** (`TP2_posterior_20260807_142117`,
-  `_145728`, plus a Yasso20). They sort newest and **will be auto-selected by every downstream
-  script** — the `run_ids.R` resolver already refused once because of it. Quarantine before
-  running anything downstream.
-- **Uncommitted code from this session**: TP2/TP3 predictive `alpha_A` fix; two auto-selecting
-  doublechecks; the error-model and rate-prior switches; the common anchor; the 0.90 centre;
-  `preflight_naive_priors.R`, `prerun_direction.R`, `ablation_stock_change.R`,
-  `production_fit_by_campaign.R`, `build_F5_stock_change.R`, `run_ids.R`, and the figure-builder
-  auto-selection pass.
+- **Level offset** +6–11%, direction unchanged since the log-normal switch.
+- **Predictive coverage** still a parameter-CI, not a posterior-predictive interval.
+- **Benchmark trio unusable** until TP2/TP3 are settled (§3), so the complexity thread has no
+  evidence yet.
+- **NextGenC bundle, `HIKET_calibration.Rmd`, and the manuscript figure set** are all keyed to
+  `20260807_1655*` and become stale the moment 563524–563529 land.

@@ -74,6 +74,16 @@ Fortran `.so` binaries, `*.rds`/`*.csv` in diagnostics,
 | `N_LOG` | 200 | progress log interval |
 | `N_PLOTS_TEST` | `NA` | `NA` = full dataset; set e.g. `20L` for quick tests |
 
+**Environment switches** (all inert unless set; on Roihu they need the `SINGULARITYENV_` prefix
+to reach R inside the r-env container):
+
+| variable | effect | default |
+|---|---|---|
+| `HIKET_LOGNORMAL_LIK` | `0` reverts to multiplicative normal | log-normal |
+| `HIKET_SIGMA_TOTAL` | overrides the likelihood error scale | `sigma_obs_fixed` (0.442) |
+| `HIKET_PRIOR_TIGHTEN` | multiplies Tier-2 **fraction** SDs only | 1 (0.4 unchanged) |
+| `HIKET_N_CHAINS` / `_N_ITER` / `_N_BURNIN` | short test runs | 5 / 50000 / 5000 |
+
 ---
 
 ## Environments
@@ -295,8 +305,23 @@ inputs at entry; committed + pushed as **ff216ce** (exact integrator + bug fix).
 re-calibration steps in "Known outstanding items".
 
 ### Likelihood / error model
-Multiplicative-normal (proportional) error model. Asymmetric penalisation of
-underprediction is a known consequence — noted in methods.
+**LOG-NORMAL is the DEFAULT since 2026-08-07** (`HIKET_LOGNORMAL_LIK=0` reverts to the old
+multiplicative normal). The multiplicative normal let a prediction widen its own error bar, so the
+penalty for a badly-missed plot plateaued and the fit bought tolerance by inflating everything.
+
+**⚠ The error SCALE was wrong until 2026-08-10.** `sigma_obs_fixed` (0.442) is the *measurement*
+CV from the SOC homogenisation, but it was used as the *total* error. Measured log-residual spread
+is **0.708–0.735** across all six models (ratio 1.60–1.66), implying model error **0.55–0.59** —
+larger than the observation error. Three consequences: posteriors overconfident; log-likelihood
+differences inflated ~2.6×; and, because the level penalty goes as 1/σ², stock-LEVEL pressure
+amplified ~2.6× relative to the priors, a candidate driver of the short bulk MRT.
+`HIKET_SIGMA_TOTAL=<s>` overrides the scale (run 563524 uses **0.72**, the plug-in MLE of the
+total error; self-consistency is testable by recomputing the residual spread afterwards).
+The principled upgrade — free `sigma_model` with `σ_total² = σ_obs² + σ_model²` — is deferred:
+~25 edits across 13 files, and a free per-model σ would reintroduce variance inflation across
+models, so it needs pairing with a common fixed σ for cross-model comparison.
+
+⚠ **Log-likelihoods are not comparable across different σ** (the normalising constant changes).
 
 ### Convergence expectations
 With ~19 free parameters and only 2 SOC observations per plot, the 12 flow
@@ -524,15 +549,61 @@ noise the error model should absorb, not as data error.
   *direction*); watch ESS on σ_init. Scripts: `doublechecks/prerun_direction.R`,
   `ablation_stock_change.R`, `production_fit_by_campaign.R`.
 
-- **🚀 ROIHU RUN LAUNCHED — jobs 509638–509643, 2026-08-07 ~17:00** (SP1 509638, TP2 509639,
-  TP3 509640, Yasso07 509641, Yasso15 509642, Yasso20 509643). Commit `e7e56bb`. ~13–19 h ⇒
-  results morning of 2026-08-08. **First run with a correct error model** (log-normal, now the
-  DEFAULT — `HIKET_LOGNORMAL_LIK=0` reverts), the common pre-run anchor, and the 0.90 ratio
-  prior. Verify with `grep -H -E "ERROR MODEL|Cores per chain|chains x" *_5096*.err` — must show
-  LOG-NORMAL, 40 cores, 5x50000. **Expect Yasso15/20 to still report a source**: the trend is
-  worth ~3.4 nats and the calibration correctly ignores it — that needs a likelihood that targets
-  the stock change, not a parameterisation fix. See `NEXT_SESSION.md` and
-  `manuscript/M&M_parameterization_working_document.pdf`.
+- **🚀 ROIHU RUN IN FLIGHT — jobs 563524–563529, 2026-08-10 ~15:30** (SP1 563524, TP2 563525,
+  TP3 563526, Yasso07 563527, Yasso15 563528, Yasso20 563529). Commit `3b0d533`. ~13–19 h ⇒
+  results 2026-08-11. **Tests ONE factor: the error-model scale.** `HIKET_SIGMA_TOTAL=0.72`
+  replaces `sigma_obs_fixed` (0.442) — the latter is the MEASUREMENT CV but was used as the TOTAL
+  error, while measured log-residual spread is 0.708–0.735 in all six models (implied model error
+  0.55–0.59, larger than observation error). Since the level penalty goes as 1/σ², that amplified
+  stock-level pressure ~2.6× relative to the priors — a candidate driver of the short bulk MRT.
+  Also in this run: double precision (item below) and Tuomi 95%→1σ prior widths (item below).
+  Fraction prior deliberately left at 0.4 so the error model is tested alone.
+  ⚠ Set via `SINGULARITYENV_HIKET_SIGMA_TOTAL` in the SLURM scripts — **a bare export never
+  reaches R inside the r-env singularity container.** Verify with
+  `grep -H -E "ERROR MODEL|Cores per chain|chains x" *_5635*.err` — expect TWO ERROR MODEL lines.
+  **→ `NEXT_SESSION.md` has the post-run checklist.**
+
+- **⚠ ALL MRT NUMBERS BEFORE 2026-08-10 ARE SUPERSEDED.** The engine binding named `steady_state`
+  is NOT a steady state — for Yasso it is `*_transient_init` (1917 equilibrium + 68-yr ramp to
+  1985). It is contaminated by `sigma_init` (25.05 at 0.90 vs 33.84 at 0.35) and diverges for
+  near-conservative draws through `model_step`'s Euler fallback. **Use
+  `doublechecks/intrinsic_mrt.R`**: unit litter input at a fixed reference (dataset-mean climate +
+  AWEN × size composition), pure steady-state routine ⇒ a property of the generator, independent
+  of `sigma_input`/`sigma_init` and of the SOC data. Correct basis: ours **11.3 / 17.7 / 14.7** vs
+  published **33.4 / 30.5 / 25.0** (Yasso07/15/20). The displacement is *demanded* (147.7 / 93.4 /
+  42.6 nats at σ=0.442), not merely permitted by loose priors.
+
+- **✅ FORTRAN PRECISION FIXED 2026-08-10.** `yasso15.f90` ran SINGLE precision while
+  `yasso07.f90` ran double, so Yasso15/20 were computed at ~7 significant digits and
+  SP1/TP2/Yasso07 at ~16 — a confound for a structural intercomparison. Switched to double, with
+  `yasso15_wrapper_transient.R` converted in the same commit: **both sides must move together
+  (`as.single`/`single()` ↔ `as.double`/`double()`) or the ABI mismatches.** VERIFIED to change no
+  result (posterior MRT bit-identical; ll at defaults −1695.1308 → −1695.1312). The `.so` is
+  gitignored ⇒ **must be recompiled on Roihu**, each `.f90` in its own `SHLIB` call.
+
+- **✅ PRIOR WIDTHS CORRECTED TO SOURCE 2026-08-10.** Tuomi 2009 Table 3 and Tuomi 2011 Table 4
+  both state *"95% confidence limits"*, but the locked convention (decision, 2026-06-05) read "±"
+  as **1σ** — ~1.96× too wide. Corrected for Yasso07 and, since they inherit "Yasso07 scale", for
+  SP1/TP2/TP3: `beta1` 0.26→0.1327, `gamma` 0.20→0.1020, `beta2`, and Yasso07's
+  `delta1`/`delta2`/`r`. **Centres unchanged.** Yasso15/20 NOT touched — their widths are genuine
+  posterior SDs from the `.dat` samples. Halves the ensemble's climate asymmetry (simple models vs
+  Yasso15: 5.7× → 2.9×).
+
+- **🚩 TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT.** Its two modes fit within **4.2 nats**
+  (the collapsed `p_S`→0 mode slightly BETTER), posterior mass 60/40. The data cannot distinguish
+  a 3-pool cascade from one effective pool with a flat climate response ⇒ **the third pool is not
+  identifiable from 2 SOC obs/plot**, and R-hat 18 is the correct output for a bimodal posterior,
+  not a sampler failure. Structural: TP2's `[1/a_A + p_H/a_H]` is a 1-D ridge; TP3's
+  `[1/a_A + p_S/a_S + p_S·p_H/a_H]` is a 3-D manifold, and `p_S`→0 frees `a_S`, `a_H` AND `p_H`
+  at once. Fraction tightening cannot fix it — the degeneracy spans the RATES, deliberately left
+  at SD 0.15 as the ICBM transferability diagnostic. **Report it rather than fix it**: it gives
+  the complexity thread a mechanism (SP1/TP2 identifiable, TP3 not) instead of only a skill
+  comparison.
+
+- **✅ LITTER 2006 PEAK IS REAL — H2 CLOSED 2026-08-10** (confirmed with B. Tupek). The series
+  stands as published; a modest post-2006 decline in modelled SOC is EXPECTED and defensible, not
+  an artefact to remove. Context: litter rises +51.7% over 1986–2006 vs growing stock +22.4%, then
+  falls −12.8% over 2006–2021 vs growing stock +16.0% (net ×1.32 vs ×1.42). Do not re-open.
 
 - **✅ SUPERSEDED — Roihu recalibration jobs 474800–474805, launched 2026-08-05 13:24.**
   First run to include C1–C4 *and* both data corrections. ~36 h → expect ~01:00 on 2026-08-07.

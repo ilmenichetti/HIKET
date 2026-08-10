@@ -32,6 +32,26 @@ No methods or full referencing; the point is to read the argument whole and see 
 
 \begin{document}
 \maketitle
+
+% ---------------------------------------------------------------------------
+% STATUS BLOCK inserted 2026-08-10. Delete once the run below has landed and
+% the affected passages have been rewritten.
+% ---------------------------------------------------------------------------
+\begin{center}
+\fbox{\begin{minipage}{0.93\textwidth}
+\small
+\textbf{DRAFT STATUS --- 2026-08-10.} All figures and numbers in this note are keyed to the
+\texttt{20260807\_1655*} posteriors and are \textbf{provisional}. A recalibration is in flight
+(Roihu jobs 563524--563529, commit \texttt{3b0d533}) which corrects the likelihood error scale,
+the Fortran precision of Yasso15/20, and three prior widths misread from their sources. Two
+findings that will need incorporating either way:
+\textbf{TP3's non-convergence is a result, not a defect} --- its two modes fit within 4.2 nats, so
+the third pool is not identifiable from two SOC observations per plot; and
+\textbf{bulk residence times must be quoted from the intrinsic basis}
+(\texttt{doublechecks/intrinsic\_mrt.R}), not from the earlier contaminated computation.
+\end{minipage}}
+\end{center}
+
 \vspace{-0.6cm}
 
 \noindent\textbf{What this is.} Below is the HIKET argument told as one continuous story,
