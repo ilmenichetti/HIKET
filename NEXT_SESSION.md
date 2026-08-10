@@ -249,7 +249,37 @@ constraints — and it should be reported as a conflict rather than met with a t
 
 ---
 
-## 7. FURTHER LEVERS
+## 7. FRACTION-TIGHTENING TEST (local, 2026-08-10) — WHAT IT DID AND DIDN'T SHOW
+
+`HIKET_PRIOR_TIGHTEN=0.5`, 3 chains x 6000, all six, on the double-precision build with the
+source-corrected climate widths. Outputs quarantined to `doublechecks/prior_tighten_test/`.
+
+| model | R-hat | ESS | |
+|---|---|---|---|
+| SP1 | 1.003–1.013 | 331–632 | clean |
+| TP2 | 1.007–1.099 | 15–124 | OK |
+| **TP3** | **1.329–18.372** | **2–34** | **broken** |
+| Yasso15 | 1.002–2.326 (20 warn) | 9–136 | poor |
+| Yasso07 | 1.022–3.066 (18 warn) | 6–61 | poor |
+| Yasso20 | 1.004–2.135 (16 warn) | 13–153 | poor |
+
+**ESTABLISHED:** TP3 is *not* fixed by fraction tightening — confirmed now at two run lengths
+(5x50000 on 2026-08-07 and 3x6000 here), so it is not a sampling fluke. Consistent with §3: the
+degeneracy spans the RATES, which the fraction prior does not touch. SP1 and TP2 unaffected.
+
+**NOT ESTABLISHED — do not over-read the Yasso rows.** At 6000 iterations with 20–26 free
+parameters and ESS 6–153, R-hat is unreliable (it is inflated at ESS ~10). This is almost certainly
+insufficient sampling, **not** evidence that tightening harmed the Yasso models. The two cannot be
+separated without production-length chains.
+
+**CONSEQUENCE:** the test did **not** deliver the fraction-only MRT effect for the Yasso family —
+those posteriors are too poorly mixed to quote an MRT from. So there is no clean single-factor
+fraction result to pair with the error-model run. Obtaining one needs a production-length Roihu
+job, which is only worth spending if §6 (the `sigma_input` tightening) leaves a gap.
+
+---
+
+## 8. FURTHER LEVERS
 
 In order:
 
@@ -268,7 +298,7 @@ In order:
 
 ---
 
-## 8. STILL OPEN
+## 9. STILL OPEN
 
 - **Level offset** +6–11%, direction unchanged since the log-normal switch.
 - **Predictive coverage** still a parameter-CI, not a posterior-predictive interval.
