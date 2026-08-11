@@ -11,7 +11,53 @@
 
 ---
 
-## 0. RUN IN FLIGHT — Roihu jobs 563524–563529, launched 2026-08-10 ~15:30
+## 0a. RESULTS — Roihu jobs 563524–563529 LANDED 2026-08-11
+
+RUN_IDs `20260810_152914` (SP1/TP2/TP3), `_152915` (Yasso07), `_152916` (Yasso15), `_152917`
+(Yasso20). Stages 2–4 and the full figure set regenerated locally 2026-08-11.
+
+**1. σ self-consistency — VALIDATED.** sd(log residual) = 0.712 / 0.735 / 0.737 / 0.737 / 0.744 /
+0.732 (SP1…Yasso20) against the assumed 0.720. It is a fixed point: widening the likelihood 1.63×
+moved the residual spread ~2%. **This result is bankable and needs no revisiting.**
+
+**2. ALL SIX CONVERGED — including TP3.** Multivariate psrf 1.001–1.024, no parameter > 1.05.
+TP2 was 15.6 and TP3 18.7 with ESS 4–5. **⚠ This falsifies §3 below** — see the rewritten §3.
+
+**3. MRT rose 18–34%** (`doublechecks/intrinsic_mrt.R`, run IDs updated in place):
+
+| | before | now | published | ratio |
+|---|---|---|---|---|
+| Yasso07 | 11.3 | **15.17** | 33.39 | 0.34 → 0.45 |
+| Yasso15 | 17.7 | **21.91** | 30.27 | 0.58 → 0.72 |
+| Yasso20 | 14.7 | **17.37** | 25.02 | 0.59 → 0.69 |
+
+Attribution is clean for Yasso15/20: their climate priors were NOT touched (genuine posterior SDs),
+so their +24%/+18% is the σ change alone. Yasso07 got both corrections and moved most.
+**So the error-model scale WAS part of the MRT story — but not all of it.**
+
+**4. σ_input fell 7–16% everywhere** — SP1 2.06→1.84, TP2 2.55→2.38, TP3 2.59→2.39,
+Yasso07 2.92→2.49, Yasso15 2.43→2.04, Yasso20 2.67→2.42. The level ridge holds exactly:
+Yasso15's MRT×σ_input goes 43.0 → 44.7, constant to 4%.
+
+**5. Still unfixed.** Bias GREW (+3.7 to +6.8 tC/ha, Yasso20 worst) — expected, a wider σ penalises
+the level offset less. R² still ~0 (0.004–0.019). And **2006–2024 is a source in all six**
+(−0.018 to −0.433) against observed +0.209; full-window positive in five of six (Yasso15 +0.379 vs
+obs +0.312) but by cancellation.
+
+**Next lever (NOT launched — pending discussion 2026-08-11).** Tighten `sigma_input` log-SD
+0.50 → 0.20, centre 1.30 (Lehtonen & Heikkinen 2015). The ridge makes the outcome predictable:
+σ_input forced to 1.30 implies Yasso15 MRT ≈ 44.7/1.30 ≈ **34 yr** vs published 30.3. Two caveats
+to state out loud: (a) it partly IMPOSES the MRT answer — defensible because the width comes from
+independent NFI sampling error rather than the SOC being fitted, but it must be declared in the
+methods; (b) the note to apply it to the CONTEMPORARY flux only is NOT implemented, so the global
+version risks σ_init absorbing the slack (watch it — currently 0.53–1.11).
+
+**Known gap:** the multimodel projection plot is skipped — `nfi_region` is absent from
+`site_raw.csv`; run `assign_nfi_regions.R` first.
+
+---
+
+## 0b. (historical) RUN IN FLIGHT — Roihu jobs 563524–563529, launched 2026-08-10 ~15:30
 
 | job | model | | job | model |
 |---|---|---|---|---|
@@ -91,7 +137,32 @@ beyond the level (plot-distribution shape, temporal profile) that a global multi
 
 ---
 
-## 3. TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT
+## 3. ⚠ RETRACTED 2026-08-11 — TP3 *DOES* CONVERGE
+
+**Everything below this box is superseded. Do not report it.** In run `20260810_152914` TP3 has
+all 9 parameters R-hat < 1.05 and multivariate psrf **1.0053**. The collapsed mode is gone, not
+outvoted: `p_S` is cleanly unimodal at 0.455 (90% 0.354–0.568), where the old quantiles ran
+0.004 / 0.006 / 0.583 / 0.635 — the bimodal fingerprint — and `gamma` no longer reaches the
+climate-off value (old 97.5% −0.14, new −1.19).
+
+**The bimodality was an artefact of the over-wide climate priors** (the Tuomi 95%-as-1σ error:
+`beta1` 0.26→0.133, `gamma` 0.20→0.102), not structural non-identifiability of the third pool. The
+degenerate mode required climate switched off; corrected to source, that region is unaffordable.
+
+**Attribution is not fully settled.** This run moved climate widths *and* σ together. The
+`HIKET_PRIOR_TIGHTEN=0.5` test cited below looks like it separates them, but its chains file is
+1.8 MB against production's 20.9 MB (~11× fewer iterations), so its R-hat 1.3–18.4 may be
+incomplete mixing rather than genuine bimodality. **Do not lean on it.** A clean separation needs a
+full-length run at σ=0.442 with corrected climate priors — cheap, and worth doing if the
+prior-width mechanism is to be claimed in print.
+
+**Consequence for the manuscript:** the complexity thread loses its mechanism and reverts to a
+skill comparison. The mode-anatomy numbers below stay valid as a description of the OLD posterior
+and are still usable as a methods cautionary point about prior width.
+
+<details><summary>Superseded text</summary>
+
+### TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT
 
 Its two modes fit within **4.2 nats** (the collapsed mode slightly *better*), posterior mass split
 60/40. So the data cannot distinguish a three-pool cascade from one effective pool with a flat
@@ -108,6 +179,8 @@ diagnostic or TP3's convergence, not obviously both.**
 
 Report the non-identifiability rather than fixing it: it gives the complexity thread a mechanism
 (SP1 and TP2 identifiable, TP3 not, boundary at the third pool) instead of only a skill comparison.
+
+</details>
 
 ---
 

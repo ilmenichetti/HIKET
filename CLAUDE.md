@@ -549,7 +549,19 @@ noise the error model should absorb, not as data error.
   *direction*); watch ESS on σ_init. Scripts: `doublechecks/prerun_direction.R`,
   `ablation_stock_change.R`, `production_fit_by_campaign.R`.
 
-- **🚀 ROIHU RUN IN FLIGHT — jobs 563524–563529, 2026-08-10 ~15:30** (SP1 563524, TP2 563525,
+- **✅ LANDED 2026-08-11 — jobs 563524–563529.** RUN_IDs `20260810_152914` (SP1/TP2/TP3),
+  `_152915` (Yasso07), `_152916` (Yasso15), `_152917` (Yasso20). Stages 2–4 and 24/25 manuscript
+  figures regenerated locally the same day. **Results:** (1) σ=0.72 **self-consistent** — residual
+  sd 0.712–0.744 in all six, so the plug-in choice is validated, not circular; (2) **all six
+  converged**, including TP3 and TP2 (were psrf 18.7 / 15.6) ⇒ TP3 retraction above; (3) intrinsic
+  MRT rose 18–34% to **15.17 / 21.91 / 17.37** vs published 33.39 / 30.27 / 25.02 — for Yasso15/20
+  that rise is attributable to σ **alone** (their climate priors were untouched); (4) σ_input fell
+  only 7–16% (now 1.84–2.49); (5) **not** fixed — bias grew to +3.7…+6.8 tC/ha, R² still ~0, and
+  2006–2024 is a source in all six vs observed +0.209. Level ridge confirmed: Yasso15's
+  MRT×σ_input 43.0→44.7, constant to 4%. **Next lever (NOT launched, pending coauthors):**
+  σ_input log-SD 0.50→0.20 ⇒ predicted Yasso15 MRT ≈ 34 yr. Superseded launch note follows:
+
+- **🚀 ~~ROIHU RUN IN FLIGHT~~ — jobs 563524–563529, 2026-08-10 ~15:30** (SP1 563524, TP2 563525,
   TP3 563526, Yasso07 563527, Yasso15 563528, Yasso20 563529). Commit `3b0d533`. ~13–19 h ⇒
   results 2026-08-11. **Tests ONE factor: the error-model scale.** `HIKET_SIGMA_TOTAL=0.72`
   replaces `sigma_obs_fixed` (0.442) — the latter is the MEASUREMENT CV but was used as the TOTAL
@@ -589,7 +601,16 @@ noise the error model should absorb, not as data error.
   posterior SDs from the `.dat` samples. Halves the ensemble's climate asymmetry (simple models vs
   Yasso15: 5.7× → 2.9×).
 
-- **🚩 TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT.** Its two modes fit within **4.2 nats**
+- **⚠ RETRACTED 2026-08-11 — TP3 *DOES* CONVERGE.** In run `20260810_152914` all 9 parameters have
+  R-hat < 1.05 (multivariate psrf 1.0053); `p_S` is cleanly unimodal at 0.455 (90% 0.354–0.568)
+  where the old quantiles ran 0.004/0.006/0.583/0.635, and `gamma` no longer reaches the
+  climate-off value. **The bimodality was an artefact of the over-wide climate priors** (Tuomi
+  95%-as-1σ), not structural non-identifiability of the third pool. Attribution is not fully
+  settled — this run moved climate widths and σ together, and the local test that appears to
+  separate them ran 3×6000 vs production 5×50000, so its R-hat may be incomplete mixing. The
+  complexity thread loses this mechanism. Superseded text follows:
+
+- **🚩 ~~TP3 DOES NOT CONVERGE — AND THAT IS THE RESULT.~~ (SUPERSEDED, see above)** Its two modes fit within **4.2 nats**
   (the collapsed `p_S`→0 mode slightly BETTER), posterior mass 60/40. The data cannot distinguish
   a 3-pool cascade from one effective pool with a flat climate response ⇒ **the third pool is not
   identifiable from 2 SOC obs/plot**, and R-hat 18 is the correct output for a bimodal posterior,
