@@ -42,6 +42,18 @@ set.seed(2025)
 ROOT     <- getwd()
 XLSX     <- file.path(ROOT, "Data/Komeetta/Hannu/Komeetta 150526hi--.xlsx")
 REGION   <- file.path(ROOT, "Data/Komeetta/Juha/region.csv")
+# ⚠ 2026-08-12 -- LOOP BREAK. site_raw.csv must NOT be used for anything that
+# affects the target: it is built from plot_data, whose row set is an inner join on
+# the SOC data THIS SCRIPT produces, so reading it back closed a cycle that did not
+# reach a fixed point in one pass (1411 vs 1408 plot-years, 38 differing lambdas,
+# campaign means moving ~0.05 Mg/ha). site_attributes.csv carries the same raw
+# attributes -- GTK soil class, Cajander peat class, region, coordinates -- over an
+# SOC-INDEPENDENT plot universe.
+SITE_ATTR <- file.path(ROOT, "Data/model_inputs/site_attributes.csv")
+# Retained ONLY for descriptive, year-tagged covariates (stand basal area, age,
+# height, dev class, 2024 site descriptors). These are copied into plot_tab for
+# reference and NEVER enter soc_0_40, soc_deep or soc_profile. Do not move a
+# target-affecting lookup back onto this file.
 SITE_RAW <- file.path(ROOT, "Data/model_inputs/site_raw.csv")
 SITE_KEY <- file.path(ROOT, "Data/soil_litter_site_key.csv")   # ';'-sep; carries northings for 1985-only plots
 OUTDIR   <- file.path(ROOT, "Data/SOC_homogeneized")
@@ -250,7 +262,20 @@ layers_1985 <- bind_rows(
 # =============================================================================
 # 3. Long table (all campaigns), original intervals + geometry, drop peat
 # =============================================================================
-site <- read.csv(SITE_RAW)                    # plot_id-keyed attributes (pipeline)
+site_cov <- read.csv(SITE_RAW)                # DESCRIPTIVE covariates only -- see SITE_RAW note
+site_att <- read.csv(SITE_ATTR)               # SOC-INDEPENDENT: soil_code, peatland, region, coords
+# `site` keeps the raw attributes authoritative: every column that can reach the
+# target comes from site_attributes.csv; the descriptive covariates are joined on
+# without being allowed to introduce rows (all.x on the attribute table).
+site <- merge(site_att,
+              site_cov[, setdiff(names(site_cov),
+                                 c("soil_code", "soil_type", "peatland",
+                                   "region", "x_ETRS", "y_ETRS", "KA"))],
+              by = "plot_id", all.x = TRUE)
+if (!all(c("soil_code","peatland","region") %in% names(site)))
+  stop("site_attributes.csv is missing a target-affecting column", call. = FALSE)
+cat(sprintf("site table: %d plots from site_attributes.csv (SOC-independent); %d matched in site_raw\n",
+            nrow(site_att), sum(site_att$plot_id %in% site_cov$plot_id)))
 peat_all <- union(peat_ids, site$plot_id[site$peatland %in% TRUE])   # + 1985-only peat via site_raw
 
 # site descriptors (per plot, Komeetta-era 2024): dev class (KEHLK), site fertility, dominant species

@@ -239,8 +239,19 @@ plot_coords <- plot_coords[!is.na(plot_coords$x) & !is.na(plot_coords$y), ]
 plots_sf <- st_as_sf(plot_coords, coords = c("x", "y"), crs = 2393)
 plots_sf <- st_transform(plots_sf, crs = 3067)
 
-coords_all <- st_coordinates(plots_sf[plots_sf$plot_id %in% plot_data$plot_id, ])
-plot_ids   <- plots_sf$plot_id[plots_sf$plot_id %in% plot_data$plot_id]
+# ⚠ 2026-08-12 -- LOOP BREAK. This used to be restricted to plot_data$plot_id, and
+# plot_data is `merge(avg_inputs, avg_SOC)` keyed on `common_plots`, i.e. an INNER
+# join on the SOC data. That made soil_code (and hence the per-GTK-class lambda in
+# build_soc_homogenized.R) depend on which plots had SOC observations -- while the
+# SOC baseline itself reads soil_code back from site_raw.csv. A closed loop: drop a
+# 1985-only plot's observation and the plot vanished from site_raw, changing the peat
+# set and lambda on the NEXT build, which changed the SOC data again. Measured: it
+# did not reach a fixed point in one pass (1411 vs 1408 plot-years, 38 lambdas).
+# plots_sf comes from inputs_matched coordinates, which are SOC-independent, so
+# extracting over the whole of it breaks the cycle. The downstream merge into
+# plot_data is all.x = TRUE, so a superset is harmless there.
+coords_all <- st_coordinates(plots_sf)
+plot_ids   <- plots_sf$plot_id
 
 rest_url_1M <- "https://gtkdata.gtk.fi/arcgis/rest/services/Hasu/maapera/MapServer/3/query"
 
@@ -506,6 +517,33 @@ cat("KA distribution in Biosoil plots:\n")
 print(table(ka_lookup$KA, useNA = "always"))
 cat("kasvyo_syke distribution in Biosoil plots:\n")
 print(table(ka_lookup$kasvyo_syke, useNA = "always"))
+
+# =========================================================================================
+# site_attributes.csv -- the SOC-INDEPENDENT site table (added 2026-08-12)
+# -----------------------------------------------------------------------------------------
+# build_soc_homogenized.R must NOT read site_raw.csv: that file is built from plot_data,
+# whose row set is an inner join on the SOC data the builder itself produces. Everything the
+# builder actually needs is a RAW attribute -- GTK soil class, Cajander peat class, region,
+# coordinates -- none of which is a modelling result. They are emitted here, over the plot
+# universe defined by the litter-input coordinates, BEFORE anything SOC-derived is used.
+# ⚠ Nothing SOC-dependent may be added to this table. The invariant to preserve is the ROW
+# SET, not just the columns: gating the rows on SOC would restore the loop invisibly.
+# =========================================================================================
+site_attributes <- merge(
+  data.frame(plot_id = plots_sf$plot_id,
+             x_ETRS  = st_coordinates(plots_sf)[, 1],
+             y_ETRS  = st_coordinates(plots_sf)[, 2]),
+  soil_types_1M[, c("plot_id", "CODE", "TEKSTI")], by = "plot_id", all.x = TRUE)
+names(site_attributes)[names(site_attributes) == "CODE"]   <- "soil_code"
+names(site_attributes)[names(site_attributes) == "TEKSTI"] <- "soil_type"
+site_attributes <- merge(site_attributes, plot_region,               by = "plot_id", all.x = TRUE)
+site_attributes <- merge(site_attributes, ka_lookup[, c("plot_id", "KA")],
+                         by = "plot_id", all.x = TRUE)
+site_attributes$peatland <- !is.na(site_attributes$KA) & site_attributes$KA %in% c(11L, 12L, 13L)
+write.csv(site_attributes, "./Data/model_inputs/site_attributes.csv", row.names = FALSE)
+cat(sprintf("\nsite_attributes.csv: %d plots (SOC-independent), %d peat, %d with a soil class\n",
+            nrow(site_attributes), sum(site_attributes$peatland),
+            sum(!is.na(site_attributes$soil_code))))
 cat("kasvyo_ahti distribution in Biosoil plots:\n")
 print(table(ka_lookup$kasvyo_ahti, useNA = "always"))
 
