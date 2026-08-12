@@ -1,0 +1,47 @@
+balanced panel: 334 plots
+
+=== 1. LIKE-FOR-LIKE CHANGE BY BAND (weighted, Mg C/ha) ===
+                  band d_85_06 d_06_24 rate_85_06 rate_06_24
+                 humus  -0.011  -2.259     -0.001     -0.125
+          mineral 0-20   1.162   3.050      0.055      0.169
+         mineral 20-40   2.216  -0.714      0.106     -0.040
+             deep tail   1.031   0.942      0.049      0.052
+ TOTAL (like-for-like)   4.399   1.020      0.209      0.057
+
+  => the accumulation does NOT vanish with the litter term removed. It RELOCATES:
+     the humus layer goes flat, and essentially all of the 1985->2006 sink ends up
+     in the mineral soil — the compartment with the documented method problem.
+
+=== 2. BOUNDARY TEST: corr(delta humus, delta mineral 0-20) per plot ===
+    process >= 0   |   boundary reallocation << 0
+
+  1985 -> 2006       n=334  r = -0.043  [-0.149,+0.065]  p = 0.44   spearman +0.094
+                       sd(humus)=7.30 sd(min0_20)=8.31  sd(SUM)=10.83  <- if it were a pure
+                       trade-off, sd(SUM) would collapse below both (quadrature = 11.06)
+  2006 -> 2024       n=334  r = -0.148  [-0.251,-0.041]  p = 0.0069   spearman -0.107
+                       sd(humus)=7.60 sd(min0_20)=10.85  sd(SUM)=12.30  <- if it were a pure
+                       trade-off, sd(SUM) would collapse below both (quadrature = 13.25)
+
+  CONTROL humus vs mineral 20-40 (no shared boundary), 2006->2024: r = +0.028
+
+=== 3. DILUTION: does the organic layer gain mass while losing C%? ===
+  1985 -> 2006 humus:  mass +14.5 %   C% -1.80 pp   carbon  +3.2 %   (n=399)
+  per plot, corr(delta mass, delta C%) = -0.565  (p = 4.2e-35)
+
+  !! DO NOT READ THIS AS DILUTION. The test is confounded BY CONSTRUCTION: the 1985
+  mass is not measured, it is derived as C85/(C%85). An over-estimated 1985 C% lowers
+  mass85 and raises delta-mass while lowering delta-C%, i.e. it manufactures exactly
+  this negative correlation. With only a stock and a concentration for 1985, mass and
+  concentration cannot be separated, so signature 3 is INCONCLUSIVE.
+
+  The same confound attacks the +14.5% mass gain itself: Kramarenko sec. 4.4 records
+  that campaign 1's C% was largely LOI-regression PREDICTED. A C% biased high by the
+  observed ~2 pp (~5% relative) biases mass85 low by ~5% and the 1985 organic STOCK
+  high by ~5% (~0.9 Mg/ha) if the mass was the measured quantity.
+  Robust statement that survives either way: the humus layer's 1985->2006 change is
+  within about +/-1 Mg/ha over 21 yr, i.e. |rate| <= 0.05 Mg/ha/yr against a
+  like-for-like total of +0.209. It is small however the C% question resolves.
+null device 
+          1 
+
+figure: ./doublechecks/soc_depth/03_boundary_tradeoff.png 

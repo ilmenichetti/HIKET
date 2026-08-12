@@ -123,6 +123,36 @@ heterogeneity of accumulation.
 being explained. Some of the discrepancy may be a choice rather than a mechanism.
 \end{hyp}
 
+\begin{caveat}
+\textbf{H6 --- RESOLVED 2026-08-12.} The action above has been carried out.
+\texttt{doublechecks/observed\_soc\_basis.R} is now the canonical table. There are \emph{three}
+axes, not one, and together they span a factor of four for the same data:
+\textbf{weighting} (unweighted = the average plot in our sample; region-weighted = the average
+hectare of Finland, worth 25--30\,\%), \textbf{plot set} (paired vs balanced --- for 2006--2024,
+also requiring a 1985 observation moves $+0.216 \to +0.143$, a 34\,\% swing, though for 1985--2024
+it changes almost nothing), and \textbf{depth} (measured 0--40\,cm vs whole profile including the
+modelled deep tail, worth $\sim$35\,\% here because the tail is refitted per campaign).
+
+\smallskip
+\textbf{The rule adopted:} model comparison $\to$ \emph{paired, unweighted, whole profile};
+any national statement $\to$ \emph{weighted, measured 0--40\,cm}; comparing intervals with each
+other $\to$ \emph{balanced}, so the population is constant. Never difference means over different
+plot subsets.
+
+\smallskip
+The table above is on the paired, unweighted, whole-profile basis and remains correct for model
+comparison. \textbf{Where 2006--2024 is set beside 1985--2024, the balanced figure $+0.143$ should
+be used instead of $+0.209$}, since only then do the two intervals describe the same plots.
+
+\smallskip
+\textbf{Applied to the figures the same day:} F2, F3 and F4 drew a model curve averaged over all
+plots against observed means taken over per-campaign subsets. They now share one balanced set
+($n=316$) via \texttt{manuscript/figures/obs\_basis.R}. On the companion appendix figure the same
+mismatch had moved Yasso15's 1985 level $63.3 \to 65.1$ and its 1985--2024 rate
+$+0.422 \to +0.379$, inflating the apparent model--observation gap by $\sim$40\,\%. F5 was already
+correct (paired per-plot differences).
+\end{caveat}
+
 % =====================================================================
 \section{The hypotheses}
 

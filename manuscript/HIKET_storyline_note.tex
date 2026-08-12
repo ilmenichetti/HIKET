@@ -403,14 +403,14 @@ the per-model palette. Same small spread, one notch higher than holdout; bias hi
 \end{figure}
 
 \begin{figure}[htbp]\centering
-\includegraphics[width=0.88\linewidth]{\fig/R1_convergence.png}
+\includegraphics[width=0.88\linewidth]{\fig/S3_convergence.png}
 \caption{\textbf{S3 --- MCMC convergence.} Per-model maximum R-hat ($<$1.02 everywhere, well under 1.05) and
 minimum effective sample size ($>$1100). Good mixing --- so well-behaved fraction R-hat reflects mixing, not
 identifiability (the non-identifiability shows up in information gain and prior-pinning, not in R-hat).}\label{fig:s3}
 \end{figure}
 
 \begin{figure}[htbp]\centering
-\includegraphics[width=0.98\linewidth]{\fig/R2_residuals.png}
+\includegraphics[width=0.98\linewidth]{\fig/S4_residuals.png}
 \caption{\textbf{S4 --- residual diagnostics.} Residual-vs-fitted, normal Q--Q, and histogram of the log residuals,
 pooled over all six models (log is the multiplicative-normal error model's natural scale). Roughly symmetric and
 near-Gaussian; the small negative offset ($-0.115$) is the systematic $\sim$11\% over-prediction --- a likelihood
@@ -418,7 +418,7 @@ property, not biogeochemistry.}\label{fig:s4}
 \end{figure}
 
 \begin{figure}[htbp]\centering
-\includegraphics[width=0.82\linewidth]{\fig/R4_nonyasso_kl.png}
+\includegraphics[width=0.82\linewidth]{\fig/S5_nonyasso_kl.png}
 \caption{\textbf{S5 --- information gain, the simple models.} KL(posterior\,$\|$\,prior) for SP1/TP2/TP3 --- the
 companion to Fig.~\ref{fig:kl}. Same verdict: $\sinput$ dominates; SP1's single decomposition rate is the one
 strongly identified parameter in the study; TP2/TP3 rates gain $\approx$0.}\label{fig:s5}
@@ -438,6 +438,48 @@ non-identifiability is a property of the model class, not a single variant.}\lab
 for $\sinput$ and $\sinit$ (Yasso20). Both move decisively off the prior --- the counterpoint to the non-identified
 transfer fractions: where the data \emph{do} constrain a parameter, it shows. (More parameter marginals can be
 added.)}\label{fig:s7}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.98\linewidth]{\fig/S8_soc_depth_profiles.png}
+\caption{\textbf{S8 --- SOC depth distribution of the three campaigns.} All panels on one basis: humus (OFH)
+$+$ mineral, with the litter layer (LM) excluded because it is absent from the 1985 record; its size is printed
+in (a). (a) mean profile at each campaign's \emph{native} layers (VMI8 splits 0--20 as 0--5/5--20, the later
+campaigns as 0--10/10--20). (b) cumulative stock with depth, the sub-40\,cm tail shaded as modelled, not
+measured. (c) the interval-free shape statistic $\lambda=-\log(C_{20\text{-}40}/C_{0\text{-}20})/20$, medians
+0.038 / 0.031 / 0.041\,cm$^{-1}$. \textbf{1985 sits between the other two}, so the profile \emph{shape} does not
+single it out --- the campaign difference is a level, not a distortion of the depth distribution.}\label{fig:s8}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.98\linewidth]{\fig/S9_soc_change_by_depth.png}
+\caption{\textbf{S9 --- where the apparent SOC change sits, by layer.} (a,b) change per layer over each
+inter-campaign interval. \textbf{The humus layer is flat over 1985--2006 ($-0.01$) and \emph{declines} over
+2006--2024 ($-2.26$), while the mineral soil carries the entire apparent sink and the subsoil reverses sign}
+($+2.22$ then $-0.71$). A genuine accumulation signal should be surface-weighted; this one is depth-weighted.
+(c) the litter treatment as a bracket on the observed trend: A as built (1985 without LM, 2006/24 with ---
+internally inconsistent), B litter removed from all three, C litter added to 1985 (working default).
+Panels (a,b) are on basis C, under which the 1985--2006 LM bar is zero \emph{by construction} and is drawn
+hollow to say so. Conditional on the 1985 record being OFH-only (see text).}\label{fig:s9}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.98\linewidth]{\fig/S10_soc_campaign_reliability.png}
+\caption{\textbf{S10 --- campaign repeatability, agreement, and the organic/mineral boundary.} (a)
+between-campaign correlation by layer; 2006\,vs\,2024 is the reference pair, both ends measured under one
+protocol. (b) the subsoil plot by plot: \textbf{1985 is no noisier than 2006} ($r=0.63$ vs $0.65$), so the
+subsoil problem is a level offset, not scatter. (c) Bland--Altman agreement for the subsoil --- the difference
+between campaigns against their average (neither is a gold standard). A non-zero intercept is a constant bias;
+a \emph{tilted} line is proportional bias, the fingerprint of a scale error (bulk density, sampled volume)
+rather than an added amount of carbon. 1985--2006 slope $+0.39$, equivalent to
+$\mathrm{C}_{2006}\approx1.48\,\mathrm{C}_{1985}-2.8$. \textbf{Note the limits of agreement, $-10.8$ to
+$+15.9$\,Mg\,C\,ha$^{-1}$ on a layer holding $\sim$11: the mineral data cannot resolve plot-level change in
+either pair.} Proportional bias is present in \emph{every} campaign pair and both mineral layers (0--20\,cm:
+$+0.17$ for 1985--2006, $+0.34$ for 2006--2024), so it is a property of the mineral measurement in general, not
+of 1985 alone. (d) the boundary test --- the organic/mineral split is set by eye in the field, so carbon can be
+reassigned between the humus and mineral 0--20\,cm bands with no carbon moving; a pure reassignment would
+follow the dashed slope $-1$. Observed $r=-0.04$ (1985--2006) and $-0.15$ (2006--2024): a weak effect in the
+later pair only.}\label{fig:s10}
 \end{figure}
 
 \end{document}

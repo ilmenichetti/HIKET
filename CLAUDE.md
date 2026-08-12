@@ -525,6 +525,35 @@ protocol). The baseline reproduces LUKE's official national stocks **exactly**
   METHODS & MATERIALS block at the end of `Data_work.R` (canonical text) and in
   §"SOC stocks: a single homogenized basis" of `manuscript/HIKET_main_manuscript.tex`.
 
+### ⚠ The 1985 target is not comparable with 2006/2024 — fix DECIDED 2026-08-12, NOT YET APPLIED
+
+Two defects, both established from the workbook's own structure (see `NEXT_SESSION.md` §0c for the
+implementation, `manuscript/HIKET_discussion_memo.tex` for the findings):
+
+1. **The 1985 organic layer is OFH only.** LM (litter+moss) is a separately coded layer (`Massat_2006`
+   Krs 100 = LM vs 101 = OFH); it was measured in 2006/2024 and folded into their organic layer, and
+   is **absent from 1985**. Worth **3.37 / 4.27 Mg C/ha** — the README's "minor, sub-Mg ha⁻¹" is wrong
+   by 3–4×. It supplies **89%** of the apparent 1985→2006 organic gain and **47%** of the 2006→2024
+   change. Proof: BiSo lays 1985/2006/2024 out in parallel blocks with identical columns; the 1985
+   block is byte-identical to `Data_1985` (414/414); and the 2006 `C_kgha` equals `1e4*C_kgm2`
+   exactly, i.e. litter-free. Corroborated by dry mass (1985 43.7 vs 2006 OFH 50.0 vs OFH+LM 56.7).
+   **Fix = treatment C:** add each plot's own 2006 LM to 1985.
+2. **"1985" is 1986–1995.** BiSo col 140 (`MAANAYTE`) and sheet `kiv_maat85_95` agree exactly
+   (387 overlapping, 0 disagreements). 69/76/103/54/**72** plots for 1986/87/88/89/**1995** — so
+   **19.5% are 10 years mis-dated**, the campaign mean represents ~**1989**, and the true mean
+   interval to 2024 is **34.7 yr, not 39** (12% error in every rate denominator).
+
+⚠ **Do NOT rename `year`** when wiring the true dates — it doubles as the campaign key, so
+`sigma_infl` and `HIKET_DROP_CAMPAIGN` would break *silently*. Add `obs_year` alongside.
+
+**What is NOT wrong with 1985**, despite intuition: its depth distribution (λ 0.038, *between*
+2006's 0.031 and 2024's 0.041), stoniness (ρ=−0.08 n.s.), the organic/mineral boundary (r=−0.04
+n.s. for this pair), and its noise level (subsoil repeatability 0.63 vs 0.65). Whatever is wrong is
+a **level**, not scatter, and proportional bias appears in *every* campaign pair. The surviving
+1985-specific mechanisms are the LOI-derived mineral C%, relocated subplots, and the physically
+implausible **depth-inverted** subsoil gain (subsoil +19% vs topsoil +8.5% over 1985→2006 — a real
+input-driven gain must be surface-weighted).
+
 **Excluded plots:** zero-litter, OFH-absent (`organic_missing`/`organic_zero`),
 peatland (Cajander KA 11–13), MRT > 100 years, **`const_litter`** (litter identical to
 rel. SD < 1e-6 over 1986–2024 — a fixed repeated value, not a measured series; 8 plots,

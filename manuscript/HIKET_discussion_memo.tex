@@ -1,0 +1,247 @@
+% HIKET -- DISCUSSION MEMO: a running collection of findings that are useful for the
+% Discussion but not yet strong enough for the storyline.
+%
+% THIS IS A LIVING DOCUMENT. Items are added, promoted, demoted and DELETED. It is not
+% a record of everything we have done -- doublechecks/ and the git history are that.
+% It holds only what might earn a sentence in the Discussion, together with the honest
+% reason it is not there yet.
+%
+% HOW TO MAINTAIN IT (see also the "Rules" section in the body):
+%   - one \item per finding, using the \finding environment, newest at the top of its
+%     status group;
+%   - when an item becomes strong enough, MOVE it to the storyline/manuscript and
+%     delete it here, leaving one line in the "Graduated" table;
+%   - when an item is falsified, delete it and leave one line in the "Retired" table
+%     with what killed it. Do not keep dead items in the body.
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}\usepackage{xcolor}
+\usepackage{booktabs}\usepackage{longtable}
+\usepackage{float}\usepackage[hidelinks]{hyperref}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+
+% --- status marks -------------------------------------------------------------------
+\definecolor{stgood}{HTML}{2E7D4F}\definecolor{stmid}{HTML}{B8860B}\definecolor{stweak}{HTML}{8B5E3C}
+\newcommand{\stA}{\textcolor{stgood}{$\bullet\bullet\bullet$}}  % measured, robust, one step from the storyline
+\newcommand{\stB}{\textcolor{stmid}{$\bullet\bullet\circ$}}     % measured but confounded or single-source
+\newcommand{\stC}{\textcolor{stweak}{$\bullet\circ\circ$}}      % suggestive; would need new data or a new test
+
+% --- the finding environment --------------------------------------------------------
+\definecolor{fbg}{HTML}{F4F6F8}\definecolor{frule}{HTML}{5B6B7A}
+\newtcolorbox{finding}[1]{colback=fbg, colframe=frule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  title={#1}, coltitle=frule, fonttitle=\small\bfseries,
+  attach title to upper=\par, before skip=10pt, after skip=10pt}
+
+\definecolor{cavbg}{HTML}{FDF3E7}\definecolor{cavrule}{HTML}{C87A2F}
+\newtcolorbox{caveat}{colback=cavbg, colframe=cavrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=8pt, after skip=8pt}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+
+\title{HIKET --- discussion memo\\
+  \large Findings that may serve the Discussion, and are not yet strong enough for the storyline}
+\author{}
+\date{Started 12 August 2026 --- living document, revised continuously}
+
+\begin{document}
+\maketitle
+
+% =====================================================================================
+\section*{What this is}
+\addcontentsline{toc}{section}{What this is}
+
+A holding place. Analyses accumulate faster than the storyline can absorb them, and the
+ones that do not fit are either lost or, worse, quietly promoted without the caveat that
+kept them out. This document keeps them with their caveat attached.
+
+\medskip
+\noindent\textbf{Admission rule.} An item belongs here if it could plausibly earn a
+sentence in the Discussion \emph{and} there is a stated reason it cannot yet. If there is
+no such reason, it belongs in the manuscript. If there is no plausible sentence, it
+belongs in \texttt{doublechecks/} and nowhere else.
+
+\medskip
+\noindent\textbf{Status marks.}\quad
+\stA~measured and robust, one step from the storyline \quad
+\stB~measured but confounded, or resting on a single source \quad
+\stC~suggestive; needs new data or a new test
+
+\medskip
+\noindent\textbf{Maintenance.} Items are \emph{deleted} when they graduate or die, leaving
+one line in the tables at the end. This document should not grow monotonically; if it
+does, it has become a diary rather than a memo.
+
+% =====================================================================================
+\section{Open items}
+
+% -------------------------------------------------------------------------------------
+\begin{finding}{\stB\ \ D1 --- The 2006--2024 model--observation disagreement is confined to the mineral soil}
+\textbf{Claim.} The six models do not fail to reproduce the recent SOC trend in general.
+They reproduce the \emph{organic layer}, and disagree with the \emph{mineral soil}.
+\end{finding}
+
+\noindent Over 2006--2024, on the 429 plots measured in both campaigns. The model trajectories are
+\emph{unweighted} plot means, so the unweighted column is the one that may be compared with them;
+the region-weighted column is the nationally representative figure and is shown so the two bases
+are never mixed.
+
+\begin{center}\small
+\begin{tabular}{lrr}
+\toprule
+compartment & unweighted & region-weighted\\
+ & \multicolumn{2}{c}{Mg\,C\,ha$^{-1}$\,yr$^{-1}$}\\
+\midrule
+organic layer & $-0.094$ & $-0.082$\\
+mineral 0--40\,cm & $+0.232$ & $+0.181$\\
+whole measured profile & $+0.138$ & $+0.098$\\
+\midrule
+the six models (unweighted) & \multicolumn{2}{c}{$-0.02$ to $-0.43$}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{caveat}
+\textbf{Basis warning, and it bites elsewhere.} The observed trend quoted as $+0.209$ in
+\texttt{HIKET\_next\_session} and \texttt{M\&M\_parameterization\_working\_document} is the
+\emph{unweighted} paired 2006--2024 rate. The region-weighted equivalent is $+0.139$, and LUKE's
+official weighted figure is $+0.111$. All three are defensible; mixing them is not. Model
+comparisons must use unweighted; anything described as national must use weighted.
+\end{caveat}
+
+\noindent The organic layer ($-0.094$ unweighted) falls \emph{inside} the model range. The entire discrepancy sits
+in the mineral soil --- which is independently the least reliable compartment: samples are
+cut from the wall of a spade-dug pit rather than taken volumetrically
+(Kramarenko 2012, \S4.4), proportional bias appears between \emph{every} campaign pair in
+both mineral layers while the humus layer shows none, and $\sim$75\% of the first
+campaign's mineral carbon concentrations were predicted from loss-on-ignition rather than
+measured.
+
+\medskip
+\noindent Supporting arithmetic: the organic decline is also of the magnitude a falling
+litter input predicts. For a first-order pool a fractional input decline $\delta$
+propagates as $\delta\,(1-e^{-kt})$; with an organic-layer turnover of 30--40\,yr over an
+18-year window that factor is $\approx 0.4$, so the $\sim$13\% input decline in the Tupek
+series predicts $\sim$5\% stock loss against $-6.6$\% observed. A 5-year-turnover pool
+would have predicted $\sim$13\%, which is not what happened.
+
+\begin{caveat}
+\textbf{Why this is not in the storyline.}
+(i) The organic layer is still a \emph{layer}, defined by a field boundary, and that
+boundary moved: $\Delta$organic against $\Delta$mineral\,0--20 gives slope $-0.25$
+($r=-0.16$, $p=0.0007$). The movement accounts for only $\sim$25\% of the organic loss, so
+$\sim$75\% survives --- but the compartment is not boundary-proof. Only the whole-profile
+total is, and that shows $+0.20\pm0.11$\,kg\,m$^{-2}$, \emph{not significant}.
+(ii) The organic total is the sum of a litter layer that rose 27\% and a humus layer that
+fell 12\%, and neither component behaves sensibly on its own (item D2). The aggregate may
+be right for the wrong reasons.
+(iii) The model range quoted is from the $\sigma=0.72$ run and predates both the litter and
+the dating corrections to the target.
+\end{caveat}
+
+\noindent\textbf{What would promote it.} Re-running the comparison after the 1985 litter and
+sampling-year corrections land; and a model-side check that the models' \emph{own} organic
+pool, not just their total, matches. \textbf{What would kill it.} Evidence that the
+organic/mineral boundary moved much more than the $-0.25$ slope implies.
+\emph{Code:} \texttt{doublechecks/organic\_mineral\_boundary.R}. \emph{Added 2026-08-12.}
+
+% -------------------------------------------------------------------------------------
+\begin{finding}{\stC\ \ D2 --- The measured litter layer does not behave like a litter pool}
+\textbf{Claim.} The litter layer (LM) grew 27\% between 2006 and 2024 while its input fell,
+and no plot-level mechanism explains it.
+\end{finding}
+
+\noindent Aggregate: input $-4.9$\% (2004--08 $\to$ 2020--24), litter layer $+27.7$\%, humus
+$-11.8$\%. Per plot, neither candidate mechanism holds: growth tracking input gives
+$r=+0.09$ ($p=0.07$), and reclassification out of the humus gives $r=-0.04$ ($p=0.45$,
+slope $-0.01$). Cross-sectionally the litter layer has no relation to modelled litter input
+in either campaign ($r=+0.03$, $+0.01$).
+
+\medskip
+\noindent The surviving explanation is a \emph{uniform campaign-level} change in what was
+called litter in 2024: plot-level correlations are blind to an offset applied equally to
+every plot, which is exactly the signature observed.
+
+\begin{caveat}
+The null cross-sectional correlation cannot separate ``the litter layer is not behaving
+like a litter pool'' from ``the Tupek series carries little plot-level signal''. The latter
+is independently known (litter does not order SOC across plots; $R^2\approx0$). So the
+real-growth hypothesis is closer to \emph{untestable with this predictor} than rejected.
+This must not be reported as evidence that the litter layer is spurious.
+\end{caveat}
+
+\noindent\textbf{What would promote it.} An independent plot-level litter predictor with
+demonstrated skill; or confirmation from LUKE that the 2024 litter sampling instruction
+differed. \emph{Code:} \texttt{doublechecks/litter\_layer\_vs\_input.R}. \emph{Added 2026-08-12.}
+
+% -------------------------------------------------------------------------------------
+\begin{finding}{\stA\ \ D3 --- Plot-level SOC change is not resolvable between campaigns}
+\textbf{Claim.} The 95\% limits of agreement between any two campaigns are of the same size
+as the stock being measured.
+\end{finding}
+
+\noindent Bland--Altman, whole profile: $-30.5$ to $+43.6$\,Mg\,C\,ha$^{-1}$ for 1985--2006 and
+$-39.0$ to $+42.9$ for 2006--2024 --- about 115\% of the mean stock in both cases. For the
+mineral 20--40\,cm layer it is $\sim$220\%. This is a model-free statement: it uses only two
+measurements of the same plots.
+
+\medskip
+\noindent It is the quantitative form of ``the posteriors are overconfident'', and it needs
+no model to establish, which makes it the cleanest available support for treating
+plot-years as far less informative than their count suggests.
+
+\begin{caveat}
+Placement, not strength, is what keeps this out of the storyline: it is an argument about
+the error model and the likelihood, and the storyline does not yet have a home for it. It
+may belong in the M\&M working document instead of the Discussion.
+\end{caveat}
+
+\noindent\emph{Code:} \texttt{Reporting/August2026\_internal\_report/build\_bland\_altman\_campaigns.R};
+figures there and manuscript Fig.~S10(c). \emph{Added 2026-08-12.}
+
+% =====================================================================================
+\section{Graduated}
+
+\noindent Items promoted into the manuscript. One line each; the content lives there now.
+
+\begin{center}\small
+\begin{tabular}{llp{7.6cm}}
+\toprule
+date & item & where it went\\
+\midrule
+--- & --- & \emph{(none yet)}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================================
+\section{Retired}
+
+\noindent Items removed as falsified or superseded. Kept as one line so they are not
+rediscovered and re-argued.
+
+\begin{center}\small
+\begin{tabular}{llp{7.6cm}}
+\toprule
+date & item & what killed it\\
+\midrule
+2026-08-12 & 1985 depth distribution is distorted & The per-plot decay rate puts 1985
+($\lambda=0.038$) \emph{between} 2006 (0.031) and 2024 (0.041). Profile shape does not
+single out 1985; the campaign difference is a level, not a shape.\\
+\addlinespace
+2026-08-12 & The subsoil offset is a stoniness-correction artefact & No relation to coarse
+fraction ($\rho=-0.08$, $p=0.15$).\\
+\addlinespace
+2026-08-12 & 1985 is noisier than the later campaigns & Subsoil repeatability $r=0.63$
+(1985--2006) vs $0.65$ (2006--2024); proportional bias present in every pair. Whatever is
+wrong with 1985 is a level, not scatter.\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

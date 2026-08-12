@@ -38,28 +38,213 @@ a Gaussian a handful of badly-missed plots steer the fit. Campaign-specific σ w
 3. **Did locations move?** The real question. Compare against `20260810_1529*`.
 4. `doublechecks/intrinsic_mrt.R` (update the RIDs) → rebuild F12.
 
+Added 2026-08-12, because these bear on the data work in §0c:
+
+5. **How much does the Student-t already down-weight 1985?** ν=6 de-weights outliers, and 1985 is
+   where the heavy residuals are. Measure the campaign's effective weight under t vs Gaussian — the
+   planned `SIGMA_1985_INFL = 2` lands *on top* of this, and we need to know what it adds.
+6. **Per-campaign residual spreads under the t.** The 0.97 / 0.62 / 0.54 were measured under a
+   Gaussian. If they compress, the empirical case that 1985 is special weakens and the appendix
+   must rest entirely on the mechanism argument.
+7. **Does the 2006→2024 source survive?** If yes, "it's an error-model artefact" is closed for the
+   one window no data fix can reach.
+
 ⚠ Log-likelihoods are **not** comparable to any previous run — both family and scale changed.
+⚠ Do **not** refresh downstream figures from this run: §0c supersedes its target. Read it as a
+diagnostic, then do the data fixes, then one re-run.
 
-### 0c. Then: the SOC data, 1985 first
+---
 
-Evidence that 1985 is the weak link, none of it chosen to suit the answer:
+## 0c. THE IMPLEMENTATION — decided 2026-08-12, execute after the run above is read
 
-- residual spread **0.97** vs 0.54 for 2024, near-identical across all six models (0.967–0.978), so
-  it is a property of the campaign, not of any model;
-- differencing does **not** clean it — Δ(2006→2024) drops to 0.37–0.45 while Δ(1985→2024) stays at
-  0.77–0.93, the signature of *independent* error rather than a shared offset;
-- all six models over-predict 1985, i.e. independently say the true value is **higher** than
-  recorded, by ~3–6 tC/ha beyond the general bias.
+Full findings: `manuscript/HIKET_discussion_memo.tex`, memories
+[[soc-campaign-comparability]] and [[kramarenko-thesis-vmi8-biosoil]], scripts
+`doublechecks/{soc_depth_distribution,litter_in_1985_organic,organic_mineral_boundary,subsoil_offset_mechanism,litter_layer_vs_input}.R`.
 
-**Calibrated expectations.** A 10% upward revision of 1985 raises the level ~3% ⇒ Yasso15 MRT
-21.9 → ~22.6 against the 30.3 needed. **1985 barely touches the MRT tension** — it constrains
-`sigma_init`, not MRT. It would however reshape the **trend**: observed 1985→2024 is +0.312, and a
-5 tC/ha higher 1985 takes it to ~+0.08, *below* several models, flipping the sign of the
-discrepancy rather than closing it.
+### Why (one paragraph)
 
-⚠ **And the 2006→2024 window contains no 1985 data at all**, yet every model produces a source
-(−0.02 to −0.43) against an observed +0.209. **No 1985 revision can fix that.** Don't let a 1985
-finding be mistaken for a resolution of the trend problem.
+The 1985 target is not comparable with 2006/2024. Its organic layer is **OFH only** — the LM
+(litter+moss) layer, a separately coded layer in the protocol, was measured in 2006/2024 and is
+absent from 1985. And "1985" is really **1986–1995**: 19.5% of plots were sampled in 1995, so the
+campaign mean represents ~**1989** and every rate denominator is 12% too large. Both are fixable.
+What is left after them — LOI-derived mineral C%, relocated subplots, and a physically implausible
+depth-inverted subsoil gain — is not, and gets an error-model term.
+
+### The changes, in order
+
+**1. `Data/SOC_homogeneized/build_soc_homogenized.R`** — back up the current CSVs first.
+- **Treatment C:** add each plot's own **2006 LM** (BiSo col 247) to its 1985 organic layer, at the
+  **layer level** so it propagates to `soc_0_40` and `soc_profile` consistently.
+  ⚠ **Compute the organic-quality flags (`organic_missing`/`organic_zero`) BEFORE adding LM** —
+  10 VMI8 plots have organic C = 0 and would silently become calibration-ready otherwise.
+  ⚠ 113 of 458 VMI8 plots have no 2006 LM, but **77 of those are also the no-year plots dropped in
+  step 2**, so only **36** need a fallback. Median LM = **3.187** Mg C/ha.
+- **Sampling year:** read BiSo **col 140 (`MAANAYTE`)**, expose as `samp_year`. Two sources agree
+  perfectly (BiSo col 140 and sheet `kiv_maat85_95`, 387 overlapping, 0 disagreements; union 391).
+  Keep `year` = campaign key (1985/2006/2024); `samp_year` is the true year.
+- Re-run the build.
+
+**2. `Data/Data_work.R`**
+- Carry the true year through as **`obs_year`** (= `samp_year` for VMI8, = `year` otherwise).
+- **Drop the VMI8 observation** for the 84 plots with no recovered year. Only that observation —
+  the plots keep 2006/2024. `calib_ready` has **no minimum-obs condition**, so 2-observation plots
+  are fine. ⚠ The dropped set is **71 South / 9 North**, so it shifts the first campaign's regional
+  balance under the 1:3 weights — quantify and state it.
+
+**3. `Calibration_real_data_transient/calib_config.R`**
+- `SIGMA_1985_INFL` **1.0 → 2.0**, with the rationale beside the existing C5-withdrawal note.
+  **Pre-registered**: the value is set BEFORE the corrected data are run, and must not be revisited
+  on the basis of results — that is the whole defence. Wording agreed:
+  > *f = 2 was set a priori as a judgement reflecting documented but unquantified differences in the
+  > first campaign's protocol — carbon concentrations largely derived from loss-on-ignition,
+  > subplots relocated between campaigns, and a subsoil gain with no physical mechanism. It is not
+  > estimated from the data. Its influence was examined with short-chain runs at
+  > f ∈ {1, 1.5, 3} for Yasso15.*
+
+  (Wording revised 2026-08-12: the sweep is short-chain and single-model, so it cannot be
+  described as if all four were production posteriors.)
+
+**4. The six `run_*_transient_calibration.R`**
+- `idx = match(obs_plot$year, clim$year)` → **`obs_plot$obs_year`**.
+- Leave `year` as the campaign key, so `sigma_infl = ifelse(obs_plot$year == 1985L, …)` and
+  `HIKET_DROP_CAMPAIGN` keep working. That is D3 achieved **without renaming anything**.
+  ⚠ If `year` were changed to the true year instead, both would break **silently**.
+
+**5. Reporting only (no re-run needed)** — denominator 39 → **34.7**:
+`manuscript/figures/build_S9_soc_change_by_depth.R`, `doublechecks/soc_depth_distribution.R`.
+(`build_appendix_delta_reconciliation.R` deliberately keeps 39 — it must match the models' x-axis.)
+Corner-cut validated: Δ-of-means/34.7 equals the mean of per-plot rates to **0.1%** (interval length
+vs change r = 0.036, p = 0.51).
+
+### Run plan (decided 2026-08-12 — deliberately cheap)
+
+**Production: six models, corrected data, f = 2.** That is all. No full sweep — too expensive.
+
+**Plus one short-chain sweep on Yasso15 only**, which is already coded:
+```
+Rscript doublechecks/run_ablation.R Yasso15 6000 3 A0_reference,A1_C5_off,A2_C5_1.5,A3_C5_3.0
+```
+`A0` = f 2 (the new default), `A1` = 1.0, `A2` = 1.5, `A3` = 3.0. Optionally add
+`A5_LOCO_no1985`, which withholds 1985 entirely.
+
+⚠ **`A1_C5_off` is not just a sensitivity point — it is the ATTRIBUTION arm.** Production changes
+the data *and* the σ at once; A1 has the corrected data at f = 1, so the A1→A0 difference isolates
+what f = 2 does and the rest is the data. Without it the two changes are confounded.
+
+⚠ **Run `doublechecks/quarantine_ablation_runs.R` afterwards**, or `run_ids.R` will select an
+ablation posterior as production and every figure will silently rebuild from short chains.
+
+⚠ The ablations source the real calibration scripts, so they must run **after** the data fixes.
+
+**RUN THE SWEEP LOCALLY — it does not need Roihu** (checked 2026-08-12). The Yasso20 six-config
+suite ran on this Mac at **~70 min/config** (2026-08-05, 00:33→07:41); Yasso07 took ~3 h. Yasso15
+shares Yasso20's Fortran, so budget **70–90 min × 4 configs ≈ 5–6 h**, i.e. one overnight, on
+12 cores. Prerequisites: the data fixes re-run first (the ablation calls the real calibration
+script, which rebuilds its own input bundle from `Data_work.R` output, so it picks up the corrected
+data automatically) and `SIGMA_1985_INFL = 2.0` already set, so `A0_reference` *is* the f = 2 arm.
+
+⇒ **Schedule gain:** the local sweep and the Roihu production run are independent and can run
+simultaneously from the same corrected data. The attribution arm `A1_C5_off` may therefore be in
+hand *before* the production results land — useful, since it is what separates "the data moved it"
+from "f = 2 moved it".
+
+### Settled details (agreed 2026-08-12, do not re-open)
+
+- LM fallback for the 36 remaining plots: **global median 3.187** Mg C/ha.
+- The 71 South / 9 North imbalance from dropping the no-year plots: **state it, do not compensate.**
+- Treatment C applied at the **layer level**, so `soc_obs_tCha_sum` also changes — add an explicit
+  flag column marking which 1985 observations carry an imputed LM component.
+- Hannu has been asked about the LM question (2026-08-12). ⚠ If he answers that 1985 *includes*
+  LM, treatment C **inverts** and this plan must be redone before running.
+- f = 2 is the user's decision, to be discussed with coauthors but not blocking the launch.
+
+### ⚠ 0c-bis. THE REPORTING BASIS — settled 2026-08-12. Independent of the data fix.
+
+`doublechecks/observed_soc_basis.R` is now the **canonical table**. Run it before quoting any
+observed level or trend. There are **three** axes, not one, and together they span a **4× range**
+for the same data.
+
+| 2006→2024 rate | unweighted | weighted |
+|---|---|---|
+| whole profile, paired | **+0.216** | +0.161 |
+| whole profile, balanced | +0.143 | +0.101 |
+| measured 0–40, paired | +0.144 | **+0.104** |
+| measured 0–40, balanced | +0.076 | +0.049 |
+
+- **weighting** — unweighted = the average *plot in our sample*; weighted = the average *hectare of
+  Finland* (North sampled at ⅓ density ⇒ weight 3). Worth 25–30%.
+- **plot set** — for 2006→2024, requiring a 1985 observation too drops the rate **+0.216 → +0.143**
+  (34%). Plots lacking a 1985 measurement gained more. For 1985→2024 it barely matters (0.316 vs
+  0.312). ⚠ Never difference means over *different* subsets — the script prints those rows labelled
+  `UNPAIRED (invalid)` so they are recognisable in the wild.
+- **depth** — `soc_0_40` (measured; LUKE official and the Hannu–Juha paper) vs `soc_profile`
+  (+ modelled deep tail; HIKET's target). Worth ~35% on this interval, because the tail is refitted
+  per campaign and so carries its own trend.
+
+**THE RULE.** Model comparison → **paired, unweighted, whole profile**. Anything national →
+**weighted, measured 0–40**. Comparing intervals with each other → **balanced** (constant plot set).
+State the depth basis whenever a level is quoted.
+
+**Verdict on existing text:** the manuscript's `+0.209` / `+0.312` are internally consistent and are
+the *correct* basis for model comparison — nothing to retract. The only hazard is that
+`M&M_parameterization_working_document` also quotes LUKE's *weighted* national stocks; those two
+must never share a sentence with a model–observation gap.
+
+#### Already fixed (2026-08-12)
+- `build_appendix_delta_reconciliation.R`: observed rate was hardcoded from the **retired**
+  63/102/105 series (1.077 vs the true 0.312 — **3.5× too high**), and the axis limits were stale
+  too (`ylim=c(84,112)` against an actual 63–81, i.e. drawing off-scale). Both now computed.
+- **Same figure: model and observed were on different plot sets** (512 vs 316). Aligning them moves
+  Yasso15 from +0.422 to **+0.379** and its 1985 level 63.3 → 65.1, i.e. the mismatch was inflating
+  the apparent gap by ~40%. Both sides now restricted to the paired plots. Model rates on the
+  aligned set: SP1 −0.092, TP2 +0.148, TP3 +0.143, Yasso07 +0.259, Yasso15 **+0.379**, Yasso20
+  +0.204, against observed **+0.312** — Yasso15 now *exceeds* the observation.
+
+#### Also done 2026-08-12 (was "still to do", now closed)
+1. ✅ **F2 / F3 / F4 aligned.** New shared `manuscript/figures/obs_basis.R` gives all three one
+   **balanced** plot set (n = 316) for both the model curves and the observed markers. The F4 cache
+   key gained a `_bal_` marker so the pre-alignment cache cannot be silently reused. F4 regenerated
+   (spin-up recomputed), then F3 and F2. **F5 was already correct** (paired per-plot differences).
+2. ✅ **`HIKET_next_session.tex`** — this work *is* the action H6 called for ("fix one plot set and
+   one statistic, applied identically to observed and modelled rates"). H6 is now marked RESOLVED
+   there, with the three axes, the rule, and the instruction to use **+0.143** rather than +0.209
+   where 2006→2024 sits beside 1985→2024. Existing tables left intact — they are a correct record of
+   the paired basis, and overwriting them would have desynchronised their other columns.
+3. ✅ **M&M working document** — the trend table now carries a basis footnote giving all four values
+   (+0.209 paired-unweighted, +0.143 balanced, +0.161 weighted, +0.111 LUKE official 0–40) and the
+   warning not to put a weighted national stock in the same sentence as a model–observation gap.
+
+#### Still to do
+4. Re-run `observed_soc_basis.R` after the data fix; every number in it will move. Then re-check
+   the two annotations above, which quote current values.
+
+### Numbers to expect
+
+| | now | after |
+|---|---|---|
+| 1985 profile mean | 61.8 | ~65.1 |
+| observed 1985→2024 | +0.248 | ~+0.182 |
+| observed 2006→2024 | +0.107 | **unchanged** |
+
+The litter fix pushes the rate down, the year fix pushes it up, litter wins. Observations move
+**toward** the models. ⚠ Do not read the net movement as either fix "working".
+
+### What this does NOT fix
+
+**2006→2024 stays at +0.107 observed against a source in all six models**, and the MRT tension
+(15.2 / 21.9 / 17.4 vs published 33.4 / 30.3 / 25.0) is untouched. This narrows the problem and
+removes the "maybe it's the data" escape route; it does not solve it.
+
+### Decisions already taken, do not re-litigate
+
+- **No subsoil reconstruction.** The 1985 20–40 cm value is *measured*; replacing it would overwrite
+  data with a model, and the choice among the three variants is worth 0.058 Mg/ha/yr (~23% of the
+  signal). The table (measured 61.75 / shape 63.14 / static 64.10 / regress 65.40) goes in the
+  appendix as a stated sensitivity. Litter is different because it is *missing*, not measured.
+- **No campaign bias term.** The trend *is* the campaign difference; a free `c_j` eats it
+  (δ-offset test).
+- **Report the f sweep every time**, never a single number: the C5 ablation moved the 1985–2024
+  change from +0.638 to −0.184 as the weighting weakened. It flips the sign of the sink.
 
 ---
 

@@ -12,15 +12,11 @@ traj <- aggregate(total_soc ~ year, pred, function(x)
           c(m = mean(x), se = sd(x) / sqrt(length(x))))
 tj <- data.frame(year = traj$year, m = traj$total_soc[, "m"], se = traj$total_soc[, "se"])
 
-om <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
-obs <- do.call(rbind, lapply(names(om), function(pid) {
-  z <- om[[pid]]; if (length(z$soc_obs) == 0) return(NULL)
-  data.frame(year = 1984L + z$idx, soc = z$soc_obs)
-}))
-cm <- aggregate(soc ~ year, obs, function(x)
-        c(m = mean(x), lo = mean(x) - 1.96*sd(x)/sqrt(length(x)),
-          hi = mean(x) + 1.96*sd(x)/sqrt(length(x))))
-cm <- data.frame(year = cm$year, m = cm$soc[,"m"], lo = cm$soc[,"lo"], hi = cm$soc[,"hi"])
+source("manuscript/figures/obs_basis.R")   # shared observed-SOC basis
+om  <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
+BAL <- balanced_plots(om)
+cm  <- obs_campaign_means(om, BAL)
+message("F2 ", basis_note(BAL))
 
 png("manuscript/figures/F2_baseline.png", width = 8.4, height = 5.2, units = "in", res = 200)
 par(mar = c(4.0, 4.6, 3.0, 1.2), mgp = c(2.6, 0.7, 0), las = 1, cex.axis = 1.05, cex.lab = 1.2, cex.main = 1.1)

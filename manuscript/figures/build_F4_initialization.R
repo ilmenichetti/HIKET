@@ -11,12 +11,21 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 
 rid <- as.list(RID)
 source("manuscript/figures/model_palette.R")   # shared per-model palette (Temperature Diverging)
+source("manuscript/figures/obs_basis.R")      # shared observed-SOC basis (see that file)
 col <- MODEL_COL
+
+# Balanced plot set: model curves and observed markers must describe ONE population
+# (2026-08-12). A model curve is a single line and cannot change population by year.
+.om_basis <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
+BAL <- balanced_plots(.om_basis)
+message("F4/F3 ", basis_note(BAL))
 # Cache key includes the RUN_IDs, so a re-calibration invalidates it automatically.
 # It used to be a fixed filename guarded by file.exists(), which meant that after a
 # re-calibration this script "rebuilt" the figure from the PREVIOUS run's cache and
 # reported success -- F4 and F3 (which reads this cache) were both silently stale.
-CACHE <- sprintf("manuscript/figures/F4_cache_%s.rds",
+# "bal" in the key: the cache now holds BALANCED-plot-set aggregates, so a cache
+# written before 2026-08-12 must not be reused.
+CACHE <- sprintf("manuscript/figures/F4_cache_bal_%s.rds",
                  substr(paste(RID[FIG_MODELS], collapse = "-"), 1, 120))
 
 if (!file.exists(CACHE)) {
@@ -36,8 +45,9 @@ if (!file.exists(CACHE)) {
   # --- (i) stored trajectory bands 1985-2084 (posterior draws) ---
   agg_stored <- function(m) {
     b <- readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_predictive_%s.rds", m, rid[[m]]))
-    pp <- rbind(b$posterior_predictions[, c("year","draw","total_soc")],
-                b$projection_predictions[, c("year","draw","total_soc")])
+    pp <- rbind(b$posterior_predictions[, c("plot_id","year","draw","total_soc")],
+                b$projection_predictions[, c("plot_id","year","draw","total_soc")])
+    pp <- pp[pp$plot_id %in% BAL, c("year","draw","total_soc")]   # basis: see obs_basis.R
     ydr <- interaction(pp$year, pp$draw, drop = TRUE, lex.order = TRUE)
     mbar <- as.vector(rowsum(pp$total_soc, ydr)) / as.vector(rowsum(rep(1, nrow(pp)), ydr))
     yr <- as.integer(do.call(rbind, strsplit(levels(ydr), ".", fixed = TRUE))[, 1])

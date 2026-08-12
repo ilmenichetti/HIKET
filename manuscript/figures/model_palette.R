@@ -10,6 +10,15 @@ MODEL_ORDER <- c("SP1","TP2","TP3","Yasso07","Yasso15","Yasso20")
 MODEL_COL   <- setNames(c("#529985","#76A26A","#B4BC53","#E5C749","#E5A84E","#C26B51"),
                         MODEL_ORDER)
 
+# --- campaign palette: single-hue sequential in TIME order ---
+# Colour = the SOC CAMPAIGN (an observation), so it stays in the same red family
+# the manuscript already uses for observed values (firebrick in F2, #AA3333 in F5),
+# ramped light (oldest) -> dark (newest) so the time order is readable without a
+# legend. Use wherever colour = CAMPAIGN rather than model.
+CAMPAIGN_ORDER <- c("VMI8", "Biosoil", "Komeetta")
+CAMPAIGN_COL   <- setNames(c("#EFB59C", "#C85A3C", "#6E2414"), CAMPAIGN_ORDER)
+CAMPAIGN_LAB   <- setNames(c("VMI8 1985", "Biosoil 2006", "Komeetta 2024"), CAMPAIGN_ORDER)
+
 # --- basal-area class palette: ggthemes "Green-Gold", 5 quintiles ---
 # Use wherever SCATTERPLOT points are coloured by stand basal area (F6, S2):
 # gold = low basal area -> dark green = high.

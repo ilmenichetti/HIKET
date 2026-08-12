@@ -1,0 +1,289 @@
+
+
+======================================================================================================================
+1. RAW LAYER COMPLETENESS AND GRANULARITY
+======================================================================================================================
+ campaign   layer   n n_NA n_zero n_unique    median
+     VMI8   0-5cm 460    0      0      460  6.517001
+     VMI8 20-40cm 460    0     18      440  9.417450
+     VMI8  5-20cm 460    0      7      452 13.723868
+     VMI8 organic 460    0     10      451 17.355711
+  Biosoil  0-10cm 503    0      0      503 12.648976
+  Biosoil 10-20cm 498    0      0      498  8.761856
+  Biosoil 20-40cm 484    0      0      484 12.045346
+  Biosoil organic 503    0     15      489 22.011287
+ Komeetta  0-10cm 445    0      0      445 13.873116
+ Komeetta 10-20cm 441    0      1      441  9.543065
+ Komeetta 20-40cm 429    0      2      428 10.659198
+ Komeetta organic 445    0     11      435 20.030474
+
+plots per campaign:
+ campaign n_plot
+     VMI8    460
+  Biosoil    503
+ Komeetta    445
+
+-> per-layer coverage as a FRACTION of that campaign's plots:
+ campaign   layer   n n_plot coverage
+     VMI8   0-5cm 460    460    1.000
+     VMI8 20-40cm 460    460    1.000
+     VMI8  5-20cm 460    460    1.000
+     VMI8 organic 460    460    1.000
+  Biosoil  0-10cm 503    503    1.000
+  Biosoil 10-20cm 498    503    0.990
+  Biosoil 20-40cm 484    503    0.962
+  Biosoil organic 503    503    1.000
+ Komeetta  0-10cm 445    445    1.000
+ Komeetta 10-20cm 441    445    0.991
+ Komeetta 20-40cm 429    445    0.964
+ Komeetta organic 445    445    1.000
+
+balanced panel (all three campaigns, outliers dropped): n = 334 plots
+
+
+======================================================================================================================
+2. STOCKS ON THE COMMON GRID (balanced panel, Mg C /ha)
+======================================================================================================================
+ campaign   n organic m0_20 m20_40 min_0_40 soc_0_40 deep_tail soc_profile
+     VMI8 334   19.11 21.68  10.80    32.48    51.59     10.16       61.75
+  Biosoil 334   22.47 22.84  13.01    35.86    58.33     11.19       69.52
+ Komeetta 334   21.12 25.89  12.30    38.19    59.31     12.13       71.44
+
+SAME, unweighted (region weights off):
+ campaign organic m0_20 m20_40 soc_0_40 soc_profile
+     VMI8   18.77 22.17  10.91    51.85       62.16
+  Biosoil   22.55 24.09  13.55    60.19       71.94
+ Komeetta   20.85 27.75  13.08    61.69       74.66
+
+COMPOSITION — each band as a share of measured 0-40 cm (weighted):
+ campaign f_organic f_0_20 f_20_40 f_deep_of_profile
+     VMI8     0.370  0.420   0.209             0.165
+  Biosoil     0.385  0.392   0.223             0.161
+ Komeetta     0.356  0.437   0.207             0.170
+
+
+======================================================================================================================
+3. DEPTH SHAPE: per-plot decay rate lambda_obs (1/cm)
+======================================================================================================================
+ campaign   n ratio_median lambda_median lambda_q25 lambda_q75 frac_flat frac_inverted
+     VMI8 329       0.4663        0.0381     0.0238     0.0469    0.0851        0.0426
+  Biosoil 334       0.5361        0.0312     0.0177     0.0455    0.1677        0.0749
+ Komeetta 332       0.4401        0.0410     0.0228     0.0566    0.1084        0.0602
+
+pooled GTK-class lambda used for the deep tail in build_soc_homogenized.R:
+  median over plots: 0.0354  range: 1e-04 - 0.0658 
+
+PAIRED within-plot shape (same plot, so soil type/stoniness cancel):
+  lambda VMI8     -> Biosoil  : n=329  median delta = -0.0055   % steeper in Biosoil = 36.5%   (paired t p = 0.0019)
+  lambda Biosoil  -> Komeetta : n=332  median delta = +0.0113   % steeper in Komeetta = 68.4%   (paired t p = 1.3e-07)
+  lambda VMI8     -> Komeetta : n=327  median delta = +0.0058   % steeper in Komeetta = 57.2%   (paired t p = 0.0026)
+
+ORGANIC-layer share of measured 0-40 cm, per plot (median):
+ campaign f_org_median f_20_40_median
+     VMI8        0.368          0.206
+  Biosoil        0.396          0.210
+ Komeetta        0.379          0.185
+
+
+======================================================================================================================
+4. CHANGE DECOMPOSITION BY DEPTH BAND (balanced panel, weighted, Mg C/ha)
+======================================================================================================================
+
+--- VMI8 -> Biosoil (21 yr) ---
+             band   n delta delta_per_yr median_delta frac_increasing share_of_0_40_change
+          organic 334 3.360        0.160        3.983           0.769                0.499
+            m0_20 334 1.162        0.055        1.534           0.590                0.172
+           m20_40 334 2.216        0.106        2.100           0.674                0.329
+         soc_0_40 334 6.738        0.321        7.917           0.710                   NA
+    soc_deep_Mgha 334 1.031        0.049        0.736           0.593                   NA
+ soc_profile_Mgha 334 7.769        0.370        8.640           0.701                   NA
+
+--- Biosoil -> Komeetta (18 yr) ---
+             band   n  delta delta_per_yr median_delta frac_increasing share_of_0_40_change
+          organic 334 -1.359       -0.075       -0.199           0.467               -1.390
+            m0_20 334  3.050        0.169        2.102           0.617                3.120
+           m20_40 334 -0.714       -0.040       -0.695           0.425               -0.731
+         soc_0_40 334  0.978        0.054        0.647           0.527                   NA
+    soc_deep_Mgha 334  0.942        0.052        0.336           0.545                   NA
+ soc_profile_Mgha 334  1.920        0.107        1.665           0.533                   NA
+
+SUBSOIL (20-40 cm) rate of change, Mg C/ha/yr — this compartment should be near-inert:
+  1985->2006 : +0.106
+  2006->2024 : -0.040
+
+
+======================================================================================================================
+5. BETWEEN-CAMPAIGN REPEATABILITY, BY DEPTH BAND (paired plots)
+======================================================================================================================
+             band              pair   n pearson spearman pearson_log cv_diff
+          organic     VMI8->Biosoil 334   0.657    0.696       0.655   0.361
+          organic Biosoil->Komeetta 334   0.644    0.635       0.960   0.355
+          organic    VMI8->Komeetta 334   0.544    0.557       0.630   0.426
+            m0_20     VMI8->Biosoil 334   0.766    0.758       0.759   0.359
+            m0_20 Biosoil->Komeetta 334   0.776    0.787       0.800   0.419
+            m0_20    VMI8->Komeetta 334   0.698    0.700       0.724   0.494
+           m20_40     VMI8->Biosoil 334   0.625    0.657       0.431   0.559
+           m20_40 Biosoil->Komeetta 334   0.649    0.642       0.506   0.575
+           m20_40    VMI8->Komeetta 334   0.586    0.609       0.315   0.646
+         soc_0_40     VMI8->Biosoil 334   0.755    0.764       0.804   0.266
+         soc_0_40 Biosoil->Komeetta 334   0.775    0.783       0.816   0.265
+         soc_0_40    VMI8->Komeetta 334   0.686    0.699       0.738   0.323
+ soc_profile_Mgha     VMI8->Biosoil 334   0.770    0.775       0.812   0.282
+ soc_profile_Mgha Biosoil->Komeetta 334   0.788    0.790       0.823   0.286
+ soc_profile_Mgha    VMI8->Komeetta 334   0.705    0.711       0.752   0.349
+
+-> read this as: 2006->2024 is the reference for how repeatable each band is
+   when both ends are trusted. A band whose 1985 pairing is much weaker than
+   its 2006->2024 pairing is failing at the 1985 end.
+             band VMI8->Biosoil Biosoil->Komeetta VMI8->Komeetta ratio_85_06_over_06_24
+          organic         0.657             0.644          0.544                  1.020
+            m0_20         0.766             0.776          0.698                  0.988
+           m20_40         0.625             0.649          0.586                  0.963
+         soc_0_40         0.755             0.775          0.686                  0.975
+ soc_profile_Mgha         0.770             0.788          0.705                  0.977
+
+
+======================================================================================================================
+6. CONSEQUENCE OF RECONSTRUCTING THE 1985 SUBSOIL FROM A TRUSTED SHAPE
+======================================================================================================================
+plot-specific later-campaign ratio available for 334 plots; fallback ratio = 0.5144 
+
+deep-tail re-fit check (our reproduction of soc_deep vs the built value): median abs diff = 0.367 Mg/ha
+
+1985 BEFORE vs AFTER reconstruction (weighted means, Mg C/ha):
+             quantity before after delta
+        mineral 20-40  10.80 11.87  1.07
+        measured 0-40  51.59 52.66  1.07
+            deep tail  10.16 10.48  0.32
+ soc_profile (TARGET)  61.75 63.14  1.39
+
+EFFECT ON THE TREND (weighted profile means, Mg C/ha, balanced panel):
+                       case soc_1985 soc_2006 soc_2024 d_85_24 rate_85_24 rate_06_24
+                   as built   61.752   69.521   71.441   9.689      0.248      0.107
+ 1985 subsoil reconstructed   63.144   69.521   71.441   8.297      0.213      0.107
+
+!! the 2006->2024 rate is UNCHANGED by construction — no 1985 revision can touch it.
+
+
+======================================================================================================================
+7. THE LITTER TERM — a definitional step at the 1985/2006 boundary
+======================================================================================================================
+balanced-panel plots matched in the workbook: 334
+
+  1985 organic (NO litter term exists)          :  19.11 Mg/ha
+  2006 organic = humus 19.52 + litter  3.37    :  22.96 Mg/ha  (litter = 14.7%)
+  2024 organic = humus 17.21 + litter  4.27    :  21.58 Mg/ha  (litter = 19.8%)
+
+  apparent 1985->2006 organic gain, AS BUILT (litter in 2006 only) :  +3.85 Mg/ha
+  same gain with the litter term REMOVED (like-for-like)          :  +0.41 Mg/ha
+  => the litter DEFINITION supplies 89% of the apparent organic-layer gain
+
+  EFFECT ON THE OBSERVED TREND (weighted profile, Mg C/ha):
+ campaign as_built like4like
+     VMI8    61.75     61.75
+  Biosoil    69.52     66.15
+ Komeetta    71.44     67.17
+
+    1985->2024 rate : as built +0.248  ->  like-for-like +0.139  Mg/ha/yr  (44% smaller)
+    2006->2024 rate : as built +0.107  ->  like-for-like +0.057  Mg/ha/yr  (47% smaller)
+    !! the litter term GREW 2006->2024, so unlike a 1985 revision this one DOES
+       move the 2006->2024 window — the one every model reports as a source.
+
+  NB this is LUKE's own convention (it is what reproduces the official 2006/2024
+  national stocks), so it is not a pipeline bug — but it is applied to two of the
+  three campaigns, and it lands exactly on the 1985->2006 step we are trying to fit.
+
+
+======================================================================================================================
+8. THE FIRST CAMPAIGN SPANS 1986-1995 — process vs method-offset test
+======================================================================================================================
+per-plot first-campaign sampling year recovered for 391 plots:
+
+1986 1987 1988 1989 1995 
+  70   80  107   57   77 
+
+balanced-panel plots with a known sampling year: 328  | interval range: 11-20 yr
+=> the pipeline labels ALL of these 1985. For the 61 plots sampled in 1995 that is a 10-year error.
+
+Does the 1985 stock itself depend on when it was sampled? (weighted mean soc_profile)
+ samp_year  n soc_1985
+      1986 56    72.08
+      1987 67    63.68
+      1988 94    56.01
+      1989 50    56.48
+      1995 61    65.39
+
+PROCESS-vs-OFFSET REGRESSION  delta = a + b*interval  (1st campaign -> 2006)
+  a = the part present at zero elapsed time  => METHOD OFFSET
+  b = the part proportional to elapsed time  => PROCESS
+
+  organic           n=328  a =  +0.30 Mg/ha [-4.28,+4.88]  b = +0.209 Mg/ha/yr [-0.055,+0.473]  p(b)=0.12
+                      at the mean interval (17.1 yr) the offset is 8% of the total change
+  m0_20             n=328  a =  -1.17 Mg/ha [-6.31,+3.97]  b = +0.185 Mg/ha/yr [-0.111,+0.481]  p(b)=0.22
+                      at the mean interval (17.1 yr) the offset is -59% of the total change
+  m20_40            n=328  a =  -0.50 Mg/ha [-4.70,+3.71]  b = +0.189 Mg/ha/yr [-0.054,+0.431]  p(b)=0.13
+                      at the mean interval (17.1 yr) the offset is -18% of the total change
+  soc_0_40          n=328  a =  -1.37 Mg/ha [-10.45,+7.72]  b = +0.582 Mg/ha/yr [+0.059,+1.105]  p(b)=0.03
+                      at the mean interval (17.1 yr) the offset is -16% of the total change
+  soc_profile_Mgha  n=328  a =  -3.43 Mg/ha [-14.96,+8.11]  b = +0.789 Mg/ha/yr [+0.124,+1.453]  p(b)=0.02
+                      at the mean interval (17.1 yr) the offset is -34% of the total change
+
+Same, as a simple contrast of the shortest vs longest intervals:
+  organic            11 yr (1995) = +3.12   17-20 yr (1986-89) = +4.04   ratio = 1.29 (expect ~1.7 if it is a process)
+  m0_20              11 yr (1995) = +1.95   17-20 yr (1986-89) = +2.00   ratio = 1.03 (expect ~1.7 if it is a process)
+  m20_40             11 yr (1995) = +2.51   17-20 yr (1986-89) = +2.78   ratio = 1.11 (expect ~1.7 if it is a process)
+  soc_profile_Mgha   11 yr (1995) = +8.64   17-20 yr (1986-89) = +10.38   ratio = 1.20 (expect ~1.7 if it is a process)
+
+!! CONFOUND: the first inventory ran south->north, so year tracks latitude.
+   sampling year x region, and mean latitude:
+         region_label
+samp_year North South
+     1986     0    56
+     1987     0    67
+     1988     0    94
+     1989    33    17
+     1995    11    50
+ 1986  1987  1988  1989  1995 
+60.88 62.15 63.54 66.62 63.75 
+
+Regression WITH latitude controlled:  delta ~ interval + lat_WGS84
+  organic           n=326  b(interval) = +0.077 Mg/ha/yr  se 0.141  p = 0.58
+  m0_20             n=326  b(interval) = -0.049 Mg/ha/yr  se 0.156  p = 0.75
+  m20_40            n=326  b(interval) = -0.000 Mg/ha/yr  se 0.128  p = 1.00
+  soc_profile_Mgha  n=326  b(interval) = +0.064 Mg/ha/yr  se 0.339  p = 0.85
+
+   The interval slope survives no test at the 0.05 level once latitude is in.
+   That is NOT evidence the change is fake — it is evidence the design cannot
+   separate elapsed time from geography, i.e. the dating error is unrecoverable
+   from these data alone and has to be carried as an uncertainty.
+
+
+======================================================================================================================
+9. THREE RECONSTRUCTIONS OF THE 1985 SUBSOIL — how much does the choice matter?
+======================================================================================================================
+ reconstruction sub20_40 profile_1985 rate_85_24 vs_measured
+       measured   10.797       61.752      0.248       0.000
+          shape   11.869       63.144      0.213       1.392
+         static   12.656       64.098      0.188       2.346
+        regress   13.846       65.398      0.155       3.645
+
+  All three RAISE the 1985 subsoil, i.e. all three SHRINK the observed sink.
+  Spread across the three: 2.25 Mg/ha on the 1985 level, 0.058 Mg/ha/yr on the rate
+  For scale, the LITTER definition (section 7) moves the same rate by 0.109 Mg/ha/yr.
+
+  => the reconstruction CHOICE is itself worth a large fraction of the effect, and
+     'regress' is the most extreme because it inherits the 2006->2024 subsoil DECLINE
+     and projects it backwards. That decline is the very thing in doubt.
+
+--- cross-check: the measured litter LAYER grew 2006->2024. Is that credible? ---
+  paired litter layer: 2006 3.37 -> 2024 4.27 Mg/ha  (+26.7%), median delta +0.82, 68% of plots up
+  vs the Tupek litter INPUT series, which falls -12.8% over 2006-2021 (CLAUDE.md, H2 closed).
+  A litter layer growing ~27% while its input falls ~13% is a contradiction: either the
+  2006 and 2024 litter measurements are not comparable, or the layer is not input-limited.
+null device 
+          1 
+null device 
+          1 
+
+
+figures written to ./doublechecks/soc_depth 
