@@ -2,7 +2,12 @@
 
 ## ⭐ 0. STATE AT 2026-08-12 — a run is IN FLIGHT, and next session is DATA WORK
 
-**Launched:** six Roihu jobs, error model **scale 0.80 + Student-t ν = 6**. Results ~2026-08-13.
+**Launched 2026-08-12**, commit `3e0c807`, error model **scale 0.80 + Student-t ν = 6**.
+Jobs **597028** SP1, **597029** TP2, **597030** TP3, **597031** Yasso07, **597032** Yasso15,
+**597033** Yasso20. Verified at launch, 6× each: `total sigma OVERRIDDEN: 0.800`,
+`LOG-NORMAL likelihood`, `STUDENT-t tails: df = 6`, `Cores per chain: 40`,
+`5 chains x 50000`. Results ~2026-08-13. ⚠ Restrict log globs to `*_597*` or you read the
+previous run's logs.
 **Next session's work is the SOC data, especially 1985** — not this run. See §0c.
 
 ### 0a. Why this run
