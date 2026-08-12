@@ -27,7 +27,7 @@ CA <- CAMPAIGN_ORDER
 
 # --- balanced panel, documented outliers dropped ------------------------------
 meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_profile_Mgha,
-                        z_cap, soc_outlier)
+                        z_cap, soc_outlier, lm_added_1985)
 band <- layers |>
   mutate(b = case_when(layer == "organic" ~ "organic",
                        layer %in% c("0-5cm","5-20cm","0-10cm","10-20cm") ~ "m0_20",
@@ -54,7 +54,12 @@ lit <- tibble(plot_id = as.integer(nn(3)), Krs = as.integer(nn(4)), REP = as.int
   filter(!is.na(plot_id), REP == 1, Krs == 101) |> select(plot_id, Biosoil, Komeetta) |>
   pivot_longer(-plot_id, names_to = "campaign", values_to = "LM")
 band <- band |> left_join(lit, by = c("plot_id", "campaign")) |>
-  mutate(LM = coalesce(LM, 0), OFH = organic - LM)   # 1985: LM absent => OFH = organic
+  # ⚠ 2026-08-12: the baseline now applies TREATMENT C — the 1985 organic layer
+# already contains the imputed LM. `lm_added_1985` (kg/ha, 0 for 2006/2024) records
+# how much, so OFH is recovered by subtracting it. Without this the 1985 "humus"
+# would silently include the litter and the whole comparison would invert.
+  mutate(LM = coalesce(LM, coalesce(lm_added_1985, 0) / 1000),
+         OFH = organic - LM)   # 1985: LM absent => OFH = organic
 
 wm <- function(x, w) sum(x * w, na.rm = TRUE) / sum(w[!is.na(x)], na.rm = TRUE)
 

@@ -21,7 +21,7 @@ XLSX   <- "Data/Komeetta/Hannu/Komeetta 150526hi--.xlsx"
 layers <- read.csv(file.path(SOCDIR, "soc_homogenized_layers.csv"), stringsAsFactors = FALSE)
 plotd  <- read.csv(file.path(SOCDIR, "soc_homogenized_plot.csv"),   stringsAsFactors = FALSE)
 
-meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_outlier)
+meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_outlier, lm_added_1985)
 band <- layers |>
   mutate(b = case_when(layer == "organic" ~ "organic",
                        layer %in% c("0-5cm","5-20cm","0-10cm","10-20cm") ~ "m0_20",
@@ -44,7 +44,10 @@ lit <- tibble(plot_id = as.integer(nn(3)), Krs = as.integer(nn(4)), REP = as.int
   filter(!is.na(plot_id), REP == 1, Krs == 101) |> select(plot_id, Biosoil, Komeetta) |>
   pivot_longer(-plot_id, names_to = "campaign", values_to = "litter")
 band <- band |> left_join(lit, by = c("plot_id", "campaign")) |>
-  mutate(litter = coalesce(litter, 0), humus = organic - litter,
+  # ⚠ 2026-08-12: the baseline applies TREATMENT C, so the 1985 organic layer already
+  # contains the imputed LM; lm_added_1985 (kg/ha, 0 elsewhere) recovers OFH.
+  mutate(litter = coalesce(litter, coalesce(lm_added_1985, 0) / 1000),
+         humus = organic - litter,
          profile = organic + m0_20 + m20_40 + soc_deep_Mgha)
 
 W <- band |> select(plot_id, campaign, humus, m0_20, m20_40, profile) |>

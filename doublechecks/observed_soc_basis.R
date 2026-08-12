@@ -33,9 +33,11 @@
 #   * any statement about FINLAND -> WEIGHTED.
 #   * comparing intervals with each other -> BALANCED, so the plot set is constant.
 #
-# NB the denominators here are NOMINAL (39 / 21 / 18 yr). The first campaign is
-# really 1986-1995, mean ~1989, so the true 1985->2024 interval is ~34.7 yr; that
-# correction is separate and not applied here (see NEXT_SESSION.md sec. 0c).
+# DENOMINATORS are the TRUE mean intervals, computed from samp_year (which the
+# baseline now carries): the first campaign was sampled 1986-1995, so its mean year
+# is ~1989 and the nominal 39 / 21 / 18 yr would overstate every interval by ~12%.
+# Corner-cut validated: delta-of-means / true-mean-interval equals the mean of
+# per-plot rates to 0.1% (interval length vs change r = 0.036, p = 0.51).
 #
 # Run from repo root:  Rscript doublechecks/observed_soc_basis.R
 # =============================================================================
@@ -45,6 +47,10 @@ options(width = 132)
 
 ROOT <- if (dir.exists("Data/SOC_homogeneized")) "." else ".."
 P <- read.csv(file.path(ROOT, "Data/SOC_homogeneized/soc_homogenized_plot.csv"))
+.sy <- P$samp_year[P$campaign == "VMI8"]; .sy <- .sy[is.finite(.sy)]
+Y1985 <- mean(.sy)      # true mean year of the first campaign (~1989)
+cat(sprintf("first-campaign mean sampling year: %.1f  (nominal 1985 => intervals were %.0f%% too long)\n",
+            Y1985, 100 * ((2024 - 1985) / (2024 - Y1985) - 1)))
 DEPTH <- Sys.getenv("BASIS_DEPTH", "soc_profile_Mgha")   # or soc_0_40_Mgha
 P <- P |> filter(!(soc_outlier %in% TRUE), is.finite(.data[[DEPTH]])) |>
   select(plot_id, campaign, weight, soc = all_of(DEPTH))
@@ -75,8 +81,9 @@ lev <- lapply(c(FALSE, TRUE), function(wgt) {
 print(lev |> mutate(across(where(is.numeric), \(x) round(x, 2))), row.names = FALSE)
 
 # =============================================================================
-hdr("B. TRENDS  (Mg C/ha/yr, nominal denominators)")
-rows <- list(c("VMI8","Biosoil",21), c("Biosoil","Komeetta",18), c("VMI8","Komeetta",39))
+hdr(sprintf("B. TRENDS  (Mg C/ha/yr, TRUE mean intervals: %.1f / 18 / %.1f yr)", 2006-Y1985, 2024-Y1985))
+rows <- list(c("VMI8","Biosoil", 2006 - Y1985), c("Biosoil","Komeetta", 18),
+             c("VMI8","Komeetta", 2024 - Y1985))
 out <- list()
 for (r in rows) {
   a <- r[1]; b <- r[2]; yrs <- as.numeric(r[3])

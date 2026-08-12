@@ -55,7 +55,36 @@ diagnostic, then do the data fixes, then one re-run.
 
 ---
 
-## 0c. THE IMPLEMENTATION — decided 2026-08-12, execute after the run above is read
+## 0c. THE IMPLEMENTATION — ✅ EXECUTED 2026-08-12 (commit `8ef5c62`)
+
+> **STATUS: the code and the data are DONE. What remains is the calibration re-run.**
+> Revert point: `3a143cd` (analysis only, target untouched).
+>
+> Done: treatment C (1985 profile 63.27 → 66.27, 2006/2024 bit-identical, official
+> validation still exact); true sampling years wired end-to-end (`samp_year` →
+> `obs_year` → `soc_obs_year`, indexed by all six calibration scripts); 82 undated
+> 1985 plot-years dropped; `SIGMA_1985_INFL = 2.0` pre-registered; `Data_work.R`
+> re-run clean (456 calib-ready, 1205 observations, median target 64.9);
+> `Data_work.R` and `build_soc_homogenized.R` brought under version control at last.
+>
+> **Local Yasso15 f-sweep launched 2026-08-12 evening**
+> (`doublechecks/ablation_logs/Yasso15_SUITE_20260812.log`, 4 configs × ~70–90 min).
+> ⚠ Run `doublechecks/quarantine_ablation_runs.R` when it finishes, or `run_ids.R`
+> will pick a 3×6000 short chain as production.
+>
+> ⚠ **Figures: only the observation-only ones were regenerated** (S8/S9/S10, and they
+> needed a fix — the baseline now *contains* the imputed LM, so OFH is recovered via
+> `lm_added_1985`; without it the 1985 "humus" would have silently included litter).
+> **F2/F3/F4 and appendix_delta_reconciliation were deliberately NOT rebuilt**: their
+> posterior bundles come from the old target, so they would compare old models against
+> the new observations. Rebuild them only after the re-run.
+>
+> Observed rates on the corrected target, balanced/unweighted/whole profile, true mean
+> intervals (17.1 / 18 / 35.1 yr): 1985→2006 **+0.368**, 2006→2024 **+0.147**,
+> 1985→2024 **+0.254** (was +0.312 on the old target and nominal intervals).
+> 2006→2024 barely moved, as it must — no 1985 fix can reach that window.
+
+### Original plan, retained as the record of what was decided
 
 Full findings: `manuscript/HIKET_discussion_memo.tex`, memories
 [[soc-campaign-comparability]] and [[kramarenko-thesis-vmi8-biosoil]], scripts
