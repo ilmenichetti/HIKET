@@ -109,6 +109,22 @@ so the live target had been carrying a stale plot set ever since.
 Yasso15 sweep are all built on — deliberately, so everything is mutually consistent. Do not re-run
 either script piecemeal.
 
+**THE FIX IS SCOPED (2026-08-12).** The builder needs only these from `site_raw.csv`:
+`plot_id`, `peatland`, `soil_code`, `region`, `x_ETRS`, `y_ETRS`, `lon_WGS84`, `lat_WGS84`, plus
+the era-tagged stand covariates (`basal_area_85`, `stand_age_85`, `mean_height_85_dm`,
+`dev_class_85`, and the 2024 descriptors). **Every one is a raw NFI/GTK attribute — none is a
+modelling result.** The contamination is incidental: those attributes arrive in a file that also
+carries `calib_ready` / `soc_outlier` / `n_soc_obs` and, critically, a ROW SET shaped by the SOC
+data (`site_raw$plot_id = plot_data$plot_id`, and `plot_data` is joined against `obs_count`, which
+is aggregated from `SOC_agg`).
+
+**Preferred route:** have `Data_work.R` write a second, minimal `Data/model_inputs/site_attributes.csv`
+containing only the raw columns above, emitted from a point in the script that is provably upstream
+of anything SOC-derived; point `build_soc_homogenized.R` at that instead. One new write, one changed
+path. ⚠ The verification that matters is the ROW SET, not the columns: the new file must be built
+before `SOC_agg` is touched, or the loop survives in a subtler form. The weaker alternative — having
+the builder re-read the original GTK/NFI sources — duplicates parsing logic and will drift.
+
 **To resolve (before the production re-run):**
 1. Establish whether this is a 2-cycle or converges — needs one more `Data_work` → build iteration,
    which must NOT be done while the sweep is running (it would change `input_raw_monthly.csv`
