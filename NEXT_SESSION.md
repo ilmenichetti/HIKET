@@ -84,6 +84,41 @@ diagnostic, then do the data fixes, then one re-run.
 > 1985→2024 **+0.254** (was +0.312 on the old target and nominal intervals).
 > 2006→2024 barely moved, as it must — no 1985 fix can reach that window.
 
+### ⚠ OPEN DEFECT FOUND 2026-08-12: build_soc_homogenized.R and Data_work.R form a LOOP
+
+`build_soc_homogenized.R` reads `Data/model_inputs/site_raw.csv`, which `Data_work.R` **writes**;
+`Data_work.R` reads the SOC CSVs that `build_soc_homogenized.R` **writes**. `site_raw` supplies the
+peat exclusion, `soil_code` (hence the per-GTK-class λ) and region/weights, so the loop closes:
+SOC data → `calib_ready`/peat → `site_raw` → plot set and λ → deep tail → SOC data.
+
+**One pass does not reach a fixed point.** Measured: a second build pass (on the `site_raw.csv`
+that the first `Data_work` run produced) gives **1408 plot-years instead of 1411**, 30 differing
+`soc_profile` values and 38 differing λ, moving the campaign means by ~0.04–0.06 Mg/ha:
+
+| | pass 1 | pass 2 |
+|---|---|---|
+| VMI8 | 66.2689 | 66.3087 |
+| Biosoil | 69.9120 | 69.9712 |
+| Komeetta | 72.4195 | 72.4438 |
+
+This is also the origin of the "input drift" seen against the 3 August build: the SOC swap of
+4 August re-ran `Data_work` and changed `site_raw`, but `build_soc_homogenized.R` was never re-run,
+so the live target had been carrying a stale plot set ever since.
+
+**Current state: pass 1 is on disk**, and it is what the commits, the input bundles and the running
+Yasso15 sweep are all built on — deliberately, so everything is mutually consistent. Do not re-run
+either script piecemeal.
+
+**To resolve (before the production re-run):**
+1. Establish whether this is a 2-cycle or converges — needs one more `Data_work` → build iteration,
+   which must NOT be done while the sweep is running (it would change `input_raw_monthly.csv`
+   underneath the later configs).
+2. Then either iterate to a fixed point and record the number of passes, or break the loop — e.g.
+   have `build_soc_homogenized.R` read the *raw* site table rather than the `Data_work` product,
+   so the dependency runs one way only. The second is the real fix.
+3. The effect is small (~0.07% on the means) but it makes the target **non-reproducible from a
+   clean checkout**, which matters more than the magnitude.
+
 ### Original plan, retained as the record of what was decided
 
 Full findings: `manuscript/HIKET_discussion_memo.tex`, memories
