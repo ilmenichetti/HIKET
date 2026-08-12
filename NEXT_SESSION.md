@@ -1,5 +1,64 @@
 # NEXT SESSION — start here
 
+## ⭐ 0. STATE AT 2026-08-12 — a run is IN FLIGHT, and next session is DATA WORK
+
+**Launched:** six Roihu jobs, error model **scale 0.80 + Student-t ν = 6**. Results ~2026-08-13.
+**Next session's work is the SOC data, especially 1985** — not this run. See §0c.
+
+### 0a. Why this run
+
+The posteriors are **overconfident** — see CLAUDE.md §"THE POSTERIORS ARE OVERCONFIDENT" and
+`doublechecks/ridge_test.R`, which reproduces every number. In one line: Yasso15's `sigma_input`
+moved 2 posterior SD from a single defensible choice, so between-run sensitivity exceeds within-run
+uncertainty.
+
+This run fixes the two *simplest* defects only, both measured, neither assumed:
+
+- **σ 0.72 → 0.80.** 0.72 was the in-sample spread; held-out plots give 0.784–0.799, and the
+  measured spatial structure adds a little more (√(0.79² + 0.13²) ≈ 0.80). **This is the largest
+  value the data support** — beyond it you contradict the residuals and forfeit the
+  self-consistency argument.
+- **Student-t, ν = 6.** Residual kurtosis is 6.9–7.1 in all six against a Gaussian's 3.0.
+
+⚠ **Expect this to CONFIRM the overconfidence, not fix it** — worth ~1.3–1.4× broadening where
+Yasso15 needs 2.5×. The reason to run it is that heavy tails may move parameter **locations**: under
+a Gaussian a handful of badly-missed plots steer the fit. Campaign-specific σ was deliberately
+**excluded** so it cannot confound the trend.
+
+### 0b. Post-run checklist
+
+1. **Self-consistency**, twice over: residual sd ≈ 0.80 *and* kurtosis ≈ 6.
+2. **`Rscript doublechecks/ridge_test.R`** — did corr(log MRT, log σ_input) move off −0.3? Did
+   `sd(log product)/sd(log MRT)` drop below 1?
+3. **Did locations move?** The real question. Compare against `20260810_1529*`.
+4. `doublechecks/intrinsic_mrt.R` (update the RIDs) → rebuild F12.
+
+⚠ Log-likelihoods are **not** comparable to any previous run — both family and scale changed.
+
+### 0c. Then: the SOC data, 1985 first
+
+Evidence that 1985 is the weak link, none of it chosen to suit the answer:
+
+- residual spread **0.97** vs 0.54 for 2024, near-identical across all six models (0.967–0.978), so
+  it is a property of the campaign, not of any model;
+- differencing does **not** clean it — Δ(2006→2024) drops to 0.37–0.45 while Δ(1985→2024) stays at
+  0.77–0.93, the signature of *independent* error rather than a shared offset;
+- all six models over-predict 1985, i.e. independently say the true value is **higher** than
+  recorded, by ~3–6 tC/ha beyond the general bias.
+
+**Calibrated expectations.** A 10% upward revision of 1985 raises the level ~3% ⇒ Yasso15 MRT
+21.9 → ~22.6 against the 30.3 needed. **1985 barely touches the MRT tension** — it constrains
+`sigma_init`, not MRT. It would however reshape the **trend**: observed 1985→2024 is +0.312, and a
+5 tC/ha higher 1985 takes it to ~+0.08, *below* several models, flipping the sign of the
+discrepancy rather than closing it.
+
+⚠ **And the 2006→2024 window contains no 1985 data at all**, yet every model produces a source
+(−0.02 to −0.43) against an observed +0.209. **No 1985 revision can fix that.** Don't let a 1985
+finding be mistaken for a resolution of the trend problem.
+
+---
+
+
 **Rewritten 2026-08-10 (evening).** Supersedes the 2026-08-07 version.
 
 > **Companion documents:**

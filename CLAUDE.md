@@ -80,7 +80,8 @@ to reach R inside the r-env container):
 | variable | effect | default |
 |---|---|---|
 | `HIKET_LOGNORMAL_LIK` | `0` reverts to multiplicative normal | log-normal |
-| `HIKET_SIGMA_TOTAL` | overrides the likelihood error scale | `sigma_obs_fixed` (0.442) |
+| `HIKET_SIGMA_TOTAL` | overrides the likelihood error scale (total **SD**) | `sigma_obs_fixed` (0.442) |
+| `HIKET_LIK_DF` | Student-t degrees of freedom on the log scale; unset/`Inf` = Gaussian | Gaussian |
 | `HIKET_PRIOR_TIGHTEN` | multiplies Tier-2 **fraction** SDs only | 1 (0.4 unchanged) |
 | `HIKET_N_CHAINS` / `_N_ITER` / `_N_BURNIN` | short test runs | 5 / 50000 / 5000 |
 
@@ -303,6 +304,46 @@ inputs at entry; committed + pushed as **ff216ce** (exact integrator + bug fix).
 **The genuine exact-integrator TP3 calibration is RUNNING on Puhti as of
 2026-06-30** (job 35323262, from ff216ce). When it finishes follow the TP3
 re-calibration steps in "Known outstanding items".
+
+### 🚩 THE POSTERIORS ARE OVERCONFIDENT (established 2026-08-11/12)
+
+Measured on run `20260810_1529*`. **The operational test is met:** defensible analysis choices move
+the estimate further than the posterior's own uncertainty. Yasso15's `sigma_input` moved 0.175 on
+the log scale (σ 0.442→0.72 alone; its climate priors were untouched) against a posterior SD of
+**0.087** — two standard deviations from one choice.
+
+**The mechanism.** The likelihood treats 1269 plot-years as independent. They are not:
+
+| shared component | measured | effect |
+|---|---|---|
+| plot-persistent | ICC **0.57–0.71**; r(2006,2024) = 0.66–0.81 | effective n 1269 → **~630** |
+| spatial (latitude bands) | band means vary **5–6×** more than iid allows; regional sd 0.12–0.14 | SE of the national mean **2.3×** larger |
+| campaign | means +0.131/−0.045/−0.031; spreads **0.97 / 0.62 / 0.54** | reweights the trend |
+| heavy tails | kurtosis **6.9–7.1** (Gaussian = 3) | a few plots steer the fit |
+
+**Why this specifically breaks MRT.** All of it attacks the *aggregate level*, and the level is what
+pins `MRT × σ_input`. The posterior does **not** explore that ridge: corr(log MRT, log σ_input) is
+only −0.30 to −0.37 and `sd(log product)/sd(log MRT)` ≈ 0.94–1.05, i.e. the two are pinned almost
+independently. Yet across runs the product is constant to 4% (Yasso15 43.0 → 44.7) while the split
+slides. Reproduce with `doublechecks/ridge_test.R`.
+
+**Why scale alone cannot fix it.** Uniform σ inflation broadens every direction by √k, so reaching
+the 2.5× Yasso15 needs would require σ ≈ 1.8 against a measured residual spread of 0.79 — it would
+invalidate the self-consistency argument that justifies σ in the first place. **Correlated-error
+structure broadens the level direction at fixed total variance; nothing else does.**
+
+**Options, in increasing cost:** (1) scale 0.72→0.80 + Student-t tails — **the run launched
+2026-08-12**, worth ~1.3–1.4×, *not* a fix, but may move locations; (2) campaign-specific σ — cheap,
+targets the **trend**, and note it *sharpens* the posterior ~10% (1985's weight 32%→14%, 2024's
+32%→46%); (3) fit regional/campaign aggregates instead of plot-years — a data decision, not a
+likelihood one, and defensible because there is no plot-level signal to lose (R² 0.004–0.019);
+(4) marginalised compound-symmetry likelihood — O(n) rank-1 updates, no new parameters.
+
+⚠ **Campaign-specific σ is safe; a campaign-specific BIAS is not** — the trend *is* the difference
+between campaign levels, so a free `c_j` eats the signal (already demonstrated: the δ-offset test
+gave δ = −0.137, requiring σ_init ≈ 0.98, implying no accumulation ever happened).
+
+Memory: [[likelihood-overconfident-ridge]].
 
 ### Likelihood / error model
 **LOG-NORMAL is the DEFAULT since 2026-08-07** (`HIKET_LOGNORMAL_LIK=0` reverts to the old

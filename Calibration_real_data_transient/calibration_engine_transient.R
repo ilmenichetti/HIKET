@@ -89,6 +89,42 @@ message(if (.hiket_lognormal_lik)
         else
           "[ERROR MODEL] multiplicative normal (REVERTED via HIKET_LOGNORMAL_LIK=0)")
 
+# -----------------------------------------------------------------------------
+# HEAVY TAILS (2026-08-12).  HIKET_LIK_DF=<nu> replaces the Gaussian on the log
+# scale with a scaled Student-t on nu degrees of freedom. Unset (or Inf) => the
+# Gaussian, bit-for-bit; this is the revert switch, same discipline as
+# transient_init = FALSE.
+#
+# WHY. The residuals are strongly leptokurtic -- measured kurtosis 6.9-7.1 in ALL
+# SIX models against a Gaussian's 3.0 (run 20260810_1529*). So the error model is
+# misspecified in a third way, independent of its scale and of its (unmodelled)
+# correlation: the tails are far too thin. Under a Gaussian the sum of squares is
+# then steered by a handful of badly-missed plots, so this may move parameter
+# LOCATIONS and not merely widen them. nu = 6 implies kurtosis 6.0, nu = 5 gives
+# 9.0; observed ~7 sits between, and 6 is the conservative choice.
+#
+# CRITICAL: dt()'s second argument is the SCALE, not the SD. For nu df,
+#   sd = scale * sqrt(nu/(nu-2))
+# so the scale must be DEFLATED or the tail change silently inflates the variance
+# too and confounds itself with HIKET_SIGMA_TOTAL. That conversion is applied at
+# the point of use (.hiket_t_scale below), NOT here, so that HIKET_SIGMA_TOTAL
+# keeps meaning "total SD" under both families.
+# -----------------------------------------------------------------------------
+.hiket_lik_df <- suppressWarnings(as.numeric(Sys.getenv("HIKET_LIK_DF", NA)))
+if (!is.na(.hiket_lik_df) && (.hiket_lik_df <= 2))
+  stop("HIKET_LIK_DF must exceed 2 (the t has no finite variance at nu <= 2)")
+.hiket_use_t <- !is.na(.hiket_lik_df) && is.finite(.hiket_lik_df)
+# SD -> scale conversion, so that a requested total SD means the same thing
+# whichever family is in force.
+.hiket_t_scale <- function(sd) if (.hiket_use_t)
+  sd / sqrt(.hiket_lik_df / (.hiket_lik_df - 2)) else sd
+if (.hiket_use_t)
+  message(sprintf(paste("[ERROR MODEL] STUDENT-t tails: df = %.3g",
+                        "(implied kurtosis %.2f; SD->scale factor %.4f)"),
+                  .hiket_lik_df,
+                  if (.hiket_lik_df > 4) 3 + 6/(.hiket_lik_df - 4) else Inf,
+                  1/sqrt(.hiket_lik_df/(.hiket_lik_df - 2))))
+
 make_likelihood <- function(n_cores,
                             to_original,
                             log_jacobian,
@@ -199,12 +235,25 @@ make_likelihood <- function(n_cores,
       # residual CV goes 0.05 -> 1.0, whereas the log-normal returns 1.000 at
       # every spread. See manuscript/M&M_parameterization_working_document.pdf.
       # -------------------------------------------------------------------
+      # HIKET_LIK_DF (2026-08-12): Student-t tails. .hiket_t_scale() converts the
+      # requested total SD to the t's SCALE, so the two switches stay orthogonal
+      # -- HIKET_SIGMA_TOTAL always means the total SD. With the switch unset,
+      # .hiket_t_scale() is the identity and both branches are the old Gaussians.
       if (isTRUE(.hiket_lognormal_lik)) {
         infl <- if (!is.null(meta$sigma_infl)) meta$sigma_infl else 1
-        sum(dnorm(log(meta$soc_obs), mean = log(SOC_hat),
-                  sd = sd_use * infl, log = TRUE))
+        s <- .hiket_t_scale(sd_use * infl)
+        if (.hiket_use_t)
+          sum(dt((log(meta$soc_obs) - log(SOC_hat)) / s,
+                 df = .hiket_lik_df, log = TRUE) - log(s))
+        else
+          sum(dnorm(log(meta$soc_obs), mean = log(SOC_hat), sd = s, log = TRUE))
       } else {
-        sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = sd_vec, log = TRUE))
+        s <- .hiket_t_scale(sd_vec)
+        if (.hiket_use_t)
+          sum(dt((meta$soc_obs - SOC_hat) / s,
+                 df = .hiket_lik_df, log = TRUE) - log(s))
+        else
+          sum(dnorm(meta$soc_obs, mean = SOC_hat, sd = s, log = TRUE))
       }
       
     }, mc.cores = n_cores)
