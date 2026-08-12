@@ -525,7 +525,7 @@ protocol). The baseline reproduces LUKE's official national stocks **exactly**
   METHODS & MATERIALS block at the end of `Data_work.R` (canonical text) and in
   §"SOC stocks: a single homogenized basis" of `manuscript/HIKET_main_manuscript.tex`.
 
-### ⚠ The 1985 target is not comparable with 2006/2024 — fix DECIDED 2026-08-12, NOT YET APPLIED
+### ✅ The 1985 target comparability fix — APPLIED 2026-08-12 (commit `8ef5c62`)
 
 Two defects, both established from the workbook's own structure (see `NEXT_SESSION.md` §0c for the
 implementation, `manuscript/HIKET_discussion_memo.tex` for the findings):
@@ -543,8 +543,21 @@ implementation, `manuscript/HIKET_discussion_memo.tex` for the findings):
    **19.5% are 10 years mis-dated**, the campaign mean represents ~**1989**, and the true mean
    interval to 2024 is **34.7 yr, not 39** (12% error in every rate denominator).
 
-⚠ **Do NOT rename `year`** when wiring the true dates — it doubles as the campaign key, so
-`sigma_infl` and `HIKET_DROP_CAMPAIGN` would break *silently*. Add `obs_year` alongside.
+**Applied:** treatment C adds each plot's own 2006 LM to its 1985 organic layer (478 of 488 rows;
+10 skipped where OFH is zero/absent, so `organic_zero` keeps firing). `samp_year` → `obs_year` →
+`soc_obs_year` carries the true date and all six calibration scripts index on it; 82 undated 1985
+plot-years dropped (71 South / 9 North). `SIGMA_1985_INFL` = **2.0**, pre-registered.
+Switch: `HIKET_ADD_1985_LM=0` reverts treatment C.
+
+⚠ **`year` was NOT renamed** — it doubles as the campaign key, so `sigma_infl` and
+`HIKET_DROP_CAMPAIGN` would have broken *silently*. `obs_year` sits alongside it.
+
+⚠ **The baseline now CONTAINS the imputed LM.** Any script treating the 1985 organic layer as OFH
+must subtract `lm_added_1985` (kg/ha, 0 for 2006/2024) or it will count litter as humus — S8/S9/S10
+were caught by exactly this.
+
+**Converged target:** 1408 plot-years; weighted profile means 66.309 / 69.971 / 72.444; official
+validation still exact; 456 calib-ready.
 
 **What is NOT wrong with 1985**, despite intuition: its depth distribution (λ 0.038, *between*
 2006's 0.031 and 2024's 0.041), stoniness (ρ=−0.08 n.s.), the organic/mineral boundary (r=−0.04
@@ -553,6 +566,24 @@ a **level**, not scatter, and proportional bias appears in *every* campaign pair
 1985-specific mechanisms are the LOI-derived mineral C%, relocated subplots, and the physically
 implausible **depth-inverted** subsoil gain (subsoil +19% vs topsoil +8.5% over 1985→2006 — a real
 input-driven gain must be surface-weighted).
+
+### 🔒 The data layer must not depend on the calibration layer (loop broken 2026-08-12, `44215b0`)
+
+`build_soc_homogenized.R` used to read `site_raw.csv`, which is built from `plot_data` — whose row
+set is `merge(avg_inputs, avg_SOC)` on `common_plots`, an **inner join on the SOC data the builder
+itself produces**. The GTK soil-class extraction also ran only over `plot_data`'s plots, so
+`soil_code` (→ per-class λ → deep tail, all three campaigns) was SOC-gated at source. The cycle did
+**not** reach a fixed point in one pass (1411 vs 1408 plot-years, 38 differing λ, means ~0.05 Mg/ha
+apart), which made the target non-reproducible from a clean checkout.
+
+**Now:** `Data_work.R` extracts soil types over the SOC-independent universe (`plots_sf`, from
+litter-input coordinates) and writes **`Data/model_inputs/site_attributes.csv`** (2719 plots) before
+anything SOC-derived. `build_soc_homogenized.R` takes every target-affecting lookup from there;
+`site_raw.csv` is retained only for descriptive covariates that cannot reach `soc_profile`.
+
+> **INVARIANT.** Nothing SOC-dependent may be added to `site_attributes.csv`, and the **ROW SET**
+> matters as much as the column list — gating those rows on SOC restores the loop invisibly.
+> Verify with the fixed-point test: `Data_work → build → Data_work → build` must be byte-identical.
 
 **Excluded plots:** zero-litter, OFH-absent (`organic_missing`/`organic_zero`),
 peatland (Cajander KA 11–13), MRT > 100 years, **`const_litter`** (litter identical to

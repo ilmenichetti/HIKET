@@ -1,6 +1,18 @@
 # NEXT SESSION — start here
 
-## ⭐ 0. STATE AT 2026-08-12 — a run is IN FLIGHT, and next session is DATA WORK
+## ⭐ 0. STATE AT 2026-08-12 (evening) — DATA WORK IS DONE; a Roihu run is in flight
+
+> **Read this box first.**
+> 1. **The calibration target has CHANGED** (1985 litter added, true sampling years, loop broken).
+>    It is at a verified fixed point. Latest commit `44215b0`; revert point `3a143cd`.
+> 2. **A local Yasso15 f-sweep is running** — see §0c "RUNNING NOW". Run
+>    `quarantine_ablation_runs.R` when it finishes or figures will rebuild from short chains.
+> 3. **The Roihu run 597028–597033 (§0a) predates all of this.** Read it as an error-model
+>    diagnostic only; do NOT refresh figures from it and do not compare its numbers with anything
+>    produced after `8ef5c62`.
+> 4. The production re-run on the corrected target is the next big action.
+
+## 0a. The Roihu run in flight (superseded target — diagnostic value only)
 
 **Launched 2026-08-12**, commit `3e0c807`, error model **scale 0.80 + Student-t ν = 6**.
 Jobs **597028** SP1, **597029** TP2, **597030** TP3, **597031** Yasso07, **597032** Yasso15,
@@ -55,34 +67,84 @@ diagnostic, then do the data fixes, then one re-run.
 
 ---
 
-## 0c. THE IMPLEMENTATION — ✅ EXECUTED 2026-08-12 (commit `8ef5c62`)
+## 0c. THE IMPLEMENTATION — ✅ DONE 2026-08-12. Only the production re-run remains.
 
-> **STATUS: the code and the data are DONE. What remains is the calibration re-run.**
-> Revert point: `3a143cd` (analysis only, target untouched).
->
-> Done: treatment C (1985 profile 63.27 → 66.27, 2006/2024 bit-identical, official
-> validation still exact); true sampling years wired end-to-end (`samp_year` →
-> `obs_year` → `soc_obs_year`, indexed by all six calibration scripts); 82 undated
-> 1985 plot-years dropped; `SIGMA_1985_INFL = 2.0` pre-registered; `Data_work.R`
-> re-run clean (456 calib-ready, 1205 observations, median target 64.9);
-> `Data_work.R` and `build_soc_homogenized.R` brought under version control at last.
->
-> **Local Yasso15 f-sweep launched 2026-08-12 evening**
-> (`doublechecks/ablation_logs/Yasso15_SUITE_20260812.log`, 4 configs × ~70–90 min).
-> ⚠ Run `doublechecks/quarantine_ablation_runs.R` when it finishes, or `run_ids.R`
-> will pick a 3×6000 short chain as production.
->
-> ⚠ **Figures: only the observation-only ones were regenerated** (S8/S9/S10, and they
-> needed a fix — the baseline now *contains* the imputed LM, so OFH is recovered via
-> `lm_added_1985`; without it the 1985 "humus" would have silently included litter).
-> **F2/F3/F4 and appendix_delta_reconciliation were deliberately NOT rebuilt**: their
-> posterior bundles come from the old target, so they would compare old models against
-> the new observations. Rebuild them only after the re-run.
->
-> Observed rates on the corrected target, balanced/unweighted/whole profile, true mean
-> intervals (17.1 / 18 / 35.1 yr): 1985→2006 **+0.368**, 2006→2024 **+0.147**,
-> 1985→2024 **+0.254** (was +0.312 on the old target and nominal intervals).
-> 2006→2024 barely moved, as it must — no 1985 fix can reach that window.
+**Commits, each a clean revert point**
+
+| | |
+|---|---|
+| `3a143cd` | analysis only — target untouched. **Revert here to undo everything.** |
+| `8ef5c62` | treatment C + true sampling years + `SIGMA_1985_INFL = 2` |
+| `b4bee98` | appendix figures + basis table on the corrected target |
+| `247eab4` / `0a25ca4` | the build↔Data_work loop: recorded, then scoped |
+| `44215b0` | **loop broken; fixed-point test passes** |
+
+**Converged target (this is what is on disk)**
+
+| | |
+|---|---|
+| plot-years | **1408** (fixed point; `Data_work → build → Data_work → build` is byte-identical, 0 of 53 numeric columns differing) |
+| weighted profile means | VMI8 **66.309**, Biosoil **69.971**, Komeetta **72.444** |
+| official validation | 2006 = 59055, 2024 = 61047 — still exact |
+| `Data_work` | all checks pass, **456** calib-ready, 1205 observations, median target 64.9 |
+| observed rates (balanced, unweighted, whole profile, true intervals 17.1/18/35.1 yr) | 1985→2006 **+0.368**, 2006→2024 **+0.143**, 1985→2024 **+0.254** |
+
+**What was done**
+1. **Treatment C** — each plot's own 2006 LM added to its 1985 organic layer (478 of 488 rows; 10
+   skipped where OFH is zero/absent so `organic_zero` keeps firing). A/B verified: 1985 moves,
+   2006/2024 bit-identical. Switch: `HIKET_ADD_1985_LM=0`.
+2. **True sampling years** — `samp_year` → `obs_year` → `soc_obs_year`, indexed by all six
+   calibration scripts. `year` stays the campaign key. 82 undated 1985 plot-years dropped
+   (71 South / 9 North — stated, not compensated).
+3. **`SIGMA_1985_INFL` 1.0 → 2.0**, pre-registered with its rationale in `calib_config.R`.
+4. **The build↔Data_work loop broken** — see below.
+5. `Data_work.R` and `build_soc_homogenized.R` brought under version control (they were untracked,
+   collateral of the blanket `Data/*` rule).
+
+### ⚠ THE LOOP — fixed 2026-08-12, and the invariant that must hold
+
+`build_soc_homogenized.R` read `site_raw.csv`, which is built from `plot_data`, whose row set is
+`merge(avg_inputs, avg_SOC)` on `common_plots` — an **inner join on the SOC data the builder
+itself produces**. Worse, the GTK soil-class extraction (hence the per-class λ, hence the deep tail
+for all three campaigns) ran only over `plot_data`'s plots, so `soil_code` was SOC-gated at source.
+
+It did **not** reach a fixed point in one pass: 1411 vs 1408 plot-years, 30 differing
+`soc_profile`, 38 differing λ, means moving ~0.05 Mg/ha. Numerically small; the real defect was
+that the target could not be regenerated from a clean checkout.
+
+**Fix:** `Data_work.R` extracts soil types over the SOC-independent universe (`plots_sf`, from
+litter-input coordinates) and writes **`Data/model_inputs/site_attributes.csv`** (2719 plots)
+before anything SOC-derived. The builder takes every target-affecting lookup from there and keeps
+`site_raw.csv` only for descriptive covariates.
+
+> **INVARIANT — do not break it.** Nothing SOC-dependent may be added to `site_attributes.csv`,
+> and the **ROW SET** matters as much as the column list: gating those rows on SOC restores the
+> loop invisibly. If you ever add a column there, ask first whether it is a raw attribute or a
+> modelling result.
+
+### 🔄 RUNNING NOW: local Yasso15 f-sweep
+
+`doublechecks/ablation_logs/Yasso15_SUITE_20260812.log` — 4 configs (`A0`=f 2, `A1`=1, `A2`=1.5,
+`A3`=3), 3 chains × 6000, ~70–90 min each, launched on the **converged** target.
+
+**When it lands:**
+1. `Rscript doublechecks/quarantine_ablation_runs.R` — ⚠ **mandatory**, or `run_ids.R` picks a
+   3×6000 short chain as production and every figure silently rebuilds from it.
+2. `Rscript doublechecks/summarise_ablation.R` to compare.
+3. **`A1_C5_off` is the attribution arm** — corrected data at f = 1, so A1→A0 isolates what f = 2
+   does and the remainder is the data fixes.
+4. ⚠ Short chains compare *locations*, not publication posteriors. Do not quote them as if they were.
+
+### ⬜ STILL OUTSTANDING
+
+1. **The production re-run**: six models, Roihu, corrected data, f = 2. Nothing else blocks it.
+2. **Then rebuild F2 / F3 / F4 and `appendix_delta_reconciliation`** — deliberately NOT rebuilt
+   today, because their posterior bundles are from the old target and would compare old models
+   against new observations. S8/S9/S10 *were* rebuilt (observation-only).
+3. **Hannu's answer on the LM question.** ⚠ If 1985 already includes LM, treatment C **inverts**;
+   revert `8ef5c62` or set `HIKET_ADD_1985_LM=0` and rebuild.
+4. Re-run `doublechecks/observed_soc_basis.R` after the production run and refresh the two basis
+   annotations in `HIKET_next_session.tex` and the M&M document, which quote current values.
 
 ### ⚠ OPEN DEFECT FOUND 2026-08-12: build_soc_homogenized.R and Data_work.R form a LOOP
 
