@@ -73,6 +73,11 @@ W$LM_VMI8_C <- W$LM_Biosoil        # treatment C: carry the plot's own 2006 LM b
 wm <- function(x, w) sum(x * w, na.rm = TRUE) / sum(w[!is.na(x)], na.rm = TRUE)
 cat(sprintf("balanced panel: %d plots\n", nrow(W)))
 
+# True mean interval, not the nominal 39 yr: the first campaign was sampled
+# 1986-1995 (mean ~1989), so 39 overstates it by ~11%. samp_year is in the baseline.
+.sy <- plotd$samp_year[plotd$campaign == "VMI8"]; .sy <- .sy[is.finite(.sy)]
+YRS_85_24 <- 2024 - mean(.sy)
+
 BANDS <- c("OFH", "LM", "m0_20", "m20_40", "soc_deep_Mgha")
 BLAB  <- c("humus\nOFH", "litter\nLM", "mineral\n0-20 cm", "mineral\n20-40 cm", "modelled\ntail")
 BCOL  <- c("#6E8B74", "#C9B458", "#4B7FA8", "#2E4E63", "#9AA0A6")
@@ -130,11 +135,11 @@ for (k in names(TR)) {
   text(1984.2, y[1], sprintf("%.1f ", y[1]), adj = 1, cex = 0.72, col = TCOL[k], font = 2, xpd = NA)
 }
 legend("topleft", lwd = 2.6, lty = TLTY[names(TLAB)], col = TCOL[names(TLAB)],
-       legend = sprintf("%s   %+.3f Mg/ha/yr", TLAB, sapply(TR, function(y) (y[3] - y[1]) / 39)),
+       legend = sprintf("%s   %+.3f Mg/ha/yr", TLAB, sapply(TR, function(y) (y[3] - y[1]) / YRS_85_24)),
        bty = "n", cex = 0.72)
 sub("A and C coincide after 1985; A and B share it -- each pair differs in one campaign only")
 
 dev.off()
 cat("Wrote manuscript/figures/S9_soc_change_by_depth.png\n")
 for (k in names(TR)) cat(sprintf("  %s: %s | 85-24 %+.3f | 06-24 %+.3f\n", k,
-  paste(sprintf("%.2f", TR[[k]]), collapse = " "), (TR[[k]][3]-TR[[k]][1])/39, (TR[[k]][3]-TR[[k]][2])/18))
+  paste(sprintf("%.2f", TR[[k]]), collapse = " "), (TR[[k]][3]-TR[[k]][1])/YRS_85_24, (TR[[k]][3]-TR[[k]][2])/18))

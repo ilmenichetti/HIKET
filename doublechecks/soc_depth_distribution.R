@@ -108,6 +108,12 @@ cat("\nbalanced panel (all three campaigns, outliers dropped): n =", length(bal_
 
 wmean <- function(x, w) sum(x * w, na.rm = TRUE) / sum(w[!is.na(x)], na.rm = TRUE)
 
+# True mean interval, not the nominal 39 yr: the first campaign was sampled
+# 1986-1995 (mean ~1989), so 39 overstates it by ~11%. samp_year is in the baseline.
+.sy <- plotd$samp_year[plotd$campaign == "VMI8"]; .sy <- .sy[is.finite(.sy)]
+YRS_85_24 <- 2024 - mean(.sy)
+
+
 hdr("2. STOCKS ON THE COMMON GRID (balanced panel, Mg C /ha)")
 tab2 <- bal |> group_by(campaign) |>
   summarise(n           = sum(!is.na(soc_0_40)),
@@ -315,7 +321,7 @@ trend <- data.frame(
   case      = c("as built", "1985 subsoil reconstructed"),
   soc_1985  = c(p85_before, p85_after), soc_2006 = c(p06, p06), soc_2024 = c(p24, p24),
   d_85_24   = c(p24 - p85_before, p24 - p85_after),
-  rate_85_24 = c((p24 - p85_before) / 39, (p24 - p85_after) / 39),
+  rate_85_24 = c((p24 - p85_before) / YRS_85_24, (p24 - p85_after) / YRS_85_24),
   rate_06_24 = c((p24 - p06) / 18, (p24 - p06) / 18))
 print(trend |> mutate(across(where(is.numeric), \(x) round(x, 3))), row.names = FALSE)
 cat("\n!! the 2006->2024 rate is UNCHANGED by construction — no 1985 revision can touch it.\n")
@@ -374,8 +380,8 @@ if (requireNamespace("readxl", quietly = TRUE) && file.exists(XLSX)) {
   cat("\n  EFFECT ON THE OBSERVED TREND (weighted profile, Mg C/ha):\n")
   print(as.data.frame(tr |> mutate(across(where(is.numeric), \(x) round(x, 2)))), row.names = FALSE)
   cat(sprintf("\n    1985->2024 rate : as built %+0.3f  ->  like-for-like %+0.3f  Mg/ha/yr  (%.0f%% smaller)\n",
-              (g("as_built","Komeetta") - g("as_built","VMI8")) / 39,
-              (g("like4like","Komeetta") - g("like4like","VMI8")) / 39,
+              (g("as_built","Komeetta") - g("as_built","VMI8")) / YRS_85_24,
+              (g("like4like","Komeetta") - g("like4like","VMI8")) / YRS_85_24,
               100 * (1 - ((g("like4like","Komeetta") - g("like4like","VMI8")) /
                           (g("as_built","Komeetta") - g("as_built","VMI8"))))))
   cat(sprintf("    2006->2024 rate : as built %+0.3f  ->  like-for-like %+0.3f  Mg/ha/yr  (%.0f%% smaller)\n",
@@ -525,7 +531,7 @@ rec_tab <- lapply(c(measured = "m20_40_VMI8", shape = "rec_shape",
   prof <- sub$organic_VMI8 + sub$m0_20_VMI8 + sub[[v]] + dtail
   data.frame(sub20_40 = wmean(sub[[v]], sub$weight),
              profile_1985 = wmean(prof, sub$weight),
-             rate_85_24 = (p24 - wmean(prof, sub$weight)) / 39)
+             rate_85_24 = (p24 - wmean(prof, sub$weight)) / YRS_85_24)
 }) |> bind_rows(.id = "reconstruction")
 rec_tab$vs_measured <- rec_tab$profile_1985 - rec_tab$profile_1985[1]
 print(as.data.frame(rec_tab |> mutate(across(where(is.numeric), \(x) round(x, 3)))), row.names = FALSE)
