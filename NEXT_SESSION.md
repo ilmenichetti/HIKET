@@ -10,7 +10,14 @@
 > 3. **The Roihu run 597028–597033 (§0a) predates all of this.** Read it as an error-model
 >    diagnostic only; do NOT refresh figures from it and do not compare its numbers with anything
 >    produced after `8ef5c62`.
-> 4. The production re-run on the corrected target is the next big action.
+> 4. **NOTHING IS PUSHED AND NO DATA IS SYNCED.** Two commands before any Roihu launch:
+>    `git push origin manuscript-figures-storyboard` (9 local commits) and
+>    `rsync -av "<mac-repo>/Data/" roihu:/scratch/project_2019134/HIKET/Data/`.
+>    ⚠ `Data/model_inputs/site_attributes.csv` is a **NEW** file — a partial rsync would leave the
+>    SOC builder without it on Roihu.
+> 5. The production re-run on the corrected target is the next big action, but let the local sweep
+>    land first: `A1_C5_off` separates "the data fixes moved it" from "f = 2 moved it", which is
+>    worth knowing before spending six production jobs.
 
 ## 0a. The Roihu run in flight (superseded target — diagnostic value only)
 
@@ -145,6 +152,19 @@ before anything SOC-derived. The builder takes every target-affecting lookup fro
    revert `8ef5c62` or set `HIKET_ADD_1985_LM=0` and rebuild.
 4. Re-run `doublechecks/observed_soc_basis.R` after the production run and refresh the two basis
    annotations in `HIKET_next_session.tex` and the M&M document, which quote current values.
+5. ✅ **Denominators are DONE** — `observed_soc_basis.R`, `build_S9_soc_change_by_depth.R` and
+   `soc_depth_distribution.R` all compute the true mean interval from `samp_year` (35.1 yr, not 39).
+   The observed 1985→2024 rate on the corrected target now reads **+0.18**, against +0.248 at the
+   start of 2026-08-12.
+
+### 📋 TOMORROW, in order
+
+1. **Read the Roihu run 597028–597033** against the §0b checklist. ⚠ Old target — diagnostic only.
+2. **Check the local sweep** (`doublechecks/ablation_logs/Yasso15_SUITE_20260812.log`), then
+   `quarantine_ablation_runs.R`, then `summarise_ablation.R`. `A1_C5_off` is the attribution arm.
+3. **Push + rsync** (see the box at the top).
+4. **Launch the production re-run**: six models, corrected data, f = 2.
+5. Only then rebuild F2 / F3 / F4 and `appendix_delta_reconciliation`.
 
 ### ⚠ OPEN DEFECT FOUND 2026-08-12: build_soc_homogenized.R and Data_work.R form a LOOP
 
