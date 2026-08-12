@@ -199,7 +199,7 @@ message(sprintf("Holdout split: %d calibration | %d holdout",
 
 SOC_obs_all <- input_calib %>%
   filter(!is.na(soc_obs_tCha)) %>%
-  select(plot_id, year, month, soc_obs_tCha) %>%
+  select(plot_id, year, month, soc_obs_tCha, soc_obs_year) %>%
   arrange(plot_id, year, month) %>%
   group_by(plot_id) %>%
   mutate(obs_rank = row_number()) %>%
@@ -278,7 +278,11 @@ obs_meta <- lapply(plots_real, function(pid) {
   clim     <- Yasso07_climate[as.character(Yasso07_climate$plot_id) == pid, ]
   obs_plot <- SOC_obs_all[as.character(SOC_obs_all$plot_id) == pid, ]
   list(
-    idx      = match(obs_plot$year, clim$year),
+    # TRUE observation year (2026-08-12): the campaign labelled 1985 was sampled
+    # 1986-1995. `year` stays the CAMPAIGN KEY (it keys sigma_infl below and
+    # HIKET_DROP_CAMPAIGN); soc_obs_year is when the model must be evaluated.
+    idx      = match(ifelse(is.na(obs_plot$soc_obs_year), obs_plot$year,
+                            obs_plot$soc_obs_year), clim$year),
     soc_obs  = obs_plot$soc_obs_tCha,
     is_first = obs_plot$obs_rank == 1L,
     sigma_infl = ifelse(obs_plot$year == 1985L, SIGMA_1985_INFL, 1.0)   # C5: down-weight VMI8

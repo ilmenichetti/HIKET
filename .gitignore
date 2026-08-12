@@ -93,3 +93,14 @@ literature/*.pdf
 doublechecks/ablation_logs/
 doublechecks/ablation_runs/
 doublechecks/delta_offset_*.rds
+
+# Data-preparation CODE is code, not data (added 2026-08-12). Data_work.R and the
+# SOC baseline builder were collateral of the blanket `Data/*` rule above, so the
+# two scripts the whole calibration target depends on were unversioned — worked
+# around until now by hand-dated copies (Data_work_pre_SOC_swap_20260804.R).
+# Same pattern as the Peat/Water extensions: un-ignore the path, keep the data out.
+!Data/Data_work.R
+!Data/SOC_homogeneized/
+Data/SOC_homogeneized/*
+!Data/SOC_homogeneized/*.R
+!Data/SOC_homogeneized/*.md

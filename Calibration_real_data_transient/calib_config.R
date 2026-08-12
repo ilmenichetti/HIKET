@@ -47,4 +47,35 @@ N_BURNIN <- as.integer(.envnum("HIKET_N_BURNIN", N_BURNIN))
 #
 # Kept as a switch rather than deleted, so the sensitivity stays reproducible: the ablation
 # harness sets HIKET_SIGMA_1985_INFL to sweep it. Default 1.0 = no down-weighting.
-SIGMA_1985_INFL <- .envnum("HIKET_SIGMA_1985_INFL", 1.0)   # 1.0 = C5 OFF (withdrawn 2026-08-05)
+# -----------------------------------------------------------------------------
+# REINSTATED 2026-08-12 at f = 2.0, on different grounds from the withdrawn C5.
+#
+# C5 was withdrawn because its premise ("the VMI8 mineral stocks look low") was
+# informed only by the 1985 residual itself -- i.e. it down-weighted a campaign
+# because the model fitted it poorly, which is circular. What has changed is that
+# there are now DOCUMENTED, MODEL-INDEPENDENT reasons to distrust the first
+# campaign, established from the source workbook and the field protocol:
+#   * ~75% of its mineral carbon concentrations were PREDICTED from loss-on-
+#     ignition by regression, against only the 20-40 cm layer in 2006, and on a
+#     different instrument (Kramarenko 2012 sec. 4.4 calls this a possible
+#     campaign-level "tasoero");
+#   * its subplots sat OUTSIDE the plot at 11 m, while 2006 sampled INSIDE at 9 m
+#     -- literally different soil;
+#   * its 1985->2006 mineral gain is DEPTH-INVERTED (subsoil +19% vs topsoil
+#     +8.5%), and a real input-driven gain must be surface-weighted.
+# The two defects that could be repaired have been (missing LM litter layer; the
+# 1986-1995 sampling dates). This term covers only what remains.
+#
+# f = 2.0 is a JUDGEMENT, not an estimate. It is PRE-REGISTERED: fixed before the
+# corrected data were run, and it must NOT be revisited on the basis of results --
+# that is the entire defence against the circularity that sank C5. Weight scales
+# as 1/f^2, so the first campaign carries a quarter of the weight of the others.
+#
+# ⚠ Not a "cautionary" or neutral choice: the C5 ablation moved the 1985-2024
+# change from +0.638 to -0.184 as the weighting weakened. It can flip the sign of
+# the sink, so NEVER report a single f. Sensitivity: short-chain Yasso15 runs at
+# f = 1 / 1.5 / 3 via doublechecks/run_ablation.R (A1/A2/A3); A1 doubles as the
+# attribution arm separating "the data fixes moved it" from "f = 2 moved it".
+# Full record: NEXT_SESSION.md sec. 0c, manuscript/HIKET_discussion_memo.tex.
+# -----------------------------------------------------------------------------
+SIGMA_1985_INFL <- .envnum("HIKET_SIGMA_1985_INFL", 2.0)   # 2.0 = ON, pre-registered 2026-08-12
