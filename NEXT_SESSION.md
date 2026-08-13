@@ -157,6 +157,53 @@ before anything SOC-derived. The builder takes every target-affecting lookup fro
    The observed 1985→2024 rate on the corrected target now reads **+0.18**, against +0.248 at the
    start of 2026-08-12.
 
+### 🔮 WHAT WE EXPECT FROM THIS RUN (written before it lands — 2026-08-13)
+
+**This run is a BASELINE on a corrected, reproducible target. It is not an attempt on the MRT.**
+
+| quantity | expectation | basis |
+|---|---|---|
+| `sigma_init` | **falls hard**, ~1.0 → ~0.15 | local sweep; A1 says most of it is the DATA fixes, not f |
+| pre-run inversion | **resolved** — all sweep values ≪ 0.818 | the defect open since 2026-08-07 |
+| `sigma_input` | **unchanged**, ~2.6–2.7 | flat across f ∈ {1, 1.5, 2, 3} in the sweep |
+| **MRT** | **unchanged**, ~15 / 22 / 18 | σ 0.72→0.80 + Student-t moved it <2%; f doesn't touch σ_input |
+| 1985 level | +3.2 Mg/ha, but 1985 now carries ¼ weight | treatment C + f = 2 partly cancel |
+| 2006→2024 | still a source in most models | survived the error-model change already |
+| residual sd / kurtosis | ~0.74 / ~7.2 | insensitive to what we assume σ is |
+
+⚠ **If MRT moves materially, something we believe is wrong** — investigate before celebrating.
+
+### ➡ THEN: the σ_input prior, and the question underneath it
+
+If MRT does not move (expected), the remaining identified lever is the `sigma_input` prior width,
+log-SD **0.50 → 0.20** (Lehtonen & Heikkinen 2015), predicted to bring Yasso15 to ≈34 yr.
+**But that is not a tuning step — it is a discriminating experiment**, and the discussion has to
+happen first. The question it answers:
+
+> Is the fast-MRT / high-input solution the only place the model can go given which parameter has
+> the loosest prior (**H1**), or is it a real structural inadequacy being hidden in σ_input (**H2**)?
+
+- **H1 — the split is set by the PRIORS, not the data.** The data pin MRT × σ_input (constant to 4%)
+  but not the split. Yasso's rates are FIXED, so MRT can only move through the transfer fractions,
+  whose priors are tight (logit SD 0.4); σ_input's prior is the loosest thing in the system
+  (log-SD 0.50, centre 1), so it absorbs the residual. **Evidence FOR:** the ridge test —
+  corr(log MRT, log σ_input) is only −0.30 to −0.37 and sd(log product)/sd(log MRT) ≈ 1. If the
+  data constrained only the product, the posterior would be a thin diagonal with corr ≈ −1.
+  It is not: each is pinned *separately*, i.e. by its own prior.
+  **Prediction under H1:** tightening σ_input forces the fractions to move instead → MRT rises,
+  fit roughly holds.
+- **H2 — structural inadequacy displaced onto σ_input.** The models cannot reproduce the observed
+  pattern, so they manufacture carbon. **Prediction under H2:** MRT rises little and R² visibly
+  degrades — which *exposes* the inadequacy instead of hiding it, and is a result in its own right.
+
+**The experiment discriminates them: watch R², not just MRT.**
+
+⚠ **A caution on the prior's CENTRE, not just its width.** σ_input conflates tree-litter model error
+with **missing understorey** (the Tupek product excludes it), so part of σ_input > 1 is real input,
+not error. Tightening to log-SD 0.20 *around a centre of 1* would assert the understorey is
+negligible. Decide the centre explicitly — the effective flux 2.6 × 2.4 ≈ 6.2 tC/ha/yr is still
+under the ~9 boreal NPP ceiling, i.e. not physically absurd.
+
 ### 📋 TOMORROW, in order
 
 1. **Read the Roihu run 597028–597033** against the §0b checklist. ⚠ Old target — diagnostic only.
