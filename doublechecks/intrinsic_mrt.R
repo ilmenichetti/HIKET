@@ -43,7 +43,7 @@ DCOL <- c("alpha_A","alpha_W","alpha_E","alpha_N","p_WA","p_EA","p_NA","p_AW","p
           "p_AE","p_WE","p_NE","p_AN","p_WN","p_EN","w1","w2","w3","w4","w5",
           "beta1","beta2","betaN1","betaN2","betaH1","betaH2","gamma","gammaN","gammaH",
           "p_H","alpha_H","delta1","delta2","r")
-RID <- c(Yasso07="20260810_152915", Yasso15="20260810_152916", Yasso20="20260810_152917")
+RID <- c(Yasso07="20260812_080941", Yasso15="20260812_080940", Yasso20="20260812_080940")  # 597031-33: sigma 0.80 + Student-t (2026-08-13)
 
 setup <- function(M) {
   src <- readLines(sprintf("Calibration_real_data_transient/run_%s_transient_calibration.R", M),
