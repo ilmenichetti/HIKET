@@ -10,8 +10,8 @@
 > 3. **The Roihu run 597028–597033 (§0a) predates all of this.** Read it as an error-model
 >    diagnostic only; do NOT refresh figures from it and do not compare its numbers with anything
 >    produced after `8ef5c62`.
-> 4. **NOTHING IS PUSHED AND NO DATA IS SYNCED.** Two commands before any Roihu launch:
->    `git push origin manuscript-figures-storyboard` (9 local commits) and
+> 4. ✅ **CODE IS PUSHED** (through `1a23a4a`, 2026-08-13). **DATA IS STILL NOT SYNCED** — one command
+>    before any Roihu launch:
 >    `rsync -av "<mac-repo>/Data/" roihu:/scratch/project_2019134/HIKET/Data/`.
 >    ⚠ `Data/model_inputs/site_attributes.csv` is a **NEW** file — a partial rsync would leave the
 >    SOC builder without it on Roihu.
