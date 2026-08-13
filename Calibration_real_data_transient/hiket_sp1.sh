@@ -8,7 +8,16 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=40
 #SBATCH --nodes=1
-#SBATCH --mem-per-cpu=1000
+#   MEMORY (2026-08-13): 1000 -> 2000 MB/cpu = 80 GB, matching the Yasso scripts.
+#   Job 597028 (SP1) was OOM-killed at 5h03 with a sampled MaxRSS of only 14.3 GB
+#   against a 40 GB limit -- it died at the CHAIN 1 -> CHAIN 2 boundary, i.e. a
+#   transient spike (chain 1's 40 mclapply forks not yet reaped while chain 2 forks
+#   another 40, on top of chain 1's stored draws) that sacct's periodic sampling
+#   never saw. NOT the old 383-core trap: "Cores per chain: 40" was correct.
+#   All six models sit at 12.1-14.6 GB steady state, and TP3 used MORE than SP1
+#   (14.55 vs 14.30) yet survived -- so the three 40 GB survivors were lucky, not
+#   lighter. 80 GB restores the ~5.5x headroom the two Yasso scripts have always had.
+#SBATCH --mem-per-cpu=2000
 # SP1 is pure R with no Fortran; no R CMD SHLIB step needed.
 # Likelihood is ~20x cheaper per eval than Yasso07 (no Fortran call, 6 free
 # params vs 20, pure R loop), so it finishes well inside the 36h walltime.
