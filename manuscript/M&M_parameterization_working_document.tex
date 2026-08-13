@@ -56,15 +56,19 @@
 \begin{center}
 \fbox{\begin{minipage}{0.93\textwidth}
 \small
-\textbf{DRAFT STATUS --- 2026-08-10.} \textbf{Defect D4 (the likelihood conflates
-observation with model error) is now quantified and is being addressed.} The measured log-residual
+\textbf{DRAFT STATUS --- 2026-08-13.} \textbf{Sections~\ref{sec:current} and \ref{sec:target}
+have been superseded by the run of 2026-08-12 and by the target corrections of the same date; see
+\S\ref{sec:state0813}, which is authoritative where it conflicts with earlier text.}
+\textbf{Defect D4 (the likelihood conflates observation with model error) is now quantified and has
+been addressed.} The measured log-residual
 spread is 0.708--0.735 across all six models against an assumed
 $\sigma_{\mathrm{obs}}=0.442$ --- a factor 1.6 --- so the implied \emph{model} error (0.55--0.59)
 exceeds the observation error. Because the level penalty scales as $1/\sigma^{2}$, this amplified
 the pressure to match stock \emph{levels} by ${\sim}2.6\times$ relative to the priors, which is a
 candidate driver of the short calibrated residence times. Roihu jobs 563524--563529 (commit
-\texttt{3b0d533}) test this with a total error scale of 0.72, the plug-in estimate; the fraction
-prior is deliberately left unchanged so the error model is tested as one factor.
+\texttt{3b0d533}) tested this with a total error scale of 0.72, the plug-in estimate; jobs
+597028--597033 then raised it to 0.80 and added Student-$t$ tails. \textbf{Both are now measured
+and neither fixed the residence times} --- see \S\ref{sec:state0813}.
 \end{minipage}}
 \end{center}
 
@@ -256,6 +260,9 @@ explicitly that ``litter scales with standing biomass'' and equally explicitly t
 calibrated endpoints $J_{1917}/J_{1985}$ are UNCHANGED; only the shape between moves.''
 
 \subsection{Likelihood}
+\emph{The form below is the one this document was written against and is retained because
+\S\ref{sec:defects}--\ref{sec:effect} argue from it. It is no longer what runs; see
+\S\ref{sec:state0813}.}
 Multiplicative normal, with the SD proportional to the prediction and its coefficient fixed:
 \begin{equation}
 \mathrm{SOC}^{\mathrm{obs}} \sim \mathcal{N}\!\left(\widehat{\mathrm{SOC}},\;
@@ -264,6 +271,138 @@ Multiplicative normal, with the SD proportional to the prediction and its coeffi
 \end{equation}
 $\sobs$ is estimated externally from the observation campaigns and held fixed. There is no
 separate model-error term.
+
+% =====================================================================
+\section{State as of 2026-08-13 --- authoritative}\label{sec:state0813}
+
+\emph{This section supersedes \S\ref{sec:current} (Likelihood) and \S\ref{sec:target} where they
+conflict. Everything below is implemented and committed; only the recalibration is outstanding.}
+
+\subsection{Likelihood as it now runs}
+
+\begin{equation}
+\log \mathrm{SOC}^{\mathrm{obs}} \;\sim\; t_{\nu}\!\left(\log\widehat{\mathrm{SOC}},\;
+  s^{2}\right), \qquad \nu = 6,\quad \sigma_{\mathrm{tot}} = 0.80,\quad
+  s = 0.8165\,\sigma_{\mathrm{tot}},
+\end{equation}
+i.e.\ \textbf{log-normal in form, Student-$t$ in tails}, with the scale converted so that
+$\sigma_{\mathrm{tot}}$ always means the total SD. Three changes from eq.~\eqref{eq:lik}:
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Log-normal instead of multiplicative normal} (default since 2026-08-07). The
+  multiplicative normal lets a prediction widen its own error bar, so the penalty for a
+  badly-missed plot plateaus and the fit buys tolerance by inflating everything.
+\item \textbf{$\sigma_{\mathrm{tot}} = 0.80$, not $\sobs = 0.442$.} 0.442 is the \emph{measurement}
+  CV; it was being used as the \emph{total} error. 0.80 is the largest value the residuals support
+  (held-out spread 0.784--0.799, plus measured spatial structure).
+\item \textbf{Student-$t$, $\nu = 6$}, from a measured residual kurtosis of 6.9--7.1 against a
+  Gaussian's 3.0.
+\end{enumerate}
+
+\noindent Plus a \textbf{campaign-specific error inflation} on the first campaign,
+$\sigma_{1985} = f\,\sigma_{\mathrm{tot}}$ with $f = 2$, so VMI8 observations carry a quarter of the
+weight of the others. This is C5 reinstated on different grounds: it was withdrawn in August
+because its premise came from the 1985 \emph{residual}, which is circular. The grounds now are
+model-independent --- ${\sim}75\%$ of the first campaign's mineral carbon concentrations were
+predicted from loss-on-ignition by regression rather than measured, its subplots sat outside the
+plot at 11\,m while 2006 sampled inside at 9\,m, and its 1985--2006 mineral gain is
+\emph{depth-inverted} (subsoil $+19\%$ against topsoil $+8.5\%$), which no input-driven process
+produces. $f = 2$ is a judgement, \textbf{pre-registered}: fixed before the corrected data were
+run and not revisited on results. It is not a neutral choice --- the C5 ablation moved the
+1985--2024 change from $+0.638$ to $-0.184$ as the weighting weakened --- so it must never be
+reported as a single number.
+
+\subsection{Corrections to the target}
+
+Three defects, all found 2026-08-12, all now fixed:
+
+\begin{enumerate}\itemsep3pt
+\item \textbf{The 1985 organic layer was OFH only.} The litter+moss layer (LM) is separately coded
+  in the protocol, was measured in 2006/2024 and folded into their organic layer, and is absent
+  from 1985 --- worth 3.4--4.3\,Mg\,C\,ha$^{-1}$, i.e.\ 89\,\% of the apparent 1985--2006 organic
+  gain. Each plot's own 2006 LM is now added to its 1985 layer. The 1985 whole-profile mean rises
+  63.27 $\rightarrow$ 66.27\,Mg\,C\,ha$^{-1}$; 2006 and 2024 are bit-identical and the official
+  LUKE validation still reproduces exactly.
+\item \textbf{``1985'' is 1986--1995.} 19.5\,\% of plots were sampled in 1995; the campaign mean
+  represents ${\sim}1989$, so every nominal 39-year denominator was 11\,\% too long. The true
+  per-plot year now drives the model evaluation. 82 plot-years whose date could not be recovered
+  are dropped for that campaign only (71 South / 9 North --- stated, not compensated).
+\item \textbf{The data layer depended on the calibration layer.} The SOC baseline read a table
+  built from an inner join on the SOC data it itself produces, and the soil-class extraction that
+  sets the per-class decay rate was gated the same way. The cycle did not reach a fixed point in
+  one pass (1411 vs 1408 plot-years, 38 differing $\lambda$), so the target was not reproducible
+  from a clean checkout. Broken by emitting the raw site attributes upstream of anything
+  SOC-derived; verified by a fixed-point test (two full cycles now byte-identical).
+\end{enumerate}
+
+\subsection{The observed target is now defined --- \S\ref{sec:target} resolved}
+
+\S\ref{sec:target} asked for ``one plot set and one statistic, applied identically to observed and
+modelled rates''. That is done. There are \emph{three} axes, not one, and together they span a
+factor of four for the same data: \textbf{weighting} (unweighted = the average plot in the sample;
+region-weighted = the average hectare of Finland; 25--30\,\%), \textbf{plot set} (paired vs
+balanced; 34\,\% on 2006--2024), and \textbf{depth} (measured 0--40\,cm vs whole profile including
+the modelled tail; ${\sim}35\,\%$).
+
+\medskip
+\noindent\textbf{Rule adopted.} Model comparison $\rightarrow$ paired, unweighted, whole profile
+(model trajectories are unweighted plot means). Any national statement $\rightarrow$ weighted,
+measured 0--40\,cm. Comparing intervals with each other $\rightarrow$ balanced, so the population is
+constant. Never difference means over different plot subsets. Canonical table:
+\texttt{doublechecks/observed\_soc\_basis.R}.
+
+\medskip
+\noindent The same mismatch was found \emph{inside} the figures: model curves averaged over all 512
+plots were being compared with observations from per-campaign subsets. Aligning them moved
+Yasso15's 1985 level 63.3 $\rightarrow$ 65.1 and its 1985--2024 rate $+0.422 \rightarrow +0.379$ ---
+the mismatch alone was inflating the apparent model--observation gap by ${\sim}40\,\%$.
+
+\subsection{What the error-model work achieved, measured}
+
+Jobs 597028--597033 ($\sigma = 0.80$, Student-$t$ $\nu = 6$; five completed, SP1 lost to an
+out-of-memory kill at a chain boundary):
+
+\begin{center}\small
+\begin{tabular}{lrrrrr}
+\toprule
+model & residual sd & kurtosis & 2006--2024 & 1985--2024 & MRT\\
+\midrule
+TP2 & 0.735 & 7.26 & $-0.121$ & $+0.281$ & ---\\
+TP3 & 0.737 & 7.22 & $-0.110$ & $+0.292$ & ---\\
+Yasso07 & 0.737 & 7.27 & $-0.031$ & $+0.381$ & 15.23\\
+Yasso15 & 0.745 & 7.17 & $+0.027$ & $+0.478$ & 22.10\\
+Yasso20 & 0.731 & 7.37 & $-0.215$ & $+0.304$ & 17.70\\
+\midrule
+observed & --- & --- & $+0.209$ & $+0.312$ & 33.4 / 30.4 / 25.0\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{enumerate}\itemsep2pt
+\item \textbf{Raising $\sigma$ did not change the residuals.} In-sample spread 0.731--0.745, against
+  0.712--0.744 at $\sigma = 0.72$: an 11\,\% change in the assumed error moved the realised spread
+  by ${\sim}2\,\%$. The spread is a property of the data--model mismatch, not of what we assume.
+\item \textbf{The Student-$t$ did not absorb the tails.} $\nu = 6$ implies kurtosis 6.00; the
+  residuals return 7.17--7.37, slightly \emph{heavier} than under a Gaussian. Heavy tails are in
+  the data, and $\nu = 6$ is not heavy enough.
+\item \textbf{The 2006--2024 source survives.} Four of five remain negative. ``It is an error-model
+  artefact'' is closed for the one window no data correction reaches.
+\item \textbf{The long window is not the problem.} On 1985--2024 the models give $+0.281$ to
+  $+0.478$ against an observed $+0.312$ --- three sit essentially on it. The failure is specific to
+  the recent window, and (2026-08-12) that disagreement sits entirely in the \emph{mineral} soil,
+  the compartment with the documented sampling and loss-on-ignition problems.
+\item \textbf{Residence times did not move.} 15.23 / 22.10 / 17.70 against 15.17 / 21.91 / 17.37 at
+  $\sigma = 0.72$ --- under 2\,\%. \textbf{The error-model lever is exhausted for MRT.} The
+  $f$-sweep confirms why: $\sinput$ is flat at 2.63--2.70 across $f \in \{1, 1.5, 2, 3\}$, and
+  MRT\,$\times\,\sinput$ is the conserved ridge, so a knob that does not move $\sinput$ cannot move
+  MRT. What $f$ \emph{does} move is $\sinit$ (0.31 at $f=1$ to 0.10 at $f=3$).
+\end{enumerate}
+
+\noindent\textbf{Consequence for the next run.} It should be read as a \emph{baseline} on a
+corrected, reproducible target, not as an attempt on the residence times. The identified lever for
+those is the $\sinput$ prior width (log-SD $0.50 \rightarrow 0.20$, Lehtonen \& Heikkinen 2015),
+predicted to bring Yasso15 to ${\approx}34$\,yr; it remains a coauthor decision and is deliberately
+not in this run.
 
 % =====================================================================
 \section{Defects identified 2026-08-07}\label{sec:defects}
@@ -315,8 +454,9 @@ bars is to raise the predictions.
 \section{Proposed package --- NOT IMPLEMENTED}\label{sec:package}
 
 \begin{caveat}
-\textbf{Nothing in this section is in the code.} Section~\ref{sec:current} is what runs today;
-this is what we propose to replace it with. the common anchor is a defect correction we would make regardless;
+\textbf{Nothing in this section is in the code.} \S\ref{sec:state0813} is what runs today
+(\S\ref{sec:current} describes the earlier state and is kept because the argument below is built
+on it); this is what we propose in addition. the common anchor is a defect correction we would make regardless;
 the ratio coordinate and the ratio prior are conditional on the unresolved level offset (section~\ref{sec:open}) --- see
 section~\ref{sec:effect} for why they make two models visibly worse until that is understood.
 \end{caveat}
@@ -574,10 +714,11 @@ but this is inference from fitted predictions, not a refit.
 \end{itemize}
 
 \begin{caveat}
-The decisive test has not been run: refit one model (TP2) under a log-normal likelihood with
-nothing else changed. If the offset collapses and $\sinput$ lands near the $1.04$ the
-observations require, the fitting criterion is responsible. If it does not, the cause is
-neither the inputs, the priors, the kinetics nor the likelihood, and remains unidentified.
+\textbf{Superseded 2026-08-13.} This test has now been run, twice over: the log-normal became the
+default on 2026-08-07, and jobs 597028--597033 added $\sigma = 0.80$ with Student-$t$ tails. The
+offset did \emph{not} collapse and $\sinput$ did not approach $1.04$ --- it sits at 2.63--2.70 and
+is flat across every error-model variant tried. By the disjunction stated here, the cause is
+therefore \emph{not} the fitting criterion. See \S\ref{sec:state0813}.
 \end{caveat}
 
 \paragraph{A note on the rate displacement.} C1's design states that the slow-rate posterior
@@ -971,7 +1112,16 @@ contested one. This is a limit of the data, not an open analysis task.
 (Yasso20 remains an exception: it predicts $-0.147$ against $+0.209$, a gap of $5.5$\,SE, so its
 failure on the trusted campaigns stands regardless of 1985.)
 
-\subsection{The target itself is not yet defined}\label{sec:target}
+\subsection{The target itself is not yet defined --- RESOLVED 2026-08-12}\label{sec:target}
+
+\begin{caveat}
+\textbf{Resolved.} The action this section calls for has been carried out; see
+\S\ref{sec:state0813}, ``The observed target is now defined''. There turned out to be three axes
+rather than two, spanning a factor of four, and the rule adopted is: model comparison
+$\rightarrow$ paired, unweighted, whole profile; national statement $\rightarrow$ weighted,
+measured 0--40\,cm; comparing intervals $\rightarrow$ balanced. The table below remains correct on
+its own (paired, unweighted, whole profile) and is the right basis for model comparison.
+\end{caveat}
 
 Every model--data gap above is quoted against an observed rate that varies substantially with two
 choices we have not made explicitly.
