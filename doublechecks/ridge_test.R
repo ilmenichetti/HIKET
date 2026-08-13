@@ -26,6 +26,14 @@
 # doublechecks/intrinsic_mrt.R, whose per-draw values are not paired to
 # sigma_input draws, so they are reported there instead.
 #
+# ⚠ 2026-08-13 -- SECTION 1 IS SIMPLE-MODELS-ONLY AND ITS RESULT DOES NOT GENERALISE.
+# Its -0.26/-0.37 was written into CLAUDE.md and memory as "the posterior does not
+# explore that ridge" in a paragraph evidenced by Yasso15 -- a model it never touched.
+# manuscript/figures/build_F14_mrt_ridge.R closes the gap (per-draw intrinsic MRT
+# paired to per-draw sigma_input) and finds the OPPOSITE for Yasso: corr -0.79/-0.73/
+# -0.57, ratio 0.62/0.73/0.92 = a real ridge. Not a run effect. Quote section 1 for
+# SP1/TP2/TP3 ONLY; for the Yasso family cite F14.
+#
 # USAGE: Rscript --no-save doublechecks/ridge_test.R
 # =============================================================================
 suppressMessages(library(BayesianTools))

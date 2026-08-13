@@ -29,7 +29,7 @@
 \title{HIKET --- next session\\
   \large The level/trend discrepancy: what it is, and the hypotheses for it}
 \author{}
-\date{7 August 2026 --- working document, not for circulation}
+\date{13 August 2026 --- working document, not for circulation}
 
 \begin{document}
 \maketitle
@@ -40,25 +40,42 @@ states the parameterisation assumptions and their evidence. This one states the 
 survives them. After correcting the error model and the pre-run anchor, the six models can
 reproduce the observed soil carbon \emph{stock} but not its \emph{rate of change}: the level and
 the trend make opposing demands, and no setting of the initialisation satisfies both. Six
-candidate explanations are recorded here with their status and the test that would decide each.
-None is ruled out except one, which was implemented and failed. A seventh issue --- the observed
-rate itself is not yet uniquely defined --- is listed first because every other gap is measured
-in its units.
+candidate explanations are recorded here with their status and the test that would decide each: one
+was implemented and rejected, two have since closed, and a seventh issue ---
+the observed rate itself was not uniquely defined --- has been resolved and is retained because every
+other gap is measured in its units. A final section records a \emph{second} discrepancy, the short
+calibrated residence times, which turns out to be three different findings rather than one.
 \end{abstract}
 
 % =====================================================================
-\section{Run in progress}
+\section{Where the runs stand}
 
-Roihu jobs \textbf{509638--509643} launched 2026-08-07 $\approx$17:00 (SP1 509638, TP2 509639,
-TP3 509640, Yasso07 509641, Yasso15 509642, Yasso20 509643), commit \texttt{e7e56bb}, $\approx$13--19\,h.
-First run with a correctly specified error model, the common pre-run anchor, and the ratio prior
-at 0.90. Pre-flight passed ($K=200$, full $N$, blow-up rates identical to the pre-change
-baseline).
+\textbf{Last completed run: Roihu jobs 597028--597033} (RUN\_IDs \texttt{20260812\_0809*}), testing
+the error model alone --- scale $0.72\rightarrow0.80$ plus Student-$t$ tails ($\nu=6$), both measured
+rather than tuned, with campaign-specific $\sigma$ deliberately excluded so it could not confound the
+trend. Five of six completed; SP1 hit an out-of-memory condition at a chain boundary and all six
+SLURM scripts now request 80\,GB.
 
-\textbf{Expected:} levels correct across all six; \textbf{Yasso15/20 still reporting a source}.
-The single most informative output is where $\sinit$ lands under the corrected anchor at
-production length --- estimated $\approx$1.33, i.e. still inverted, but that is extrapolated from
-6000-iteration widths and could be wrong.
+\textbf{Its verdict is that this lever is exhausted.} Residence times moved under 2\,\%, the residual
+spread barely moved ($0.73$--$0.75$), the returned kurtosis was $7.2$--$7.4$ against the $t$'s own
+implied $6.0$, and \textbf{the 2006--2024 source survived}. The error model was worth doing --- it is
+now measured and self-consistent --- but it is not the explanation for either the trend deficit or
+the short residence times.
+
+\textbf{Pending: the production re-run on the corrected target.} The SOC data work recorded under H3 and H6 is
+implemented and at a verified fixed point but \emph{has not yet been calibrated against}. Every
+number in this document that involves the observed trend still refers to the pre-correction target.
+Two operations precede any launch: push the local commits, and rsync \texttt{Data/} ---
+\texttt{Data/model\_inputs/site\_attributes.csv} is a \emph{new} file, so a partial sync would leave
+the SOC builder unable to run on Roihu.
+
+\begin{caveat}
+\textbf{Expect the re-run to narrow the problem, not to solve it.} The target corrections move the
+\emph{observations} toward the models over 1985--2024 ($+0.248 \rightarrow \approx +0.182$), but
+\textbf{2006--2024 is untouched at $+0.107$ against a source in all six models}, and residence times
+are untouched entirely. See also \S\ref{sec:mrtgap}: the residence-time gap turns out to be three different
+findings, only one of which is decisively at odds with the data.
+\end{caveat}
 
 % =====================================================================
 \section{The discrepancy}
@@ -186,6 +203,15 @@ be required; check it against the growing-stock rise and the fitted elasticity. 
 $\sinit$ sweep and equally decisive.
 \end{hyp}
 
+\begin{caveat}
+\textbf{H2 --- CLOSED 2026-08-10, confirmed with B.~Tupek.} The series stands as published; the 2006
+peak is real and not an artefact. Litter rises $+51.7$\,\% over 1986--2006 against a growing stock
+rising $+22.4$\,\%, then falls $-12.8$\,\% over 2006--2021 against a growing stock rising
+$+16.0$\,\% (net $\times1.32$ against $\times1.42$). \textbf{A modest post-2006 decline in modelled
+SOC is therefore expected and defensible, not something to be removed.} Do not re-open. The one
+remaining input-side lead is H4 (understorey), which needs external data.
+\end{caveat}
+
 \begin{hyp}{H3 --- the 1985 campaign reads low}
 VMI8 samples 0--5 and 5--20\,cm where the later campaigns sample 0--10 and 10--20\,cm, and it
 could not be validated against official LUKE figures. If it reads low, the observed trend is
@@ -204,6 +230,32 @@ stated sensitivity, rather than as an open analysis task.
 \emph{Exception:} Yasso20 predicts $-0.147$ against $+0.209$ over the trusted campaigns, a gap of
 $5.5$\,SE. Its failure stands regardless of 1985.
 \end{hyp}
+
+\begin{caveat}
+\textbf{H3 --- SUPERSEDED 2026-08-12: the defect was identified, and it is not the one hypothesised.}
+Two concrete comparability failures were established from the source workbook's own structure, and
+both are now corrected in the target.
+
+\smallskip
+\emph{(i) The 1985 organic layer is OFH only.} Litter-and-moss is a separately coded layer that was
+measured in 2006 and 2024 and folded into their organic layer, but is \textbf{absent from 1985}. It
+is worth $3.37$--$4.27$\,Mg\,C\,ha$^{-1}$ and supplies \textbf{89\,\% of the apparent 1985--2006
+organic gain}. Corrected by adding each plot's own 2006 litter layer to its 1985 organic layer.
+
+\smallskip
+\emph{(ii) ``1985'' is really 1986--1995.} $19.5$\,\% of the plots were sampled in 1995; the campaign
+mean represents $\approx$1989, so the true mean interval to 2024 is $34.7$ years, not $39$ --- a
+12\,\% error in every rate denominator. Corrected by carrying the true sampling year per plot, and
+dropping the 82 plot-years that carry no date.
+
+\smallskip
+\textbf{What is \emph{not} wrong with 1985}, against intuition: its depth distribution, its
+stoniness, its organic/mineral boundary and its noise level are all unremarkable, and proportional
+bias appears in \emph{every} campaign pair. Whatever remains is a \emph{level}, not scatter. A
+pre-registered inflation $f=2$ on the 1985 likelihood covers the unattributable residual; no subsoil
+reconstruction and no campaign bias term were adopted, the latter because a free campaign offset
+consumes the very trend being measured.
+\end{caveat}
 
 \begin{hyp}{H4 --- a missing input component with its own trend}
 Understorey litter is absent from the product entirely, and its share plausibly changed with
@@ -242,23 +294,117 @@ $+0.23$ across the sweep --- but not its magnitude.
 \end{hyp}
 
 % =====================================================================
+\section{The residence-time gap is three findings, not one}\label{sec:mrtgap}
+
+Alongside the trend deficit sits a second discrepancy: our calibrated intrinsic mean residence times
+come out below the published parameterisations. Work of 2026-08-13 shows this is \textbf{not one
+phenomenon}, and that treating it as one has been obscuring the result.
+
+\subsection*{What a longer residence time would cost}
+
+In the Yasso family MRT and $\sinput$ trade off along a clear ridge ($r=-0.79/-0.73/-0.57$): the
+observed stock pins their \emph{product}, so the split between ``slow turnover, modest inputs'' and
+``fast turnover, inflated inputs'' must be decided by something other than the stock. The simple
+models show no such ridge ($r\approx-0.26/-0.31$), so this is a property of the Yasso structure, not
+of the calibration in general. Reading the best fit attainable near each published value against the
+best attainable anywhere:
+
+\begin{table}[H]\centering\small
+\caption{Cost of the published residence time, in log-likelihood units, run \texttt{20260812\_0809*}.}
+\begin{tabular}{lrrr}
+\toprule
+model & P(MRT $>$ published) & cost & draws in band\\
+\midrule
+Yasso07 & \textbf{0\,\%} & \textbf{never reached} & 0\\
+Yasso15 & 0.011\,\% & $\le 14.7$ & 741\\
+Yasso20 & \textbf{18.1\,\%} & $\le 1.6$ & 121\,141\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Yasso20's published value is nearly free and Yasso15 reaches its own only in the far tail.
+\textbf{Yasso07 never reaches its published value at all}: 225\,015 draws span $10.4$--$25.4$\,yr
+against a published $33.5$, so no sampled estimate of the cost exists --- only a profile likelihood
+could supply one.
+
+\begin{caveat}
+\textbf{Two qualifications, both load-bearing.} \emph{(i)} These are maxima over posterior draws, so
+they \emph{over}state the cost, and they do so most where draws are thinnest --- 121\,141 draws in
+Yasso20's band, 741 in Yasso15's, \textbf{none} in Yasso07's. Settling it needs a profile likelihood
+(an optimisation over the remaining parameters at each grid node, $\approx$7\,h per model), and
+\textbf{Yasso07 is where to spend it}, since for that model nothing can be read off the samples.
+An earlier version of this table was built on \emph{burn-in artefacts} --- the first retained iteration
+of each internal chain, 15 rows per model, which were the only draws near the published value for
+Yasso07 and Yasso15; they are now removed. \emph{(ii)} \textbf{Two
+different ``published MRT'' values exist and must not be mixed}: the published \emph{point}
+parameterisation and the median of the published posterior \emph{sample}. Residence time is a
+nonlinear many-to-one function of the parameters, so these differ --- for Yasso20, $19.0$ against
+$25.0$\,yr, which moves its cost from $1.6$ to $10.0$. The table uses the point. \textbf{Which
+comparator the paper adopts is still to be decided.}
+\end{caveat}
+
+\subsection*{Why the climate response owns Yasso07's gap and cannot own the others'}
+
+Yasso07 applies a \emph{single} climate modifier $\xi$ to every pool, so $\xi$ is a pure rescaling of
+time and $\mathrm{MRT}=\mathrm{MRT}_{\mathrm{ref}}/\xi$ exactly. Calibration moves $\xi$ from $0.855$
+to $1.822$ ($\times2.13$) at the Finnish mean climate, and that alone predicts $15.7$\,yr against an
+actual $15.2$ --- the entire gap, with nothing left for the transfer fractions. The model has nowhere
+else to put a climate misfit.
+
+Yasso15 and Yasso20 carry \emph{three} pool-specific modifiers. Residence time is governed by the
+slow humus pool, which has its own $\beta_{H1}$, and that modifier moved only $\times1.04$ and
+$\times1.06$; in Yasso20 the components move in opposite directions ($\xi_{\mathrm{AWE}}\times0.76$
+against $\xi_{\mathrm{N}}\times1.16$) and largely cancel. \textbf{The leverage Yasso07 hands to
+climate is structurally unavailable to its successors.}
+
+Two consequences. Yasso07's \emph{published} $\xi$ is $0.855<1$ --- its own parameterisation says
+Finnish conditions decompose \emph{more slowly} than its reference, where Yasso15 and Yasso20 already
+say faster ($1.16$--$1.66$); it starts furthest from what the data want and is the only variant able
+to travel the distance in one parameter. And calibration \textbf{inverts the family ordering}:
+published $33.5/30.4/19.0$\,yr (Yasso07 slowest) becomes $15.2/22.1/17.5$ (Yasso07 fastest).
+
+\emph{Open:} whether $\xi=1.82$ is defensible. It requires $\beta_1$ to move $0.0987\rightarrow0.1578$
+($+60$\,\%), some $4.4$ prior standard deviations off centre. Suggestive but not decisive: that value
+is essentially Yasso20's \emph{published} $\beta_1$ ($0.1580$), though Yasso07's $\beta_1$ scales all
+pools while Yasso20's scales one, so they are not strictly the same quantity. Pair with an
+independent check of the fitted Finnish warming rate.
+
+\smallskip
+\noindent Reproduce with \texttt{doublechecks/xi\_published\_vs\_ours.R} and
+\texttt{manuscript/figures/build\_F14\_mrt\_ridge.R}.
+
+% =====================================================================
 \section{Suggested order}
 
+\emph{Revised 2026-08-13.} H6, H2 and H3 have all closed since the list was first written; what
+remains is reordered accordingly.
+
 \begin{enumerate}
-\item \textbf{H6} --- fix the target. Cheap, and it may shrink the discrepancy before anything is
-      attributed to a mechanism. Everything else is measured in its units.
-\item \textbf{H2} --- the litter-trend sweep. The only remaining testable input hypothesis, and
-      the same shape as the sweep already run.
-\item \textbf{H1} --- change what the likelihood targets, then re-read the rates. Expensive, and
-      its answer depends on the target settled in (1).
-\item \textbf{H3} --- write up as a limit of the data with a stated sensitivity.
+\item \textbf{Re-run the six calibrations on the corrected target.} Everything downstream is quoted
+      against the pre-correction observations, so no other number can be trusted to move for the
+      right reason until this lands. Push and rsync first.
+\item \textbf{Decide the published-MRT comparator} (point versus posterior median). Free, and it
+      changes a headline number by a factor of seven for Yasso20.
+\item \textbf{Profile likelihood for Yasso07} --- the only way to price a longer residence time
+      without the prior contaminating the coverage, and the only way to tell whether the
+      $\le137.7$ figure is real or an artefact of thin sampling.
+\item \textbf{H1} --- change what the likelihood targets, then re-read the rates. Expensive, and its
+      answer depends on (1). Note \S\ref{sec:mrtgap}: for Yasso07 the rates are not where the gap lives, so this
+      test now applies mainly to the simple models and to Yasso15.
 \item \textbf{H4, H5} --- second paper, or as discussion; H4 needs external data.
 \end{enumerate}
 
 \begin{caveat}
-These are not exclusive. Several could contribute simultaneously, and the ordering above is by
-cost and dependency, not by expected importance. In particular H1 and H3 are observationally
-degenerate over the available campaigns, so neither can be confirmed by ruling the other out.
+These are not exclusive. Several could contribute simultaneously, and the ordering above is by cost
+and dependency, not by expected importance. In particular H1 and H3 are observationally degenerate
+over the available campaigns, so neither can be confirmed by ruling the other out --- and the H3
+corrections, while they remove a real defect, do not resolve that degeneracy.
+
+\smallskip
+\textbf{The load-bearing caution now.} The error-model lever is exhausted, the input series is
+confirmed, and the target is corrected --- yet 2006--2024 remains a source in all six models against
+an observed sink. The remaining candidates are structural, and \S\ref{sec:mrtgap} shows they differ by model. Resist
+any single explanation for what are, on the evidence, several different problems.
 \end{caveat}
 
 \end{document}

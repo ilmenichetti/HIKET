@@ -18,6 +18,12 @@
   arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
   before skip=8pt, after skip=8pt}
 
+% Provisional-result box (amber): a figure or number we intend to redo before submission.
+\definecolor{provbg}{HTML}{FDF3E3}\definecolor{provrule}{HTML}{C08A2E}
+\newtcolorbox{provisional}{colback=provbg, colframe=provrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=8pt, after skip=8pt}
+
 \newcommand{\sinit}{\sigma_{\mathrm{init}}}
 \newcommand{\sinput}{\sigma_{\mathrm{input}}}
 \newcommand{\fig}{figures}
@@ -320,6 +326,105 @@ ridges as continuous density fields. The data fix the net flux out of a pool, no
 posterior is unconstrained.}\label{tab:ridges}
 \input{\fig/T2_fraction_ridges.tex}
 \end{table}
+
+\subsection{What a longer residence time would cost}
+The same geometry governs the quantity the reader will care about most: our mean residence times come
+out well below the published parameterisations. Fig.~\ref{fig:ridge} shows why, and how much of it is
+the data's doing. In the Yasso family MRT and $\sinput$ trade off along a clear ridge
+($r=-0.79/-0.73/-0.57$): the observed stock pins their \emph{product}, so the split between ``slow
+turnover, modest inputs'' and ``fast turnover, inflated inputs'' has to be decided by something other
+than the stock. Notably, the \emph{simple} models show no such ridge ($r\approx-0.26/-0.31$), so this
+is a property of the Yasso structure, not of the calibration in general.
+
+The cost of moving to the published residence time is then wildly uneven --- so much so that
+\textbf{``our MRT is too short'' is not one finding but three different ones}. Yasso20's posterior
+straddles its published value (18\,\% of draws exceed it) and sitting there costs $1.6$
+log-likelihood units, which is nothing. Yasso15 reaches its published value only in the far tail
+(0.011\,\% of draws) at a cost of $14.7$. \textbf{Yasso07 never reaches its published value at all:}
+225\,015 draws span $10.4$--$25.4$\,yr against a published $33.5$, so the posterior stops eight years
+short and the figure can put no price on the gap --- only a profile likelihood could.
+
+\emph{Which published value.} Those costs are measured against the published \emph{point}
+parameterisation (33.5 / 30.4 / 19.0\,yr). Yasso15 and Yasso20 also publish posterior \emph{samples},
+and because residence time is a nonlinear many-to-one function of the parameters, the median residence
+time of that sample is not the residence time of the median parameters --- for Yasso20 it is 25.0
+rather than 19.0\,yr, which raises its cost from 1.6 to 10.0. The qualitative ordering is unchanged, but
+the two comparators must not be mixed, and the figure uses the point throughout.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.98\linewidth]{\fig/F14_mrt_ridge.png}
+\caption{\textbf{What a longer residence time would cost.} \emph{Top:} best attainable fit over
+(intrinsic MRT, $\sinput$) for each Yasso model. \textbf{Colours are the likelihood alone --- the fit
+to the data, priors excluded --- blue is the best fit, through green and yellow to red at the worst. The white contour lines are
+the posterior --- likelihood \emph{and} priors together.} Colour is the log-likelihood deficit from
+the best fit found, clamped at 25 units. Dashed line: published MRT; white dot: posterior median.
+Regions the sampler visited fewer than five times are left blank. \emph{Bottom:} first-order variance
+indices of MRT. The colour peak lies up and to the left of the contours in all three panels: the data alone want an
+\emph{even shorter} residence time, and it is the prior that pulls the answer back toward the
+published value.}\label{fig:ridge}
+\end{figure}
+
+\begin{methodnote}
+\textbf{Reading the two layers.} The panels superimpose two different things on the same axes, and
+keeping them apart is the whole point of the figure.
+
+\emph{The white contour lines are the posterior} --- where the calibration actually ended up. That
+location is set by three ingredients at once: how well the data are fitted, what the priors say, and
+how many parameter combinations happen to land there (many parameters map onto the same residence
+time, and that alone attracts probability mass).
+
+\emph{The colours are the likelihood only} --- the best fit to the data achievable in that cell,
+with the priors switched off. They answer a different question: not ``where did we end up'', but
+``how well \emph{could} the data be fitted here''.
+
+So the offset between the bluest colour and the innermost contour \textbf{measures how far the prior
+pulls the answer away from where the data alone would put it}. Here that offset always points the
+same way: the likelihood wants shorter residence times and larger inputs than we report.
+
+\emph{Three honest limits.} (i) The colours are prior-free in \emph{value} but not in \emph{coverage}:
+each cell shows the best of the draws the sampler happened to visit, and the sampler was steered by
+the priors. It is therefore a lower bound on the true best fit, and it is weakest exactly where draws
+are thin --- the band around the published value holds 121\,141 draws for Yasso20 but only 741 for
+Yasso15 and \emph{none at all} for Yasso07. A blank cell means \emph{not visited}, never \emph{cannot
+be fitted}, and Yasso07's blank is precisely why a profile likelihood is needed. (ii) The colour surface is estimated on a coarse grid --- one whose cells hold enough draws to
+support a maximum --- and then bilinearly interpolated for display, so it looks continuous without
+claiming resolution the draws cannot support. (iii) Colour is the log-likelihood \emph{deficit} from
+the best fit found, clamped at 25 units: a deficit past that is decisively rejected, so resolving 30
+from 200 would convey nothing and would flatten the few units of structure along the ridge that
+actually matter.
+\end{methodnote}
+
+\begin{provisional}
+\textbf{To be redone before submission.} Replace the sampled colour map with a true \emph{profile
+likelihood} --- an optimisation over the remaining parameters at each grid node --- which removes the
+prior from the coverage as well as from the value, prices the region beyond the posterior's reach,
+and is smooth enough to interpolate. Roughly 7\,h per model on a $20\times20$ grid; \textbf{Yasso07
+first}, since it is the model for which no sampled estimate exists at all. Expect the figure to change again
+once the $\sinput$ prior is tightened.
+\end{provisional}
+
+\subsection{Why the climate response owns Yasso07's gap and cannot own the others'}
+The lower row of Fig.~\ref{fig:ridge} shows that residence time is made uncertain by different things
+in different models: climate dominates in Yasso07, transfer fractions in Yasso15, and the two share
+Yasso20. That asymmetry looks at first like an artefact of the priors. It is structural.
+
+Yasso07 applies a \emph{single} climate modifier $\xi$ to every pool, so $\xi$ is a pure rescaling of
+time and $\mathrm{MRT}=\mathrm{MRT}_{\mathrm{ref}}/\xi$ exactly. Calibration moves $\xi$ from $0.855$
+to $1.822$ ($\times2.13$) at the Finnish mean climate, and that alone predicts a residence time of
+$15.7$\,yr against an actual $15.2$ --- the entire gap, with nothing left over. The model has nowhere
+else to put a climate misfit. Yasso15 and Yasso20 carry \emph{three} pool-specific modifiers
+($\xi_{\mathrm{AWE}},\xi_{\mathrm{N}},\xi_{\mathrm{H}}$); residence time is governed by the slow
+humus pool, which has its own $\beta_{H1}$, and that modifier moved only $\times1.04$ and $\times1.06$.
+In Yasso20 the components even move in opposite directions ($\xi_{\mathrm{AWE}}\times0.76$ against
+$\xi_{\mathrm{N}}\times1.16$) and largely cancel. The leverage Yasso07 hands to climate is
+structurally unavailable to its successors.
+
+Two consequences. First, Yasso07's \emph{published} $\xi$ is $0.855<1$: its published parameterisation
+says Finnish conditions decompose \emph{more slowly} than its reference, where Yasso15 and Yasso20
+already say faster ($1.16$--$1.66$). Yasso07 starts furthest from what the Finnish data want and is the
+only variant able to travel the whole distance in one parameter. Second, calibration \textbf{inverts
+the family ordering}: published $33.5/30.4/19.0$\,yr (Yasso07 slowest) becomes $15.2/22.1/17.5$
+(Yasso07 fastest). Reproduce with \texttt{doublechecks/xi\_published\_vs\_ours.R}.
 
 \subsection{The frontier: where the recoverable signal still hides}
 If not in the kinetics, where is the signal that remains? A random-forest analysis of the residuals answers the

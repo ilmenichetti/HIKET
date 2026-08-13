@@ -19,6 +19,65 @@
 >    land first: `A1_C5_off` separates "the data fixes moved it" from "f = 2 moved it", which is
 >    worth knowing before spending six production jobs.
 
+## ⭐ 0-bis. SESSION OF 2026-08-13 — the MRT/fitness work (read with §0)
+
+Nothing here touches the data target or the runs; it is analysis of the **existing** run
+`20260812_0809*`. All of it is committed as scripts + figures.
+
+### What landed
+
+1. **F14 is IN the manuscript** (Lorenzo's decision). `manuscript/figures/build_F14_mrt_ridge.R`
+   → `F14_mrt_ridge.png`, written into `HIKET_storyline_note.tex` §"What a longer residence time
+   would cost", with **two boxes**: a `methodnote` explaining the two layers and a `provisional`
+   box recording the planned rework. **F13 was DELETED** as not useful — do not resurrect it; its
+   variance panel survives as F14's lower row.
+2. **F14 now uses EVERY draw** (~75k, was 6000; one MRT eval is 1e-4 s). Not cosmetic: the
+   max-per-cell bias shrinks with draws *in that cell*, so subsampling made the tails look worse
+   than they are — biased the convenient way. `NS <- Inf`, `NB <- 60`, `MINN <- 5`.
+3. **The ridge claim was mis-scoped and is now corrected** — `ridge_test.R` §1 covers SP1/TP2/TP3
+   only. Yasso rides a real ridge (r −0.79/−0.73/−0.57) while the simple models do not
+   (−0.26/−0.31); not a run effect. Fixed in CLAUDE.md, memory, and `ridge_test.R`'s own header.
+4. **NEW STRUCTURAL FINDING** — `doublechecks/xi_published_vs_ours.R`. Yasso07 has **one** ξ for
+   all pools ⇒ `MRT = MRT_ref/ξ` exactly; ξ 0.855→1.822 predicts **15.7 yr vs actual 15.2**, the
+   whole gap. Yasso15/20 have **three** pool-specific ξ and their humus modifier moved only
+   ×1.04/×1.06. So the family's MRT gaps are **not one phenomenon**. Calibration also **inverts
+   the ordering**: published 33.5/30.4/19.0 → ours 15.2/22.1/17.5.
+
+### ⚠ Two things to resolve before quoting any of it
+
+- **TWO "published MRT" bases exist and older records mix them.** `intrinsic_mrt.R` reports the
+  published **POINT** (`to_original(best_x)`) *and* the published **POSTERIOR** median (FMI `.dat`,
+  Yasso15/20 only); MRT is nonlinear many-to-one so they differ. Yasso20: **19.03** vs **25.02**,
+  and the fit cost of reaching it goes **1.4 → 9.8**. F14 and the new text use the POINT.
+  **Decide which the paper uses.**
+- **The costs are max-over-draws lower bounds**, weakest where draws are thin. Corrected values:
+  **Yasso07 never reaches its published MRT at all** (0 draws; 10.4–25.4 yr vs published 33.5, so no
+  estimate exists), Yasso15 **≤14.7** (741 in band), Yasso20 **≤1.6** (121 141).
+  ⚠ **The first version was built on BURN-IN ARTEFACTS** — `getSample()` returns the first retained
+  iteration of each internal DEzs chain (15 rows/model, 100–200 ll below the bulk), and those were the
+  only draws near the published value for Yasso07/15. Fixed by per-sampler extraction with
+  `start = 2`, which also removes the 1-in-3 thinning ⇒ **225 015 draws**, not 75 015.
+
+### The planned rework (Lorenzo: on Puhti, later)
+
+True **profile likelihood** for the colour map: optimise the remaining ~18 parameters at each grid
+node. Removes the prior from *coverage* as well as *value*, prices the region past the posterior's
+reach, and is smooth enough to interpolate coarsely. Grid over **(β₁, σ_input)** not (MRT, σ_input)
+— both are box constraints, whereas fixing MRT is a curved manifold, and β₁ carries the MRT
+variation. Warm-start each node from its neighbour. ~7 h/model at 20×20; cost scales as nb².
+**Yasso07 first.** Profile the *likelihood*, not the posterior, and show the prior separately —
+otherwise a region the data reject cannot be told from one the prior merely disfavours.
+Expect the figure to change again once the σ_input prior is tightened (§6).
+
+### Still open from this session
+
+- Is ξ = 1.82 defensible? Needs `beta1` 0.0987→**0.1578** (+60%), ~4.4 prior σ off centre. It is
+  essentially Yasso20's *published* β1 (0.1580) — suggestive, but Yasso07's β1 scales all pools and
+  Yasso20's scales AWE only, so not strictly comparable. Pair with the FMI warming-rate check.
+- Yasso20 is the least ridge-like Yasso (ratio 0.92) yet the most accommodating on MRT. Unexplained.
+- Decide whether F7 and S5 are retired (superseded by S11/S12), and whether S12 is promoted to
+  main text.
+
 ## 0a. The Roihu run in flight (superseded target — diagnostic value only)
 
 **Launched 2026-08-12**, commit `3e0c807`, error model **scale 0.80 + Student-t ν = 6**.

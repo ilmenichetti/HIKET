@@ -322,10 +322,25 @@ the log scale (σ 0.442→0.72 alone; its climate priors were untouched) against
 | heavy tails | kurtosis **6.9–7.1** (Gaussian = 3) | a few plots steer the fit |
 
 **Why this specifically breaks MRT.** All of it attacks the *aggregate level*, and the level is what
-pins `MRT × σ_input`. The posterior does **not** explore that ridge: corr(log MRT, log σ_input) is
-only −0.30 to −0.37 and `sd(log product)/sd(log MRT)` ≈ 0.94–1.05, i.e. the two are pinned almost
-independently. Yet across runs the product is constant to 4% (Yasso15 43.0 → 44.7) while the split
-slides. Reproduce with `doublechecks/ridge_test.R`.
+pins `MRT × σ_input`. Yet across runs the product is constant to 4% (Yasso15 43.0 → 44.7) while the
+split slides. Reproduce with `doublechecks/ridge_test.R`.
+
+⚠ **CORRECTED 2026-08-13 — the ridge SPLITS BY FAMILY; the old blanket claim was mis-scoped.**
+`ridge_test.R` §1 computes MRT in closed form and covers **SP1/TP2/TP3 only** (its header says so:
+`intrinsic_mrt.R`'s per-draw values were not paired to `sigma_input` draws). Its −0.30/−0.37 was
+therefore written up as "the posterior does not explore that ridge" in a paragraph whose evidence is
+*Yasso15* — a model it never measured. `build_F14_mrt_ridge.R` closes that gap by pairing per-draw
+intrinsic MRT with per-draw `sigma_input`, and the answer is **the opposite for Yasso**:
+
+| | corr(log MRT, log σ_input) | sd(log product)/sd(log MRT) |
+|---|---|---|
+| TP2 / TP3 | −0.263 / −0.313 | 0.98 / 0.97 → pinned independently |
+| Yasso07 / 15 / 20 | **−0.787 / −0.725 / −0.572** | **0.62 / 0.73 / 0.91** → a real ridge |
+
+Not a run effect: TP2/TP3 give −0.34/−0.37 on `20260810_1529*` and −0.26/−0.31 on `20260812_0809*`.
+So the overconfidence argument stands for the simple models but must NOT be stated for the Yasso
+family, where the two genuinely trade off. Yasso20 is intermediate (0.92) — and is also the model
+whose published MRT costs almost nothing in fit (below); those two facts are not yet reconciled.
 
 **Why scale alone cannot fix it.** Uniform σ inflation broadens every direction by √k, so reaching
 the 2.5× Yasso15 needs would require σ ≈ 1.8 against a measured residual spread of 0.79 — it would
@@ -344,6 +359,61 @@ between campaign levels, so a free `c_j` eats the signal (already demonstrated: 
 gave δ = −0.137, requiring σ_init ≈ 0.98, implying no accumulation ever happened).
 
 Memory: [[likelihood-overconfident-ridge]].
+
+### 🚩 "MRT TOO SHORT" IS THREE DIFFERENT FINDINGS, NOT ONE (established 2026-08-13)
+
+Run `20260812_0809*`. Two results, both reproducible.
+
+**1. The cost of the published MRT is wildly uneven.** Best attainable fit near the published value vs
+best anywhere (max-over-draws lower bound on the profile, from `F14_mrt_ridge.rds`):
+
+| | P(MRT > published) | cost in ll units | draws in the band |
+|---|---|---|---|
+| Yasso07 | **0%** (max MRT 25.4 vs 33.5) | **NEVER REACHED — no estimate** | 0 |
+| Yasso15 | 0.011% (24) | **≤ 14.7** | 741 |
+| Yasso20 | **18.1%** (40 689) | **≤ 1.6** | 121 141 |
+
+⚠ These are **over**estimates of the cost, worst where draws are thinnest. Only a profile likelihood
+settles it — and for Yasso07 nothing at all can be read off the samples.
+
+⚠⚠ **CORRECTED 2026-08-13 — the first version of this table was BUILT ON BURN-IN ARTEFACTS.**
+`getSample()` on the saved chains returns the **first retained iteration of each internal DEzs chain**
+(3 per sampler × 5 samplers = **15 rows per model**), sitting 100–200 ll below the bulk with a clean
+gap. Those 15 rows were the ONLY draws near the published MRT for Yasso07/15, so the original
+≤137.7 / ≤14.3 described initialisation, not the posterior. **Fix: extract per sampler with
+`start = 2`** (also drops the 1-in-3 thinning `getSample` applies to the list ⇒ **225 015** draws, not
+75 015). Yasso07's apparent reach 34.1 → **25.4 yr**; ll range 209 → 33.
+
+⚠⚠ **TWO DIFFERENT "PUBLISHED MRT" NUMBERS EXIST — DO NOT MIX THEM.** `intrinsic_mrt.R` computes
+both: the published **POINT** (`to_original(best_x)`) and the published **POSTERIOR** median (MRT over
+the FMI `.dat` sample, Yasso15/20 only). MRT is a nonlinear many-to-one map, so `median(MRT) ≠
+MRT(median)`. For Yasso20 the point is **19.03** and the posterior median **25.02** — and the cost of
+reaching it goes **1.4 → 9.8** accordingly (29 draws in the band vs 40 369). The table above and F14's
+dashed line use the **POINT** (33.47 / 30.38 / 19.03). CLAUDE.md's older line "published 33.39 / 30.27
+/ 25.02" and memories `mrt-too-short` / `run-563524-error-model` mix the two bases. **Resolve which
+comparator the paper uses before quoting any cost.**
+
+**2. Yasso07's gap is ENTIRELY the climate modifier, and that is STRUCTURAL — not a prior artefact.**
+Yasso07 applies **one** ξ to every pool ⇒ ξ is a pure rescaling of time and `MRT = MRT_ref/ξ` exactly.
+Calibration moves ξ 0.855 → **1.822** (×2.13) at the Finnish mean climate, which alone predicts
+**15.7 yr against an actual 15.2** — the whole gap, nothing left for the fractions. Yasso15/20 carry
+**three** pool-specific modifiers (ξ_AWE, ξ_N, ξ_H); MRT is set by the slow humus pool, which has its
+own `betaH1`, and that moved only ×1.04 / ×1.06. In Yasso20 the components oppose each other
+(ξ_AWE ×0.76 vs ξ_N ×1.16) and largely cancel. **The leverage Yasso07 gives climate is structurally
+unavailable to its successors** — so the family's MRT gaps must NOT be discussed as one phenomenon.
+
+Corollaries: Yasso07's *published* ξ is **0.855 < 1** (its parameterisation says Finland decomposes
+slower than its reference; Yasso15/20 already say faster, 1.16–1.66), so it starts furthest away and
+is the only one able to travel the distance in one parameter. And **calibration inverts the family
+ordering**: published 33.5 / 30.4 / 19.0 (07 slowest) → ours 15.2 / 22.1 / 17.5 (07 **fastest**).
+
+⚠ OPEN: is ξ = 1.82 defensible? It needs `beta1` 0.0987 → **0.1578** (+60%), ~4.4 prior σ off centre
+under the corrected Tuomi width. Suggestive but not proof: that value is essentially Yasso20's
+*published* `beta1` (0.1580) — though Yasso07's β1 scales all pools while Yasso20's scales AWE only,
+so they are not strictly the same quantity. Pair with the FMI warming-rate check.
+
+Scripts: `doublechecks/xi_published_vs_ours.R`, `manuscript/figures/build_F14_mrt_ridge.R`.
+Memory: [[mrt-climate-leverage-structural]].
 
 ### Likelihood / error model
 **LOG-NORMAL is the DEFAULT since 2026-08-07** (`HIKET_LOGNORMAL_LIK=0` reverts to the old
