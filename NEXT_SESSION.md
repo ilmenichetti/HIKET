@@ -1,23 +1,66 @@
 # NEXT SESSION — start here
 
-## ⭐ 0. STATE AT 2026-08-12 (evening) — DATA WORK IS DONE; a Roihu run is in flight
+## 🚨 0. FIRST ACTION NEXT SESSION — IDENTIFY AND READ THE ROIHU RUN
 
-> **Read this box first.**
-> 1. **The calibration target has CHANGED** (1985 litter added, true sampling years, loop broken).
->    It is at a verified fixed point. Latest commit `44215b0`; revert point `3a143cd`.
-> 2. **A local Yasso15 f-sweep is running** — see §0c "RUNNING NOW". Run
->    `quarantine_ablation_runs.R` when it finishes or figures will rebuild from short chains.
-> 3. **The Roihu run 597028–597033 (§0a) predates all of this.** Read it as an error-model
->    diagnostic only; do NOT refresh figures from it and do not compare its numbers with anything
->    produced after `8ef5c62`.
-> 4. ✅ **CODE IS PUSHED** (through `1a23a4a`, 2026-08-13). **DATA IS STILL NOT SYNCED** — one command
->    before any Roihu launch:
->    `rsync -av "<mac-repo>/Data/" roihu:/scratch/project_2019134/HIKET/Data/`.
->    ⚠ `Data/model_inputs/site_attributes.csv` is a **NEW** file — a partial rsync would leave the
->    SOC builder without it on Roihu.
-> 5. The production re-run on the corrected target is the next big action, but let the local sweep
->    land first: `A1_C5_off` separates "the data fixes moved it" from "f = 2 moved it", which is
->    worth knowing before spending six production jobs.
+> **Do this before anything else, and do not assume what it is.**
+>
+> Lorenzo believes a **corrected-target production run** was launched in an earlier session and is
+> running / has landed on Roihu (as of 2026-08-13). That is **unverified** — this file recorded the
+> corrected-target run as *pending* and `Data/` as *not synced*, so the possibility that it launched
+> against the **OLD** target is real and would make its numbers actively misleading.
+>
+> **THE DECISIVE CHECK — the observation count in the launch log:**
+> - **1205 observations / 456 calib-ready** ⇒ the CORRECTED target (1985 LM added, true sampling
+>   years, 82 undated plot-years dropped). Good: read it as the new baseline.
+> - **1269** ⇒ the OLD target. The run repeats what we already have; discard it and relaunch after
+>   rsyncing `Data/`.
+>
+> Confirm at the same time: `Cores per chain: 40` (not 383 — the OOM trap), `5 chains x 50000`, two
+> `ERROR MODEL` lines, and all six models reaching `Chain 1/5`. Guard output goes to `.err`, not
+> `.out`; restrict globs to the actual job numbers or you will read August's earlier logs.
+>
+> **What it should show if it IS the corrected target** (pre-registered, so it cannot be
+> rationalised afterwards): observations move TOWARD the models over 1985–2024
+> (+0.248 → ≈ +0.182); **2006–2024 untouched at +0.107 against a source in all six**; MRT unmoved.
+> If 2006–2024 unexpectedly flips sign, stop and re-plan — the priority changes.
+>
+> **Then:** sync `runs/`, `diagnostics/` AND `Data/model_inputs/` back, run stages 2–4 locally, and
+> rebuild the figures. Only after that does the next launch (§0-ter) make sense.
+>
+> ⚠ Regardless of the outcome: **`Data/` on Roihu may not be current.** Before any NEW launch,
+> `rsync -av "<mac-repo>/Data/" roihu:/scratch/project_2019134/HIKET/Data/` —
+> `Data/model_inputs/site_attributes.csv` is a **NEW** file and a partial rsync would leave the SOC
+> builder without it. ✅ Code is pushed through `391fc4a`.
+
+## ⭐ 0-ter. THE LAUNCH AFTER THAT — tighten the `sigma_input` prior
+
+**One factor, on top of the corrected target.** Do not bundle it with anything else; the discipline
+that produced every clear result so far is one change per run (the σ=0.80+t run deliberately
+excluded campaign-σ so it could not confound the trend).
+
+`sigma_input` log-SD **0.50 → 0.15–0.20**, justified from **Lehtonen & Heikkinen 2015** — ⚠ *not*
+chosen because it lands MRT near the published value. That is the circularity trap, and the 2.4×
+inflation is not itself a finding.
+
+**Why it should work, and why that is newly established:** `CLAUDE.md` used to claim the posterior
+does not ride the MRT×σ_input ridge — which would predict this lever does nothing. That claim was
+**simple-models-only** and is false for Yasso (r = −0.79/−0.73/−0.57). Pinning σ_input drags MRT
+along that ridge; the ridge is the mechanism.
+
+**PRE-REGISTERED expected fit cost**, from F14's profile lower bounds (run `20260812_0809*`):
+
+| model | published MRT | expected ll cost to reach it |
+|---|---|---|
+| Yasso20 | 19.0 | **≈1.6** — nearly free, should move easily |
+| Yasso15 | 30.4 | **≈14.7** — visible but survivable penalty |
+| Yasso07 | 33.5 | **posterior never reaches it** — expect it to strain hardest, or refuse |
+
+Costs far BELOW these ⇒ our max-over-draws bounds were loose. Far ABOVE ⇒ something outside the
+ridge resists. **Watch R² and the log-likelihood, not MRT** — MRT moves by construction if the ridge
+is real; what is informative is what it costs.
+
+**Neither open item blocks this launch:** the published-MRT comparator (point vs posterior median)
+is a reporting decision, and the Yasso07 profile likelihood is separate Puhti work.
 
 ## ⭐ 0-bis. SESSION OF 2026-08-13 — the MRT/fitness work (read with §0)
 

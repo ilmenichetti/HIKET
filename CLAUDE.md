@@ -685,6 +685,17 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
+- **🚨 NEXT SESSION STARTS BY IDENTIFYING THE ROIHU RUN (2026-08-13).** A corrected-target
+  production run is believed to have been launched in an earlier session, but that is **unverified**
+  and `Data/` may not have been synced first. **Decisive check in the launch log: 1205 observations /
+  456 calib-ready = the CORRECTED target; 1269 = the OLD one** (discard and relaunch after rsync).
+  Pre-registered expectation if corrected: 1985–2024 observations move to ≈+0.182, **2006–2024
+  untouched at +0.107 against a source in all six**, MRT unmoved. **Then** the next launch is the
+  `sigma_input` prior tightening (log-SD 0.50 → 0.15–0.20 from Lehtonen & Heikkinen 2015, ⚠ never
+  tuned to land MRT on the published value), with F14's pre-registered fit costs as the test:
+  Yasso20 ≈1.6 ll, Yasso15 ≈14.7, Yasso07 unreachable. **Watch R² and log-likelihood, not MRT.**
+  Full protocol: `NEXT_SESSION.md` §0 and §0-ter.
+
 - **✅ C5 WITHDRAWN 2026-08-05** — the 1985 (VMI8) campaign is NOT down-weighted;
   `SIGMA_1985_INFL` default is now **1.0**. Ablations: turning C5 off changes trusted-campaign
   RMSE by 0.45% (TP2) / 0.25% (SP1) vs a ~2% noise floor, while it moves σ_init by ~4×. Its
