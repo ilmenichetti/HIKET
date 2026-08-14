@@ -478,6 +478,49 @@ level by site class. Non-equilibrium is the frame that ties the levels together:
 history), the obstacle (an initial state we cannot assume), and the stakes (a sink still in motion) --- one thing,
 seen from the model side and the policy side at once.
 
+\begin{provisional}
+\textbf{Priority future direction (ahead of the stratification test): calibrate the ensemble twice,
+under a restrictive and a permissive input assumption, and compare the consequences.}
+
+\emph{Why it is the right experiment.} The likelihood cannot separate high-input/short-MRT from
+low-input/long-MRT --- the product $\mathrm{MRT}\times\sinput$ is conserved to 4\,\% and the ridge
+correlation reaches $-0.79$ to $-0.92$ across the ensemble. What is easy to miss is that the
+\emph{equilibrium} response is degenerate too: at steady state $C = J/(k\xi)$, so a warming that
+multiplies $\xi$ by $f$ gives $C' = C/f$ whatever the split, and a proportional change in inputs gives
+$\Delta C/C = \Delta J/J$ either way. \textbf{The split is invisible in fit and invisible at
+equilibrium --- but not in timing.} MRT \emph{is} the time constant: after 50 years a step change is
+$96\,\%$ realised at $\mathrm{MRT}=15$ but only $78\,\%$ at $\mathrm{MRT}=33$. Saturation is a
+statement about timing, so the one thing the data cannot constrain is precisely the thing the policy
+question turns on. That reframes the equifinality: it is not a nuisance beside the result, it
+\emph{is} the uncertainty in the result.
+
+\emph{Design.} Two full ensemble calibrations differing \textbf{only} in the \texttt{flux\_pair}
+input window --- restrictive (Nordic NPP maximum, $\sinput \le 1.84$) versus permissive (the
+present window, which does not bind). Then compare, using the posterior draws from each:
+\begin{enumerate}\itemsep2pt
+\item \textbf{Fitness} --- the two RMSE distributions from the MCMC samples, not point estimates. If
+they overlap, the restrictive assumption costs nothing in fit and the permissive one is unjustified.
+\item \textbf{Climate reactivity} --- forward runs sweeping temperature, propagating the posteriors
+rather than a median, so the reactivity itself carries the calibration uncertainty.
+\item \textbf{Sink or source} --- the sign and magnitude of the contemporary stock change.
+\item \textbf{Future extrapolation} --- trajectories to 2100, where the timing difference compounds.
+\end{enumerate}
+
+\emph{What would make it publishable either way.} If the two calibrations fit equally well but
+project differently, the ensemble's forecast spread is shown to be set by an assumption the data
+cannot adjudicate --- a stronger and more honest claim than any single tuned answer. If they project
+alike, the input assumption is shown not to matter and the projections are correspondingly more
+robust. Note also that pool-specific $\xi$ breaks the symmetry: Yasso07's single modifier makes
+$\mathrm{MRT}=\mathrm{MRT}_{\mathrm{ref}}/\xi$ exactly degenerate, while Yasso15/20 respond according
+to \emph{which} pools hold the carbon --- so the structural thread reappears in the projections.
+
+\emph{And it points at the data that would settle it.} The degeneracy is a property of the
+observation design, not of nature: two SOC observations per plot over 39 years carry almost no
+information about a time constant. Radiocarbon constrains turnover directly and independently of
+input magnitude; so would higher-frequency repeated measurement, warming manipulations, or
+incubations. Stating that turns a limitation into a recommendation.
+\end{provisional}
+
 \paragraph{A concrete next step (to explore).} The spin-up currently ramps litter \emph{linearly} from the 1917
 anchor to the 1985 start. But the national growing-stock history (Fig.~\ref{fig:history}) already gives the
 \emph{shape} of that recovery --- a depleted mid-century base, then a rise --- and litter scales with standing
