@@ -34,6 +34,49 @@
 > neither `mclapply` nor `parLapply` perturbs the parent RNG and that summed log-likelihoods match
 > bitwise.
 
+## ⭐⭐ 0-quinquies. THE EQUIFINALITY REACHES THE FORECAST — measured 2026-08-14
+
+**Lorenzo's insight, tested and confirmed:** high-input/short-MRT and low-input/long-MRT fit the
+SOC data identically, but they do **not** project identically. Script:
+`doublechecks/equifinality_forecast.R` (+ `.png`, `.rds`).
+
+**The number:** within each model the 95% forecast spread is **25–34%** of the median 50-year loss,
+and **R² of log-likelihood on the forecast is only 0.10–0.18** — so **82–90% of the projection
+spread is among draws the data cannot rank**. The equifinality is not a nuisance beside the
+result, it **is** the uncertainty in the result — and saturation is a *timing* question, which is
+exactly what MRT sets (after 50 yr a step change is 96% realised at MRT 15 but 78% at MRT 33).
+
+⚠ **A prediction of mine was WRONG, informatively.** I expected the *equilibrium* response to be
+degenerate (`C = J/(kξ)` ⇒ warming by factor `f` gives `C/f` whatever the split). It isn't, because
+**`f` itself depends on β₁**, which is what sets MRT. corr(log σ_input, equilibrium change) is
+**−0.58 for Yasso07** (single ξ: MRT and climate sensitivity are the *same* parameter) but only
+**−0.10 / −0.16 for Yasso15/20** (pool-specific ξ, near-degenerate as predicted). So the degeneracy
+of the equilibrium response is **itself structural**, splitting on the same single-ξ vs three-ξ line
+as the MRT finding.
+
+**CLIMATE SENSITIVITY DIFFERS ~2× ACROSS THE FAMILY, and it was in NO figure.**
+`doublechecks/climate_sensitivity_sweep.{R,png}` puts all three on shared axes (0–5 °C, posterior
+propagated as bands). Equilibrium SOC change at **+2 °C: Yasso07 −21.7%, Yasso20 −13.7%,
+Yasso15 −9.6%**; at +5 °C: −44.7 / −29.6 / −21.9. **The between-model range is 3.1× the mean
+within-model 95% band at +2 °C (2.9× at +5 °C)** — for climate sensitivity, structure dominates
+calibration uncertainty, and the gap **widens** with warming. This is Thread A ("structure dominates
+out of sample") in the climate dimension, quantified.
+
+⚠ **Both scripts are DEMONSTRATIONS, not projections.** Single-exponential transient on the bulk
+MRT (a multi-pool system is a sum of exponentials), a step change rather than a trajectory, and a
+common J̄ for absolute scale. A proper version needs forward runs — which is precisely the
+two-calibration experiment now recorded in `HIKET_storyline_note.tex` §Outlook as the **priority
+future direction, ahead of the stratification test**: restrictive vs permissive σ_input, compared on
+RMSE distributions, climate reactivity, sink/source sign, and 2100 trajectories. Publishable either
+way. It also notes that **radiocarbon would break the degeneracy directly**, since ¹⁴C constrains
+turnover independently of input magnitude — the degeneracy is a property of the observation design,
+not of nature.
+
+⚠ **Two traps, both cost time today:** the **chains store UNCONSTRAINED parameters** (the posterior
+RDS is physical but carries no likelihood, which is why `intrinsic_mrt.R` reads the latter) — skip
+`to_original()` and you silently get MRT = 0; and a **named scalar** taken from the sample matrix
+renames the data-frame column.
+
 ## ⭐ 0-quater. THE σ_input WINDOW IS ANCHORED ON THE WRONG STATISTIC (2026-08-14)
 
 **Decided: narrow the `flux_pair` window to `[0.05, 4.62]` — but NOT YET, and not bundled.**
