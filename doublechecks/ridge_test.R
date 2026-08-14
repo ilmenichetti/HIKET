@@ -34,6 +34,18 @@
 # -0.57, ratio 0.62/0.73/0.92 = a real ridge. Not a run effect. Quote section 1 for
 # SP1/TP2/TP3 ONLY; for the Yasso family cite F14.
 #
+# ⚠⚠ 2026-08-13, LATER THE SAME DAY -- AND SECTION 1 IS WRONG FOR THE SIMPLE MODELS TOO.
+# Its closed forms are MRT AT xi = 1, i.e. with the climate response switched OFF. All
+# three models put xi on every pool rate (TP3 since C2), so MRT = MRT_ref/xi EXACTLY --
+# the same structure as Yasso07 -- and the calibration MOVES xi (TP2/TP3 medians 2.92/
+# 3.21 at the reference climate, against an anchor of 1.00). Put xi back and the trio
+# rides a ridge STRONGER than any Yasso model: corr -0.92/-0.87/-0.86, ratio 0.41/0.49/
+# 0.51. Second, smaller cause: -0.263/-0.313 come from the posterior .rds, which
+# getSample() thins to 1001 draws; the same closed form over the 225015 chain draws
+# gives -0.350/-0.362. THE RIDGE IS UNIVERSAL, NOT A YASSO PROPERTY -- do not quote
+# section 1's correlations as evidence that the simple models lack a ridge.
+# Correct basis: manuscript/figures/build_S13_mrt_ridge_benchmark.R.
+#
 # USAGE: Rscript --no-save doublechecks/ridge_test.R
 # =============================================================================
 suppressMessages(library(BayesianTools))

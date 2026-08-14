@@ -80,6 +80,7 @@ Nothing here touches the data target or the runs; it is analysis of the **existi
 3. **The ridge claim was mis-scoped and is now corrected** — `ridge_test.R` §1 covers SP1/TP2/TP3
    only. Yasso rides a real ridge (r −0.79/−0.73/−0.57) while the simple models do not
    (−0.26/−0.31); not a run effect. Fixed in CLAUDE.md, memory, and `ridge_test.R`'s own header.
+   🚩 **AND THAT CORRECTION IS ITSELF WRONG** — S13 overturns it; see memory `s13-benchmark-ridge`.
 4. **NEW STRUCTURAL FINDING** — `doublechecks/xi_published_vs_ours.R`. Yasso07 has **one** ξ for
    all pools ⇒ `MRT = MRT_ref/ξ` exactly; ξ 0.855→1.822 predicts **15.7 yr vs actual 15.2**, the
    whole gap. Yasso15/20 have **three** pool-specific ξ and their humus modifier moved only

@@ -33,7 +33,12 @@
 # Deliberately identical to production in the ways that matter: 40 workers,
 # 80 GB, full plot set, same error model. Only the iteration count is cut.
 # =============================================================================
-set -u
+# Load r-env FIRST, exactly as the production hiket_*.sh scripts do. Doing it
+# later (after `set -u` and the sampler subshell) left `module` undefined and
+# Rscript off PATH -- job 652818 died in 1 s.
+module load r-env
+command -v Rscript >/dev/null || { echo "[probe] FATAL: Rscript not on PATH after module load"; exit 1; }
+echo "[probe] Rscript: $(command -v Rscript)"
 
 PROBE_OUT=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/memprobe_${SLURM_JOB_ID}_cgroup.csv
 
@@ -67,7 +72,6 @@ ev() { [ -r "$1" ] && awk -v k="$2" '$1==k{print $2}' "$1" 2>/dev/null || echo N
 SAMPLER=$!
 echo "[probe] sampler PID $SAMPLER -> $PROBE_OUT"
 
-module load r-env
 if test -f ~/.Renviron; then sed -i '/TMPDIR/d' ~/.Renviron; fi
 echo "TMPDIR=/scratch/project_2019134" >> ~/.Renviron
 cd /scratch/project_2019134/HIKET/
