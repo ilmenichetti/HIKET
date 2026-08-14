@@ -494,6 +494,16 @@ statement about timing, so the one thing the data cannot constrain is precisely 
 question turns on. That reframes the equifinality: it is not a nuisance beside the result, it
 \emph{is} the uncertainty in the result.
 
+\emph{The primary question, stated precisely.} \textbf{Calibrate the same model under two input
+assumptions, obtaining two different MRT posteriors --- by how much does the resulting climate
+sensitivity differ?} This is a \emph{within-model, between-calibration} comparison, and it is not
+answered by the between-model spread of a single calibration, nor by slicing one posterior along the
+ridge: a genuine re-calibration lets every other parameter readjust, which a slice cannot capture.
+The only partial signal available now is the ridge correlation between $\log\sinput$ and the
+equilibrium climate response, which is $-0.58$ for Yasso07 but only $-0.10$/$-0.16$ for Yasso15/20
+--- suggesting the effect would be large where a single $\xi$ ties MRT to climate sensitivity and
+small where three pool-specific modifiers decouple them. That is a hypothesis to test, not a result.
+
 \emph{Design.} Two full ensemble calibrations differing \textbf{only} in the \texttt{flux\_pair}
 input window --- restrictive (Nordic NPP maximum, $\sinput \le 1.84$) versus permissive (the
 present window, which does not bind). Then compare, using the posterior draws from each:

@@ -62,6 +62,20 @@ within-model 95% band at +2 °C (2.9× at +5 °C)** — for climate sensitivity,
 calibration uncertainty, and the gap **widens** with warming. This is Thread A ("structure dominates
 out of sample") in the climate dimension, quantified.
 
+🚩 **THE ACTUAL QUESTION IS NOT YET ANSWERED, and `climate_sensitivity_sweep.png` does NOT answer
+it.** Lorenzo's question is **within-model, between-calibration**: *calibrate the same model under
+two input assumptions ⇒ two different MRT posteriors ⇒ how much does climate sensitivity differ?*
+The sweep figure shows **between-MODEL** differences with the posterior band of a **single**
+calibration — a different quantity. It cannot be answered from what is on disk, because the
+restrictive calibration does not exist yet.
+
+⚠ **Slicing the existing posterior along the ridge is NOT a substitute** — a genuine re-calibration
+lets every other parameter readjust, which a slice cannot capture. The only partial signal is
+corr(log σ_input, equilibrium change) = **−0.58 (Yasso07)** vs **−0.10 / −0.16 (Yasso15/20)**,
+suggesting the effect is large where a single ξ ties MRT to climate sensitivity and small where
+three pool-specific modifiers decouple them. **A hypothesis to test, not a result.** This is now the
+stated primary question of the two-calibration experiment in `HIKET_storyline_note.tex` §Outlook.
+
 ⚠ **Both scripts are DEMONSTRATIONS, not projections.** Single-exponential transient on the bulk
 MRT (a multi-pool system is a sum of exponentials), a step change rather than a trajectory, and a
 common J̄ for absolute scale. A proper version needs forward runs — which is precisely the
