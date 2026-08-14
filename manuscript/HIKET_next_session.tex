@@ -62,12 +62,25 @@ implied $6.0$, and \textbf{the 2006--2024 source survived}. The error model was 
 now measured and self-consistent --- but it is not the explanation for either the trend deficit or
 the short residence times.
 
-\textbf{Pending: the production re-run on the corrected target.} The SOC data work recorded under H3 and H6 is
-implemented and at a verified fixed point but \emph{has not yet been calibrated against}. Every
-number in this document that involves the observed trend still refers to the pre-correction target.
-Two operations precede any launch: push the local commits, and rsync \texttt{Data/} ---
-\texttt{Data/model\_inputs/site\_attributes.csv} is a \emph{new} file, so a partial sync would leave
-the SOC builder unable to run on Roihu.
+\textbf{Update 2026-08-14 --- the corrected-target run exists and is half landed.} Jobs
+619204--619209 ran on the corrected target (verified in the launch log: \texttt{SOC obs: 1205},
+456 calibration-ready, \texttt{SIGMA\_1985\_INFL 2.00}); \texttt{Data/} had been rsynced after all.
+\textbf{SP1, TP2 and TP3 completed} (R-hat $1.000$--$1.003$, ESS $4582$--$9713$) and are synced as
+\texttt{20260813\_0803*}. \textbf{Yasso07/15/20 were OOM-killed at 8\,h} and were relaunched as
+jobs \textbf{654390--654392} on 2026-08-14 with identical settings, so that all six will sit on one
+footing. Results expected 2026-08-15.
+
+\textbf{The out-of-memory failures are chronic and the accounting cannot diagnose them.} The
+ceiling has been raised $16\rightarrow40\rightarrow80$\,GB since July and the failures recurred at
+every level, with \texttt{MaxRSS} pinned at $12$--$16$\,GB throughout --- because
+\texttt{JobAcctGatherFrequency} is 10\,s and cannot see a peak. All six SLURM scripts now carry
+\texttt{cgroup\_memlog.sh}, which records \texttt{memory.peak} (a kernel high-water mark, immune to
+sampling) and \texttt{memory.events:max} at \emph{both} the job and step cgroup. The distinction
+matters: the step's \texttt{memory.max} is \texttt{UNLIMITED}, so its breach counter would read
+zero forever and look like proof of innocence. On landing, \texttt{events:max}${}>0$ means the job
+breached its own ceiling and \texttt{peak} sizes the correct request; \texttt{max}${}=0$ alongside
+an \texttt{oom\_kill} means the kill came from outside and more memory buys nothing. Memory was
+raised to 160\,GB as headroom, explicitly not as a diagnosis.
 
 \begin{caveat}
 \textbf{Expect the re-run to narrow the problem, not to solve it.} The target corrections move the
@@ -372,6 +385,77 @@ independent check of the fitted Finnish warming rate.
 \smallskip
 \noindent Reproduce with \texttt{doublechecks/xi\_published\_vs\_ours.R} and
 \texttt{manuscript/figures/build\_F14\_mrt\_ridge.R}.
+
+% =====================================================================
+\section{The input-flux window is anchored on the wrong statistic}\label{sec:fluxwindow}
+
+\emph{Established 2026-08-14. Decided but deliberately not implemented --- see the sequencing note
+at the end. The full write-up, with tables and the boxed proposal, is in the M\&M working document,
+section ``Prior specification: the litter-input flux window''.}
+
+$\sinput$ is a single global scalar, so $\sinput \times \bar{J}$ is a \textbf{national mean}
+effective litter flux. The current \texttt{flux\_pair} ceiling of $8.7$\,tC\,ha$^{-1}$\,yr$^{-1}$ is
+Gower et al.\ (2001)'s Class~I evergreen \textbf{maximum} --- the most productive single stand in a
+global boreal compilation. \textbf{The window has been bounding a mean with a maximum}, which is why
+it has never constrained anything: posterior effective fluxes are $4.99$--$6.56$, all comfortably
+inside. The \emph{direction} of the bound is sound --- $\text{litter}\le\text{NPP}$ is an identity
+--- but the statistic and the population are wrong.
+
+\begin{caveat}
+\textbf{A unit trap worth recording, because it produced a wrong claim mid-analysis.} Gower et al.\
+(2001) reports in \textbf{g\,C}\,m$^{-2}$\,yr$^{-1}$; Zheng et al.\ (2004) reports in \textbf{dry
+matter}. The proof is internal to the two papers: Zheng cites Gower's world-boreal total NPP as
+$109$--$1827$ (mean $892$) where Gower's own Appendix~A gives $218$--$912$ (mean $424$) g\,C --- a
+ratio of exactly $2.00$--$2.10$. Zheng's headline $563$ is therefore $\approx 2.81$, not $5.63$,
+tC\,ha$^{-1}$\,yr$^{-1}$. Mixing the two inflates any NPP ceiling twofold.
+\end{caveat}
+
+\begin{center}\small
+\begin{tabular}{@{}lrll@{}}
+\toprule
+window ceiling & $\sinput\le$ & binds? & implied MRT Y07/Y15/Y20 \\
+\midrule
+$8.70$ current (Gower global max) & 3.46 & \textbf{no} & 15.2 / 21.9 / 17.5 (unchanged) \\
+$4.62$ Gower Nordic max \quad$\leftarrow$ \textbf{decided} & \textbf{1.84} & all six & 21.3 / 25.8 / 24.0 \\
+$2.81$ Zheng gridded mean & 1.12 & all six & 35.0 / 42.4 / 39.5 \\
+\midrule
+\multicolumn{4}{@{}l@{}}{\emph{published, for reference:} 33.5 / 30.4 / 19.0} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A constraint \emph{binds} when the value the likelihood would choose lies outside it, so that the
+bound rather than the data sets the answer. Zheng's ceiling is not adoptable as a drop-in: it lies
+\emph{below} the prior centre ($\sinput = 1.30 \Rightarrow F = 3.26$), so the centre is not
+representable; and being only $4\%$ above LUKE's own total litter, it amounts to asserting the
+inventory as near-exact. Narrowing the window also \textbf{tightens the prior}, not only the wall:
+at fixed \texttt{sigma\_ppm} the $\pm1$\,ppm range moves from $\sinput\in[0.93,1.72]$ to
+$[1.09,1.47]$, because the transform is a scaled logit onto the window.
+
+\begin{caveat}
+\textbf{Three claims that did not survive scrutiny.} (i) ``our flux is physically impossible'' --- it
+exceeds the Nordic \emph{mean} but not the Nordic \emph{range} ($2.15$--$4.62$); (ii) ``LUKE's litter
+product is biased high'' --- $2.70$ is $84\%$ of Gower's Nordic mean, but that range is too wide to
+support the inference; (iii) ``Finnish forests are twice as productive as Gower's stands'' --- this
+compared Korhonen's \emph{current annual increment} against Gower's \emph{mean annual increment}
+(biomass $\div$ stand age, on stands averaging 99 years), so the factor is largely definitional, and
+Gower's stands are selected for having complete NPP budgets rather than for representing Finnish
+managed forest. A national inventory rebuilt across thirteen cycles is not likely to be wrong by a
+factor of two without anyone noticing; the discrepancy was in the comparison.
+\end{caveat}
+
+\textbf{What $\bar{J}$ contains, now established} from the Zenodo deposit (DOI
+10.5281/zenodo.19736499, now live) and the \texttt{YaYasso} implementation of the LUKE chain: it is
+a flux (biomass $\times$ turnover), it \textbf{includes harvest residues and natural mortality} ---
+both previously assumed missing --- and it \textbf{excludes understorey}, which is what the
+$\sinput$ centre of $1.30$ stands in for. The dominant uncertainty is the fine-root chain, where
+\texttt{YaYasso} variants span foliage$\times 0.18$--$2.5$ for biomass and $\times0.5$--$0.85$ for
+turnover: a $\sim$20-fold range in the dominant component, and precisely the term Lehtonen \&
+Heikkinen exclude from their own uncertainty, which makes their $\pm10\%$ a floor.
+
+\textbf{Sequencing.} Wait for jobs 654390--654392, analyse them, \emph{then} decide. Do not bundle
+this with the $\sinput$ prior tightening or anything else --- one change per run is the discipline
+that produced every clear result so far.
 
 % =====================================================================
 \section{Suggested order}

@@ -1,6 +1,101 @@
 # NEXT SESSION — start here
 
-## 🚨 0. FIRST ACTION NEXT SESSION — IDENTIFY AND READ THE ROIHU RUN
+## 🚨 0-NOW. STATE AT 2026-08-14 — READ THIS FIRST
+
+> **§0 below is RESOLVED.** The run was found, it IS the corrected target (`SOC obs: 1205 |
+> Calibration-ready plots: 456`, `SIGMA_1985_INFL 2.00`), and `Data/` had been rsynced after all.
+> SP1/TP2/TP3 completed (R-hat 1.000–1.003, ESS 4582–9713) and are synced to the Mac as
+> `20260813_0803*`. Yasso07/15/20 were **OOM-killed at 8 h** (jobs 619207–9).
+>
+> **⏳ IN FLIGHT: jobs 654390 / 654391 / 654392** (Yasso07/15/20), launched 2026-08-14 ~10:56 from
+> commit `37d9dfe`, RUN_IDs `20260814_1056*`/`1057*`/`1058*`. Identical settings to the completed
+> trio (corrected target, σ=0.80, Student-t ν=6) — **only memory and instrumentation changed**, so
+> all six will sit on one footing. Verified at launch: 1205 obs, 40 cores/chain, 5×50000, and the
+> three landed on **separate nodes** (rc4127 / rc4117 / rc5124). ~18 h ⇒ results 2026-08-15.
+>
+> **The OOM is chronic, not new, and `sacct` cannot diagnose it.** Ceiling raised 16→40→80 GB
+> since July and it kept recurring; MaxRSS sat at 12–16 GB at *every* ceiling because accounting
+> samples at 10 s. All six `hiket_*.sh` now run `cgroup_memlog.sh`, which records `memory.peak`
+> (a kernel high-water mark) and `memory.events:max` at **both** job and step cgroup — the step's
+> `memory.max` is `UNLIMITED`, so reading its breach counter alone would report 0 forever.
+> **Verdict on landing: `events:max > 0` ⇒ our own ceiling, more memory is the fix and `peak`
+> sizes it; `max = 0` with an `oom_kill` ⇒ the node did it and more memory buys nothing.**
+> Memory bumped to 160 GB as headroom, explicitly **not** as a diagnosis.
+> Detail: memory `roihu-oom-instrumentation`. ⚠ Submit with
+> `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'` — `MODULEPATH` is interactive-only
+> and a bare `ssh … sbatch` dies in 1 s (memory `roihu-module-not-interactive`).
+>
+> **NOT implemented, deliberately:** per-chain checkpointing (chains are saved only after all five
+> finish, so the Aug-13 kill discarded ~6.5 h of healthy sampling) and the fork-cluster rewrite
+> (`mclapply` forks 40 procs *per likelihood evaluation*, ~10M/run). Both were measured and
+> **deferred**: checkpointing because its value depends on a failure rate we just reduced;
+> the rewrite because it is worth only **~3%** runtime (dispatch is 8.3 ms of a 227 ms evaluation
+> — the model computation dominates). Both are bit-identical-safe if ever done; verified that
+> neither `mclapply` nor `parLapply` perturbs the parent RNG and that summed log-likelihoods match
+> bitwise.
+
+## ⭐ 0-quater. THE σ_input WINDOW IS ANCHORED ON THE WRONG STATISTIC (2026-08-14)
+
+**Decided: narrow the `flux_pair` window to `[0.05, 4.62]` — but NOT YET, and not bundled.**
+Full write-up with tables, references and the boxed proposal:
+`manuscript/M&M_parameterization_working_document.tex` §"Prior specification: the litter-input
+flux window". Appendix figure: `manuscript/figures/SX_input_vs_literature.png` (⚠ diagnostic,
+**not for production**, several comparisons on it are deliberately not like-for-like).
+
+**The defect.** `σ_input` is a single global scalar, so `σ_input × J̄` is a **national mean**. The
+current ceiling 8.7 is Gower's Class I evergreen **maximum** (9.12 gC-based) — a global boreal
+single-stand maximum. **Bounding a mean with a maximum** is why the constraint has never bound
+(posterior effective fluxes 4.99–6.56, all inside). The direction of the bound is fine —
+`litter ≤ NPP` is a true identity — the *statistic* and the *population* are wrong.
+
+**⚠ THE UNIT TRAP.** Gower 2001 reports **gC** m⁻² yr⁻¹ (Table 4 caption); Zheng 2004 reports
+**dry matter**. Proof is internal: Zheng cites Gower's world-boreal TNPP as 109–1827 (mean 892)
+where Gower's own Appendix A gives 218–912 (mean 424) gC — ratio exactly 2.00–2.10. So Zheng's
+563 is **2.81**, not 5.63, tC/ha/yr. Mixing them inflates the ceiling 2×; I made this error
+mid-session and it produced a "54% above NPP" claim that is wrong.
+
+| option | σ_input ≤ | binds? | implied MRT Y07/Y15/Y20 |
+|---|---|---|---|
+| 8.70 current (Gower global max) | 3.46 | **no** | 15.2 / 21.9 / 17.5 (unchanged) |
+| **4.62 Gower Nordic max ← DECIDED** | **1.84** | all six | 21.3 / 25.8 / 24.0 |
+| 2.81 Zheng gridded mean | 1.12 | all six | 35.0 / 42.4 / 39.5 |
+
+*(published for reference: 33.5 / 30.4 / 19.0)*
+
+**Why Nordic max and not Zheng.** Zheng's ceiling (2.81) is **below the prior centre**
+(σ_input 1.30 ⇒ flux 3.26), so the centre is not representable and re-centring would be required;
+and since 2.81 is only 4% above LUKE's own total litter, it amounts to asserting the inventory as
+near-exact. Nordic max keeps the project's "widest defensible" principle, fixes the statistic, and
+depends on none of the arguments that failed scrutiny.
+
+⚠ **Narrowing also tightens the PRIOR**, not just the wall: `flux_pair` is a scaled logit onto the
+window, so at fixed `sigma_ppm = 0.50` the ±1 ppm range moves from σ_input [0.93, 1.72] to
+[1.09, 1.47]. Decide whether that is wanted or whether `sigma_ppm` should rise to compensate.
+
+⚠ **THREE CLAIMS THAT DID NOT SURVIVE — do not revive them.** (1) "our flux is physically
+impossible" — exceeds the Nordic *mean* but not the Nordic *range*; (2) "LUKE's litter is biased
+high" — its 2.70 is 84% of Gower's Nordic mean, but that range is 2.15–4.62, too wide to support
+the inference; (3) "Finnish forests are 2× Gower's productivity" — compared Korhonen's *current
+annual increment* against Gower's *mean annual increment* (biomass ÷ stand age, stands averaging
+99 yr); the factor is largely definitional and Gower's stands are selected for having complete NPP
+budgets, not for representing Finnish managed forest.
+
+**Also established (Zenodo deposit + YaYasso):** `J̄` is a flux (biomass × turnover, Liski 2006
+rates); it **includes harvest residues and natural mortality** (both previously assumed missing)
+and **excludes understorey**. Component legend: `nwl` = foliage + fine roots, `fwl` = branches +
+coarse roots + stem/bark, `cwl` = stumps. The Zenodo DOI **is now live** (CLAUDE.md says it isn't).
+
+**➡ OPEN QUESTION FOR B. TUPEK — one line:** which fine-root biomass model and turnover rate were
+used? YaYasso variants span foliage×0.18–2.5 for biomass and ×0.5–0.85 for turnover — a ~20× range
+in the dominant `nwl` component, and exactly the term L&H exclude ("The uncertainty in these leaf
+mass-to-fine root ratios was not included in our analyses"), which makes their ±10% a floor. One
+variant (`fineroot.total.tsum`) is annotated as **including understorey**, which would make the
+1.30 centre a partial double-count.
+
+**SEQUENCING: wait for 654390–92 → analyse → then decide.** Do not bundle the window change with
+the σ_input prior tightening (§0-ter) or anything else.
+
+## ✅ 0. RESOLVED 2026-08-14 — IDENTIFY AND READ THE ROIHU RUN
 
 > **Do this before anything else, and do not assume what it is.**
 >

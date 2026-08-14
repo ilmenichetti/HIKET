@@ -17,6 +17,84 @@ fontsize: 11pt
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
+# ADDENDUM 2026-08-14 --- the ceiling in this note is anchored on the wrong statistic {-}
+
+> **Everything below documents the original design and remains the record of why
+> `flux_pair` exists and what it fixed. This addendum supersedes only the choice of
+> the ceiling.** Decided, **not yet implemented**; full write-up with tables in
+> `manuscript/M&M_parameterization_working_document.tex`, section "Prior
+> specification: the litter-input flux window".
+
+**The defect.** `sigma_input` is a single global scalar, so `sigma_input × J̄` is a
+**national mean** effective flux. The ceiling of 8.7 tC/ha/yr adopted below is Gower
+et al. (2001)'s Class I evergreen **maximum** (912 gC m^-2^ yr^-1^), i.e. the most
+productive single stand in a *global* boreal compilation. **A mean has been bounded
+by a maximum**, which is why the constraint has never bound: posterior effective
+fluxes are 4.99--6.56 tC/ha/yr, all inside. The *direction* of the bound is sound
+(`litter ≤ NPP` is an identity); the statistic and the population are not.
+
+**⚠ Unit trap.** Gower et al. (2001) reports in **gC** m^-2^ yr^-1^ (Table 4
+caption). Zheng et al. (2004) reports in **dry matter**. Proof is internal: Zheng
+cites Gower's world-boreal TNPP as 109--1827 (mean 892) where Gower's own Appendix A
+gives 218--912 (mean 424) gC --- a ratio of exactly 2.00--2.10. Zheng's headline 563
+is therefore **2.81**, not 5.63, tC/ha/yr. Any comparison mixing the two is out by 2×.
+
+**The Finland-relevant numbers** (all understorey-inclusive, carbon units):
+
+| source | quantity | tC/ha/yr |
+|---|---|---|
+| Tupek, Zenodo 10.5281/zenodo.19736499 | tree litter `J̄` (**no** understorey) | 2.51 |
+| Lehtonen & Heikkinen (2015) | total litter | 2.70 |
+| Zheng et al. (2004) gridded, FI+SE (DM→C) | total NPP | ~2.81 |
+| Gower et al. (2001) **Nordic** Class I | total NPP | 3.21 (2.15--4.62) |
+| Gower et al. (2001) Class I evergreen | total NPP | 3.87 (2.14--9.12) |
+| **ours, calibrated** | `sigma_input × J̄` | **4.99--6.56** |
+
+**Decision: narrow the window to `[0.05, 4.62]`**, anchored on Gower's **Nordic**
+Class I maximum (462 gC m^-2^ yr^-1^). This fixes the statistic and the population,
+keeps the project's "widest defensible" principle (it assumes Finnish forests are as
+productive as the most productive stand in the Nordic sample), and depends on none of
+the arguments that failed scrutiny. It gives `sigma_input ≤ 1.84`, which binds in all
+six models. Zheng's 2.81 was rejected as a ceiling because it lies **below the prior
+centre** (`sigma_input = 1.30` ⇒ flux 3.26), so the centre would not be representable,
+and because at only 4% above LUKE's own total litter it amounts to asserting the
+inventory as exact.
+
+**⚠ Narrowing tightens the prior as well as the wall.** Because the transform is a
+scaled logit onto the window, at fixed `sigma_ppm = 0.50` the ±1 ppm range moves from
+`sigma_input ∈ [0.93, 1.72]` to `[1.09, 1.47]`. Decide explicitly whether that is
+wanted, or whether `sigma_ppm` should rise to compensate.
+
+**⚠ Three claims that did NOT survive scrutiny --- do not revive them.** (1) "our flux
+is physically impossible" --- it exceeds the Nordic *mean* but not the Nordic *range*;
+(2) "LUKE's litter product is biased high" --- its 2.70 is 84% of Gower's Nordic mean,
+but that range (2.15--4.62) is too wide to support the inference; (3) "Finnish forests
+are 2× Gower's productivity" --- this compared Korhonen's *current annual increment*
+with Gower's *mean annual increment* (biomass ÷ stand age, stands averaging 99 years);
+the factor is largely definitional, and Gower's stands are selected for having complete
+NPP budgets, not for representing Finnish managed forest.
+
+**What `J̄` actually contains** (Zenodo deposit + the `YaYasso` implementation of the
+LUKE chain): it is a **flux** (biomass × turnover, Liski et al. 2006 rates); it
+**includes harvest residues and natural mortality** --- both previously assumed missing
+--- and **excludes understorey**, which is what the 1.30 centre stands in for. Legend:
+`nwl` = foliage + fine roots, `fwl` = branches + coarse roots + stem/bark, `cwl` =
+stumps. **Open question for B. Tupek:** which fine-root biomass model and turnover rate
+were used? `YaYasso` variants span foliage × 0.18--2.5 (biomass) and × 0.5--0.85
+(turnover) --- a ~20-fold range in the dominant `nwl` component, and exactly the term
+Lehtonen & Heikkinen exclude ("The uncertainty in these leaf mass-to-fine root ratios
+was not included in our analyses"), which makes their ±10% a floor. One variant
+(`fineroot.total.tsum`) is annotated as *including understorey*, which would make the
+1.30 centre a partial double-count.
+
+**Sequencing.** Wait for Roihu jobs 654390--654392 (Yasso07/15/20, corrected target),
+analyse, then decide. Do not bundle with the `sigma_input` prior tightening.
+
+Appendix diagnostic figure: `manuscript/figures/SX_input_vs_literature.png` (⚠ **not
+for production** --- several comparisons on it are deliberately not like-for-like).
+
+\newpage
+
 # Summary
 
 `sigma_input` multiplies the litter forcing every model integrates. Under the

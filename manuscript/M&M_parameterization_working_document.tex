@@ -273,6 +273,151 @@ $\sobs$ is estimated externally from the observation campaigns and held fixed. T
 separate model-error term.
 
 % =====================================================================
+\section{Prior specification: the litter-input flux window}\label{sec:priorspec}
+
+\emph{Added 2026-08-14. This section documents a defect in the \texttt{flux\_pair} window, the
+literature that bounds it, and the replacement decided on. Nothing here is implemented --- see
+the boxed proposal at the end.}
+
+\subsection{The defect: the window bounds a mean with a maximum}
+
+The window is $[a,b] = [0.05,\,8.7]$\,tC\,ha$^{-1}$\,yr$^{-1}$, anchored on the boreal
+total-NPP range of Gower et al.\ (2001). Two things are wrong with it, and neither is the
+\emph{direction} of the bound --- $\text{litter}\le\text{NPP}$ is a true inequality and using NPP
+as a ceiling is legitimate.
+
+\begin{enumerate}
+\item \textbf{Wrong statistic.} $\sinput$ is a single global scalar, so $\sinput\times\bar{J}$ is
+a \emph{national mean} effective flux. The ceiling $8.7$ is Gower's Class~I evergreen
+\emph{maximum} ($912$\,g\,C\,m$^{-2}$\,yr$^{-1}$ $=9.12$), i.e.\ the most productive single stand
+in a global boreal compilation. Bounding a mean with a maximum is why the constraint has never
+bound: the posterior effective fluxes are $4.99$--$6.56$, all comfortably inside.
+\item \textbf{Wrong population.} Gower's global boreal range spans sparse woodland to the most
+productive stands. The Nordic subset is much narrower: total NPP mean $321$, range $215$--$462$
+g\,C\,m$^{-2}$\,yr$^{-1}$ ($3.21$; $2.15$--$4.62$\,tC\,ha$^{-1}$\,yr$^{-1}$).
+\end{enumerate}
+
+Consequently the statement recorded in \S\ref{sec:current} --- that the bound ``may no longer be
+load-bearing'' because the TP2/TP3 pathology is gone --- is only half right. It is not
+load-bearing because it was never calibrated to bound the quantity it is applied to.
+
+\subsection{What the literature actually says}
+
+\begin{center}\small
+\begin{tabular}{@{}llrl@{}}
+\toprule
+source & quantity & tC\,ha$^{-1}$\,yr$^{-1}$ & understorey \\
+\midrule
+Tupek (Zenodo 10.5281/zenodo.19736499) & tree litter, $\bar{J}$ & 2.51 & \textbf{excluded} \\
+Lehtonen \& Heikkinen (2015) & total litter & 2.70 & included \\
+Zheng et al.\ (2004) gridded, FI+SE & total NPP (DM$\to$C) & $\approx$2.81 & included \\
+Gower et al.\ (2001) Nordic Class~I & total NPP & 3.21 (2.15--4.62) & included \\
+Gower et al.\ (2001) Class~I evergreen & total NPP & 3.87 (2.14--9.12) & included \\
+\midrule
+\textbf{ours, calibrated} & $\sinput\times\bar{J}$ & \textbf{4.99--6.56} & (should include) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{caveat}
+\textbf{A unit trap that inflated the ceiling by a factor of two.} Gower et al.\ (2001) reports in
+\textbf{g\,C}\,m$^{-2}$\,yr$^{-1}$ explicitly (Table~4 caption). Zheng et al.\ (2004) reports in
+\textbf{dry matter}. The proof is internal: Zheng cites Gower's world-boreal TNPP as
+$109$--$1827$ (mean $892$) where Gower's own Appendix~A gives $218$--$912$ (mean $424$)
+g\,C\,m$^{-2}$\,yr$^{-1}$ --- a ratio of exactly $2.00$--$2.10$. Zheng's headline
+$563$\,g\,m$^{-2}$\,yr$^{-1}$ is therefore $\approx2.81$, not $5.63$, tC\,ha$^{-1}$\,yr$^{-1}$.
+Any comparison mixing the two is out by $2\times$.
+\end{caveat}
+
+\begin{caveat}
+\textbf{Three claims that did NOT survive scrutiny and must not be revived.}
+(i) \emph{``Our flux is physically impossible.''} It exceeds the Nordic mean but not the Nordic
+range, and NPP estimates for Finland are uncertain enough that ``impossible'' is not supportable.
+(ii) \emph{``LUKE's litter product is biased high.''} Its $2.70$ is $84\%$ of Gower's Nordic mean
+NPP, which looks high --- but Gower's Nordic range is $2.15$--$4.62$, wide enough that the
+inference does not hold. (iii) \emph{``Finnish forests are twice as productive as Gower's
+stands.''} This came from comparing Korhonen's \emph{current annual increment} with Gower's
+\emph{mean annual increment} (biomass$\,\div\,$stand age) on stands averaging 99 years --- the
+factor is largely definitional, and Gower's stands are a sample selected for having complete NPP
+budgets, not a sample representative of Finnish managed forest.
+\end{caveat}
+
+\subsection{What $\bar{J}$ actually contains --- two assumptions were wrong}
+
+Established from the Zenodo deposit and from the \texttt{YaYasso} implementation of the LUKE
+calculation chain: $\bar{J}$ is a \emph{flux} (biomass $\times$ turnover, Liski et al.\ 2006
+rates), covering foliage, branches, stem$+$bark, stumps, coarse and fine roots, resolved as
+\texttt{nwl} (foliage $+$ fine roots), \texttt{fwl} (branches, coarse roots, stem$+$bark) and
+\texttt{cwl} (stumps). It \textbf{includes harvest residues and natural mortality} --- both had
+been assumed missing --- and \textbf{excludes understorey}, which is what $\sinput$'s centre of
+$1.30$ stands in for.
+
+The largest remaining uncertainty is the fine-root chain, which is also the dominant
+\texttt{nwl} term: foliage mass $\to$ fine-root biomass ($\times 0.18$--$2.5$ depending on which
+\texttt{YaYasso} variant is used) $\to$ litter ($\times 0.5$--$0.85$ by region). That is a
+$\sim$20-fold range in a dominant component, and it is precisely the term Lehtonen \& Heikkinen (2015)
+exclude: \emph{``The uncertainty in these leaf mass-to-fine root ratios was not included in our
+analyses.''} Their $\pm10\%$ is therefore a floor. \textbf{Open question for B.\ Tupek: which
+fine-root biomass model and turnover rate were used?} One variant
+(\texttt{fineroot.total.tsum}) is annotated as including understorey, which would make the
+$1.30$ centre a partial double-count.
+
+\subsection{Candidate windows, and what each would do}
+
+\begin{center}\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+window ceiling & $\sinput\le$ & binds? & implied MRT Y07/Y15/Y20 \\
+\midrule
+$8.70$ current (Gower global max) & 3.46 & \textbf{no} & 15.2 / 21.9 / 17.5 (unchanged) \\
+$4.62$ Gower et al.\ (2001) Nordic max & \textbf{1.84} & all six & 21.3 / 25.8 / 24.0 \\
+$2.81$ Zheng et al.\ (2004) gridded mean & 1.12 & all six & 35.0 / 42.4 / 39.5 \\
+\midrule
+\multicolumn{4}{@{}l@{}}{\emph{published, for reference:} 33.5 / 30.4 / 19.0} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A constraint \emph{binds} when the value the likelihood would choose lies outside it, so that the
+bound rather than the data sets the result. The current window permits everything the data want
+and therefore constrains nothing.
+
+Two consequences of narrowing the window are easy to miss. First, because \texttt{flux\_pair} is
+a scaled logit onto $(a,b)$, narrowing the window also \emph{tightens the prior} at fixed
+\texttt{sigma\_ppm}: $\pm 1$\,ppm moves from $\sinput\in[0.93,1.72]$ to $[1.09,1.47]$. Second,
+the Zheng et al.\ (2004) ceiling is \textbf{not adoptable as a drop-in}: the prior centre
+($\sinput = 1.30 \Rightarrow F = 3.26$) lies \emph{outside} a window capped at $2.81$, so the
+centre is not representable and re-centring would be required. Since $2.81$ is only $4\%$ above
+LUKE's own total litter, that option amounts to asserting the inventory as near-exact.
+
+\begin{proposal}{narrow the input-flux window to the Nordic NPP maximum --- NOT YET IMPLEMENTED}
+Replace \verb|<MODEL>_INPUT_FLUX_WINDOW <- c(0.05, 8.7)| with \verb|c(0.05, 4.62)| in the six
+\texttt{Prior\_specs/*\_priors.R}, anchoring on Gower et al.\ (2001)'s Nordic Class~I maximum
+($462$\,g\,C\,m$^{-2}$\,yr$^{-1}$) rather than the global boreal maximum. No engine change:
+\texttt{flux\_pair} reads the window from the parameter group.
+
+\textbf{Why this one.} It fixes the statistic (a Nordic bound, not a global one) and keeps the
+project's ``widest defensible'' principle --- it assumes Finnish forests are as productive as the
+most productive stand in Gower's Nordic sample. It does not depend on the budget-closure
+argument, on Korhonen's increment figures, or on accepting LUKE's litter estimate as exact, all
+of which failed scrutiny (caveat above).
+
+\textbf{Expected consequences.} $\sinput$ binds in all six models; the misfit must then move
+along the level ridge into longer MRT, or show up as degraded fit. Both are visible outcomes,
+which is the point. \textbf{Watch \texttt{sigma\_input} R-hat and ESS}: the parameter will sit
+against a wall it has never previously touched, and pile-up near the boundary is the main risk.
+The MRT projections above assume $\text{MRT}\times\sinput$ is conserved, which holds best for
+Yasso07 ($r=-0.79$) and worst for Yasso20 ($r=-0.57$); Yasso20 may take the hit as fit rather
+than as MRT.
+
+\textbf{Sequencing.} Do \emph{not} bundle this with anything else. Wait for the corrected-target
+runs (Yasso07/15/20, jobs 654390--654392) to land, analyse them, then decide. Documentation to
+follow the code change: \texttt{documentation/sigma\_input\_physical\_bounds\_note.Rmd},
+\texttt{appendices/appendix\_sigma\_input.tex}, the Tier-3 row in \texttt{HIKET\_calibration.Rmd},
+\texttt{CLAUDE.md}, and the NPP envelope band in \texttt{build\_F9\_auxiliary\_sigmas.R}.
+\end{proposal}
+
+% =====================================================================
 \section{State as of 2026-08-13 --- authoritative}\label{sec:state0813}
 
 \emph{This section supersedes \S\ref{sec:current} (Likelihood) and \S\ref{sec:target} where they

@@ -685,7 +685,37 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
-- **🚨 NEXT SESSION STARTS BY IDENTIFYING THE ROIHU RUN (2026-08-13).** A corrected-target
+- **⏳ IN FLIGHT (2026-08-14): jobs 654390/654391/654392 = Yasso07/15/20**, corrected target,
+  σ=0.80 + Student-t ν=6, 160 GB, launched from `37d9dfe`, on separate nodes. Identical settings to
+  the completed SP1/TP2/TP3 (`20260813_0803*`, R-hat ≤1.003) so all six sit on one footing.
+  Results ~2026-08-15. Verified at launch: 1205 obs, 40 cores/chain, 5×50000.
+  ⚠ **Submit with** `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'` — `MODULEPATH`
+  is interactive-only; a bare `ssh … sbatch` dies in 1 s.
+  **The OOM history is chronic** (ceiling raised 16→40→80 GB since July, MaxRSS pinned at 12–16 GB
+  at every level because `JobAcctGatherFrequency` is 10 s). All six scripts now run
+  `Calibration_real_data_transient/cgroup_memlog.sh`, logging `memory.peak` and
+  `memory.events:max` at **both** job and step cgroup — the step's `memory.max` is `UNLIMITED`, so
+  its breach counter alone reads 0 forever. **Verdict: `events:max > 0` ⇒ our own ceiling (and
+  `peak` sizes it); `max = 0` with an `oom_kill` ⇒ the node did it and more memory buys nothing.**
+  Deferred deliberately: per-chain checkpointing, and the fork-cluster rewrite (worth only ~3% —
+  dispatch is 8.3 ms of a 227 ms evaluation). Memory: [[roihu-oom-instrumentation]].
+
+- **⭐⭐ σ_input FLUX WINDOW IS ANCHORED ON THE WRONG STATISTIC (2026-08-14) — decided, NOT
+  implemented.** `σ_input` is one global scalar ⇒ `σ_input × J̄` is a **national mean**; the 8.7
+  ceiling is Gower 2001's **global** Class I evergreen **maximum**. **Bounding a mean with a
+  maximum** is why it has never bound (posterior effective fluxes 4.99–6.56, all inside).
+  **Decided: `[0.05, 4.62]`** (Gower **Nordic** Class I max) ⇒ σ_input ≤ 1.84, binds all six.
+  ⚠ **UNIT TRAP: Gower 2001 = gC, Zheng 2004 = DRY MATTER** (Zheng cites Gower's world TNPP as
+  109–1827 where Gower's own table gives 218–912 gC — ratio exactly 2.00–2.10); Zheng's 563 is
+  **2.81**, not 5.63 tC/ha/yr. ⚠ Narrowing also **tightens the prior** (scaled logit onto the
+  window). ⚠ Three claims died and must not be revived — "physically impossible", "LUKE is biased
+  high", "Finnish forests are 2× Gower's" (that last compared *current annual increment* with
+  Gower's *MAI*). **Also corrected: `J̄` INCLUDES harvest residues and natural mortality** (both
+  previously assumed missing) and excludes understorey; Zenodo DOI 10.5281/zenodo.19736499 is now
+  **live**. Write-up: M&M §"Prior specification: the litter-input flux window", `NEXT_SESSION.md`
+  §0-quater. Memory: [[sigma-input-physical-bounds]].
+
+- **✅ RESOLVED 2026-08-14 — NEXT SESSION STARTS BY IDENTIFYING THE ROIHU RUN (2026-08-13).** A corrected-target
   production run is believed to have been launched in an earlier session, but that is **unverified**
   and `Data/` may not have been synced first. **Decisive check in the launch log: 1205 observations /
   456 calib-ready = the CORRECTED target; 1269 = the OLD one** (discard and relaunch after rsync).
