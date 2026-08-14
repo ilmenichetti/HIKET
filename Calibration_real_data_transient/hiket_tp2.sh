@@ -17,10 +17,21 @@
 #   All six models sit at 12.1-14.6 GB steady state, and TP3 used MORE than SP1
 #   (14.55 vs 14.30) yet survived -- so the three 40 GB survivors were lucky, not
 #   lighter. 80 GB restores the ~5.5x headroom the two Yasso scripts have always had.
-#SBATCH --mem-per-cpu=2000
+# mem-per-cpu 2000 -> 4000 (80 -> 160 GB) 2026-08-14. NOT a diagnosis: the peak
+# is unmeasured, and 12-16 GB was reported at both 40 and 80 GB. It is headroom
+# while cgroup_memlog.sh measures the real requirement, plus it makes SLURM less
+# likely to co-locate all three Yasso jobs on one node (619207-9 died together
+# on rc5143). Size this from memory.peak once a full run has been logged.
+#SBATCH --mem-per-cpu=4000
 # TP2 is pure R; no Fortran. 8 free params (two-pool update loop), slightly
 # more than SP1; finishes well inside the 36h walltime.
 module load r-env
+# Fail loudly if r-env did not put Rscript on PATH. `module` is undefined in
+# non-interactive shells -- MODULEPATH is set only for interactive ones -- so a
+# job submitted from a bare ssh command dies in ~1 s with a confusing error
+# (probe jobs 652818/652841/653065 all burned that way). Submit from a shell
+# that has already run `module load r-env`.
+command -v Rscript >/dev/null || { echo "FATAL: Rscript not on PATH after 'module load r-env' -- submit from a shell where the CSC module system is initialised"; exit 1; }
 if test -f ~/.Renviron; then
     sed -i '/TMPDIR/d' ~/.Renviron
 fi
@@ -52,4 +63,19 @@ export SINGULARITYENV_SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 # container, and a bare export never reaches R.
 export SINGULARITYENV_HIKET_SIGMA_TOTAL=0.80
 export SINGULARITYENV_HIKET_LIK_DF=6
+# ---- memory instrumentation (2026-08-14) ----------------------------------
+# Record the cgroup high-water mark and the limit-breach counter for the WHOLE
+# run. sacct samples every 10 s and has reported only 12-16 GB at every ceiling
+# ever tried (16 -> 40 -> 80 GB), so it cannot distinguish a genuine breach of
+# our own limit from a global OOM kill under node pressure. The job cgroup's
+# memory.events:max settles it. See cgroup_memlog.sh.
+MEMLOG=/scratch/project_2019134/HIKET/Calibration_real_data_transient/progress_logs/memlog_${SLURM_JOB_ID}.csv
+bash Calibration_real_data_transient/cgroup_memlog.sh sample "$MEMLOG" &
+MEMLOG_PID=$!
+
 srun Rscript --no-save Calibration_real_data_transient/run_TP2_transient_calibration.R
+SRUN_RC=$?
+kill $MEMLOG_PID 2>/dev/null
+bash Calibration_real_data_transient/cgroup_memlog.sh summary "$MEMLOG"
+exit $SRUN_RC
+
