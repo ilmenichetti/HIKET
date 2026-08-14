@@ -46,6 +46,12 @@ if ! command -v module >/dev/null 2>&1; then
   [ -r /usr/share/lmod/lmod/init/bash ] && source /usr/share/lmod/lmod/init/bash
 fi
 module load r-env
+# NB if the guard below trips: MODULEPATH is unset, i.e. this was submitted from
+# a shell where CSC's module system was never initialised. Sourcing lmod's init
+# defines `module` but NOT MODULEPATH, and /etc/profile.d/zz-csc-env.sh only sets
+# it for interactive shells -- so submit with
+#   ssh roihu 'bash -ic "module load r-env && cd <repo> && sbatch <this>"'
+# which is what the production hiket_*.sh scripts implicitly rely on.
 command -v Rscript >/dev/null || { echo "[probe] FATAL: Rscript not on PATH after module load"; exit 1; }
 echo "[probe] Rscript: $(command -v Rscript)"
 
