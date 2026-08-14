@@ -33,9 +33,18 @@
 # Deliberately identical to production in the ways that matter: 40 workers,
 # 80 GB, full plot set, same error model. Only the iteration count is cut.
 # =============================================================================
-# Load r-env FIRST, exactly as the production hiket_*.sh scripts do. Doing it
-# later (after `set -u` and the sampler subshell) left `module` undefined and
-# Rscript off PATH -- job 652818 died in 1 s.
+# Load r-env FIRST, before the sampler subshell.
+#
+# `module` is NOT defined in non-interactive shells on Roihu -- even `bash -lc`
+# on the login node cannot find it. The production hiket_*.sh scripts get away
+# with a bare `module load` only because they are submitted from an interactive
+# session that already ran it, and SLURM exports that environment. A job
+# submitted from a plain ssh command inherits nothing (652818, 652841 both died
+# here). Source lmod explicitly so this script does not depend on the
+# submitter's shell.
+if ! command -v module >/dev/null 2>&1; then
+  [ -r /usr/share/lmod/lmod/init/bash ] && source /usr/share/lmod/lmod/init/bash
+fi
 module load r-env
 command -v Rscript >/dev/null || { echo "[probe] FATAL: Rscript not on PATH after module load"; exit 1; }
 echo "[probe] Rscript: $(command -v Rscript)"
