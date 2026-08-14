@@ -134,3 +134,30 @@ centuries-steady input/climate). HIKET's repeated campaigns let us test the dyna
 *directly* and drop the equilibrium-start assumption — the contribution. (Caveat: the
 between-campaign mineral-soil QC issue, D3, partly compromises that repeated-stock advantage
 and must be stated.)
+
+---
+
+## `input_estimates/` — independent NPP, for bounding the litter-input flux (added 2026-08-14)
+
+PDFs are untracked (as elsewhere here); this records what they are and what they settle.
+
+- **Gower et al. 2001**, *Ecol. Appl.* — NPP and carbon allocation of boreal forest ecosystems.
+  **Reports in g C m⁻², explicitly (Table 4 caption), and its NPP includes an "Understory NPP" row.**
+  Nordic Class I: total NPP mean **321**, range **215–462** g C m⁻² yr⁻¹ (3.21; 2.15–4.62 tC/ha/yr).
+  Class I evergreen (global): mean 387, range 214–912 — **the 912 is where the current 8.7 flux
+  window ceiling comes from**, i.e. a global single-stand maximum.
+  ⚠ Gower's own caveat: mycorrhizal NPP is excluded, so "all the total NPP estimates are likely to
+  be underestimates" (Vogt et al. 1982 put mycorrhizae at ~15% of NPP).
+
+- **Zheng et al. 2004**, *J. Veg. Sci.* 15:161–170 — gridded NPP for Finland and Sweden from field
+  inventory + AVHRR. Above-ground NPP mean **408** (172–1091); **total NPP mean 563** (252–1426).
+  ⚠⚠ **THESE ARE DRY MATTER, NOT CARBON.** Proof is internal: Zheng cites Gower's world-boreal TNPP
+  as 109–1827 (mean 892) where Gower's own Appendix A gives 218–912 (mean 424) g C — a ratio of
+  exactly 2.00–2.10. So Zheng's 563 is **≈2.81**, not 5.63, tC/ha/yr. Mixing the two inflates any
+  NPP-based ceiling twofold.
+  ⚠ Not fully independent of the inventory lineage: it runs on NFI field data, so it is a different
+  *estimator*, not a different *data source*.
+
+**What they were used for:** M&M §"Prior specification: the litter-input flux window" — the decision
+to narrow the `flux_pair` window to `[0.05, 4.62]` (Gower's *Nordic* maximum) because the present
+ceiling bounds a **national mean** with a **global single-stand maximum**.
