@@ -4,8 +4,10 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 #   (a) sigma_input as EFFECTIVE LITTER FLUX vs the physical NPP envelope (bounded run only)
 #   (b) sigma_init as the below-equilibrium 1917 start (post-exploitation recovery)
 # Both are per-model forest plots sharing the same model rows, so they read as a pair.
-# The unbounded "before" run is NOT shown here (main story = bounded only); it lives in
-# the appendix (see build_F9_effective_flux.R -> appendix_unbounded_input.tex).
+# The unbounded "before" run is NOT shown (main story = bounded only). It used to have
+# its own figure, build_F9_effective_flux.R -> F9_effective_flux_vs_ceiling.png in
+# appendix_sigma_input.tex; both were DELETED 2026-08-17 (the builder's "old"
+# posteriors had been cleaned up, so it could no longer be regenerated).
 suppressMessages(library(BayesianTools))
 
 new <- as.list(RID)

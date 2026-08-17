@@ -76,7 +76,7 @@ for (mn in c("Yasso07","Yasso15","Yasso20")) {
            bty = "n", cex = 1.05, title = "Parameter class")
   }
 }
-mtext("KL(posterior || prior) per parameter -- fractions gain ~0 nats, sigma_input the most (all three Yassos); note y-axes differ",
+mtext("KL(posterior || prior) per parameter; note y-axes differ",
       side = 1, line = 0.8, outer = TRUE, cex = 0.85, col = "grey30")
 dev.off()
 cat("wrote F7_kl_three_yasso.png\n")

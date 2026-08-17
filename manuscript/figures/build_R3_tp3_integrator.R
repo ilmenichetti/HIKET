@@ -50,7 +50,7 @@ plot(1:n, eu_tot, type="l", col="#d01c8b", lwd=2.2, ylim=range(ex_tot,eu_tot),
 lines(1:n, ex_tot, col="#1a9850", lwd=2.4)
 legend("topright", c("explicit Euler (old)","exact matrix-exp (now)"), col=c("#d01c8b","#1a9850"), lwd=2.3, bty="n", cex=0.85)
 plot(tr$year, tr$soc_mean, type="l", col="#C26B51", lwd=2, xlab="Year", ylab="Mean SOC across plots (tC/ha)",
-     main="B . Real calibrated TP3 (exact): bounded oscillation survives", font.main=1, cex.main=0.95)
+     main="B . Real calibrated TP3 (exact)", font.main=1, cex.main=0.95)
 points(tr$year, tr$soc_mean, pch=19, cex=0.5, col="#C26B51")
 dev.off()
 cat(sprintf("Euler roughness %.3f vs exact %.4f (constant forcing); real-traj roughness %.3f\n",

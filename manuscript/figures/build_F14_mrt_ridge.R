@@ -40,7 +40,8 @@ suppressMessages(library(pals))     # kovesi diverging rainbow
 source("doublechecks/intrinsic_mrt_lib.R")     # setup(), mrt_fun(), ref
 source("manuscript/figures/model_palette.R")
 
-RID <- c(Yasso07 = "20260812_080941", Yasso15 = "20260812_080940", Yasso20 = "20260812_080940")
+source("manuscript/figures/run_ids.R")          # auto-selects current RUN_IDs
+RID <- RID[c("Yasso07", "Yasso15", "Yasso20")]  # this figure is the Yasso family only
 PUB <- c(Yasso07 = 33.47, Yasso15 = 30.38, Yasso20 = 19.03)   # published POINT MRT
 NS  <- Inf                                                     # use EVERY draw (see note)
 NB  <- 60L                                                     # ESTIMATION grid cells per axis

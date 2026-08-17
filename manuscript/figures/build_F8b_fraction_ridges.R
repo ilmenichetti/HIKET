@@ -48,7 +48,7 @@ make_fig <- function(model, rid, outfile, do_table = FALSE) {
   for (i in 1:nf) for (j in 1:nf) { v <- C[i, nf+1-j]
     if (abs(v) >= 0.3) text(i, j, sprintf("%.2f", v), cex = 0.6, col = if(abs(v)>0.7) "white" else "grey20") }
   abline(h = c(3.5,6.5,9.5), v = c(3.5,6.5,9.5), col = "grey55", lwd = 1.4)
-  mtext("same-pool blocks (A|W|E|N); strong blue = near -1 trade-off", side = 1, line = 3.1, cex = 0.72, col = "grey35")
+  mtext("same-pool blocks (A|W|E|N)", side = 1, line = 3.1, cex = 0.72, col = "grey35")
   # density ridge panels (top-2 same-pool anti-correlations)
   par(mar = c(4.2,4.4,2.6,1))
   for (i in 1:2) { a <- tb$a[i]; b <- tb$b[i]

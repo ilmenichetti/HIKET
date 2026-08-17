@@ -51,7 +51,6 @@ text(vmi$year[key], vmi$stock[key], vmi$label[key], pos=c(4,1,2,2), cex=0.62,
 abline(v=1917, col="#5e35b1", lwd=1.4, lty=3)
 text(1917, yl[2]-40, "1917\npre-init start", cex=0.62, col="#5e35b1", font=2, pos=4, offset=0.3)
 arrows(1917, 1560, 1917, 1360, length=0.08, col="#5e35b1", lwd=1.6)
-text(1917, 1345, "below-equilibrium\n=> sigma_init < 1", cex=0.6, col="#5e35b1", pos=4, offset=0.3)
 
 # --- SOC campaigns we calibrate against -------------------------------------
 soc <- data.frame(year=c(1985, 2006), name=c("VMI8 SOC\n(1985-86)", "Biosoil SOC\n(2006)"))
@@ -60,10 +59,8 @@ for (i in seq_len(nrow(soc))) {
   text(soc$year[i], 2600, soc$name[i], cex=0.6, col="#00695c", font=2, pos=2, offset=0.25)
 }
 
-title(main="F10b - Finnish forest history: a rising, non-stationary carbon base",
+title(main="Finnish forest history: growing stock",
       cex.main=1.0, font.main=1)
-mtext("A depleted, near-stationary base into the 1970s, then a sustained ~70% rise -> the non-equilibrium premise & rising litter inputs",
-      side=3, line=0.1, cex=0.72, col="grey35")
 mtext("Source: Korhonen, Raty et al. (2024) Silva Fennica 58(4) art. 24045 (NFI1-NFI13)",
       side=1, line=3.4, cex=0.6, col="grey45", adj=1)
 dev.off()

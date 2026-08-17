@@ -32,7 +32,7 @@ text(xj, calib, models, pos=3, offset=0.55, cex=0.68, col=col_m, font=2)
 legend("topright", bty="n", cex=0.8, pch=21,
        pt.bg=c("black","white"), col="black",
        legend=c("calibration", "independent holdout"))
-title(main="A · Pool-complexity axis: skill does not climb", cex.main=0.95, font.main=1)
+title(main="A · Pool-complexity axis", cex.main=0.95, font.main=1)
 
 ## ---- Panel B: climate-integration sub-axis (Yasso only) -------------------
 yx <- 1:3; yi <- 4:6
@@ -46,7 +46,7 @@ points(yx, hold[yi],  pch=21, bg="white",   col="#e65100", cex=1.6, lwd=1.8)
 points(yx, calib[yi], pch=21, bg="#e65100",  col="#e65100", cex=1.8, lwd=1.2)
 segments(yx, hold[yi], yx, calib[yi], col=adjustcolor("#e65100",0.5), lwd=1.2)
 text(yx, calib[yi], sprintf("%.3f", calib[yi]), pos=3, offset=0.6, cex=0.72, col="#e65100")
-title(main="B · Climate axis: monotone DOWN (07 > 15 > 20)", cex.main=0.95, font.main=1)
+title(main="B · Climate axis", cex.main=0.95, font.main=1)
 
 dev.off()
 cat("Wrote manuscript/figures/F6b_skill_vs_complexity.png\n")

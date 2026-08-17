@@ -35,8 +35,8 @@ OUT <- "manuscript/figures/SX_input_vs_literature.png"
 J_BAR <- 2.511   # Boris tree-litter cross-plot mean, corrected-target run 20260813
 
 # --- our calibrated effective flux, per model -------------------------------
-rid <- list(SP1="20260813_080305", TP2="20260813_080306", TP3="20260813_080306",
-            Yasso07="20260812_080941", Yasso15="20260812_080940", Yasso20="20260812_080940")
+source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
+rid <- as.list(RID)
 ours <- do.call(rbind, lapply(names(rid), function(m) {
   f <- sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds", m, rid[[m]])
   if (!file.exists(f)) return(NULL)
@@ -105,10 +105,8 @@ axis(2, at = seq(n - nrow(lit) - 0.6, by = -1, length.out = nrow(ours)),
 title_x <- grconvertX(0, "ndc", "user")   # left device edge, so long titles are not clipped
 mtext("Litter input to Finnish forest soil: inventory products vs independent NPP vs our calibration",
       side = 3, line = 3.6, at = title_x, adj = 0, cex = 0.92, font = 2, xpd = NA)
-mtext("APPENDIX DIAGNOSTIC — NOT FOR PRODUCTION.  Bars are reported RANGES (Gower, Zheng) or 95% intervals (L&H, ours):",
+mtext("Bars are reported ranges (Gower, Zheng) or 95% intervals (L&H, ours).",
       side = 3, line = 2.4, at = title_x, adj = 0, cex = 0.6, col = "grey30", xpd = NA)
-mtext("they are NOT comparable uncertainties.  NPP is an UPPER BOUND on litter, not an estimate of it —",
-      side = 3, line = 1.6, at = title_x, adj = 0, cex = 0.6, col = "grey30", xpd = NA)
 mtext("litter = NPP − biomass increment − stemwood removed − exudates.",
       side = 3, line = 0.8, at = title_x, adj = 0, cex = 0.6, col = "grey30", xpd = NA)
 legend("bottomright", bty = "n", cex = 0.66,

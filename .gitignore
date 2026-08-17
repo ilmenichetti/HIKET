@@ -104,3 +104,7 @@ doublechecks/delta_offset_*.rds
 Data/SOC_homogeneized/*
 !Data/SOC_homogeneized/*.R
 !Data/SOC_homogeneized/*.md
+
+# Local run snapshots (large, regenerable only by re-running the calibration).
+# Kept on disk + OneDrive as the comparison basis across prior changes; never in git.
+snapshots/

@@ -37,7 +37,7 @@ layers <- read.csv(file.path(SOCDIR, "soc_homogenized_layers.csv"), stringsAsFac
 plotd  <- read.csv(file.path(SOCDIR, "soc_homogenized_plot.csv"),   stringsAsFactors = FALSE)
 CA <- CAMPAIGN_ORDER
 
-meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_outlier, lm_added_1985)
+meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_outlier)
 band <- layers |>
   mutate(b = case_when(layer == "organic" ~ "organic",
                        layer %in% c("0-5cm","5-20cm","0-10cm","10-20cm") ~ "m0_20",
@@ -60,23 +60,13 @@ lit <- tibble(plot_id = as.integer(nn(3)), Krs = as.integer(nn(4)), REP = as.int
   filter(!is.na(plot_id), REP == 1, Krs == 101) |> select(plot_id, Biosoil, Komeetta) |>
   pivot_longer(-plot_id, names_to = "campaign", values_to = "LM")
 band <- band |> left_join(lit, by = c("plot_id", "campaign")) |>
-  # ⚠ 2026-08-12: the baseline now applies TREATMENT C — the 1985 organic layer
-# already contains the imputed LM. `lm_added_1985` (kg/ha, 0 for 2006/2024) records
-# how much, so OFH is recovered by subtracting it. Without this the 1985 "humus"
-# would silently include the litter and the whole comparison would invert.
-  mutate(LM = coalesce(LM, coalesce(lm_added_1985, 0) / 1000),
-         OFH = organic - LM)
+  mutate(LM = coalesce(LM, 0), OFH = organic - LM)
 
 W <- band |> select(plot_id, campaign, weight, OFH, LM, m0_20, m20_40, soc_deep_Mgha) |>
   pivot_wider(names_from = campaign, values_from = c(OFH, LM, m0_20, m20_40, soc_deep_Mgha))
 W$LM_VMI8_C <- W$LM_Biosoil        # treatment C: carry the plot's own 2006 LM back to 1985
 wm <- function(x, w) sum(x * w, na.rm = TRUE) / sum(w[!is.na(x)], na.rm = TRUE)
 cat(sprintf("balanced panel: %d plots\n", nrow(W)))
-
-# True mean interval, not the nominal 39 yr: the first campaign was sampled
-# 1986-1995 (mean ~1989), so 39 overstates it by ~11%. samp_year is in the baseline.
-.sy <- plotd$samp_year[plotd$campaign == "VMI8"]; .sy <- .sy[is.finite(.sy)]
-YRS_85_24 <- 2024 - mean(.sy)
 
 BANDS <- c("OFH", "LM", "m0_20", "m20_40", "soc_deep_Mgha")
 BLAB  <- c("humus\nOFH", "litter\nLM", "mineral\n0-20 cm", "mineral\n20-40 cm", "modelled\ntail")
@@ -102,7 +92,7 @@ TCOL <- c(A = "#B0B0B0", B = "#7FA8C4", C = "#1F4E79")
 TLTY <- c(A = 2, B = 1, C = 1)
 
 # =============================================================================
-png("manuscript/figures/S9_soc_change_by_depth.png",
+png("manuscript/figures/appendix_soc_change_by_depth.png",
     width = 12, height = 4.8, units = "in", res = 200)
 par(mfrow = c(1, 3), mar = c(4.6, 4.5, 3.9, 1.0), mgp = c(2.5, 0.7, 0), las = 1)
 sub <- function(txt) mtext(txt, side = 3, line = 0.35, cex = 0.62, col = "grey35")
@@ -135,11 +125,11 @@ for (k in names(TR)) {
   text(1984.2, y[1], sprintf("%.1f ", y[1]), adj = 1, cex = 0.72, col = TCOL[k], font = 2, xpd = NA)
 }
 legend("topleft", lwd = 2.6, lty = TLTY[names(TLAB)], col = TCOL[names(TLAB)],
-       legend = sprintf("%s   %+.3f Mg/ha/yr", TLAB, sapply(TR, function(y) (y[3] - y[1]) / YRS_85_24)),
+       legend = sprintf("%s   %+.3f Mg/ha/yr", TLAB, sapply(TR, function(y) (y[3] - y[1]) / 39)),
        bty = "n", cex = 0.72)
 sub("A and C coincide after 1985; A and B share it -- each pair differs in one campaign only")
 
 dev.off()
-cat("Wrote manuscript/figures/S9_soc_change_by_depth.png\n")
+cat("Wrote manuscript/figures/appendix_soc_change_by_depth.png\n")
 for (k in names(TR)) cat(sprintf("  %s: %s | 85-24 %+.3f | 06-24 %+.3f\n", k,
-  paste(sprintf("%.2f", TR[[k]]), collapse = " "), (TR[[k]][3]-TR[[k]][1])/YRS_85_24, (TR[[k]][3]-TR[[k]][2])/18))
+  paste(sprintf("%.2f", TR[[k]]), collapse = " "), (TR[[k]][3]-TR[[k]][1])/39, (TR[[k]][3]-TR[[k]][2])/18))

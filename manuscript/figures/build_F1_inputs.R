@@ -46,7 +46,7 @@ par(mar = c(3.4, 4.6, 2.4, 1.2), mgp = c(2.5, 0.7, 0), las = 1, cex.axis = 1.05,
 ccol <- c(nonwoody = "#2e7d32", finewoody = "#8d6e63", coarsewoody = "#4e342e")
 b1 <- NW; b2 <- NW + FW; b3 <- NW + FW + CW
 plot(NA, xlim = range(yr), ylim = c(0, max(b3) * 1.08), xlab = "", ylab = expression("Litter input (tC ha"^-1*" yr"^-1*")"),
-     main = "(a)  Litter input: composition and the rise-then-plateau")
+     main = "(a)  Litter input: composition")
 polyb <- function(lo, hi, col) polygon(c(yr, rev(yr)), c(lo, rev(hi)), col = col, border = NA)
 polyb(rep(0, length(yr)), b1, ccol["nonwoody"])
 polyb(b1, b2, ccol["finewoody"])
@@ -58,12 +58,12 @@ text(yr[2], b1[2] * 0.5, "non-woody\n(foliage + fine root)", pos = 4, cex = 0.78
 text(2018, (b1[yr==2018]+b2[yr==2018])/2, "fine woody", pos = 3, cex = 0.72, col = "white", font = 2)
 legend("bottomright", inset = c(0.01, 0.04), bty = "n", cex = 0.8, fill = ccol, border = NA,
        legend = c("non-woody litter", "fine woody", "coarse woody"))
-mtext(sprintf("total  %.1f -> %.1f (peak %d) -> %.1f tC/ha/yr;  non-woody drives ~55%% of the rise",
+mtext(sprintf("total  %.1f -> %.1f (peak %d) -> %.1f tC/ha/yr",
               b3[1], max(b3), peak_y, b3[length(b3)]), side = 3, line = -0.1, cex = 0.72, col = "grey35", adj = 0.02)
 
 ## (b) spatial gradient -- litter by latitude band (median + IQR) -----------
 plot(NA, xlim = range(yr), ylim = c(1.2, 3.8), xlab = "", ylab = expression("Litter input (tC ha"^-1*" yr"^-1*")"),
-     main = "(b)  A strong south–north productivity gradient (447 plots, latitude terciles)")
+     main = "(b)  South–north gradient (447 plots, latitude terciles)")
 for (b in c("South","Central","North")) {          # all bands first
   lo <- qtile(b, .25); hi <- qtile(b, .75); by <- as.integer(names(lo))
   polygon(c(by, rev(by)), c(lo, rev(hi)), col = adjustcolor(bcol[b], 0.13), border = NA)
@@ -74,7 +74,7 @@ for (b in c("North","Central","South")) {          # then medians, on top
 mn <- tapply(tot_py, band, mean, na.rm = TRUE)
 legend("topright", bty = "n", cex = 0.82, lwd = 2.6, col = bcol, bg = "white", box.col = NA,
        legend = sprintf("%s  (mean %.2f)", names(bcol), mn[names(bcol)]))
-mtext("shaded = interquartile spread across plots within band (the input heterogeneity that sigma_input engages)",
+mtext("shaded = interquartile spread across plots within band",
       side = 3, line = -0.1, cex = 0.72, col = "grey35", adj = 0.02)
 
 ## (c)(d) climate context -- demoted --------------------------------------

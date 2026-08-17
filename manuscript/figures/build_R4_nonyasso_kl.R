@@ -29,7 +29,7 @@ kl_from_kde <- function(pv, qv, n=512L){ pv<-pv[is.finite(pv)]; qv<-qv[is.finite
 cat("sourcing SP1/TP2/TP3 setups...\n")
 M <- lapply(names(rid), setup_model); names(M) <- names(rid)
 
-png("manuscript/figures/S5_nonyasso_kl.png", width=10, height=8, units="in", res=200)
+png("manuscript/figures/R4_nonyasso_kl.png", width=10, height=8, units="in", res=200)
 par(mfrow=c(3,1), mar=c(6.2,4.8,2.4,0.8), mgp=c(2.9,0.7,0), oma=c(1.5,0,0,0), cex.axis=1.0, cex.lab=1.15)
 for (mn in names(rid)) {
   mm <- M[[mn]]; kv <- vapply(mm$FREE, function(nm) kl_from_kde(mm$post[,nm], mm$prior[,nm]), numeric(1))
@@ -42,4 +42,4 @@ for (mn in names(rid)) {
 }
 mtext("KL by parameter, simple models; note y-axes differ",
       side=1, line=0.2, outer=TRUE, cex=0.8, col="grey30")
-dev.off(); cat("wrote S5_nonyasso_kl.png\n")
+dev.off(); cat("wrote R4_nonyasso_kl.png\n")

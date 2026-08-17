@@ -21,7 +21,7 @@ XLSX   <- "Data/Komeetta/Hannu/Komeetta 150526hi--.xlsx"
 layers <- read.csv(file.path(SOCDIR, "soc_homogenized_layers.csv"), stringsAsFactors = FALSE)
 plotd  <- read.csv(file.path(SOCDIR, "soc_homogenized_plot.csv"),   stringsAsFactors = FALSE)
 
-meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_outlier, lm_added_1985)
+meta <- plotd |> select(plot_id, campaign, weight, soc_deep_Mgha, soc_outlier)
 band <- layers |>
   mutate(b = case_when(layer == "organic" ~ "organic",
                        layer %in% c("0-5cm","5-20cm","0-10cm","10-20cm") ~ "m0_20",
@@ -44,10 +44,7 @@ lit <- tibble(plot_id = as.integer(nn(3)), Krs = as.integer(nn(4)), REP = as.int
   filter(!is.na(plot_id), REP == 1, Krs == 101) |> select(plot_id, Biosoil, Komeetta) |>
   pivot_longer(-plot_id, names_to = "campaign", values_to = "litter")
 band <- band |> left_join(lit, by = c("plot_id", "campaign")) |>
-  # ⚠ 2026-08-12: the baseline applies TREATMENT C, so the 1985 organic layer already
-  # contains the imputed LM; lm_added_1985 (kg/ha, 0 elsewhere) recovers OFH.
-  mutate(litter = coalesce(litter, coalesce(lm_added_1985, 0) / 1000),
-         humus = organic - litter,
+  mutate(litter = coalesce(litter, 0), humus = organic - litter,
          profile = organic + m0_20 + m20_40 + soc_deep_Mgha)
 
 W <- band |> select(plot_id, campaign, humus, m0_20, m20_40, profile) |>
@@ -68,34 +65,9 @@ rr <- sapply(PAIRS, function(p) sapply(BANDS, function(v) {
 colnames(rr) <- PLAB
 
 # =============================================================================
-# --- Bland-Altman: difference vs average, per campaign pair -------------------
-# Neither campaign is a gold standard, so plot the DIFFERENCE against the
-# AVERAGE of the two (not against one of them -- the difference contains -x, so
-# regressing on x alone manufactures a negative slope out of measurement error).
-#   intercept != 0  => constant bias
-#   slope     != 0  => PROPORTIONAL bias, the fingerprint of a scale/calibration
-#                      problem (density, volume) rather than an added amount
-ba <- function(x, y) {
-  ok <- is.finite(x) & is.finite(y) & x > 0 & y > 0
-  d <- y[ok] - x[ok]; m <- (x[ok] + y[ok]) / 2; f <- lm(d ~ m)
-  list(d = d, m = m, fit = f, bias = mean(d), sd = sd(d),
-       slope = coef(f)[2], p = summary(f)$coefficients[2, 4],
-       loa = mean(d) + c(-1.96, 1.96) * sd(d))
-}
-BA <- list(); for (i in seq_along(PAIRS)) {
-  pr <- PAIRS[[i]]
-  BA[[PLAB[i]]] <- ba(W[[paste0("m20_40_", pr[1])]], W[[paste0("m20_40_", pr[2])]])
-}
-cat("\nBland-Altman, mineral 20-40 cm:\n")
-for (k in names(BA)) cat(sprintf("  %-14s bias %+5.2f  slope %+0.3f (p=%.2g)  LoA %+.1f to %+.1f Mg/ha\n",
-  k, BA[[k]]$bias, BA[[k]]$slope, BA[[k]]$p, BA[[k]]$loa[1], BA[[k]]$loa[2]))
-cat("  (mineral 0-20 for contrast: 1985->2006 slope +0.165, 2006->2024 slope +0.339 --\n")
-cat("   proportional bias is present in EVERY pair, so it is a property of the mineral\n")
-cat("   measurement in general, not of 1985 alone.)\n")
-
-png("manuscript/figures/S10_soc_campaign_reliability.png",
-    width = 10.5, height = 8.8, units = "in", res = 200)
-par(mfrow = c(2, 2), mar = c(4.6, 4.5, 3.9, 1.0), mgp = c(2.5, 0.7, 0), las = 1)
+png("manuscript/figures/appendix_soc_campaign_reliability.png",
+    width = 12, height = 4.8, units = "in", res = 200)
+par(mfrow = c(1, 3), mar = c(4.6, 4.5, 3.9, 1.0), mgp = c(2.5, 0.7, 0), las = 1)
 sub <- function(txt) mtext(txt, side = 3, line = 0.35, cex = 0.62, col = "grey35")
 
 ## (a) repeatability by band ---------------------------------------------------
@@ -123,27 +95,7 @@ legend("topleft", pch = 16, col = PCOL[PLAB], bty = "n", cex = 0.76,
        legend = sprintf("%s  (r = %.2f)", PLAB, rr["m20_40", ]))
 sub("1985 is no noisier here than 2006 -- the subsoil problem is a level, not scatter")
 
-## (c) Bland-Altman of the subsoil ---------------------------------------------
-xr <- range(unlist(lapply(BA, `[[`, "m"))); yr <- c(-26, 26)
-plot(NA, xlim = xr, ylim = yr,
-     xlab = "Mean of the two campaigns, 20-40 cm (Mg C/ha)",
-     ylab = "Difference, later - earlier (Mg C/ha)",
-     main = "(c)  Campaign agreement (Bland-Altman)")
-abline(h = 0, col = "grey40", lwd = 1.4)
-for (i in seq_along(BA)) {
-  k <- names(BA)[i]; b <- BA[[k]]; cl <- PCOL[k]
-  abline(h = b$loa, col = adjustcolor(cl, 0.45), lty = 3)
-  points(b$m, b$d, pch = 16, col = adjustcolor(cl, 0.45), cex = 0.6)
-  xx <- seq(xr[1], xr[2], length.out = 50)
-  lines(xx, predict(b$fit, data.frame(m = xx)), col = cl, lwd = 2.6)
-}
-legend("topleft", bty = "n", cex = 0.72, lwd = 2.6, col = PCOL[PLAB],
-       legend = sprintf("%s   slope %+.2f%s", PLAB,
-                        sapply(BA, `[[`, "slope"),
-                        ifelse(sapply(BA, `[[`, "p") < 0.05, "*", "")))
-sub("dotted = 95% limits of agreement; a tilted line = PROPORTIONAL bias, i.e. a scale error")
-
-## (d) organic/mineral boundary trade-off --------------------------------------
+## (c) organic/mineral boundary trade-off --------------------------------------
 dh <- lapply(PAIRS, function(p) W[[paste0("humus_", p[2])]] - W[[paste0("humus_", p[1])]])
 dm <- lapply(PAIRS, function(p) W[[paste0("m0_20_", p[2])]] - W[[paste0("m0_20_", p[1])]])
 rb <- sapply(seq_along(PAIRS), function(i) {
@@ -151,7 +103,7 @@ rb <- sapply(seq_along(PAIRS), function(i) {
 rg <- c(-32, 32)
 plot(NA, xlim = rg, ylim = rg, xlab = expression(Delta * " humus layer (Mg C/ha)"),
      ylab = expression(Delta * " mineral 0-20 cm (Mg C/ha)"),
-     main = "(d)  Organic–mineral boundary")
+     main = "(c)  Organic–mineral boundary")
 abline(h = 0, v = 0, col = "grey80"); abline(0, -1, lty = 2, col = "grey40")
 for (i in seq_along(PAIRS)) {
   ok <- is.finite(dh[[i]]) & is.finite(dm[[i]])
@@ -164,5 +116,5 @@ legend("topright", bty = "n", cex = 0.72, lwd = c(2.4, 2.4, 1), lty = c(1, 1, 2)
 sub("a strong negative slope would mean carbon was reassigned, not gained")
 
 dev.off()
-cat("Wrote manuscript/figures/S10_soc_campaign_reliability.png\n")
+cat("Wrote manuscript/figures/appendix_soc_campaign_reliability.png\n")
 print(round(rr, 3)); cat(sprintf("boundary r: %s\n", paste(sprintf("%s %+.3f", PLAB, rb), collapse = "  ")))

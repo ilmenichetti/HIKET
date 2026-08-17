@@ -1,0 +1,53 @@
+% =====================================================================
+%  Appendix module: Posterior distribution of RMSE
+%  Modular subfile: compiles standalone (uses the main preamble) OR is
+%  pulled into the main document via \subfile{...}. See main file header.
+%  Figure built by: manuscript/figures/build_appendix_rmse_posterior.R
+%  Numbers also written to: manuscript/figures/appendix_rmse_posterior.csv
+% =====================================================================
+\documentclass[../HIKET_main_manuscript.tex]{subfiles}
+
+\begin{document}
+
+\section{Posterior distribution of RMSE}
+\label{app:rmse-posterior}
+
+The multimodel metrics table reports a single RMSE per model, computed from the
+posterior-mean prediction. That number says nothing about how tightly the fit is
+pinned: two calibrations with the same central RMSE can disagree with themselves
+by very different amounts. Here RMSE is recomputed for \emph{every} posterior
+draw, so each panel of Figure~\ref{fig:rmse-posterior} is a distribution whose
+location is the fit and whose width is the posterior's own disagreement about it.
+Calibration and held-out plots are drawn together, because the gap between them
+is the part that is not merely a fit statistic.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{figures/appendix_rmse_posterior.png}
+  \caption{Posterior distribution of RMSE, one panel per model, recomputed for each
+  of the 100 posterior draws. Blue = calibration plots, red = held-out plots;
+  dashed lines are medians; densities are scaled to a common height so shape is
+  comparable across panels. The horizontal range is held fixed across runs so that
+  successive calibrations can be laid side by side.}
+  \label{fig:rmse-posterior}
+\end{figure}
+
+Two features are worth noting. First, the six models are barely separated in
+central RMSE (calibration medians span $43.6$--$44.4$~tC\,ha$^{-1}$), which is the
+same message the skill metrics carry: structure buys very little here. Second, and
+less visible in a point estimate, the calibration--holdout gap is \emph{not}
+uniform across the ensemble. TP2 and TP3 achieve the best calibration RMSE of the
+six yet the worst on held-out plots ($43.6 \rightarrow 46.8$ and
+$43.6 \rightarrow 46.9$), while Yasso15's two distributions almost coincide
+($44.2 \rightarrow 44.4$). The models that fit the calibration set best are
+therefore the ones that generalise worst, and they are also the models carrying
+the largest input multipliers --- consistent with fit being bought by rescaling
+inputs rather than by resolving kinetics.
+
+This figure is intended as a comparison instrument across calibrations. Where a
+prior is tightened onto a physical referent, the expectation is that fit degrades;
+the quantity of interest is then not only how far the distribution moves but
+whether its width moves with it, since a constraint that shifts the location while
+leaving the spread untouched is doing something different from one that does both.
+
+\end{document}
