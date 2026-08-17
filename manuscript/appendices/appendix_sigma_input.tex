@@ -1,4 +1,22 @@
 % =====================================================================
+%  ⚠⚠ STALE AS OF 2026-08-17 -- DO NOT BUILD ON THIS WITHOUT REWRITING.
+%  Three specific problems:
+%   1. It argues the flux window [0.5, 8.7] tC/ha/yr. That window BOUNDS A MEAN
+%      WITH A MAXIMUM (sigma_input x J_bar is a national mean; 8.7 is Gower's
+%      GLOBAL Class I MAXIMUM), which is why it has never bound. Decided
+%      replacement: [0.05, 4.62] (Gower NORDIC max). NOT implemented.
+%   2. It calls TP2/TP3's effective fluxes "physically impossible". That claim is
+%      RETRACTED -- see memory sigma-input-physical-bounds, which lists it among
+%      three dead claims (with "LUKE is biased high" and "Finnish forests are 2x
+%      Gower's", the last of which compared current annual increment with an MAI).
+%   3. The prior it describes has since changed: sigma_input centre 1.30 -> 1.08
+%      (Lehtonen & Heikkinen total litter / Tupek tree-only J_bar) and Tier-3
+%      width 0.50 -> 0.25, wired 2026-08-17.
+%  The figure it used to carry (F9_effective_flux_vs_ceiling) was deleted the same
+%  day -- its builder could no longer be run, its "old" posteriors having been
+%  cleaned up.
+% =====================================================================
+% =====================================================================
 %  Appendix module: Physically-bounded litter-input priors
 %  Modular subfile: compiles standalone (uses the main preamble) OR is
 %  pulled into the main document via \subfile{...}. See main file header.

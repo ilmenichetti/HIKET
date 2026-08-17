@@ -463,7 +463,14 @@ decision record. Summary:
   Guardrail: fractions must stay **non-identified** (prior-pinned + ridge-
   correlated + low KL) — *not* "R-hat must stay poor" (that wrongly conflates
   non-identifiability with poor mixing; see Convergence expectations above).
-- **Tier 3 (`sigma_init`, `sigma_input`):** identical log SD 0.50 everywhere.
+- **Tier 3 (`sigma_init`, `sigma_input`):** identical log SD everywhere — **0.25 since 2026-08-17**
+  (was 0.50). Centres: `sigma_init` **0.90** (Korhonen growing stock ^ fitted elasticity 0.43),
+  `sigma_input` **1.08** (Lehtonen & Heikkinen total litter 2.70 ÷ Tupek tree-only J̄ 2.511 — the
+  understorey gap this parameter exists to close; was 1.30, unsourced). The two share a width by
+  design; keep it that way. Width derivation: elasticity CI 0.03 + volume-record uncertainty 0.07 +
+  structural litter-model error 0.09 → 0.12 in quadrature, prudential ×2. ⚠ Deliberately looser than
+  the evidence supports so the sampler is pulled, not walled — and **never re-tune it to land MRT on
+  a published value.**
 
 Concept: priors are homogeneous in *construction method, scale, constraints,
 and degrees of freedom* — **not** identical numbers (identical numbers is what
@@ -685,15 +692,52 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
-- **⏳ IN FLIGHT (2026-08-14): jobs 654390/654391/654392 = Yasso07/15/20**, corrected target,
-  σ=0.80 + Student-t ν=6, 160 GB, launched from `37d9dfe`, on separate nodes. Identical settings to
-  the completed SP1/TP2/TP3 (`20260813_0803*`, R-hat ≤1.003) so all six sit on one footing.
-  Results ~2026-08-15. Verified at launch: 1205 obs, 40 cores/chain, 5×50000.
+- **⏳ IN FLIGHT (2026-08-17): jobs 695142–695147 = SP1/TP2/TP3/Yasso07/Yasso15/Yasso20**, launched
+  from `ffce254`. **Tests ONE factor: the auxiliary-sigma priors** (widths 0.50→0.25, `sigma_input`
+  centre 1.30→1.08). Everything else byte-identical to the run it is compared against, so the
+  comparison is clean. Results ~2026-08-18.
+  **This is a `sigma_init` run, NOT an MRT run** — pre-registered: `sigma_init` up (prior and
+  likelihood are comparably informative), `sigma_input` down only slightly (the likelihood pins it
+  ~3.6× more sharply than the prior), **R² should FALL**. ⚠ Magnitudes are NOT predictable: a joint
+  reweight of the previous draws gave **ESS = 1 of 1001** because `sigma_init` must travel ~6.4 prior
+  SDs into unsampled territory. Direction only.
+  ⚠ **All three Yassos landed on the SAME node (rc5113)** — the configuration associated with the
+  2026-08-13 triple failure. Deliberately left to run: node reports 1.33 TB free and peaks are the
+  usual 9–14 GB, and if it dies we finally get a co-located failure WITH cgroup telemetry.
   ⚠ **Submit with** `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'` — `MODULEPATH`
   is interactive-only; a bare `ssh … sbatch` dies in 1 s.
-  **The OOM history is chronic** (ceiling raised 16→40→80 GB since July, MaxRSS pinned at 12–16 GB
-  at every level because `JobAcctGatherFrequency` is 10 s). All six scripts now run
-  `Calibration_real_data_transient/cgroup_memlog.sh`, logging `memory.peak` and
+
+- **✅ LANDED 2026-08-15/17 — the corrected-target run, all six on one footing.** SP1/TP2/TP3
+  `20260813_0803*`, Yasso07/15/20 `20260814_105614` / `_105757` / `_105907`. 1205 obs, σ=0.800,
+  log-normal + Student-t ν=6, `SIGMA_1985_INFL` 2.00, R-hat ≤1.009, ESS ≥1727. **Snapshotted whole
+  (823 MB) to `snapshots/20260817_pre_sigma_tightening/` with a MANIFEST** — `runs/` and
+  `diagnostics/` are gitignored and Roihu scratch is purged at 180 days, so this is the only
+  comparison basis for the next run. ⚠ `manuscript/figures/run_ids.R` auto-selects the NEWEST
+  posterior, so the next run silently overwrites every figure — that is why the snapshot exists.
+  **Results:** (1) intrinsic MRT **15.23 / 22.10 / 17.70** (Yasso07/15/20), unmoved from the previous
+  run as pre-registered; (2) **bias FLIPPED SIGN** — the uniform over-prediction is gone, now −0.6 to
+  −2.5 (calib), −1.2 to −4.0 (holdout), so the "level offset" thread needs re-reading; (3) the
+  **"2006→2024 is a source in all six" headline is DEAD** — it survives only in SP1 (−0.362) and
+  Yasso20 (−0.181); TP2/TP3/Yasso07/Yasso15 bracket the observed +0.117 well; (4) over the full span
+  every model is a sink but **1.6–2.5× too strong**, and over 1985→2006 **2.1–3.1×** — the misfit is
+  concentrated EARLY; (5) skill unchanged, R² 0.011–0.024 calib / 0.000–0.004 holdout.
+
+- **⭐⭐ THE OBSERVED-RATE REPORTING BASIS IS NOW DECIDED (Lorenzo, 2026-08-17): the baseline is the
+  SAME DATA the models are calibrated on** — balanced plot set (observed in all three campaigns,
+  **n=310**), unweighted, whole profile, **true observation years** from `obs_meta` (`year = 1984+idx`).
+  This is what `manuscript/figures/obs_basis.R` already implements. ⚠ **The choice is worth ~1.8× on
+  the headline rate:** 2006→2024 observed is **+0.117** on the balanced set but **+0.209** pairwise
+  (n=409). **Every "+0.209" in this file and in older memories is the PAIRWISE figure** and must be
+  restated before quoting. Full basis: 1985→2024 **+0.259** (Δt 35.1 yr), 1985→2006 **+0.399**.
+
+- **✅ THE CHRONIC OOM WAS BROKEN 2026-08-15 — BY NODE SEPARATION, NOT MEMORY.** Jobs
+  654390/654391/654392 completed (R-hat ≤1.009) with `cgroup_memlog` peaks of **14.5 / 12.0 / 14.0 GB
+  against the 160 GB requested** and `events:max = 0` throughout — i.e. the same 12–16 GB every dying
+  job ever reached, nowhere near any ceiling. The 16→40→80→160 GB ladder was treating the wrong
+  variable. ⚠ **Do NOT "save" memory by lowering the request:** a smaller ask lets SLURM pack more
+  jobs per node, which raises the node-level pressure that actually does the killing. The large
+  request functions as a de-facto node reservation; `--exclusive` is the explicit form.
+  Instrumentation retained: `Calibration_real_data_transient/cgroup_memlog.sh` logs `memory.peak` and
   `memory.events:max` at **both** job and step cgroup — the step's `memory.max` is `UNLIMITED`, so
   its breach counter alone reads 0 forever. **Verdict: `events:max > 0` ⇒ our own ceiling (and
   `peak` sizes it); `max = 0` with an `oom_kill` ⇒ the node did it and more memory buys nothing.**
@@ -744,7 +788,29 @@ noise the error model should absorb, not as data error.
   withdrawn (choosing the 1985 weighting to make the sink come out right is circular), but the
   **live question is now σ_init**, not the 1985 weighting. See "σ_init pre-run inversion" below.
 
-- **🚩 σ_init PRE-RUN INVERSION — the open defect (found 2026-08-07).**
+- **⭐⭐ σ_init IS A MEASURABLE RATIO, AND FIVE OF SIX MODELS VIOLATE IT (2026-08-17).**
+  The engine builds `J_1917 = J_t0_mean × σ_init × σ_input` while the forward run carries `σ_input`
+  only, so σ_input cancels and **σ_init = J₁₉₁₇ / J₁₉₈₅**. The NFI speaks to that directly: fitting
+  the litter–growing-stock elasticity on our own record gives **eps = 0.43 [0.23, 0.63]**, and with
+  Korhonen 2024 `V(1917)/V(1985) = 1400/1775 = 0.789` that gives **σ_init ≈ 0.90** — reproducing the
+  existing prior centre exactly. So the CENTRE was already right; the **0.50 WIDTH** was the defect,
+  letting posteriors sit **2.3–5.0× below** it (Yasso15 **0.182** = a 1917 soil equilibrated to 18%
+  of 1985 litter against a forest record saying 79%). That is how the models manufacture the sink:
+  start implausibly depleted, still be climbing out. Same symptom as overshooting 1985→2006 by 2–3×.
+  ⚠ The comparison is CONSERVATIVE — younger, more heavily cut 1917 stands shed *more* litter per m³,
+  which pushes the implied value ABOVE 0.90. The gap is a floor. Check:
+  `doublechecks/sigma_init_vs_growing_stock.R`. Fix wired 2026-08-17 (width → 0.25); memory
+  [[sigma-init-growing-stock-bound]], [[sigma-priors-tightened-20260817]].
+
+- **⚠ SUPERSEDED — the "0.818 inversion threshold" is OBSOLETE.** It came from
+  `σ_init > J_t0_mean/J_full_mean`, but **P1 (2026-08-07) moved the 1917 anchor to `J_t0_mean`**
+  (`tp2_wrapper_transient.R` ~354, `yasso15_wrapper_transient.R` ~282). Both ends now use the same
+  flux, so the pre-run builds iff **σ_init < 1**, full stop. Any "[0.64, 0.82] window" is wrong on
+  both ends. ⚠ `build_F4_initialization.R` still used `J_full_mean` until 2026-08-17 and misled an
+  entire analysis — **read the wrappers, not the figure scripts, for what a parameter means.**
+  Superseded text follows:
+
+- **🚩 ~~σ_init PRE-RUN INVERSION~~ (SUPERSEDED, see above).**
   The pre-run **declines** exactly when `σ_init > J_t0_mean/J_full_mean` (σ_input cancels; the
   pre-run starts *at* equilibrium and the flux moves monotonically). Per-plot ratio median
   **0.818** over 512 plots — this reproduces the 0.826 from the ablations and is a property of

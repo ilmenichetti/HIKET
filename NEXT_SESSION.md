@@ -1,38 +1,49 @@
 # NEXT SESSION — start here
 
-## 🚨 0-NOW. STATE AT 2026-08-14 — READ THIS FIRST
+## 🚨 0-NOW. STATE AT 2026-08-17 — READ THIS FIRST
 
-> **§0 below is RESOLVED.** The run was found, it IS the corrected target (`SOC obs: 1205 |
-> Calibration-ready plots: 456`, `SIGMA_1985_INFL 2.00`), and `Data/` had been rsynced after all.
-> SP1/TP2/TP3 completed (R-hat 1.000–1.003, ESS 4582–9713) and are synced to the Mac as
-> `20260813_0803*`. Yasso07/15/20 were **OOM-killed at 8 h** (jobs 619207–9).
+> **⏳ IN FLIGHT: jobs 695142–695147** (SP1/TP2/TP3/Yasso07/Yasso15/Yasso20), launched 2026-08-17
+> from commit `ffce254`. **Tests ONE factor: the auxiliary-sigma priors** — widths 0.50→0.25 and
+> `sigma_input` centre 1.30→1.08. Everything else is byte-identical to the run it will be compared
+> against, so the comparison is clean. Results ~2026-08-18.
 >
-> **⏳ IN FLIGHT: jobs 654390 / 654391 / 654392** (Yasso07/15/20), launched 2026-08-14 ~10:56 from
-> commit `37d9dfe`, RUN_IDs `20260814_1056*`/`1057*`/`1058*`. Identical settings to the completed
-> trio (corrected target, σ=0.80, Student-t ν=6) — **only memory and instrumentation changed**, so
-> all six will sit on one footing. Verified at launch: 1205 obs, 40 cores/chain, 5×50000, and the
-> three landed on **separate nodes** (rc4127 / rc4117 / rc5124). ~18 h ⇒ results 2026-08-15.
+> **READ IT AS A `sigma_init` RUN, NOT AN MRT RUN.** Pre-registered: `sigma_init` rises (prior and
+> likelihood are comparably informative, ~45% prior weight), `sigma_input` falls only slightly (the
+> likelihood pins it ~3.6× more sharply than the prior, ~7% weight), and **R² should FALL** — that is
+> the intended cost of a physically-bounded prior, not a regression. ⚠ **Magnitudes are NOT
+> predictable.** A joint reweight of the previous draws returned **ESS = 1 of 1001**, because
+> `sigma_init` has to travel ~6.4 prior SDs into territory the old posterior never visited. Direction
+> only. The real question is whether the 2006→2024 sink survives once the depleted-1917 crutch is
+> removed, and what it costs in log-likelihood (comparable here — σ stays 0.800).
 >
-> **The OOM is chronic, not new, and `sacct` cannot diagnose it.** Ceiling raised 16→40→80 GB
-> since July and it kept recurring; MaxRSS sat at 12–16 GB at *every* ceiling because accounting
-> samples at 10 s. All six `hiket_*.sh` now run `cgroup_memlog.sh`, which records `memory.peak`
-> (a kernel high-water mark) and `memory.events:max` at **both** job and step cgroup — the step's
-> `memory.max` is `UNLIMITED`, so reading its breach counter alone would report 0 forever.
-> **Verdict on landing: `events:max > 0` ⇒ our own ceiling, more memory is the fix and `peak`
-> sizes it; `max = 0` with an `oom_kill` ⇒ the node did it and more memory buys nothing.**
-> Memory bumped to 160 GB as headroom, explicitly **not** as a diagnosis.
-> Detail: memory `roihu-oom-instrumentation`. ⚠ Submit with
-> `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'` — `MODULEPATH` is interactive-only
-> and a bare `ssh … sbatch` dies in 1 s (memory `roihu-module-not-interactive`).
+> ⚠ **All three Yassos landed on the SAME node (rc5113)** — the configuration associated with the
+> 2026-08-13 triple failure. Left to run deliberately: the node reports 1.33 TB free and peaks are the
+> usual 9–14 GB, and if it dies we finally get a co-located failure WITH cgroup telemetry. Check
+> around hour 8, historically when the window opens.
 >
-> **NOT implemented, deliberately:** per-chain checkpointing (chains are saved only after all five
-> finish, so the Aug-13 kill discarded ~6.5 h of healthy sampling) and the fork-cluster rewrite
-> (`mclapply` forks 40 procs *per likelihood evaluation*, ~10M/run). Both were measured and
-> **deferred**: checkpointing because its value depends on a failure rate we just reduced;
-> the rewrite because it is worth only **~3%** runtime (dispatch is 8.3 ms of a 227 ms evaluation
-> — the model computation dominates). Both are bit-identical-safe if ever done; verified that
-> neither `mclapply` nor `parLapply` perturbs the parent RNG and that summed log-likelihoods match
-> bitwise.
+> **✅ THE CHRONIC OOM IS BROKEN — by NODE SEPARATION, not memory.** Jobs 654390–2 completed with
+> peaks 14.5/12.0/14.0 GB against 160 GB and `events:max = 0`. The 16→40→80→160 GB ladder was the
+> wrong variable. ⚠ **Never lower the memory request to "save" resources** — a smaller ask lets SLURM
+> pack more jobs per node, raising the node-level pressure that does the killing. The big request is
+> a de-facto node reservation. See memory `roihu-oom-instrumentation`.
+>
+> **✅ THE PREVIOUS RUN IS SNAPSHOTTED** to `snapshots/20260817_pre_sigma_tightening/` (823 MB, with
+> a MANIFEST holding all headline numbers). `runs/` and `diagnostics/` are gitignored and Roihu
+> scratch is purged at 180 days, and `manuscript/figures/run_ids.R` auto-selects the NEWEST
+> posterior — so without that snapshot the next run silently erases the comparison.
+>
+> **✅ REPORTING BASIS DECIDED:** balanced set (n=310), unweighted, whole profile, true obs years —
+> what `obs_basis.R` implements. ⚠ Worth ~1.8×: 2006→2024 observed is **+0.117** balanced vs
+> **+0.209** pairwise. Every older "+0.209" is the pairwise figure.
+>
+> **NEXT STEP IF THE POSTERIORS ARE STILL UNREASONABLE:** the correlated-error likelihood, written up
+> in full in `manuscript/HIKET_correlated_likelihood_proposal.tex` (compound symmetry, τ fixed at the
+> measured ICC, closed form, no new free parameter). ⚠ Verify `τ = 0` reproduces the current
+> log-likelihood exactly before trusting any implementation. Memory: `correlated-likelihood-proposal`.
+>
+> **Still open:** whether to keep F3 now that the merged F4 spans the same window; and
+> `appendix_sigma_input.tex` still argues the retired `[0.5, 8.7]` window and repeats the
+> "physically impossible" claim that our own records list as dead.
 
 ## ⭐⭐ 0-quinquies. THE EQUIFINALITY REACHES THE FORECAST — measured 2026-08-14
 
