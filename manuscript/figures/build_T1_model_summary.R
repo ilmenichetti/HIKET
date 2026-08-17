@@ -14,7 +14,10 @@ runs  <- "Calibration_real_data_transient/runs"
 # RUN_ID-keyed cache written by build_F4_initialization.R (run that first). It used to
 # be a fixed filename, which silently served the PREVIOUS calibration's forecast after a
 # re-calibration -- the 2084 column looked current and was not.
-.f4_cache <- sprintf("manuscript/figures/F4_cache_%s.rds",
+# NB "bal_": F4's cache holds BALANCED-plot-set aggregates since 2026-08-12. This path
+# must track build_F4_initialization.R's CACHE exactly -- it did not, and T1 failed hard
+# (correctly) rather than serving the pre-balanced cache.
+.f4_cache <- sprintf("manuscript/figures/F4_cache_bal_%s.rds",
                      substr(paste(RID[FIG_MODELS], collapse = "-"), 1, 120))
 if (!file.exists(.f4_cache))
   stop("F4 cache for the current RUN_IDs is missing -- run build_F4_initialization.R first:\n  ",

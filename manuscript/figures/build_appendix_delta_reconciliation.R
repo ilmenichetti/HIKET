@@ -9,6 +9,7 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 
 rid <- as.list(RID)
 source("manuscript/figures/model_palette.R")   # shared per-model palette
+source("manuscript/figures/obs_basis.R")       # campaign_of(): true-year campaign keys
 col <- MODEL_COL
 roll <- function(x,k=5){ n<-length(x); s<-rep(NA,n); h<-(k-1)/2
   for(i in seq_len(n)){ s[i]<-mean(x[max(1,i-h):min(n,i+h)]) }; s }
@@ -26,9 +27,15 @@ for(m in names(rid)){
 # rate is +0.422 over all plots and +0.379 over the 316, and the 1985 level moves
 # 63.3 -> 65.1. Comparing the two inflated the apparent model-observation gap by
 # roughly 40%. Both sides are now restricted to the same plots.
-o85 <- setNames(obs$soc_obs_tCha[obs$year == 1985L], obs$plot_id[obs$year == 1985L])
-o24 <- setNames(obs$soc_obs_tCha[obs$year == 2024L], obs$plot_id[obs$year == 2024L])
+# FIXED 2026-08-17: endpoints are selected by CAMPAIGN, not by literal year. The
+# first campaign is dated 1986/87/88/89/95, so `year == 1985L` matched nothing and
+# this script died with n = 0. The per-plot true interval also replaces the flat 39.
+obs$camp <- campaign_of(obs$year)
+e1 <- obs[obs$camp == 1L, ]; e3 <- obs[obs$camp == 3L, ]
+o85 <- setNames(e1$soc_obs_tCha, e1$plot_id); y85 <- setNames(e1$year, e1$plot_id)
+o24 <- setNames(e3$soc_obs_tCha, e3$plot_id); y24 <- setNames(e3$year, e3$plot_id)
 both <- as.integer(intersect(names(o85), names(o24)))
+DT   <- mean(y24[as.character(both)] - y85[as.character(both)])   # ~34.7 yr, not 39
 
 mt <- lapply(PS, function(ps) {
   d <- ps[ps$plot_id %in% both, ]
@@ -47,16 +54,16 @@ mt <- lapply(PS, function(ps) {
 # Restricted to plots observed at BOTH endpoints: the campaigns cover different
 # plot subsets (404/456/409), and differencing means over different subsets is
 # not an estimate of change.
-obs_rate <- (mean(o24[as.character(both)]) - mean(o85[as.character(both)])) / (2024 - 1985)
+obs_rate <- (mean(o24[as.character(both)]) - mean(o85[as.character(both)])) / DT
 message(sprintf("observed reference rate: %+.3f tC/ha/yr  (n=%d plots with both endpoints)",
                 obs_rate, length(both)))
 message(sprintf("model rates on the SAME plots: %s",
         paste(sprintf("%s %+.3f", names(mt),
-              sapply(mt, function(d) (tail(d$soc,1)-d$soc[1])/39)), collapse="  ")))
+              sapply(mt, function(d) (tail(d$soc,1)-d$soc[1])/DT)), collapse="  ")))
 # NB two corrections are pending and will both move this number: adding the
 # missing 1985 litter (LM) layer, and using the true 1986-1995 sampling years
 # (the "1985" campaign is really ~1989, so the interval is ~34.7 yr, not 39).
-# The 39 here is deliberate: it must match the model trajectories' own x-axis.
+# DT (the per-plot true mean interval) is used throughout; the flat 39 is gone.
 
 png("manuscript/figures/appendix_delta_reconciliation.png", width = 12, height = 4.3, units = "in", res = 200)
 par(mfrow = c(1,3), mar = c(4.0, 4.5, 3.0, 1.0), mgp = c(2.5, 0.7, 0), las = 1)
@@ -70,17 +77,16 @@ inc_all  <- unlist(lapply(mt, function(d) roll(diff(d$soc))))
 ## (a) absolute stock
 plot(NA, xlim=c(1985,2024), ylim=soc_rng + c(-1,1)*diff(soc_rng)*0.06,
      xlab="Year", ylab="Mean SOC (tC/ha)",
-     main="(a)  Absolute stock: rises to saturation")
+     main="(a)  Absolute stock")
 for(m in names(rid)) lines(mt[[m]]$yr, mt[[m]]$soc, col=col[m], lwd=2)
 legend("bottomright", bty="n", cex=0.8, lwd=2, col=col, legend=names(col))
 
 ## (b) cumulative-average rate = the OLD plot
 plot(NA, xlim=c(1985,2024), ylim=range(0, rate_all, obs_rate) * c(1, 1.12), xlab="Year",
      ylab=expression("(SOC(t)-SOC(t"[0]*")) / (t-t"[0]*")  (tC/ha/yr)"),
-     main="(b)  Cumulative-average rate  [the OLD figure]")
+     main="(b)  Cumulative-average rate")
 abline(h=obs_rate, col="grey30", lwd=1.6, lty=2); text(2005, obs_rate, "observed", pos=3, cex=0.75, col="grey30")
 for(m in names(rid)){ d<-mt[[m]]; r<-(d$soc-d$soc[1])/(d$yr-d$yr[1]); lines(d$yr[-1], r[-1], col=col[m], lwd=2) }
-mtext("declining = DECELERATION, not SOC loss; below obs = 1985 over-prediction", side=3, line=-1.1, cex=0.62, col="grey35")
 
 ## (c) instantaneous increment
 plot(NA, xlim=c(1986,2024), ylim=range(0, inc_all, na.rm=TRUE) * c(1.15, 1.15), xlab="Year",

@@ -4,7 +4,11 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 #   (a) LEFT  : FULL trajectory incl. the transient-init spin-up 1917->1985 (median line;
 #               modelled init device: constant climate + linearly ramped litter from a
 #               below-equilibrium 1917 anchor) + observed window 1985-2024 (mean + ribbon)
-#               + observed accumulation path (63->102->105) + the +26 tC/ha 1985 gap.
+#               + the observed campaign path + the model-observation gap at campaign 1.
+#   ⚠ The old header quoted "63->102->105" and "+26 tC/ha": both come from the SOC
+#     series RETIRED 2026-08-04 (no stoniness correction). On the corrected target the
+#     campaign path is ~61/65/67 and the campaign-1 gap is NEGATIVE (~-9, an UNDER-
+#     prediction). Do not reintroduce those numbers.
 #   (b) RIGHT : FUTURE forecast 2025-2084 (projection mean + ribbon) -- structural divergence.
 # Ribbons: posterior 2.5-97.5% of the cross-plot mean; same per-model colour, alpha 0.12.
 # Heavy reconstruction is cached to F4_cache.rds (delete it to recompute).
@@ -57,13 +61,18 @@ if (!file.exists(CACHE)) {
   }
 
   # --- (ii) spin-up 1917-1984 cross-plot-mean median line ---
+  # FIXED 2026-08-17: the 1917 anchor uses J_t0_mean, matching P1 in the wrappers
+  # (tp2_wrapper_transient.R ~354, yasso15_wrapper_transient.R ~282). This script
+  # still used J_full_mean, so the drawn initialization sat on a DIFFERENT flux
+  # basis from the calibration that produced the posterior -- and sigma_init means
+  # J_1917/J_1985, not J_1917/J_full.
   interp_awen <- function(v1917, v1985, n){ f<-(seq_len(n)-1)/(n-1)
     m<-outer(1-f, v1917)+outer(f, v1985); colnames(m)<-names(v1917); m }
   spinup_yasso <- function(pm, lm, xm, PN, steady_fn, run_fn, xi_list){
     n<-68L; params<-pm[PN]
-    n17<-lm$nwl_full_mean*pm["sigma_init"]*pm["sigma_input"]; n85<-lm$nwl_t0_mean*pm["sigma_input"]
-    f17<-lm$fwl_full_mean*pm["sigma_init"]*pm["sigma_input"]; f85<-lm$fwl_t0_mean*pm["sigma_input"]
-    c17<-lm$cwl_full_mean*pm["sigma_init"]*pm["sigma_input"]; c85<-lm$cwl_t0_mean*pm["sigma_input"]
+    n17<-lm$nwl_t0_mean*pm["sigma_init"]*pm["sigma_input"]; n85<-lm$nwl_t0_mean*pm["sigma_input"]
+    f17<-lm$fwl_t0_mean*pm["sigma_init"]*pm["sigma_input"]; f85<-lm$fwl_t0_mean*pm["sigma_input"]
+    c17<-lm$cwl_t0_mean*pm["sigma_init"]*pm["sigma_input"]; c85<-lm$cwl_t0_mean*pm["sigma_input"]
     if(xi_list) C0 <- steady_fn(params=params, nwl_mean=n17, fwl_mean=f17, cwl_mean=c17, xi_ss=xm, precip_mean=lm$precip_mean)
     else        C0 <- steady_fn(params=params, nwl_mean=n17, fwl_mean=f17, cwl_mean=c17, xi_mean=xm)
     idf <- data.frame(year=seq_len(n), interp_awen(n17,n85,n), interp_awen(f17,f85,n), interp_awen(c17,c85,n))
@@ -75,7 +84,7 @@ if (!file.exists(CACHE)) {
   }
   spinup_simple <- function(pm, lm, xm, step){
     si<-unname(pm["sigma_init"]); sinp<-unname(pm["sigma_input"])
-    J17<-lm$J_full_mean*si*sinp; J85<-lm$J_t0_mean*sinp; tr<-numeric(68)
+    J17<-lm$J_t0_mean*si*sinp; J85<-lm$J_t0_mean*sinp; tr<-numeric(68)
     if(step=="sp1"){ k<-unname(pm["alpha"])*xm; C<-J17/k
       for(i in 1:68){ Css<-(J17+(J85-J17)*(i-1)/67)/k; C<-Css+(C-Css)*exp(-k); tr[i]<-C }; C0<-J17/k }
     if(step=="tp2"){ kA<-unname(pm["alpha_A"])*xm; kH<-unname(pm["alpha_H"])*xm; pH<-unname(pm["p_H"])
@@ -124,54 +133,72 @@ cache <- readRDS(CACHE); spin <- cache$spin; stored <- cache$stored
 
 # observed campaign means +/- 95% CI
 om <- readRDS(sprintf("Data/model_inputs/Yasso20_inputs_%s.rds", RID[["Yasso20"]]))$obs_meta
-obs <- do.call(rbind, lapply(names(om), function(p){ z<-om[[p]]; if(!length(z$soc_obs)) return(NULL)
-  data.frame(year=1984L+z$idx, soc=z$soc_obs) }))
-cm <- aggregate(soc~year, obs, function(x) c(m=mean(x), lo=mean(x)-1.96*sd(x)/sqrt(length(x)), hi=mean(x)+1.96*sd(x)/sqrt(length(x))))
-cm <- data.frame(year=cm$year, m=cm$soc[,"m"], lo=cm$soc[,"lo"], hi=cm$soc[,"hi"])
-m1985 <- sapply(stored, function(d) d$m[d$year==1985]); mstart <- mean(m1985); gap <- mstart - cm$m[cm$year==1985]
-obs_rate <- (cm$m[cm$year==2006]-cm$m[cm$year==1985])/(2006-1985)
-mod_rate <- (mean(sapply(stored,function(d)d$m[d$year==2006]))-mstart)/(2006-1985)
+# ONE marker per campaign at its TRUE mean year (VMI8 ~1989, not 1985), on the
+# BALANCED set -- the basis this figure declares. Addressed by campaign INDEX:
+# a literal `year == 1985` no longer matches anything (see obs_basis.R).
+cm  <- obs_campaigns(om, BAL)
+sy  <- obs_subyears(om, BAL, camp = 1L)   # VMI8 per-sampling-year subsets
+yc  <- round(cm$year)                       # modelled years to read the models at
+m_c1   <- sapply(stored, function(d) d$m[d$year == yc[1]])
+mstart <- mean(m_c1)
+gap    <- mstart - cm$m[1]                  # SIGNED: >0 over-prediction, <0 under
+obs_rate <- (cm$m[2] - cm$m[1]) / (cm$year[2] - cm$year[1])
+mod_rate <- (mean(sapply(stored, function(d) d$m[d$year == yc[2]])) - mstart) /
+            (cm$year[2] - cm$year[1])
 # validation print
-for(m in names(rid)) cat(sprintf("%-8s spin 1917=%.1f 1984=%.1f | stored1985=%.1f\n", m, spin[[m]]$m[1], tail(spin[[m]]$m,1), m1985[m]))
-# anchor each spin-up to the calibrated 1985 state (removes the median-vs-mean kink;
-# the spin-up shows the recovery SHAPE, its level is pinned to the posterior 1985 stock)
-for(m in names(rid)) spin[[m]]$m <- spin[[m]]$m + (m1985[m] - tail(spin[[m]]$m, 1))
+for(m in names(rid)) cat(sprintf("%-8s spin 1917=%.1f 1984=%.1f | stored%d=%.1f\n",
+                                 m, spin[[m]]$m[1], tail(spin[[m]]$m,1), yc[1], m_c1[m]))
+# Anchor each spin-up to the model's own t0 (1985) stock, so the spin-up and the
+# stored trajectory JOIN. Must be the t0 year, NOT campaign 1's mean year (~1989):
+# anchoring on the campaign left a visible step at 1985 in the merged panel.
+m_t0 <- sapply(stored, function(d) d$m[d$year == 1985])
+for(m in names(rid)) spin[[m]]$m <- spin[[m]]$m + (m_t0[m] - tail(spin[[m]]$m, 1))
 
 ribbon <- function(d, keep, c0){ i<-d$year %in% keep
   polygon(c(d$year[i], rev(d$year[i])), c(d$lo[i], rev(d$hi[i])), col=adjustcolor(c0,0.12), border=NA) }
 
-png("manuscript/figures/F4_initialization.png", width = 11.8, height = 5.6, units = "in", res = 200)
-layout(matrix(1:2, nrow = 1), widths = c(1.35, 1))
-par(mar = c(4.0, 4.6, 3.2, 1.0), mgp = c(2.6, 0.7, 0), las = 1)
+## ONE panel, 1917-2084: initialization | calibration | forecast, separated by shaded
+## bands and rules. Was two panels; merged 2026-08-17.
+## ylim is COMPUTED, never hardcoded -- the old ylim=c(55,114) sat above the anchored
+## spin-up (which starts near 20 tC/ha), so the initialization was drawn off-scale and
+## the panel silently showed nothing of the thing the figure is named after.
+png("manuscript/figures/F4_initialization.png", width = 12.6, height = 6.4, units = "in", res = 200)
+par(mar = c(4.2, 4.8, 2.6, 4.4), mgp = c(2.8, 0.7, 0), las = 1)
 
-## (a) full trajectory: spin-up 1917 -> observed 2024
-plot(NA, xlim=c(1917,2024), ylim=c(55,114), xlab="Year", ylab="Mean SOC across plots (tC/ha)",
-     main="(a)  Full trajectory: transient-init spin-up + observed window")
-rect(1917,54,1985,116, col=adjustcolor("grey85",0.35), border=NA)
-text(1951, 57, "modelled transient initialization (1917->1985)", cex=0.72, col="grey45", font=3)
-abline(v=1985, col="grey70", lty=2)
-for(m in names(rid)){
-  ribbon(stored[[m]], 1985:2024, col[m])
-  lines(spin[[m]]$year, spin[[m]]$m, col=col[m], lwd=2, lty=1)
-  s<-stored[[m]]; i<-s$year<=2024 & s$year>=1985; lines(s$year[i], s$m[i], col=col[m], lwd=2)
+yl <- range(unlist(lapply(names(rid), function(m)
+        c(spin[[m]]$m, stored[[m]]$lo, stored[[m]]$hi))), cm$lo, cm$hi, sy$lo, sy$hi, finite = TRUE)
+yl <- yl + c(-1, 1) * 0.04 * diff(yl)
+
+plot(NA, xlim = c(1917, 2084), ylim = yl, xlab = "Year",
+     ylab = "Mean SOC across plots (tC/ha)", main = "")
+rect(1917, yl[1], 1985, yl[2], col = adjustcolor("grey85",  0.40), border = NA)
+rect(2024, yl[1], 2084, yl[2], col = adjustcolor("#9ec7e8", 0.22), border = NA)
+abline(v = c(1985, 2024), col = "grey60", lty = 2)
+ytop <- yl[2] - 0.03 * diff(yl)
+text(1951,   ytop, "initialization", cex = 0.8, col = "grey45", font = 3)
+text(2004.5, ytop, "calibration",    cex = 0.8, col = "grey45", font = 3)
+text(2054,   ytop, "forecast",       cex = 0.8, col = "grey45", font = 3)
+
+for (m in names(rid)) {
+  ribbon(stored[[m]], 1985:2084, col[m])
+  lines(spin[[m]]$year, spin[[m]]$m, col = col[m], lwd = 2)
+  s <- stored[[m]]; lines(s$year, s$m, col = col[m], lwd = 2)
 }
-lines(cm$year, cm$m, col="black", lwd=3)
-arrows(cm$year, cm$lo, cm$year, cm$hi, angle=90, code=3, length=0.04, col="firebrick", lwd=2)
-points(cm$year, cm$m, pch=21, bg="firebrick", col="black", cex=1.5)
-text(cm$year, cm$lo, c("VMI8\n1985","Biosoil\n2006","Komeetta\n2024"), pos=c(4,1,2), offset=0.8, cex=0.68, col="firebrick")
-arrows(1986.4, cm$m[cm$year==1985], 1986.4, mstart, angle=90, code=3, length=0.04, col="grey20", lwd=1.6)
-text(1990, 72, sprintf("+%.0f tC/ha\n1985 over-prediction", gap), pos=4, cex=0.74, col="grey15", font=2)
-legend("bottomright", bty="n", cex=0.76, lwd=2, col=col, legend=names(col),
-       title="model means (simple -> complex)", ncol=2)
+arrows(sy$year, sy$lo, sy$year, sy$hi, angle = 90, code = 3, length = 0.03, col = SUBYEAR_COL, lwd = 1.4)
+points(sy$year, sy$m, pch = 21, bg = "white", col = SUBYEAR_COL, cex = 0.95, lwd = 1.6)
+lines(cm$year, cm$m, col = "black", lwd = 3)
+arrows(cm$year, cm$lo, cm$year, cm$hi, angle = 90, code = 3, length = 0.04, col = "firebrick", lwd = 2)
+points(cm$year, cm$m, pch = 21, bg = "firebrick", col = "black", cex = 1.5)
+text(cm$year, cm$lo, sprintf("%s\n%d", CAMPAIGN_LABELS, yc), pos = c(2,1,1), offset = 0.9,
+     cex = 0.7, col = "firebrick")
+legend("bottomright", bty = "n", cex = 0.72, pch = c(21, 21), pt.bg = c("firebrick", "white"),
+       col = c("black", SUBYEAR_COL), pt.cex = c(1.5, 0.95), pt.lwd = c(1, 1.6),
+       legend = c("campaign mean", "VMI8 sampling year (plot subset)"))
 
-## (b) future forecast 2024-2084
-par(mar = c(4.0, 4.2, 3.2, 3.6))
-yl2 <- range(sapply(stored, function(d){ i<-d$year>=2024; c(d$lo[i], d$hi[i]) }))
-plot(NA, xlim=c(2024,2084), ylim=yl2, xlab="Year", ylab="", main="(b)  Future forecast: structural divergence")
-for(m in names(rid)){ ribbon(stored[[m]], 2024:2084, col[m]); s<-stored[[m]]; i<-s$year>=2024; lines(s$year[i], s$m[i], col=col[m], lwd=2.2) }
-lab <- sort(sapply(stored, function(d) d$m[d$year==2084]), decreasing=TRUE)
-laby <- lab; mind <- 0.03*diff(yl2)              # spread near-coincident labels
-for(k in 2:length(laby)) if(laby[k-1]-laby[k] < mind) laby[k] <- laby[k-1]-mind
-text(2084, laby, names(lab), pos=4, cex=0.66, col=col[names(lab)], font=2, xpd=NA)
+# per-model labels at the right edge, nudged apart where they coincide
+lab  <- sort(sapply(stored, function(d) d$m[d$year == 2084]), decreasing = TRUE)
+laby <- lab; mind <- 0.032 * diff(yl)
+for (k in 2:length(laby)) if (laby[k-1] - laby[k] < mind) laby[k] <- laby[k-1] - mind
+text(2084, laby, names(lab), pos = 4, cex = 0.7, col = col[names(lab)], font = 2, xpd = NA)
 dev.off()
-cat(sprintf("\nstart mean=%.1f; gap=+%.1f; obs rate=%.2f mod rate=%.2f\nWrote F4_initialization.png\n", mstart, gap, obs_rate, mod_rate))
+cat(sprintf("\nstart mean=%.1f; gap=%+.1f; obs rate=%.2f mod rate=%.2f\nWrote F4_initialization.png\n", mstart, gap, obs_rate, mod_rate))
