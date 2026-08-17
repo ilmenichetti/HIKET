@@ -44,7 +44,12 @@ YASSO15_FREE_DEFAULTS <- c(
   # Meaningful only together with P1 (common J_t0 anchor in the wrappers): before
   # P1, sigma_init = R * 0.818 and a centre of 1.00 silently asserted R = 1.22.
   sigma_init  = 0.90,
-  sigma_input = 1.30   # C4b: re-centred >1 for missing (understorey-dominated) litter (D2)
+  # C4b/2026-08-17: centre DERIVED, not chosen. Tupek J_bar = 2.511 tC/ha/yr is TREE
+  # litter only (understorey excluded); Lehtonen & Heikkinen 2015 give TOTAL litter
+  # (tree + understorey) = 2.70 [2.43, 2.97]. Adding the missing understorey is exactly
+  # this parameter's job => 2.70/2.511 = 1.08. The old 1.30 was directionally right but
+  # had no source. Coupled to sigma_init through J_1917 -- do not move one alone.
+  sigma_input = 1.08
 )
 
 # sigma_ppm in unconstrained (transformed) space. All free params listed
@@ -68,8 +73,19 @@ YASSO15_SIGMA_PPM <- c(
   delta1      = 0.32810,
   delta2      = 0.28643,
   r           = 0.05504,
-  sigma_init  = 0.50,
-  sigma_input = 0.50
+  # Tier-3 width HALVED 0.50 -> 0.25 (2026-08-17), same value for both, preserving the
+  # Tier-3 principle that the two auxiliary sigmas share a width.
+  # WHY: the sigma_init CENTRE (0.90) was already well derived -- Korhonen et al. 2024
+  # growing stock V(1917)/V(1985) = 0.789 raised to the litter-growing-stock elasticity
+  # eps = 0.43 [0.23, 0.63], fitted on our own litter record => 0.789^0.43 = 0.90. The
+  # 0.50 width was what let posteriors sit 2.3-5.0x BELOW that centre (Yasso15 0.182,
+  # i.e. a 1917 soil equilibrated to 18% of 1985 litter, against a forest record saying
+  # 79%). Width rebuilt from its parts: elasticity CI 0.03, volume-record uncertainty
+  # 0.07, structural litter-model error 0.09 => 0.12 in quadrature, prudential x2 = 0.25.
+  # Deliberately looser than the evidence supports so the sampler is PULLED, not WALLED.
+  # Check with doublechecks/sigma_init_vs_growing_stock.R.
+  sigma_init  = 0.25,
+  sigma_input = 0.25
 )
 
 # --- Fraction-prior tightening switch (2026-08-10) ----------------------------
