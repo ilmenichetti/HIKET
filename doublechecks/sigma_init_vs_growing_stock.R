@@ -1,6 +1,20 @@
 # =============================================================================
 # sigma_init_vs_growing_stock.R   (2026-08-17)
 #
+# ⚠⚠ STALE AS OF 2026-08-18 -- DO NOT CITE ITS NUMBERS. It implements the PRE-P1
+# engine, where the 1917 anchor was J_full_mean. P1 (2026-08-07) moved it to
+# J_t0_mean, so the correct denominator is the 1985 flux, not the 1986-2024 mean.
+# Consequences: the "volume-implied lower bound" of ~0.64 is wrong (the right
+# comparison is 1400/1775 = 0.789, and 0.789^0.43 = 0.903), and the 0.818
+# "inversion threshold" is obsolete -- with both ends on the same flux the pre-run
+# builds iff sigma_init < 1, full stop. The whole "[0.64, 0.82] window" is wrong on
+# both ends.
+#
+# ⚠ ALSO OPEN (discussion unfinished, resume 2026-08-19): even corrected, this
+# bounds the LITTER FLUX ratio, not the soil carbon stock. sigma_init additionally
+# equilibrates the 1917 soil at that flux, and the NFI record says nothing about
+# whether 1917 soils had caught up. See memory sigma-init-growing-stock-bound.
+#
 # THE POINT: sigma_init has an INDEPENDENT physical referent, and it is currently
 # violated by every multi-pool model.
 #

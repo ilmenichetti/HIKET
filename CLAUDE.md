@@ -850,7 +850,24 @@ noise the error model should absorb, not as data error.
   withdrawn (choosing the 1985 weighting to make the sink come out right is circular), but the
   **live question is now σ_init**, not the 1985 weighting. See "σ_init pre-run inversion" below.
 
-- **⭐⭐ σ_init IS A MEASURABLE RATIO, AND FIVE OF SIX MODELS VIOLATE IT (2026-08-17).**
+- **⚠⚠ OPEN THREAD — RESUME 2026-08-19: the σ_init growing-stock bound is over-stated.** Traced
+  2026-08-18: **0.90 = (1400/1775)^0.43** — V(1917)=1400 Mm³ (Korhonen NFI1, ⚠ **extrapolated flat**
+  from the 1921–24 inventory), V(1985)=1775, elasticity **0.43 [0.23,0.63] fitted on OUR OWN litter
+  record**, so the benchmark is only part-external. **It is sound for LITTER FLUX and over-strong for
+  SOC STOCKS**: σ_init also *equilibrates* the 1917 soil at that flux, and the NFI says nothing about
+  whether 1917 soils had caught up — after a century of slash-and-burn, raking and heavy cutting,
+  disequilibrium is plausible and the parameterisation cannot express it. **σ_init = 0.90 is in fact
+  UNREACHABLE for the Yassos** (implies 1917 stocks of 92–98 tC/ha, above their own modelled 1985
+  value of 57–63). Proposed replacement criteria, **NOT yet agreed**: (1) a 1917 stock of **40–45
+  tC/ha** (needs σ_init ≈ 0.37–0.44; TP3 and SP1 already there); (2) the **implied pre-run rate**,
+  currently +0.37…+0.40 tC/ha/yr sustained over 68 yr against an observed +0.259 the models already
+  overshoot — this check is independent of the equilibrium confound. ⚠ The **~0.64** in older records
+  is a STALE quantity (1400 ÷ the 1986–2024 mean, the pre-P1 `J_full` definition), and
+  **`doublechecks/sigma_init_vs_growing_stock.R` still implements it** — fix before citing.
+  ⚠ The correlated likelihood is **not expected to relieve σ_init**. Memory:
+  [[sigma-init-growing-stock-bound]]. Superseded framing follows:
+
+- **⭐⭐ ~~σ_init IS A MEASURABLE RATIO, AND FIVE OF SIX MODELS VIOLATE IT~~ (2026-08-17, SEE ABOVE).**
   The engine builds `J_1917 = J_t0_mean × σ_init × σ_input` while the forward run carries `σ_input`
   only, so σ_input cancels and **σ_init = J₁₉₁₇ / J₁₉₈₅**. The NFI speaks to that directly: fitting
   the litter–growing-stock elasticity on our own record gives **eps = 0.43 [0.23, 0.63]**, and with
