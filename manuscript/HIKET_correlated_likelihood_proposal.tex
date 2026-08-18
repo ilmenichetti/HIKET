@@ -1,7 +1,8 @@
 % HIKET -- PROPOSAL: replacing the independent-observation likelihood with a
 % correlated-error (compound symmetry) likelihood.
 %
-% STATUS: proposal, not implemented. Written 2026-08-17.
+% STATUS: agreed plan, not yet implemented. Written 2026-08-17, REWRITTEN 2026-08-18
+%         after the auxiliary-sigma-prior run landed and the design was worked out.
 % Scope: this document describes ONE change to ONE function. It deliberately spells
 % out every step, including the ones that are obvious to someone who works with
 % mixed models daily, because the argument has to survive review by people who do not.
@@ -25,302 +26,462 @@
 \title{Replacing the independent-observation likelihood\\
 \large A proposal for the HIKET calibration}
 \author{}
-\date{Draft, 17 August 2026 --- \emph{proposal, not implemented}}
+\date{Revised 18 August 2026 --- \emph{agreed plan, not yet implemented}}
 
 \begin{document}
 \maketitle
 
 \begin{keybox}[In one paragraph]
 The calibration currently assumes that every soil-carbon measurement is an
-independent piece of evidence. It is not: the same plot measured in three different
-campaigns gives three strongly related numbers, and plots near each other give
-related numbers too. Because of this, the calibration believes it has roughly twice
-as much information as it really has, and the excess confidence falls precisely on
-the quantity that controls the headline results. This document proposes a specific,
-small, closed-form change that fixes the accounting, explains why the obvious
-alternative (simply assuming larger measurement error) provably cannot work, and
-states honestly what the change will and will not achieve.
+independent piece of evidence. It is not. The same plot measured in three campaigns
+gives three strongly related numbers; plots near each other give related numbers
+too; and every plot in one campaign shares whatever that campaign's method did.
+Counting 1205 measurements as 1205 independent facts overstates the evidence by
+roughly a factor of five for the quantity that controls the headline results. This
+document sets out the agreed plan: three shared-offset terms, all with their sizes
+fixed from outside the calibration, replacing the independence assumption. It gives
+the numbers, the traps found while deriving them, what the change is expected to
+achieve, and --- equally important --- what it cannot.
 \end{keybox}
 
 \section{What the calibration does now}
 
-\subsection{The model prediction}
-
-For each plot $i$ and each measurement occasion $j$, the soil model produces a
-predicted carbon stock, which we write $f_{ij}(\theta)$. Here $\theta$ is the full
-vector of parameters being calibrated, and the prediction depends on the plot's
-litter inputs, its climate, and the year of the measurement. Nothing in this
-document changes $f$; the proposal concerns only how predictions are compared with
-observations.
-
-\subsection{The current comparison}
-
-Let $y_{ij}$ be the measured stock. The calibration currently assumes
-\begin{equation}
+For plot $i$ in campaign $j$ the model returns a predicted carbon stock
+$f_{ij}(\theta)$, and the comparison with the observation is made on the log scale:
+\[
 \log y_{ij} \;=\; \log f_{ij}(\theta) \;+\; e_{ij},
-\qquad
-e_{ij} \ \text{independent for every } i \text{ and } j .
-\label{eq:before}
-\end{equation}
-The comparison is made on the logarithmic scale, which means the error is
-proportional rather than absolute: an error of ``ten per cent'' means the same
-thing on a carbon-poor plot and a carbon-rich one. Each $e_{ij}$ is drawn from a
-distribution centred on zero with spread $s$ (currently $0.80$ on the log scale,
-optionally with heavier tails).
-
-The word doing the damage in Equation~\ref{eq:before} is \textbf{independent}. In
-the code this assumption is not a stated hypothesis; it is the plain summation
-
-\begin{verbatim}
-    sum(dnorm(log(meta$soc_obs), mean = log(SOC_hat), sd = s, log = TRUE))
-\end{verbatim}
-
-\noindent
-(\texttt{calibration\_engine\_transient.R}, likelihood block). Adding log-densities
-together \emph{is} the statement that the observations carry separate, non-overlapping
-information. With $1205$ observations, the calibration therefore behaves as though it
-has $1205$ independent pieces of evidence.
+\qquad e_{ij}\sim N(0,\sigma^2), \quad \sigma = 0.800 .
+\]
+The log-likelihood is the plain sum of the individual log-densities. That sum
+\emph{is} the assumption that every $e_{ij}$ is independent of every other. The
+assumption has never been stated as a hypothesis anywhere in the code or the
+manuscript; it arrived as a default.
 
 \section{Why that assumption is wrong here}
 
-It is wrong in a way we have measured, not merely suspected.
+Three different groupings make observations share information. They are easy to
+conflate, so we name them explicitly and use one notation throughout: a shared
+offset is $u$ with a superscript naming what it groups.
 
-\begin{description}[leftmargin=1.6em,style=nextline]
-\item[Plots persist.] If a plot's carbon stock is higher than the model expects in
-one campaign, it is higher in the next campaign too. The correlation between the
-2006 and 2024 measurements of the \emph{same} plot is $0.66$--$0.81$. The formal
-summary of this is the \emph{intraclass correlation}, which is simply the share of
-the total variation that is attributable to persistent differences between plots
-rather than to fluctuation within a plot. Here it is $0.57$--$0.71$: most of the
-scatter is a fixed property of the plot.
+\begin{center}
+\begin{tabular}{llrl}
+\toprule
+term & groups & members & meaning \\
+\midrule
+$u^{R}_{r}$ & plots in a region & $\sim$150 & same climate, parent material, forest history \\
+$u^{P}_{i}$ & visits to one plot & 2.6 & same soil, missing edaphic control \\
+$u^{C}_{j}$ & all plots in one campaign & $\sim$400 & shared method, crew, laboratory \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-\item[Neighbours resemble each other.] Grouping plots by latitude band, the band
-means vary five to six times more than they would if plots were independent draws
-from one national population.
-
-\item[Campaigns differ as blocks.] The three campaigns have different mean offsets
-and different spreads, so measurements share whatever was peculiar to their campaign.
-
-\item[A few plots dominate.] The residual distribution has kurtosis close to $7$,
-against $3$ for a normal distribution: the tails are far heavier than assumed, so a
-small number of plots exert disproportionate influence.
-\end{description}
-
-Taken together, the effective number of independent observations is roughly
-\textbf{half} the nominal $1205$.
-
-\begin{keybox}[Why this specifically matters]
-Every one of these mechanisms acts on the \emph{overall level} of soil carbon rather
-than on differences within a plot. The overall level is exactly what pins down the
-product of mean residence time and the litter-input multiplier. So the calibration is
-most overconfident precisely in the direction that determines the results we report.
-An independent symptom: the posterior standard deviation of the input multiplier is
-about $0.07$ on the log scale, meaning the calibration claims to know it to within
-roughly seven per cent. That claim is not credible given the correlation structure
-above, and it is why an externally derived prior, however well founded, currently
-changes almost nothing.
+\begin{keybox}[The counter-intuitive part]
+A \emph{small} correlation shared by \emph{many} observations does more damage to a
+national mean than a large one shared by few. The plot term has a correlation of
+0.5--0.6 but only 2.6 members. The regional term has a correlation of just
+\textbf{0.080} --- negligible-sounding --- but $\sim$150 plots share it, and
+$1+149\times0.08 \approx 13$. Group size multiplies the effect. This is why the
+regional term matters more than the plot term, which is the opposite of what the
+raw correlations suggest.
 \end{keybox}
+
+\subsection{Measured, from the observations rather than from residuals}
+
+\begin{keybox}[Design principle]
+Residuals may \textbf{check} a design value. They may never \textbf{set} one.
+Setting the likelihood from the residuals of a fit produced under the assumption we
+are replacing is circular. Every number below comes from the observations
+themselves, with campaign levels removed first so nothing can be a trend artefact.
+\end{keybox}
+
+\paragraph{The plot term.} Under compound symmetry the covariance between any two
+visits to the same plot \emph{is} $\tau_P^2$, so it can be read directly off a
+campaign pair with no variance decomposition and no distributional assumption:
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+pair & $n$ & correlation & $\tau_P$ \\
+\midrule
+1985--2006 & 384 & 0.805 & 0.355 \\
+1985--2024 & 342 & 0.762 & 0.363 \\
+\textbf{2006--2024} & \textbf{442} & \textbf{0.820} & \textbf{0.396} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+We adopt $\tau_P = 0.396$ from the 2006--2024 pair: the largest sample, the widest
+of the three, and \textbf{the only pair untouched by the 1985 problems} --- no
+imputed litter layer, no 1986--1995 dating spread. The 1985 campaign therefore
+enters the likelihood at full weight but sets none of the likelihood's parameters.
+
+\paragraph{The regional term.} Splitting the plots into eight equal-count latitude
+bands (ETRS northing), after removing campaign levels, the band means run
+monotonically south to north:
+\[
++0.18,\;+0.16,\;+0.06,\;+0.01,\;-0.03,\;-0.16,\;-0.12,\;-0.10
+\]
+a gradient of about 32\%. Between-band $\mathrm{sd} = \mathbf{0.117}$, between-plot
+within band $=0.397$, giving a regional correlation of 0.080. We adopt
+$\tau_R = 0.117$.
+
+\paragraph{The campaign term.} Not measurable from this data at all --- see
+Section~\ref{sec:campaign}.
+
+\subsection{There is no field replication to check any of this}
+
+The Biosoil workbook carries a \texttt{REP} column, but only 63 rows of 3028 (about
+16 plots) have \texttt{REP}~$=2$, all in Biosoil, none in 1985 or 2024. Of the three
+carbon columns, two return $\mathrm{sd}(\log\text{ratio}) = 0.000$ and $0.003$
+between the pairs --- copied values, not independent re-measurements. Only one shows
+genuine variation, at about 12\% per sample, and that reads as a laboratory
+duplicate rather than a second field sample.
+
+\begin{warnbox}[Consequence]
+We cannot empirically separate ``we sampled a different spot'' from ``this plot
+really is different''. Random relocation between campaigns is harmless for the
+design --- it is genuinely independent between visits, so it already sits inside
+$\sigma_e$ --- but a \emph{systematic} component of relocation or protocol drift is
+a campaign-level offset, and nothing in the data can measure it.
+\end{warnbox}
 
 \section{Why simply assuming a larger error does not work}
 
-The natural first reaction is to keep Equation~\ref{eq:before} and increase $s$. This
-provably cannot achieve what is needed, for a reason worth stating carefully.
+Inflating $\sigma$ multiplies every direction of the posterior by $\sqrt{k}$.
+Reaching what is needed would require $\sigma \approx 1.8$ against a measured
+residual spread of 0.71, which would destroy the self-consistency that justifies
+$\sigma$ in the first place. \textbf{Correlation widens the level at fixed total
+variance; nothing else available does.} That is the whole argument for this
+instrument, and it is why the variance is \emph{split} rather than \emph{added}:
+\[
+\sigma^2_{\text{total}} \;=\; \tau_R^2 + \tau_P^2 + \tau_C^2 + \sigma_e^2 ,
+\qquad \sigma_{\text{total}} = 0.800 \text{ (unchanged)} .
+\]
 
-Increasing $s$ inflates uncertainty in \emph{every} direction of parameter space by
-the same factor. But the problem is not that we are uniformly overconfident; we are
-overconfident \emph{about the level} while remaining appropriately confident about
-within-plot contrasts. To widen the level enough by inflating $s$ alone, $s$ would
-have to reach roughly $1.8$, against a measured residual spread of $0.79$. That is
-internally contradictory: the error model would assert a scatter more than twice what
-the residuals actually show, destroying the self-consistency argument that justifies
-the choice of $s$ in the first place.
+\begin{warnbox}[A trap found while deriving this --- do not repeat it]
+The observations show an intraclass correlation of \textbf{0.799}. Transplanting
+that \emph{ratio} into a total of 0.800 gives $\tau = 0.715$ and $\sigma_e = 0.359$
+--- \emph{below} the models' own within-plot error of 0.44--0.48. That would assert
+the trend is measured more precisely than any model can reproduce it: the same
+overconfidence we are removing from the level, recreated in the trend. The 0.799 is
+a ratio inside the observations' own spread of 0.422; only its \emph{absolute} part
+transfers. Always carry absolute standard deviations across, never ratios.
+\end{warnbox}
 
-\begin{keybox}[The one-sentence reason correlation is the right tool]
-Introducing correlation between observations widens uncertainty about the level while
-leaving the total variance of each individual observation unchanged --- and nothing
-else available to us does that.
-\end{keybox}
+\section{The plan}
 
-\section{What is proposed}
+\subsection{The model}
 
-\subsection{The change}
+\[
+\log y_{ij} \;=\; \log f_{ij}(\theta) \;+\; u^{R}_{r(i)} \;+\; u^{P}_{i} \;+\;
+u^{C}_{j} \;+\; e_{ij}
+\]
+with $u^{R}\sim N(0,\tau_R^2)$, $u^{P}\sim N(0,\tau_P^2)$,
+$u^{C}\sim N(0,\tau_C^2)$, $e\sim N(0,\sigma_e^2)$.
 
-Add a single term to Equation~\ref{eq:before}:
-\begin{equation}
-\log y_{ij} \;=\; \log f_{ij}(\theta) \;+\; u_i \;+\; e_{ij},
-\qquad
-u_i \sim \mathcal{N}(0,\tau^2),
-\qquad
-e_{ij} \sim \mathcal{N}(0,s^2).
-\label{eq:after}
-\end{equation}
+\subsection{Nothing new is estimated}
 
-The new quantity $u_i$ carries no second subscript: there is \emph{one} $u_i$ per
-plot, shared by all of that plot's measurements. It represents whatever is
-persistently true of that plot and unknown to the model. Because the comparison is
-on the log scale, $u_i$ acts multiplicatively: it says ``this plot is persistently
-twenty per cent richer than the model believes.'' The parameter $\tau$ controls how
-large such plot-level offsets typically are, and $s$ now describes only the
-remaining, genuinely occasion-to-occasion variation.
+None of the offsets is ever given a value. They are \textbf{marginalised} ---
+integrated out, averaged over all the values they might take --- leaving behind only
+their effect on the covariance:
+\[
+\Sigma \;=\; \sigma_e^2 I \;+\; \tau_P^2 Z_P Z_P' \;+\; \tau_R^2 Z_R Z_R'
+\;+\; \tau_C^2 Z_C Z_C' .
+\]
+This distinction is the crux of the whole proposal and is worth stating plainly:
 
-\subsection{This is not an invented convenience}
-
-The interpretation is physical and was identified independently of this proposal.
-No model in the ensemble contains any description of local soil conditions --- texture,
-drainage, parent material, stoniness beyond the stock correction. Those conditions do
-not change between 1989 and 2024. A persistent per-plot offset is therefore exactly
-the form the missing information should take. We are writing down a term for something
-we already know exists, not adding a free variance to buy comfort.
-
-\subsection{The plot-level offsets are removed analytically, not estimated}
-
-A common objection is that Equation~\ref{eq:after} adds hundreds of unknowns, one per
-plot. It does not, because we never estimate them. We integrate them out --- that is,
-we ask what the observations look like once every possible value of $u_i$ has been
-averaged over, weighted by how plausible it is. This is standard and exact, and the
-result has a closed form.
-
-For a plot with $n_i$ measurements, collect its log-residuals
-$r_{ij} = \log y_{ij} - \log f_{ij}(\theta)$ into a vector. After integrating out
-$u_i$, those residuals are jointly normal with covariance
-\begin{equation}
-\Sigma_i \;=\; s^2 I \;+\; \tau^2 \mathbf{1}\mathbf{1}^{\!\top},
-\end{equation}
-where $I$ is the identity matrix and $\mathbf{1}$ is a column of ones. Every diagonal
-entry is $s^2 + \tau^2$ (each observation's total variance) and every off-diagonal
-entry is $\tau^2$ (the covariance any two measurements of the same plot share). This
-pattern --- equal variances, equal covariances --- is called \emph{compound symmetry}.
-
-Matrices of this shape can be inverted analytically, so no numerical linear algebra
-is required. Writing $n_i$ for the number of observations on plot $i$, the
-contribution of that plot to the log-likelihood is
-\begin{equation}
-\log L_i \;=\; -\tfrac{1}{2}\!\left[
-\frac{1}{s^{2}}\!\left(\sum_j r_{ij}^{2}
-- \frac{\tau^{2}}{s^{2} + n_i\tau^{2}}\Big(\sum_j r_{ij}\Big)^{\!2}\right)
-+ (n_i-1)\log s^{2}
-+ \log\!\left(s^{2} + n_i\tau^{2}\right)
-+ n_i\log 2\pi
-\right].
-\label{eq:cs}
-\end{equation}
-
-Everything in Equation~\ref{eq:cs} is a sum over the plot's own observations. The cost
-is proportional to $n_i$, identical to the current code. Plots remain independent of
-one another, so the outer summation over plots is unchanged.
-
-\subsection{Setting $\tau$}
-
-We recommend \textbf{fixing} $\tau$ at the measured intraclass correlation rather than
-estimating it. Two reasons. First, it adds no free parameter, so the comparison between
-models is not disturbed --- a per-model free variance term would let each model choose
-its own tolerance for misfit, reintroducing exactly the asymmetry the homogenised prior
-scheme exists to remove. Second, $\tau$ is directly measurable from the residuals
-without reference to the calibration, so fixing it is an external constraint rather
-than a fitted convenience. The relationship is
-\begin{equation}
-\rho \;=\; \frac{\tau^{2}}{\tau^{2}+s^{2}},
-\qquad\text{so}\qquad
-\tau^{2} \;=\; \frac{\rho}{1-\rho}\, s^{2},
-\end{equation}
-with $\rho$ the intraclass correlation, measured at $0.57$--$0.71$. A single common
-value across all six models keeps the intercomparison clean; the sensitivity of the
-results to $\rho$ within its measured range should be reported.
-
-\section{What changes, concretely}
-
-\begin{table}[H]\centering\small
-\begin{tabular}{@{}p{0.30\linewidth}p{0.31\linewidth}p{0.31\linewidth}@{}}
+\begin{center}
+\begin{tabular}{lll}
 \toprule
- & \textbf{Before} & \textbf{After} \\
+ & what happens to the offset & consequence \\
 \midrule
-Error structure & one independent draw per plot-year & one draw per plot-year plus one persistent offset per plot \\
-Free parameters & unchanged & unchanged ($\tau$ fixed externally) \\
-Cost per plot & proportional to $n_i$ & proportional to $n_i$ \\
-Code touched & --- & one block in \texttt{calibration\_engine\_transient.R} \\
-Variance of a plot's mean & $s^2/n_i$, shrinks toward zero & $s^2/n_i + \tau^2$, does not \\
-Confidence in the overall level & too high & appropriately reduced \\
-Confidence in within-plot change & appropriate & essentially unchanged \\
+ignore it & fixed at exactly zero & asserts perfect comparability \\
+\textbf{fit it} & data choose the best-fitting value & \textbf{eats the trend} ($\delta=-0.137$) \\
+\textbf{marginalise it} & never given any value & widens the right direction \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{center}
 
-The fifth row is the mechanism in a single line. At present, averaging more
-measurements of a plot drives the uncertainty in that plot's mean toward zero, so
-accumulating plots drives uncertainty in the national level toward zero as well. Under
-the proposal a floor of $\tau^2$ remains, because additional visits to the same plot
-cannot tell us anything new about that plot's persistent peculiarity. Differences
-\emph{within} a plot are unaffected, since the shared offset cancels when one
-measurement is subtracted from another --- which is why the trend is largely preserved
-while the level is properly widened.
+The standing rule that ``a campaign-specific bias is forbidden'' applies to the
+\emph{fitted} version, which is unidentifiable and absorbs the signal. The
+marginalised version adds no parameter and cannot absorb anything, because there is
+nothing to absorb \emph{with}.
 
-\section{What this will and will not achieve}
+\subsection{The numbers}
 
-\begin{warnbox}[State this before running, not after]
-The purpose of the change is to make the stated uncertainty honest. It is not
-guaranteed to move any particular parameter, and it must not be judged by whether it
-does.
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+term & value & source & status \\
+\midrule
+$\tau_R$   & 0.117 & latitude-band means, campaign-centred & measured, fixed \\
+$\tau_P$   & 0.396 & 2006--2024 pair covariance & measured, fixed \\
+$\tau_C$   & 0.06 (1985), 0.03 (2006, 2024) & prescribed, see below & \textbf{assumed} \\
+$\sigma_e$ & 0.685 & remainder of the fixed total & derived \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{keybox}[The one-sided check]
+$\sigma_e = 0.685$ sits comfortably above the models' measured within-plot error of
+0.44--0.48, so the trend is not over-claimed. This is a residual-based
+\emph{check}, not a residual-based \emph{setting} --- the distinction the design
+principle allows.
+\end{keybox}
+
+\subsection{Setting $\tau_C$}
+\label{sec:campaign}
+
+$\tau_C$ cannot be measured; it is chosen. That is not a weakness relative to the
+status quo, because the status quo also chooses a value --- zero --- and zero is the
+least defensible number available, asserting that three campaigns spanning 39 years,
+two laboratory methods and three field crews are perfectly inter-comparable.
+
+The choice rests on two arguments that happen to agree. First, the largest
+campaign-level defect we have actually identified and corrected --- the 1985
+litter-layer definition --- was worth 3.37--4.27\,Mg\,C\,ha$^{-1}$, i.e.\
+\textbf{4.8--6.0\% of stock}, and at least three further mechanisms are documented
+but unquantified (LOI-derived mineral carbon in 1985 versus dry combustion later,
+relocated subplots, the 1986--1995 dating spread). The residual should be
+\emph{at least} the size of the one we happened to measure. Second, 1985 deserves
+roughly twice the others: different laboratory method, relocated subplots, an
+imputed litter layer, a ten-year dating spread, and no external validation, whereas
+the 2006 and 2024 processing reproduces LUKE's official national stocks exactly.
+A 3\% base doubled for 1985 gives 6\%, which is also the top of the measured
+litter-layer range. \textbf{This is a stated assumption, not a measurement, and
+should be written as one.}
+
+\section{What the change is expected to achieve}
+
+\subsection{Effect on the evidence}
+
+On the calibration target (1205 observations, 456 plots; 310 with three visits,
+129 with two, 17 with one):
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+structure & SE of the national mean & inflation & effective $n$ \\
+\midrule
+independent (now) & 0.0231 & 1.00 & 1205 \\
+$+\,u^{P}$        & 0.0274 & 1.19 & 855 \\
+$+\,u^{P}+u^{R}$  & 0.0496 & \textbf{2.15} & \textbf{260} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}[The plot term alone is not worth doing]
+$u^{P}$ by itself reduces precision by a factor 1.4, against a likelihood that is
+already 10--15 times more informative than the prior for $\sigma_{\text{input}}$. It
+moves the estimates by 1--2\%. \textbf{The regional term is where the effect is}, and
+the two must go in together.
 \end{warnbox}
 
-A widened level uncertainty allows externally derived priors to carry more weight,
-because the relative influence of a prior and a likelihood is set by their relative
-precisions. Rough arithmetic suggests that accounting for plot-level correlation alone
-would raise the influence of the input-multiplier prior from about seven per cent to
-roughly fourteen, and that adding the regional level could bring it near thirty.
+\subsection{Expected landing}
 
-\begin{warnbox}[These figures are unreliable and should not be quoted]
-They come from a marginal, one-parameter-at-a-time approximation. That same style of
-approximation was tested against a full reweighting of the existing posterior draws
-and failed badly: once two priors change together, the existing samples provide
-almost no coverage of the new region --- an effective sample size of one draw in a
-thousand. Direction can be anticipated; magnitude cannot. Only running the calibration
-settles it.
+Marginal, local approximations --- direction is predictable, magnitude is not; an
+estimate of exactly this kind gave an effective sample size of 1 in 1001 when used
+to predict a prior change. Treat as order of magnitude.
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & now & expected \\
+\midrule
+posterior sd of $\log\sigma_{\text{input}}$ & 0.062--0.076 & roughly double \\
+$\sigma_{\text{input}}$ & 1.69--2.10 & 1.51--1.80 \\
+intrinsic MRT (Yasso07/15/20) & 21.7 / 25.1 / 21.4 & $\sim$25.4 / 28.5 / 24.8 \\
+effective litter flux & 4.25--5.28 & 3.8--4.6 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The flux row is the checkable one: all six models would fall inside the Nordic
+Class~I window of 4.62\,tC\,ha$^{-1}$\,yr$^{-1}$ for the first time.
+
+\begin{warnbox}[No prediction is offered for $\sigma_{\text{init}}$]
+The arithmetic above assumes the likelihood loosens uniformly in every direction.
+That is apt for a level parameter such as $\sigma_{\text{input}}$ and \emph{wrong}
+for $\sigma_{\text{init}}$, whose information lives in trajectory shape --- and the
+shared offsets cancel on differencing, leaving within-plot contrasts untouched.
+$\sigma_{\text{init}}$ should move only as a knock-on through its correlation with
+$\sigma_{\text{input}}$, measured at $-0.29$ to $-0.45$. An earlier reading of the
+marginal prior-to-posterior widths concluded the opposite and was wrong.
 \end{warnbox}
 
-\section{Open questions to resolve before implementing}
+\section{What it will not achieve}
 
-\begin{enumerate}[leftmargin=1.6em]
-\item \textbf{Heavy tails.} The current likelihood optionally uses a Student's
-$t$ distribution to accommodate kurtosis near $7$. A $t$ does not decompose into a
-shared part plus an independent part the way a normal does, so the two features do
-not simply stack. Either apply compound symmetry to the normal version, or adopt a
-multivariate $t$ per plot, which preserves closed form but changes the meaning of the
-tail parameter. This must be decided deliberately rather than discovered at runtime.
+\subsection{The trend is a separate problem, and the short interval is the fragile one}
 
-\item \textbf{The regional level.} Plots within a latitude band are also correlated.
-This can be added as a second, nested shared term, still in closed form, at the cost
-of the outer summation no longer being over independent units. It is the larger of the
-two effects on the national level and should probably be included, but it is a bigger
-change and could follow as a second step.
+The correlated likelihood widens the \emph{level}. It does nothing for the
+\emph{trend}, which is governed by campaign comparability. Writing the implied
+uncertainty on an observed rate as $\tau_C\sqrt{2}\,\bar{C}/\Delta t$:
 
-\item \textbf{Comparability of log-likelihoods.} Changing the likelihood changes its
-normalising constant. Log-likelihoods from before and after are therefore \emph{not}
-comparable, and neither are any quantities derived from them. Comparisons across the
-change must use quantities computed after the fact, such as root-mean-square error or
-the per-draw distributions reported in the appendix on posterior RMSE.
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+ & signal & \% of stock & $\tau_C$ that dissolves it (1$\sigma$) \\
+\midrule
+1985$\rightarrow$2024 & 9.1\,Mg\,ha$^{-1}$ over 35.1\,yr & 12.8 & \textbf{9.1\%} \\
+2006$\rightarrow$2024 & 2.1\,Mg\,ha$^{-1}$ over 18.0\,yr & \textbf{3.0} & \textbf{2.1\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-\item \textbf{Campaign effects.} A campaign-specific \emph{spread} is safe and could
-be added. A campaign-specific \emph{mean offset} must not be: the trend we are trying
-to estimate \emph{is} the difference between campaign levels, so a free offset absorbs
-the signal. This has already been demonstrated --- a fitted offset of $-0.137$ implied
-that no accumulation had occurred at all.
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+$\tau_C$ scheme (1985 / others) & 1985--2024 ($+0.259$) & 2006--2024 ($+0.117$) \\
+\midrule
+0 (current, implicit) & exact & exact \\
+4\% / 2\%  & $\pm0.090$ \;(2.87$\sigma$) & $\pm0.111$ \;(1.05$\sigma$) \\
+\textbf{6\% / 3\% (adopted)} & $\pm0.135$ \;(1.91$\sigma$) & $\pm0.167$ \;(0.70$\sigma$) \\
+10\% / 5\% & $\pm0.226$ \;(1.15$\sigma$) & $\pm0.278$ \;(0.42$\sigma$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{keybox}[The main result of this analysis, and it is not about the likelihood]
+The intuition has been that 1985 is the campaign to distrust, so the long
+comparison is the weak one. The arithmetic says the reverse. \textbf{1985--2024 is
+robust} --- 35 years is long enough for the signal to outgrow any plausible bias,
+surviving to $\tau_C \approx 9\%$. \textbf{2006--2024 is not resolvable} at any
+$\tau_C$ above about 2\%, even though it uses our two best campaigns: same protocol,
+both reproducing LUKE's official stocks exactly. An 18-year change of 3\% of stock
+simply cannot survive a campaign offset of comparable size. No amount of trusting
+those two campaigns repairs this; the interval is too short relative to the signal.
+\end{keybox}
+
+\begin{warnbox}[A recorded result that must be restated]
+The finding that ``2006$\rightarrow$2024 is a source in all six models'' has died,
+with four models now bracketing the observed $+0.117$. That is much weaker than it
+reads: $+0.117$ itself is not resolvable against any campaign bias above $\sim$2\%.
+``The models bracket the observation'' is not evidence when the observation carries
+an unquantified systematic of its own size.
+\end{warnbox}
+
+This table is analytic --- arithmetic on the campaign means --- so all three
+$\tau_C$ schemes are reported at no computational cost, whatever is run.
+
+\subsection{Other things it does not fix}
+
+The plot term is not a substitute for edaphic predictors; no model in the ensemble
+has any, which is why $R^2 \approx 0.02$ and why a persistent per-plot offset is the
+right shape for the missing information. And nothing here addresses the possibility
+that the models are structurally wrong about early accumulation --- the misfit
+concentrated in 1985--2006 remains whatever the likelihood says.
+
+\section{Implementation}
+
+\subsection{It is computationally trivial, for one specific reason}
+
+Every variance component is \textbf{fixed}. $\Sigma$ therefore does not depend on
+$\theta$ and does not change between MCMC draws. Factorise it \emph{once} at setup
+--- a $1205\times1205$ Cholesky, well under a second, about 12\,MB stored --- and
+each likelihood evaluation is a triangular solve for $r'\Sigma^{-1}r$ with
+$r = \log y - \log f(\theta)$. That is of order 1\,ms against a forward model
+costing 227\,ms: under half a percent of overhead. $\log|\Sigma|$ is computed once.
+
+Woodbury and Sherman--Morrison identities are \emph{not} required. They would earn
+their place only if the variance components were being estimated, or if $n$ were far
+larger.
+
+\begin{warnbox}[The one structural change]
+The likelihood is currently computed plot-by-plot under \texttt{mclapply} and
+summed. The plot term preserves that decomposition and the regional term preserves
+it with regions as blocks, but \textbf{the campaign term couples every plot and
+every region simultaneously}, so the per-plot sum is replaced by a single global
+solve. This is a change to how the likelihood is assembled, not a local edit.
+\end{warnbox}
+
+\subsection{Build order --- these are local unit tests, not calibrations}
+
+Each check is a single likelihood evaluation at a fixed parameter vector, compared
+against the previous stage. Seconds on a laptop; no MCMC.
+
+\begin{enumerate}[nosep]
+\item $\tau_P = \tau_R = \tau_C = 0$ must reproduce the current log-likelihood
+      \textbf{exactly}, to floating point. This is the only test that separates a
+      correct implementation from a plausible-looking one.
+\item Add $u^{P}$; setting $\tau_P=0$ must return to step 1.
+\item Add $u^{R}$; setting $\tau_R=0$ must return to step 2.
+\item Add $u^{C}$; setting $\tau_C=0$ must return to step 3.
 \end{enumerate}
 
-\section{Recommended sequence}
+\subsection{Run configuration}
 
-\begin{enumerate}[leftmargin=1.6em]
-\item Measure $\rho$ once more on the current residuals and fix $\tau$ from it.
-\item Implement Equation~\ref{eq:cs} for the normal branch only, leaving the Student's
-$t$ branch untouched and selectable, so the change is reversible by a switch.
-\item Verify on a short run that the log-likelihood is computed correctly, by checking
-that setting $\tau=0$ reproduces the current values exactly.
-\item Run the full calibration; compare using RMSE distributions and parameter
-locations, never log-likelihood.
-\item Only then consider the regional level.
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+switch & value & note \\
+\midrule
+correlation & $u^{R}+u^{P}+u^{C}$ & values in the table above \\
+\texttt{HIKET\_SIGMA\_TOTAL} & 0.800 & unchanged; split, not added \\
+\texttt{HIKET\_LIK\_DF} & \textbf{unset} & Student-$t$ dropped, see below \\
+\texttt{HIKET\_SIGMA\_1985\_INFL} & \textbf{1.0} & superseded by $\tau_C$ \\
+chains / iterations & 5 $\times$ 50000 & unchanged \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{One launch, six jobs, all six models.} No staged runs: the intermediate
+stages are unit tests, not calibrations.
+
+\paragraph{Why Student-$t$ is dropped.} The tails were adopted because measured
+kurtosis is 6.9--7.1 against a Gaussian 3. But pooling observations from plots with
+different persistent offsets produces heavy tails \emph{mechanically} --- a mixture
+of Gaussians with different means is leptokurtic. Tails and shared offsets are
+competing explanations for the same measurement, and fitting both risks paying twice
+for one structure. Drop them, then measure kurtosis \emph{conditional on} the fitted
+offsets: if it remains near 7 the tails are independently justified and return; if
+it falls toward 3 they were a proxy for exactly this. Note that $\sigma$ means the
+same thing either way, since the current setup already maps it to the standard
+deviation.
+
+\paragraph{Why the 1985 inflation is removed.} \texttt{SIGMA\_1985\_INFL} = 2.0 was a
+crude device for ``1985 is less trustworthy''. $\tau_C$ now does that job explicitly
+and with a stated magnitude. Keeping both would double-count.
+
+\begin{warnbox}[This run changes three things at once]
+Correlation on, tails off, 1985 inflation off. It is therefore a comparison of
+\emph{error models}, not an isolation of the correlation effect, and the one-factor
+discipline used in previous runs does not apply. Accepted deliberately: the
+intermediate configurations are not scientifically interesting, and attribution can
+be recovered afterwards from the conditional kurtosis and the campaign-specific
+residual spreads.
+\end{warnbox}
+
+\section{Pre-registered predictions}
+
+Stated before launch so that the outcome cannot be rationalised afterwards.
+
+\begin{enumerate}[nosep]
+\item $\sigma_{\text{input}}$ falls; MRT rises.
+\item Posterior widths increase, most along the level direction.
+\item RMSE is unchanged or slightly worse; the calibration--holdout gap narrows or
+      holds.
+\item $\sigma_{\text{init}}$ moves only weakly, and only via its correlation with
+      $\sigma_{\text{input}}$.
 \end{enumerate}
 
-Step three is the one that must not be skipped: $\tau = 0$ reducing exactly to the
-present likelihood is the only check that distinguishes a correct implementation from
-a plausible-looking one.
+\textbf{Falsifier:} if posterior widths do \emph{not} increase, the implementation is
+not doing what the theory says, whatever the medians do.
+
+\begin{warnbox}[Comparison rules]
+Log-likelihoods are \textbf{not} comparable across this change --- the normalising
+constant moves. Compare on the RMSE distributions
+(\texttt{S14\_rmse\_posterior}). And the standing rule applies with full force:
+\textbf{$\tau_C$, $\tau_P$ and $\tau_R$ must never be tuned to land MRT on a
+published value.}
+\end{warnbox}
+
+\section{What this is adopted for}
+
+Not because it moves MRT. The independence assumption is measurably false: 1205
+observations carry the weight of about 260 for the national level. The corrected
+accounting is the more defensible error model whether or not the estimates move at
+all. If MRT does not move, that is a result --- it would say the short residence
+times are not an artefact of overconfidence, which is worth as much as the
+alternative.
 
 \end{document}

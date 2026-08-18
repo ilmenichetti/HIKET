@@ -698,11 +698,27 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
-- **⭐⭐ NEXT ACTION (agreed 2026-08-18): implement the CORRELATED LIKELIHOOD, then launch on Roihu.**
-  Compound symmetry, `log y_ij = log f_ij(θ) + u_i + e_ij`, `u_i ~ N(0, τ²)`, τ **fixed** from the
-  measured ICC (0.57–0.71) so it adds no free parameter. Full write-up:
+- **⭐⭐ NEXT ACTION — the CORRELATED LIKELIHOOD; design SETTLED 2026-08-18, not yet implemented.**
+  `log y_ij = log f_ij(θ) + u^R_r(i) + u^P_i + u^C_j + e_ij`. **Nothing is estimated** — all four
+  variances FIXED, offsets marginalised: **τ_R = 0.117** (latitude bands), **τ_P = 0.396**
+  (2006–2024 pair covariance), **τ_C = 0.06 (1985) / 0.03 (2006, 2024)** prescribed, **σ_e = 0.685**
+  as the remainder of an UNCHANGED total 0.800 (split, never added). Student-t **dropped**,
+  `HIKET_SIGMA_1985_INFL` → **1.0**. **ONE launch, SIX jobs.** Full write-up (7 pp):
   `manuscript/HIKET_correlated_likelihood_proposal.tex`; memory [[correlated-likelihood-proposal]].
-  Recovery point before touching anything: `snapshots/20260818_pre_correlated_likelihood/`.
+  Recovery point: `snapshots/20260818_pre_correlated_likelihood/`.
+  **Design principle (Lorenzo): residuals may CHECK a design value, never SET one** — every τ comes
+  from the observations with campaign levels removed.
+  ⚠ **TRAP:** the observations' ICC is 0.799, but transplanting that RATIO onto a total of 0.800
+  gives σ_e = 0.359, *below* the models' within-plot error — recreating overconfidence in the TREND.
+  **Carry absolute SDs, never ratios.**
+  ⚠ **The plot term ALONE is not worth doing** (precision ÷1.4, estimates move 1–2%). The REGION
+  term is where the effect is: together they take n_eff 1205 → **260**, SE of the national mean ×2.15.
+  ⚠ **Marginalise ≠ fit** — the "campaign bias forbidden" rule applies to the FITTED version
+  (δ = −0.137). τ_C = 0 is also a choice, and the least defensible one.
+  ⚠ Implementation is trivial: all variances fixed ⇒ Σ is CONSTANT ⇒ factorise once (~12 MB), then a
+  ~1 ms solve per evaluation. **Woodbury/Sherman–Morrison NOT needed.** But the campaign term couples
+  everything, so the per-plot `mclapply` sum becomes one global solve.
+  ⚠ Build order = **local unit tests, not runs**: all τ=0 must reproduce the current ll EXACTLY.
   ⚠ **The non-negotiable check: τ = 0 must reproduce the current log-likelihood EXACTLY.**
   ⚠ Student-t does **not** decompose into shared + independent Gaussian, so the ν=6 tails and this
   feature do not stack — decide deliberately, do not leave both on by accident.
