@@ -1,7 +1,9 @@
 source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # =============================================================================
-# APPENDIX -- POSTERIOR DISTRIBUTION OF RMSE, one panel per model.
+# S14 -- POSTERIOR DISTRIBUTION OF RMSE, one panel per model.
+# (Supplementary numbering; the surrounding appendix module is
+#  manuscript/appendices/appendix_rmse_posterior.tex.)
 #
 # THE POINT: a cross-run comparison instrument. The multimodel metrics table
 # reports ONE RMSE per model (computed from the posterior-mean prediction), which
@@ -24,14 +26,14 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 # own range. The per-draw quantiles are also written to a CSV next to the PNG so
 # the comparison can be numerical, not visual.
 #
-# Run from repo root:  Rscript manuscript/figures/build_appendix_rmse_posterior.R
+# Run from repo root:  Rscript manuscript/figures/build_S14_rmse_posterior.R
 # =============================================================================
 
 source("manuscript/figures/model_palette.R")
 
 RMSE_XLIM <- c(40, 60)          # FIXED -- see comparability note above
-OUT_PNG   <- "manuscript/figures/appendix_rmse_posterior.png"
-OUT_CSV   <- "manuscript/figures/appendix_rmse_posterior.csv"
+OUT_PNG   <- "manuscript/figures/S14_rmse_posterior.png"
+OUT_CSV   <- "manuscript/figures/S14_rmse_posterior.csv"
 
 rid <- as.list(RID)
 res <- list(); tab <- list()

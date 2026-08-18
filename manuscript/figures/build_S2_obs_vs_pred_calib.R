@@ -44,23 +44,37 @@ for (m in names(bundles)) {
        col = adjustcolor(BASAL_COL[as.character(cl)], 0.75),
        xlab = "Observed SOC (tC/ha)", ylab = "Predicted SOC (tC/ha)",
        main = sprintf("%s   (calib R2 = %.3f)", m, r2c[m]), font.main = 1, cex.main = 1.0)
+  # Three references. Dashed grey = 1:1 (perfect). Dotted blue = predicting the mean
+  # regardless of the plot (NO skill). Red = the actual OLS fit -- it lies ~80-85% of
+  # the way from 1:1 down to flat, which is what R2 ~ 0.02 looks like. NB the cloud's
+  # major axis IS near 1:1 (SMA slope ~1.15); OLS is flatter by the factor r ~ 0.14,
+  # so "centred on 1:1" and "regresses flat" are both true and not in conflict.
   abline(0, 1, col = "grey40", lwd = 1.3, lty = 2)
+  abline(h = mean(d$soc_median), col = "steelblue4", lwd = 1.3, lty = 3)
   abline(lm(soc_median ~ soc_obs_tCha, d), col = "firebrick", lwd = 1.5)
 }
 
 # --- systematic-bias barplot (per-model palette) ---
 par(mar = c(4.2, 4.4, 2.4, 1))
+# Bias may be of EITHER sign (it flipped negative on the corrected target), so the
+# axis must span 0 and the bars both ways -- ylim = c(0, max(bias)*1.15) silently
+# inverted the panel and clipped five of six bars once every bias went negative.
+.bl <- range(c(0, bias * 1.15))
 bp <- barplot(bias[MODEL_ORDER], col = MODEL_COL[MODEL_ORDER], border = NA, las = 2,
               cex.names = 0.8, ylab = "Mean bias (tC/ha)",
-              main = "Systematic bias by model", font.main = 1,
-              ylim = c(0, max(bias) * 1.15))
-text(bp, bias[MODEL_ORDER], sprintf("%+.1f", bias[MODEL_ORDER]), pos = 3, cex = 0.75, xpd = NA)
+              main = "Systematic bias by model", font.main = 1, ylim = .bl)
+abline(h = 0, col = "grey40", lwd = 1)
+text(bp, bias[MODEL_ORDER], sprintf("%+.1f", bias[MODEL_ORDER]),
+     pos = ifelse(bias[MODEL_ORDER] >= 0, 3, 1), cex = 0.75, xpd = NA)
 
 # --- basal-area legend in the 8th cell ---
 plot.new()
 legend("center", bty = "n", cex = 1.05, pt.cex = 1.6, pch = 19,
        col = BASAL_COL[seq_len(bc$nb - 1)], title = "Stand basal area (quintiles, m2/ha)\nscatterplot point colour",
        legend = bc$labels)
+legend("bottom", bty = "n", cex = 0.9, lwd = c(1.3, 1.3, 1.5), lty = c(2, 3, 1),
+       col = c("grey40", "steelblue4", "firebrick"),
+       legend = c("1:1 (perfect)", "mean prediction (no skill)", "OLS fit"))
 dev.off()
 cat("wrote manuscript/figures/S2_obs_vs_pred_calib.png\n")
 cat("calib R2:", paste(sprintf("%s %.3f", names(r2c), r2c), collapse = "  "), "\n")

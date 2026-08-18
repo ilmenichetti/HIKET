@@ -29,6 +29,18 @@ RID <- vapply(FIG_MODELS, function(m) {
   sub(sprintf("^%s_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
 }, character(1))
 
+# Pin an OLDER run for a like-for-like comparison against the current one:
+#   HIKET_FIG_RID="SP1=<id>,...,Yasso20=<id>"   (unset = newest, the default)
+# Comparison only -- manuscript figures are always built from the default.
+local({
+  ov <- Sys.getenv("HIKET_FIG_RID", "")
+  if (nzchar(ov)) {
+    kv <- strsplit(strsplit(ov, ",")[[1]], "=")
+    for (e in kv) RID[[trimws(e[1])]] <<- trimws(e[2])
+    message("run_ids.R: RID OVERRIDDEN by HIKET_FIG_RID")
+  }
+})
+
 # Fail LOUDLY if the companion files a figure needs are absent, rather than
 # letting a builder fall back to whatever else is lying around.
 local({

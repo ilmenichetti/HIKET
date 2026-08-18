@@ -337,6 +337,12 @@ intrinsic MRT with per-draw `sigma_input`, and the answer is **the opposite for 
 | TP2 / TP3 | −0.263 / −0.313 | 0.98 / 0.97 → pinned independently |
 | Yasso07 / 15 / 20 | **−0.787 / −0.725 / −0.572** | **0.62 / 0.73 / 0.91** → a real ridge |
 
+⚠ **Updated on run `20260817_12*` (2026-08-18):** Yasso07 **−0.733**, Yasso15 **−0.675**, Yasso20
+**−0.637** (ratios 0.68 / 0.77 / 0.81). The family is now much more HOMOGENEOUS — Yasso20 no longer
+stands apart as the intermediate case, which removes the tension noted below. S13 (the benchmark
+trio, ξ included) reads SP1 **−0.902**, TP2 **−0.812**, TP3 **−0.805**: the simple models still ride
+a STRONGER ridge than any Yasso, so "the simple models show no such ridge" remains falsified.
+
 Not a run effect: TP2/TP3 give −0.34/−0.37 on `20260810_1529*` and −0.26/−0.31 on `20260812_0809*`.
 So the overconfidence argument stands for the simple models but must NOT be stated for the Yasso
 family, where the two genuinely trade off. Yasso20 is intermediate (0.92) — and is also the model
@@ -692,20 +698,56 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
-- **⏳ IN FLIGHT (2026-08-17): jobs 695142–695147 = SP1/TP2/TP3/Yasso07/Yasso15/Yasso20**, launched
-  from `ffce254`. **Tests ONE factor: the auxiliary-sigma priors** (widths 0.50→0.25, `sigma_input`
-  centre 1.30→1.08). Everything else byte-identical to the run it is compared against, so the
-  comparison is clean. Results ~2026-08-18.
-  **This is a `sigma_init` run, NOT an MRT run** — pre-registered: `sigma_init` up (prior and
-  likelihood are comparably informative), `sigma_input` down only slightly (the likelihood pins it
-  ~3.6× more sharply than the prior), **R² should FALL**. ⚠ Magnitudes are NOT predictable: a joint
-  reweight of the previous draws gave **ESS = 1 of 1001** because `sigma_init` must travel ~6.4 prior
-  SDs into unsampled territory. Direction only.
-  ⚠ **All three Yassos landed on the SAME node (rc5113)** — the configuration associated with the
-  2026-08-13 triple failure. Deliberately left to run: node reports 1.33 TB free and peaks are the
-  usual 9–14 GB, and if it dies we finally get a co-located failure WITH cgroup telemetry.
+- **⭐⭐ NEXT ACTION (agreed 2026-08-18): implement the CORRELATED LIKELIHOOD, then launch on Roihu.**
+  Compound symmetry, `log y_ij = log f_ij(θ) + u_i + e_ij`, `u_i ~ N(0, τ²)`, τ **fixed** from the
+  measured ICC (0.57–0.71) so it adds no free parameter. Full write-up:
+  `manuscript/HIKET_correlated_likelihood_proposal.tex`; memory [[correlated-likelihood-proposal]].
+  Recovery point before touching anything: `snapshots/20260818_pre_correlated_likelihood/`.
+  ⚠ **The non-negotiable check: τ = 0 must reproduce the current log-likelihood EXACTLY.**
+  ⚠ Student-t does **not** decompose into shared + independent Gaussian, so the ν=6 tails and this
+  feature do not stack — decide deliberately, do not leave both on by accident.
+  ⚠ Log-likelihoods are **not comparable** across the change (the normalising constant moves) —
+  compare on RMSE distributions (`S14_rmse_posterior`) instead.
+  **What it should move, corrected 2026-08-18:** the correction removes LEVEL information; within-plot
+  contrasts survive differencing untouched. So it loosens what the level pins — `sigma_input` and the
+  `MRT × sigma_input` ridge — while `sigma_init` (pinned largely by trajectory SHAPE) moves only as a
+  knock-on through their −0.29…−0.45 correlation. An earlier reading of the marginal prior/posterior
+  widths said the opposite; that inference was wrong.
+  ⚠ The per-plot ICC is the SMALLER of the two documented non-independence effects on the national
+  level; the regional/spatial term (SE of the national mean ×2.3) is larger and is deliberately a
+  SECOND step. Expect the first step to under-deliver on MRT.
   ⚠ **Submit with** `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'` — `MODULEPATH`
   is interactive-only; a bare `ssh … sbatch` dies in 1 s.
+
+- **✅ LANDED 2026-08-18 — jobs 695142–695147, the auxiliary-sigma-prior run.** RUN_IDs
+  `20260817_120140` / `_120433` / `_120621` / `_120827` / `_120828` / `_120829`. One factor vs the
+  previous run: sigma priors (widths 0.50→0.25, `sigma_input` centre 1.30→1.08); everything else
+  byte-identical. All six COMPLETED, R-hat ≤1.008, ESS ≥1450, inf_rate 0.00%. **Snapshotted whole
+  (825 MB) to `snapshots/20260818_pre_correlated_likelihood/` with a MANIFEST.**
+  ✅ **The rc5113 co-location survived** — all three Yassos on the 2026-08-13 failure node, peaks
+  13.4–15.6 GB against 160 GB. Node separation was never the whole story; nothing was killed.
+  **Results:** (1) **MRT ROSE — and this was pre-registered as NOT an MRT run**: 21.68 / 25.13 /
+  21.40 (Yasso07/15/20), i.e. +24 / +9 / +13% on this run alone. **Yasso20 now EXCEEDS its published
+  POINT** (19.03); Yasso15's gap to published fell 24%→17%. (2) **It was nearly free in fit** —
+  R² 0.011–0.024 → 0.010–0.022. ⚠ **This contradicts "MRT is likelihood-limited, not prior-limited"**;
+  a prior-only change moved MRT further than the error-model lever ever did. (3) The pre-registered
+  cost DID appear, but in RMSE not R²: calibration RMSE degraded in five of six (+0.25 to +1.06),
+  holdout moved ≤+0.28, so the **calibration–holdout gap narrowed in ALL SIX** (Yasso15's went
+  negative) — the constraint was paid for in fit that was not generalising. (4) `sigma_init` rose in
+  five of six (Yasso15 0.180→0.298) but **the growing-stock bound is still violated in all six**
+  (0.30–0.63 vs ~0.90). (5) `sigma_input` fell 15–25% but **tracked its prior centre nearly 1:1**,
+  which sits awkwardly with the claim that the likelihood pins it ~3.6× more sharply than the prior.
+  (6) Effective flux 4.25–5.28 ⇒ **five of six now exceed the decided Nordic window 4.62**.
+
+- **⚠ ALL MRT NUMBERS RECORDED BEFORE 2026-08-18 MAY BE MIS-MEASURED.** `doublechecks/intrinsic_mrt.R`
+  carried **hard-coded RUN_IDs** (line 46, last set 2026-08-13) and was never repointed, so the
+  "15.23 / 22.10 / 17.70, unmoved" recorded for the 20260814 corrected-target run is actually the
+  **20260812** posteriors — that run's MRT was never measured. True value **17.49 / 23.15 / 18.96**
+  (+15 / +5 / +7%), so the corrected target DID move MRT. Fixed: the script defaults to the current
+  run, **echoes its RUN_IDs at startup**, stamps them into `intrinsic_mrt.rds`, and accepts
+  `HIKET_MRT_RID` for deliberate comparisons; `build_F12_mrt_yasso.R` now sources `run_ids.R` and
+  **refuses to plot a mismatched .rds**. `manuscript/figures/run_ids.R` gained `HIKET_FIG_RID` for the
+  same purpose. **Always check the echoed RUN_IDs before quoting any MRT.**
 
 - **✅ LANDED 2026-08-15/17 — the corrected-target run, all six on one footing.** SP1/TP2/TP3
   `20260813_0803*`, Yasso07/15/20 `20260814_105614` / `_105757` / `_105907`. 1205 obs, σ=0.800,
@@ -714,8 +756,9 @@ noise the error model should absorb, not as data error.
   `diagnostics/` are gitignored and Roihu scratch is purged at 180 days, so this is the only
   comparison basis for the next run. ⚠ `manuscript/figures/run_ids.R` auto-selects the NEWEST
   posterior, so the next run silently overwrites every figure — that is why the snapshot exists.
-  **Results:** (1) intrinsic MRT **15.23 / 22.10 / 17.70** (Yasso07/15/20), unmoved from the previous
-  run as pre-registered; (2) **bias FLIPPED SIGN** — the uniform over-prediction is gone, now −0.6 to
+  **Results:** (1) ⚠ intrinsic MRT was recorded as **15.23 / 22.10 / 17.70**, "unmoved as
+  pre-registered" — **that was a stale-RUN_ID artefact**; the true value is **17.49 / 23.15 / 18.96**
+  and MRT DID move (+15 / +5 / +7%). See the correction item above; (2) **bias FLIPPED SIGN** — the uniform over-prediction is gone, now −0.6 to
   −2.5 (calib), −1.2 to −4.0 (holdout), so the "level offset" thread needs re-reading; (3) the
   **"2006→2024 is a source in all six" headline is DEAD** — it survives only in SP1 (−0.362) and
   Yasso20 (−0.181); TP2/TP3/Yasso07/Yasso15 bracket the observed +0.117 well; (4) over the full span

@@ -2,8 +2,8 @@
 %  Appendix module: Posterior distribution of RMSE
 %  Modular subfile: compiles standalone (uses the main preamble) OR is
 %  pulled into the main document via \subfile{...}. See main file header.
-%  Figure built by: manuscript/figures/build_appendix_rmse_posterior.R
-%  Numbers also written to: manuscript/figures/appendix_rmse_posterior.csv
+%  Figure built by: manuscript/figures/build_S14_rmse_posterior.R
+%  Numbers also written to: manuscript/figures/S14_rmse_posterior.csv
 % =====================================================================
 \documentclass[../HIKET_main_manuscript.tex]{subfiles}
 
@@ -23,7 +23,7 @@ is the part that is not merely a fit statistic.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{figures/appendix_rmse_posterior.png}
+  \includegraphics[width=\linewidth]{figures/S14_rmse_posterior.png}
   \caption{Posterior distribution of RMSE, one panel per model, recomputed for each
   of the 100 posterior draws. Blue = calibration plots, red = held-out plots;
   dashed lines are medians; densities are scaled to a common height so shape is
@@ -33,21 +33,33 @@ is the part that is not merely a fit statistic.
 \end{figure}
 
 Two features are worth noting. First, the six models are barely separated in
-central RMSE (calibration medians span $43.6$--$44.4$~tC\,ha$^{-1}$), which is the
+central RMSE (calibration medians span $43.8$--$45.1$~tC\,ha$^{-1}$), which is the
 same message the skill metrics carry: structure buys very little here. Second, and
 less visible in a point estimate, the calibration--holdout gap is \emph{not}
-uniform across the ensemble. TP2 and TP3 achieve the best calibration RMSE of the
-six yet the worst on held-out plots ($43.6 \rightarrow 46.8$ and
-$43.6 \rightarrow 46.9$), while Yasso15's two distributions almost coincide
-($44.2 \rightarrow 44.4$). The models that fit the calibration set best are
-therefore the ones that generalise worst, and they are also the models carrying
-the largest input multipliers --- consistent with fit being bought by rescaling
-inputs rather than by resolving kinetics.
+uniform across the ensemble, and it separates the ensemble cleanly in the wrong
+direction. The three models with the \emph{best} calibration RMSE --- SP1, TP2 and
+TP3 --- carry the three \emph{largest} gaps ($+1.4$, $+3.1$, $+3.1$~tC\,ha$^{-1}$),
+while the three that fit the calibration set least well close theirs or reverse it:
+Yasso20 $+0.3$, Yasso07 $+1.0$, and Yasso15 does slightly \emph{better} on held-out
+plots than on calibration ones ($45.0 \rightarrow 44.5$). The models that fit best
+are therefore the ones that generalise worst. This is not explained by the size of
+the input multiplier, as one might expect: $\sigma_{\text{input}}$ is largest in
+Yasso07 ($2.10$), which has one of the smallest gaps, and across the ensemble the
+correlation between multiplier and gap is weakly negative ($-0.25$).
 
 This figure is intended as a comparison instrument across calibrations. Where a
 prior is tightened onto a physical referent, the expectation is that fit degrades;
 the quantity of interest is then not only how far the distribution moves but
 whether its width moves with it, since a constraint that shifts the location while
 leaving the spread untouched is doing something different from one that does both.
+
+That comparison has now been made once. Tightening the auxiliary-parameter priors
+(the widths of $\sigma_{\text{init}}$ and $\sigma_{\text{input}}$, and the centre of
+the latter) degraded calibration RMSE in five of the six models, by $+0.25$ to
+$+1.06$~tC\,ha$^{-1}$, while held-out RMSE moved by at most $+0.28$. The
+calibration--holdout gap consequently narrowed in \emph{every} model, in one case
+changing sign. The cost of the constraint was therefore paid almost entirely in fit
+that was not generalising, which is the outcome a physically-motivated prior is
+supposed to produce and is not visible in $R^{2}$, which barely moved.
 
 \end{document}

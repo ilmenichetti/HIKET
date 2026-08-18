@@ -1,6 +1,7 @@
 suppressWarnings(suppressMessages(library(BayesianTools)))
 set.seed(2025)
 source("manuscript/figures/model_palette.R")
+source("manuscript/figures/run_ids.R")   # RID, for the staleness guard below
 
 # Intrinsic model MRT: computed by doublechecks/intrinsic_mrt.R, which feeds each
 # model a UNIT litter input at a fixed reference condition (dataset-mean climate
@@ -16,6 +17,20 @@ source("manuscript/figures/model_palette.R")
 # 'MRT too short' and 'sigma_input too high' are ONE finding from two ends.
 # Read this figure against the sigma_input posterior, and say so in the caption.
 RES <- readRDS("doublechecks/intrinsic_mrt.rds")
+
+# Guard: this artefact is written by doublechecks/intrinsic_mrt.R, which can be pointed
+# at an older run for comparison. Refuse to plot it against the current RUN_IDs.
+local({
+  if (is.null(RES$rid))
+    stop("intrinsic_mrt.rds predates RUN_ID stamping -- re-run doublechecks/intrinsic_mrt.R",
+         call. = FALSE)
+  bad <- names(RES$rid)[RES$rid != RID[names(RES$rid)]]
+  if (length(bad))
+    stop("intrinsic_mrt.rds is from a DIFFERENT run: ",
+         paste(sprintf("%s=%s (figures use %s)", bad, RES$rid[bad], RID[bad]), collapse = ", "),
+         "\n  Re-run doublechecks/intrinsic_mrt.R with no HIKET_MRT_RID override.",
+         call. = FALSE)
+})
 MODELS <- c("Yasso07","Yasso15","Yasso20")
 R <- RES$out; ref <- RES$ref
 

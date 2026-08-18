@@ -31,7 +31,16 @@ siginit <- function(m) quantile(getSample(post_of(m))[,"sigma_init"], c(.025,.5,
 A  <- t(sapply(models, effflux))   # bounded effective flux
 SI <- t(sapply(models, siginit))   # sigma_init
 rawJ <- median(sapply(models, function(m){ inp<-readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds",m,new[[m]])); median(sapply(inp$plots,function(id) totlit(inp$inputs_by_plot[[id]]))) }))
-LO <- 0.5; HI <- 8.7
+# Two NPP envelopes, drawn as nested bands (Gower 2001, Class I evergreen maxima):
+#   GLOBAL  [0.5, 8.7]   the original window -- so wide it never bound any model
+#   NORDIC  [0.05, 4.62] the decided replacement (2026-08-14), region-matched
+# ⚠ BOTH are MAXIMA, while sigma_input x Jbar is a national MEAN (sigma_input is one
+# global scalar). Bounding a mean with a maximum is the category error that made the
+# global window vacuous; the Nordic window narrows it but does not change its kind.
+# Read an excursion as a flag, not as proof of physical impossibility.
+LO_G <- 0.5;  HI_G <- 8.7        # global
+LO_N <- 0.05; HI_N <- 4.62       # Nordic (decided)
+LO <- LO_G; HI <- HI_G
 source("manuscript/figures/model_palette.R")   # shared per-model palette
 col <- MODEL_COL
 darken <- function(c, f=0.65){ v <- col2rgb(c)/255; rgb(v[1]*f, v[2]*f, v[3]*f) }
@@ -41,9 +50,11 @@ par(mfrow=c(1,2), mar=c(4.6,5.8,3.0,1.2), mgp=c(2.7,0.7,0), cex.axis=1.05, cex.l
 
 ## ---- Panel A: sigma_input as effective litter flux -------------------------
 plot(NA, xlim=c(0.5,12), ylim=c(0.4,n+0.6), log="x", xaxs="i", axes=FALSE, xlab="", ylab="")
-rect(LO, 0.2, HI, n+0.8, col="#e6f2e6", border=NA)                 # physical NPP envelope
-abline(v=HI, col="#2e7d32", lwd=1.6, lty=1)
-abline(v=LO, col="#2e7d32", lwd=1.3, lty=2)
+rect(LO_G, 0.2, HI_G, n+0.8, col="#eef6ee", border=NA)             # global envelope (pale)
+rect(0.5,  0.2, HI_N, n+0.8, col="#c9e2c9", border=NA)             # Nordic envelope (stronger)
+abline(v=HI_G, col="#7fb07f", lwd=1.4, lty=2)
+abline(v=HI_N, col="#1b5e20", lwd=2.0, lty=1)
+abline(v=LO_G, col="#7fb07f", lwd=1.2, lty=2)
 abline(v=rawJ, col="grey45", lwd=1.1, lty=3)                        # tree litter mean
 xt <- c(0.5,1,2,5,10)
 axis(1, at=xt, labels=xt); axis(2, at=ypos, labels=models, las=1, tick=FALSE); box()
@@ -54,8 +65,8 @@ for(i in seq_len(n)){
   segments(A[i,1], y, A[i,3], y, col=cm, lwd=2.6)
   points(A[i,2], y, pch=21, bg=cm, col=darken(cm), cex=1.6, lwd=1.3)
 }
-text(sqrt(LO*HI), 0.72, "physical NPP envelope [0.5, 8.7]", col="#2e7d32", font=3, cex=0.72)
-text(HI, n+0.55, "NPP ceiling 8.7", col="#2e7d32", pos=2, cex=0.72, font=3)
+text(0.55, 0.62, "NPP envelope (Gower 2001 Class I maxima)", col="#2e7d32", font=3, cex=0.68, adj=0)
+text(0.55, 0.42, "dashed = global 8.7    solid = Nordic 4.62 (decided)", col="#2e7d32", font=3, cex=0.68, adj=0)
 text(rawJ, n+0.55, expression(bar(J) %~~% "2.5"), col="grey35", pos=4, cex=0.72)
 title(main=expression("A  "*sigma[input]*": litter input multiplier, as effective flux"),
       cex.main=0.98, font.main=1)

@@ -43,7 +43,17 @@ DCOL <- c("alpha_A","alpha_W","alpha_E","alpha_N","p_WA","p_EA","p_NA","p_AW","p
           "p_AE","p_WE","p_NE","p_AN","p_WN","p_EN","w1","w2","w3","w4","w5",
           "beta1","beta2","betaN1","betaN2","betaH1","betaH2","gamma","gammaN","gammaH",
           "p_H","alpha_H","delta1","delta2","r")
-RID <- c(Yasso07="20260812_080941", Yasso15="20260812_080940", Yasso20="20260812_080940")  # 597031-33: sigma 0.80 + Student-t (2026-08-13)
+# Default = the current run (695142-47: auxiliary-sigma priors tightened, 2026-08-17).
+# Override for an older run with HIKET_MRT_RID="Yasso07=<id>,Yasso15=<id>,Yasso20=<id>".
+# NB this was hard-coded and went stale once already -- the 20260814 run was reported
+# with the 20260812 posteriors' MRT. Always check the RUN_IDs echoed at startup.
+RID <- c(Yasso07="20260817_120827", Yasso15="20260817_120828", Yasso20="20260817_120829")
+.rid_env <- Sys.getenv("HIKET_MRT_RID", "")
+if (nzchar(.rid_env)) {
+  kv <- strsplit(strsplit(.rid_env, ",")[[1]], "=")
+  RID <- setNames(vapply(kv, `[`, "", 2L), vapply(kv, `[`, "", 1L))
+}
+cat("RUN_IDs:", paste(names(RID), RID, sep="=", collapse=" | "), "\n\n")
 
 setup <- function(M) {
   src <- readLines(sprintf("Calibration_real_data_transient/run_%s_transient_calibration.R", M),
@@ -136,5 +146,7 @@ for (M in names(RID)) {
   cat(sprintf("  OUR posterior       : %8.2f  90%% [%.2f, %.2f]  n=%d\n\n",
               median(ours), quantile(ours,.05), quantile(ours,.95), length(ours)))
 }
-saveRDS(list(out = out, ref = ref), "doublechecks/intrinsic_mrt.rds")
+# Stamp the RUN_IDs into the artefact: F12 is built from this file, so a comparison
+# run against an OLD posterior would otherwise leave a stale figure behind silently.
+saveRDS(list(out = out, ref = ref, rid = RID), "doublechecks/intrinsic_mrt.rds")
 cat("wrote doublechecks/intrinsic_mrt.rds\n")

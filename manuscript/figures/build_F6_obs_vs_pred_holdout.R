@@ -46,13 +46,19 @@ for (m in names(bundles)) {
        col = adjustcolor(cls_col[as.character(cl)], 0.75),
        xlab = "Observed SOC (tC/ha)", ylab = "Predicted SOC (tC/ha)",
        main = sprintf("%s   (holdout R2 = %.3f)", m, r2h[m]), font.main = 1, cex.main = 1.2)
+  # See build_S2: dashed = 1:1, dotted = predicting the mean (no skill), red = OLS fit.
   abline(0, 1, col = "grey40", lwd = 1.4, lty = 2)
+  abline(h = mean(d$soc_median), col = "steelblue4", lwd = 1.4, lty = 3)
   abline(lm(soc_median ~ soc_obs_tCha, d), col = "firebrick", lwd = 1.6)
 }
 # shared legend in the last cell margin
 legend("bottomright", inset = c(0.02, 0.02), bty = "n", cex = 0.92, pt.cex = 1.3,
        pch = 19, col = cls_col[seq_len(bc$nb - 1)],
        title = "Stand basal area (quintiles, m2/ha)", legend = bc$labels)
+legend("topleft", inset = c(0.02, 0.02), bty = "n", cex = 0.88,
+       lwd = c(1.4, 1.4, 1.6), lty = c(2, 3, 1),
+       col = c("grey40", "steelblue4", "firebrick"),
+       legend = c("1:1 (perfect)", "mean prediction (no skill)", "OLS fit"))
 dev.off()
 cat("wrote manuscript/figures/F6_obs_vs_pred_holdout.png\n")
 cat("holdout R2:", paste(sprintf("%s %.3f", names(r2h), r2h), collapse = "  "), "\n")

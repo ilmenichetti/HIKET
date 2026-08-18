@@ -77,6 +77,9 @@ cat(sprintf("balanced panel: %d plots\n", nrow(W)))
 # 1986-1995 (mean ~1989), so 39 overstates it by ~11%. samp_year is in the baseline.
 .sy <- plotd$samp_year[plotd$campaign == "VMI8"]; .sy <- .sy[is.finite(.sy)]
 YRS_85_24 <- 2024 - mean(.sy)
+YRS_85_06 <- 2006 - mean(.sy)   # 17.1 yr, NOT the nominal 21
+YRS_06_24 <- 18
+VMI8_YR   <- round(mean(.sy))   # ~1989; F4 labels the campaign the same way
 
 BANDS <- c("OFH", "LM", "m0_20", "m20_40", "soc_deep_Mgha")
 BLAB  <- c("humus\nOFH", "litter\nLM", "mineral\n0-20 cm", "mineral\n20-40 cm", "modelled\ntail")
@@ -94,7 +97,7 @@ levA <- lv(function(cc) W[[paste0("OFH_", cc)]] + W[[paste0("LM_", cc)]])
 levB <- lv(function(cc) W[[paste0("OFH_", cc)]])
 levC <- lv(function(cc) W[[paste0("OFH_", cc)]] +
              (if (cc == "VMI8") W$LM_VMI8_C else W[[paste0("LM_", cc)]]))
-YRS  <- c(1985, 2006, 2024)
+YRS  <- c(VMI8_YR, 2006, 2024)   # first campaign at its MEAN sampling year (~1989), not 1985
 TR   <- list(A = levA, B = levB, C = levC)
 TLAB <- c(A = "A  as built (inconsistent)", B = "B  litter removed from all",
           C = "C  litter added to 1985  [default]")
@@ -111,16 +114,16 @@ bandpanel <- function(d, yrs, ttl, note, hollow = NULL) {
   yl <- range(0, d) + c(-0.45, 0.65)
   fill <- BCOL; if (!is.null(hollow)) fill[hollow] <- "white"
   bp <- barplot(d, col = fill, border = BCOL, names.arg = BLAB, ylim = yl,
-                ylab = sprintf("Change over %d yr (Mg C/ha)", yrs), main = ttl, cex.names = 0.8)
+                ylab = sprintf("Change over %.0f yr (Mg C/ha)", yrs), main = ttl, cex.names = 0.8)
   abline(h = 0, col = "grey30")
   text(bp, d, sprintf("%+.2f", d), pos = ifelse(d >= 0, 3, 1), cex = 0.72, offset = 0.28, font = 2)
   text(mean(bp[3:5]), yl[2] * 0.88, sprintf("total %+.2f", sum(d)), cex = 0.78, font = 3, col = "grey25")
   sub(note); invisible(bp)
 }
-bp1 <- bandpanel(d1, 21, "(a)  1985 -> 2006, by layer",
+bp1 <- bandpanel(d1, YRS_85_06, sprintf("(a)  VMI8 (mean %d) -> 2006, by layer", VMI8_YR),
                  "humus flat; the mineral soil carries the whole sink", hollow = 2)
 text(bp1[2], 0, "zero by\nconstruction", pos = 3, cex = 0.58, col = "grey45", font = 3, offset = 1.9)
-bandpanel(d2, 18, "(b)  2006 -> 2024, by layer",
+bandpanel(d2, YRS_06_24, "(b)  2006 -> 2024, by layer",
           "humus now DECLINES; the subsoil reverses sign")
 
 ## (c) the litter treatment as a bracket ---------------------------------------
@@ -137,7 +140,7 @@ for (k in names(TR)) {
 legend("topleft", lwd = 2.6, lty = TLTY[names(TLAB)], col = TCOL[names(TLAB)],
        legend = sprintf("%s   %+.3f Mg/ha/yr", TLAB, sapply(TR, function(y) (y[3] - y[1]) / YRS_85_24)),
        bty = "n", cex = 0.72)
-sub("A and C coincide after 1985; A and B share it -- each pair differs in one campaign only")
+sub("A and C coincide after the first campaign; A and B share it -- each pair differs in one campaign only")
 
 dev.off()
 cat("Wrote manuscript/figures/S9_soc_change_by_depth.png\n")
