@@ -703,7 +703,10 @@ noise the error model should absorb, not as data error.
   variances FIXED, offsets marginalised: **τ_R = 0.117** (latitude bands), **τ_P = 0.396**
   (2006–2024 pair covariance), **τ_C = 0.06 (1985) / 0.03 (2006, 2024)** prescribed, **σ_e = 0.685**
   as the remainder of an UNCHANGED total 0.800 (split, never added). Student-t **dropped**,
-  `HIKET_SIGMA_1985_INFL` → **1.0**. **ONE launch, SIX jobs.** Full write-up (7 pp):
+  `HIKET_SIGMA_1985_INFL` → **1.0** — ⚠ **REPLACED, not removed: 1985 keeps 2× weight via τ_C=0.06.**
+  The old switch inflated independent per-observation noise; τ_C is a shared LEVEL offset, which is
+  what the defect is. Stacking both would give an effective τ_C of 0.085 — the broad scheme by
+  accident. **ONE launch, SIX jobs.** Full write-up (7 pp):
   `manuscript/HIKET_correlated_likelihood_proposal.tex`; memory [[correlated-likelihood-proposal]].
   Recovery point: `snapshots/20260818_pre_correlated_likelihood/`.
   **Design principle (Lorenzo): residuals may CHECK a design value, never SET one** — every τ comes

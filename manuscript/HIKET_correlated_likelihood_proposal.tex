@@ -418,7 +418,7 @@ switch & value & note \\
 correlation & $u^{R}+u^{P}+u^{C}$ & values in the table above \\
 \texttt{HIKET\_SIGMA\_TOTAL} & 0.800 & unchanged; split, not added \\
 \texttt{HIKET\_LIK\_DF} & \textbf{unset} & Student-$t$ dropped, see below \\
-\texttt{HIKET\_SIGMA\_1985\_INFL} & \textbf{1.0} & superseded by $\tau_C$ \\
+\texttt{HIKET\_SIGMA\_1985\_INFL} & \textbf{1.0} & replaced by $\tau_C$(1985)=0.06 \\
 chains / iterations & 5 $\times$ 50000 & unchanged \\
 \bottomrule
 \end{tabular}
@@ -438,12 +438,26 @@ it falls toward 3 they were a proxy for exactly this. Note that $\sigma$ means t
 same thing either way, since the current setup already maps it to the standard
 deviation.
 
-\paragraph{Why the 1985 inflation is removed.} \texttt{SIGMA\_1985\_INFL} = 2.0 was a
-crude device for ``1985 is less trustworthy''. $\tau_C$ now does that job explicitly
-and with a stated magnitude. Keeping both would double-count.
+\paragraph{The 1985 inflation is replaced, not removed.} 1985 keeps its extra
+weight --- $\tau_C = 0.06$ against 0.03 for the others, the factor of two argued for
+above. What is switched off is the old \emph{device}. \texttt{SIGMA\_1985\_INFL}~=~2.0
+inflated the \emph{independent, per-observation} noise for 1985, reaching the campaign
+level only because $n$ is finite (as $1/\sqrt{n}$) and degrading every plot-level
+comparison in 1985 on the way. $\tau_C$ is a \emph{shared} level offset: it displaces
+the campaign level and does nothing else, whatever $n$ is. Since the documented defect
+is a level and not scatter --- 1985's noise level is normal, subsoil repeatability 0.63
+against 0.65 --- the old device was a blunt proxy that happened to hit the right target,
+and $\tau_C$ hits it directly. It also does what the old device structurally cannot:
+express level uncertainty for 2006 and 2024, which is what limits the recent trend.
+
+Numerically the two are near-equivalent for 1985, which is exactly why they must not be
+stacked. On the 1985 campaign mean, the other terms alone give 0.0578; the old device
+adds 0.0605 in quadrature and $\tau_C$ adds 0.0600. \textbf{Keeping both gives an
+effective $\tau_C$ of 0.085} --- silently the 10\%/5\% broad scheme rather than the
+6\%/3\% one adopted.
 
 \begin{warnbox}[This run changes three things at once]
-Correlation on, tails off, 1985 inflation off. It is therefore a comparison of
+Correlation on, tails off, the 1985 inflation replaced by $\tau_C$. It is therefore a comparison of
 \emph{error models}, not an isolation of the correlation effect, and the one-factor
 discipline used in previous runs does not apply. Accepted deliberately: the
 intermediate configurations are not scientifically interesting, and attribution can
