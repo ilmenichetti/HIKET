@@ -274,6 +274,13 @@ stopifnot(
 message(sprintf("flux_pair J_bar = %.3f tC/ha/yr | sigma_input window [%.3f, %.3f]",
                 J_bar, SP1_INPUT_FLUX_WINDOW[1] / J_bar, SP1_INPUT_FLUX_WINDOW[2] / J_bar))
 
+# --- Grouping for the correlated likelihood (2026-08-19) --------------------
+# Eight equal-count latitude bands on ETRS northing -- the grouping tau_R = 0.117
+# was measured on. Computed over the CALIBRATION plots so the bands are balanced
+# in the set actually fitted. Inert unless HIKET_CORRELATED_LIK=1.
+region_band <- hiket_latitude_bands(setNames(
+  site_raw$y_ETRS[match(plots_real, as.character(site_raw$plot_id))], plots_real))
+
 obs_meta <- lapply(plots_real, function(pid) {
   clim     <- Yasso07_climate[as.character(Yasso07_climate$plot_id) == pid, ]
   obs_plot <- SOC_obs_all[as.character(SOC_obs_all$plot_id) == pid, ]
@@ -285,7 +292,11 @@ obs_meta <- lapply(plots_real, function(pid) {
                             obs_plot$soc_obs_year), clim$year),
     soc_obs  = obs_plot$soc_obs_tCha,
     is_first = obs_plot$obs_rank == 1L,
-    sigma_infl = ifelse(obs_plot$year == 1985L, SIGMA_1985_INFL, 1.0)   # C5: down-weight VMI8
+    sigma_infl = ifelse(obs_plot$year == 1985L, SIGMA_1985_INFL, 1.0),  # C5: down-weight VMI8
+    # Correlated likelihood: the campaign KEY (not the true obs year) and the
+    # latitude band. Unused unless HIKET_CORRELATED_LIK=1.
+    campaign   = obs_plot$year,
+    region     = unname(region_band[pid])
   )
 })
 names(obs_meta) <- plots_real

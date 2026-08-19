@@ -43,6 +43,9 @@
 
 source("./Calibration_real_data/calibration_engine.R")
 
+# The correlated-error likelihood (2026-08-19). Default OFF; see the file header.
+source("./Calibration_real_data_transient/correlated_likelihood.R")
+
 
 # Override make_likelihood() with transient_init support.
 # Only the sd_vec line and function signature differ from the original.
@@ -147,7 +150,34 @@ make_likelihood <- function(n_cores,
   force(steady_state); force(run_model); force(sigma_obs_fixed); force(plots)
   force(climate_by_plot); force(inputs_by_plot); force(litter_means)
   force(obs_meta); force(steady_state_n); force(transient_init)
-  
+
+  # ---------------------------------------------------------------------------
+  # CORRELATED LIKELIHOOD SETUP (2026-08-19). Sigma does not depend on theta, so
+  # it is built and factorised exactly ONCE, here, and closed over.
+  # ---------------------------------------------------------------------------
+  .hiket_sigma_obj <- NULL
+  if (.hiket_correlated_lik) {
+    if (!isTRUE(.hiket_lognormal_lik))
+      stop("HIKET_CORRELATED_LIK=1 requires the LOG-NORMAL likelihood: the ",
+           "decomposition is additive on the LOG scale. Unset HIKET_LOGNORMAL_LIK=0.")
+    if (isTRUE(.hiket_use_t))
+      stop("HIKET_CORRELATED_LIK=1 and HIKET_LIK_DF do NOT stack: a Student-t does ",
+           "not decompose into shared + independent Gaussian components. Choose one ",
+           "deliberately -- do not leave both on by accident.")
+    infl <- unlist(lapply(plots, function(p) obs_meta[[p]]$sigma_infl))
+    if (length(infl) && any(abs(infl - 1) > 1e-12))
+      stop("HIKET_CORRELATED_LIK=1 requires SIGMA_1985_INFL = 1. tau_C REPLACES the ",
+           "1985 inflation; stacking them gives an effective tau_C of ~0.085. ",
+           "Set HIKET_SIGMA_1985_INFL=1.")
+    if (is.finite(.hiket_sigma_total) &&
+        abs(.hiket_sigma_total - HIKET_SIGMA_TOT) > 1e-12)
+      message(sprintf(paste0("[ERROR MODEL] NOTE: HIKET_SIGMA_TOTAL=%.3f is IGNORED under the ",
+                             "correlated likelihood;\n              the total is HIKET_SIGMA_TOT=%.3f, ",
+                             "split across the four components."),
+                      .hiket_sigma_total, HIKET_SIGMA_TOT))
+    .hiket_sigma_obj <- hiket_build_sigma(plots, obs_meta)
+  }
+
   cmpfun(function(x) {
     
     p_free       <- to_original(x)
@@ -239,6 +269,11 @@ make_likelihood <- function(n_cores,
       # requested total SD to the t's SCALE, so the two switches stay orthogonal
       # -- HIKET_SIGMA_TOTAL always means the total SD. With the switch unset,
       # .hiket_t_scale() is the identity and both branches are the old Gaussians.
+      # CORRELATED LIKELIHOOD (2026-08-19): the campaign term couples every
+      # observation, so no per-plot term exists. Hand back the log residuals and
+      # let the caller do ONE global solve. See correlated_likelihood.R.
+      if (.hiket_correlated_lik) return(log(meta$soc_obs) - log(SOC_hat))
+
       if (isTRUE(.hiket_lognormal_lik)) {
         infl <- if (!is.null(meta$sigma_infl)) meta$sigma_infl else 1
         s <- .hiket_t_scale(sd_use * infl)
@@ -258,6 +293,20 @@ make_likelihood <- function(n_cores,
       
     }, mc.cores = n_cores)
     
+    if (.hiket_correlated_lik) {
+      # A failed plot returned the scalar -Inf, a good one a finite residual
+      # vector; both are caught by the same finiteness test.
+      if (any(vapply(log_liks, function(z)
+                     is.null(z) || !length(z) || any(!is.finite(z)), logical(1))))
+        return(-Inf)
+      r <- unlist(log_liks, use.names = FALSE)
+      if (length(r) != .hiket_sigma_obj$n)
+        stop(sprintf(paste0("correlated likelihood: %d residuals but Sigma was built for %d.\n",
+                            "  The residual order/count must match hiket_build_sigma() exactly."),
+                     length(r), .hiket_sigma_obj$n))
+      return(hiket_corr_ll(r, .hiket_sigma_obj) + log_jac)
+    }
+
     log_liks <- unlist(log_liks)
     if (any(!is.finite(log_liks))) return(-Inf)
     sum(log_liks) + log_jac
