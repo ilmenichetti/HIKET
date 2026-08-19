@@ -1,5 +1,72 @@
 # NEXT SESSION — start here
 
+## 🚀 0-NOW. THE CORRELATED-LIKELIHOOD RUN IS READY TO LAUNCH (2026-08-19)
+
+Implemented, gated and wired. Commits `ab4861a` (likelihood), `aaad558` (effective n),
+`96509a6` (launch wiring). **Nothing is estimated** -- all four variances fixed, the three
+offsets marginalised: tau_R 0.117, tau_P 0.396, tau_C 0.06 (1985) / 0.03, sigma_e 0.685 as the
+remainder of an UNCHANGED total 0.800.
+
+**The gate passed.** `doublechecks/test_correlated_likelihood.R`: tau = 0 reproduces the
+independent log-likelihood to **1.7e-10** (SP1) / **5.9e-12** (Yasso15); all three guards refuse
+(Student-t, SIGMA_1985_INFL != 1, multiplicative normal); rejected draws agree as -Inf on both
+paths. All six models build Sigma identically -- 959 obs, 365 plots, 8 bands, 3 campaigns.
+
+**What it does, measured on the real Sigma** (`doublechecks/effective_n.R`):
+
+| | inflate | n_eff |
+|---|---|---|
+| national LEVEL | **2.18x** | 959 -> **202** |
+| 1985 campaign level | 1.79x | 269 -> 84 |
+| trend 1985->2024 | 1.35x | -- |
+| trend 2006->2024 | 1.11x | -- |
+
+The level is hit; the trends are not (u^P and u^R cancel on differencing). That asymmetry is
+the instrument working, and if a future change makes the trends fall as far as the level, the
+implementation is wrong.
+
+### PRE-REGISTERED, before the run
+
+- **Should move:** `sigma_input` and the MRT x sigma_input ridge -- the correction removes LEVEL
+  information and the level is what pins them.
+- **Should NOT move much:** `sigma_init`. u^P/u^R cancel on within-plot differencing, and
+  tau_C = 0.06/0.03 leaves the trend constraint ~12% TIGHTER than the SIGMA_1985_INFL = 2 it
+  replaces. **Expect this run to under-deliver on sigma_init and on the 1917 stock.**
+- **Watch ESS.** The likelihood now couples every plot and the level direction just got 2.18x
+  looser, so `sigma_input`'s posterior should widen. Not a bug; a mixing risk.
+
+### ⚠ THE REMAINING TRAPS ARE ALL OUTSIDE THE CODE
+
+1. **Recompile the Fortran on Roihu.** `.so` files are gitignored. ONE `R CMD SHLIB` call PER
+   `.f90` -- a combined call silently produces no `yasso15.so` and breaks Yasso15 AND Yasso20.
+   Check: `yasso07_transient_init` at defaults ~69 tC/ha; ~0 means stale.
+2. **Verify the log line before walking away.** Expect BOTH of these in the `.err`:
+   `[ERROR MODEL] CORRELATED likelihood: n = ... tau_R 0.117 | tau_P 0.396 | ... sigma_e 0.685`
+   and `Cores per chain: 40` (not 383). If the correlated line is ABSENT the
+   SINGULARITYENV_ export did not reach R and the run is a plain repeat of the last one.
+3. **Submit through an interactive shell** -- MODULEPATH is interactive-only:
+   `ssh roihu 'bash -ic "module load r-env && cd /scratch/project_2019134/HIKET && sbatch ..."'`
+   A bare `ssh ... sbatch` dies in ~1 s.
+
+⚠ **`ll` at defaults CHANGES with this run** (the normalising constant moved: SP1 -1090 -> -966).
+Do NOT use ll-at-defaults as the cross-run sanity check any more, and **compare runs on RMSE
+distributions, never on log-likelihood.** The stale-`.so` check is the ~69 tC/ha one, unaffected.
+
+✅ Snapshot already taken: `snapshots/20260818_pre_correlated_likelihood/` (825 MB, the
+`20260817_12*` run). `run_ids.R` auto-selects the newest posterior, so without it the next run
+erases the comparison.
+
+✅ Walltime is fine: last run 12.4-17.7 h, +12% worst case = 19.8 h against a 36 h limit.
+
+✅ **Stage 2 is safe to run in any shell.** The predictive scripts now read the error model from
+the posterior's own `error_model_spec`, not from the environment -- previously a stage-2 run
+without the SLURM exports would have built intervals at 0.442 for a run fitted at 0.800,
+silently. They also now report a TRUE posterior-predictive coverage alongside the parameter CI
+(validated on the current run: ParamCov 0.092, **ppCov 0.963** -- the error model is well
+calibrated per observation).
+
+---
+
 ## 🚨 0-NOW. STATE AT 2026-08-17 — READ THIS FIRST
 
 > **⏳ IN FLIGHT: jobs 695142–695147** (SP1/TP2/TP3/Yasso07/Yasso15/Yasso20), launched 2026-08-17
