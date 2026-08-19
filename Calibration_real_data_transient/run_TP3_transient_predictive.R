@@ -82,6 +82,34 @@ plot_info          <- inputs_pkg$plot_info
 plots_real         <- inputs_pkg$plots_real
 holdout_plots      <- inputs_pkg$holdout_plots
 sigma_obs_fixed    <- inputs_pkg$sigma_obs_fixed
+# --- TRUE posterior-predictive error scale (2026-08-19) ---------------------
+# sigma_obs_fixed (0.442) is the MEASUREMENT CV only. The predictive interval
+# below needs the TOTAL error, resolved exactly as the likelihood resolves it.
+# ⚠ Under the correlated likelihood the total is SPLIT, not increased, so the
+#   MARGINAL variance of a single plot-year is unchanged -- a one-observation
+#   interval is the same width either way. The shared offsets change only JOINT
+#   statements (see doublechecks/effective_n.R). See hiket_total_sigma().
+# ⚠ READ IT FROM THE POSTERIOR'S OWN METADATA, not from this shell. Stage 2 is
+#   routinely run days later, locally, without the SLURM script's exports -- so
+#   resolving sigma from the environment would silently build intervals on 0.442
+#   for a run fitted at 0.800. Same failure shape as the stale .so.
+SIGMA_PP <- local({
+  mf <- file.path(DIR_RUNS, sprintf("%s_metadata_%s.rds", MODEL_NAME, RUN_ID))
+  spec <- if (file.exists(mf)) readRDS(mf)$error_model_spec else NULL
+  env  <- hiket_total_sigma(sigma_obs_fixed)
+  if (!is.null(spec) && is.finite(spec$sigma_total)) {
+    if (abs(spec$sigma_total - env) > 1e-9)
+      message(sprintf(paste0("Posterior-predictive sigma: using %.3f FROM THE RUN'S METADATA.\n",
+                             "  (this shell would have given %.3f -- the calibration's value wins)"),
+                      spec$sigma_total, env))
+    spec$sigma_total
+  } else {
+    message("Posterior-predictive sigma: run predates error_model_spec; ",
+            "falling back to this shell's setting.")
+    env
+  }
+})
+message(sprintf("Posterior-predictive error scale: %.3f (log scale)", SIGMA_PP))
 STEADY_STATE_YEARS <- inputs_pkg$STEADY_STATE_YEARS
 
 message(sprintf("Loaded posterior:   %d samples x %d params",
@@ -301,6 +329,13 @@ posterior_summary <- posterior_predictions %>%
     soc_sd     = sd(total_soc,     na.rm = TRUE),
     soc_q025   = quantile(total_soc, 0.025, na.rm = TRUE),
     soc_q975   = quantile(total_soc, 0.975, na.rm = TRUE),
+    # TRUE posterior-predictive quantiles: push each draw's mean through the
+    # observation+model error before taking quantiles. soc_q025/q975 above are a
+    # PARAMETER CI on the mean and omit that error entirely -- which is why they
+    # cover ~5% of observations, not 95%. Both are kept: the param CI answers
+    # "where is the mean", the pp interval answers "where is an observation".
+    soc_pp_q025 = quantile(total_soc * exp(rnorm(n(), 0, SIGMA_PP)), 0.025, na.rm = TRUE),
+    soc_pp_q975 = quantile(total_soc * exp(rnorm(n(), 0, SIGMA_PP)), 0.975, na.rm = TRUE),
     n_draws    = n(), .groups = "drop") %>%
   left_join(SOC_obs_all, by = c("plot_id", "year"))
 
@@ -322,7 +357,7 @@ residuals_df <- posterior_summary %>%
     residual_abs = soc_obs_tCha - soc_mean
   ) %>%
   select(plot_id, year, soc_obs_tCha, soc_mean, soc_median,
-         soc_q025, soc_q975, log_obs, log_hat_mean,
+         soc_q025, soc_q975, soc_pp_q025, soc_pp_q975, log_obs, log_hat_mean,
          residual_log, residual_abs, is_first) %>%
   left_join(site_raw, by = "plot_id")
 
@@ -350,6 +385,8 @@ RMSE_med    <- sqrt(mean((obs - hat_med)^2, na.rm = TRUE))
 bias_med    <- mean(hat_med - obs,          na.rm = TRUE)
 coverage_95 <- mean(obs >= residuals_df$soc_q025 &
                     obs <= residuals_df$soc_q975, na.rm = TRUE)
+pp_coverage_95 <- mean(obs >= residuals_df$soc_pp_q025 &
+                       obs <= residuals_df$soc_pp_q975, na.rm = TRUE)
 
 message("\nPredictive metrics:")
 message(sprintf("  R²:            %.3f", R2))
@@ -357,7 +394,9 @@ message(sprintf("  RMSE (mean):   %.2f tC/ha", RMSE))
 message(sprintf("  Bias (mean):   %+.2f tC/ha", bias))
 message(sprintf("  RMSE (median): %.2f tC/ha", RMSE_med))
 message(sprintf("  Bias (median): %+.2f tC/ha", bias_med))
-message(sprintf("  Param 95%% CI cov:  %.3f", coverage_95))
+message(sprintf("  Param 95%% CI cov:  %.3f  (spread of the MEAN; expected to be small)", coverage_95))
+message(sprintf("  TRUE pp 95%% cov:   %.3f  (should be ~0.95 if the error model is adequate)",
+                pp_coverage_95))
 
 # --- Split calibration / holdout and compute metrics for each ---
 res_calib   <- residuals_df[!residuals_df$is_holdout, ]
@@ -370,20 +409,23 @@ compute_metrics <- function(df) {
        bias_mean   = mean(hat - obs,              na.rm = TRUE),
        RMSE_median = sqrt(mean((obs - hat_med)^2, na.rm = TRUE)),
        bias_median = mean(hat_med - obs,          na.rm = TRUE),
-       coverage_95 = mean(obs >= df$soc_q025 & obs <= df$soc_q975, na.rm = TRUE))
+       coverage_95 = mean(obs >= df$soc_q025 & obs <= df$soc_q975, na.rm = TRUE),
+       pp_coverage_95 = mean(obs >= df$soc_pp_q025 & obs <= df$soc_pp_q975, na.rm = TRUE))
 }
 
 metrics_calib   <- compute_metrics(res_calib)
 metrics_holdout <- compute_metrics(res_holdout)
 
 message("\nCalibration metrics:")
-message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f",
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f  ppCov: %.3f",
                 metrics_calib$R2, metrics_calib$RMSE_median,
-                metrics_calib$bias_median, metrics_calib$coverage_95))
+                metrics_calib$bias_median, metrics_calib$coverage_95,
+                metrics_calib$pp_coverage_95))
 message("Holdout (independent validation) metrics:")
-message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f",
+message(sprintf("  R²: %.3f  RMSE: %.2f  Bias: %+.2f  ParamCov: %.3f  ppCov: %.3f",
                 metrics_holdout$R2, metrics_holdout$RMSE_median,
-                metrics_holdout$bias_median, metrics_holdout$coverage_95))
+                metrics_holdout$bias_median, metrics_holdout$coverage_95,
+                metrics_holdout$pp_coverage_95))
 
 
 # =============================================================================
@@ -614,7 +656,8 @@ pp_output <- list(
   holdout_plots          = holdout_plots,
   metrics         = list(
     R2 = R2, RMSE_mean = RMSE, bias_mean = bias,
-    RMSE_median = RMSE_med, bias_median = bias_med, coverage_95 = coverage_95),
+    RMSE_median = RMSE_med, bias_median = bias_med, coverage_95 = coverage_95,
+    pp_coverage_95 = pp_coverage_95, sigma_pp = SIGMA_PP),
   metrics_calib   = metrics_calib,
   metrics_holdout = metrics_holdout,
   config  = list(model = MODEL_NAME, run_id = RUN_ID,
@@ -639,6 +682,7 @@ append_to_report(run_config, paste(c(
   sprintf("    RMSE (median):          %.2f tC/ha\n", RMSE_med),
   sprintf("    Bias (median):          %+.2f tC/ha\n", bias_med),
   sprintf("    Param 95%% CI cov (mean):   %.3f\n",    coverage_95),
+  sprintf("    TRUE pp 95%% cov (sigma %.3f): %.3f\n", SIGMA_PP, pp_coverage_95),
   sprintf("    Projection years:       %d\n",       PROJ_YEARS),
   sprintf("    Climate recycle window: %d years\n", RECYCLE_YEARS)), collapse=""))
 

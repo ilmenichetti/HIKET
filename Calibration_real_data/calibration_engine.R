@@ -1440,7 +1440,26 @@ save_results <- function(chain_results, all_phys, run_config,
                         "log-normal" else "multiplicative-normal",
     env_overrides   = Sys.getenv(c("HIKET_LOGNORMAL_LIK","HIKET_RATE_PRIOR_SD",
                                    "HIKET_SIGMA_1985_INFL","HIKET_PREINIT_LINEAR",
-                                   "HIKET_N_ITER","HIKET_N_CHAINS")),
+                                   "HIKET_N_ITER","HIKET_N_CHAINS",
+                                   "HIKET_SIGMA_TOTAL","HIKET_LIK_DF",
+                                   "HIKET_CORRELATED_LIK","HIKET_TAU_R","HIKET_TAU_P",
+                                   "HIKET_TAU_C_1985","HIKET_TAU_C_BASE","HIKET_SIGMA_TOT")),
+    # --- The RESOLVED error model (2026-08-19) --------------------------------
+    # env_overrides above records what was REQUESTED; this records what the
+    # likelihood actually USED. The predictive stage reads THIS, not the
+    # environment, so a stage-2 run in a different shell cannot silently build
+    # its intervals on a different sigma from the one that was fitted -- the same
+    # failure shape as the stale .so and the stale input bundle.
+    error_model_spec = list(
+      lognormal   = isTRUE(get0(".hiket_lognormal_lik", ifnotfound = TRUE)),
+      correlated  = isTRUE(get0(".hiket_correlated_lik", ifnotfound = FALSE)),
+      lik_df      = get0(".hiket_lik_df",  ifnotfound = NA_real_),
+      sigma_total = tryCatch(hiket_total_sigma(sigma_obs_fixed),
+                             error = function(e) NA_real_),
+      tau = if (isTRUE(get0(".hiket_correlated_lik", ifnotfound = FALSE)))
+              c(R = get0("HIKET_TAU_R"), P = get0("HIKET_TAU_P"),
+                C_1985 = get0("HIKET_TAU_C_1985"), C_base = get0("HIKET_TAU_C_BASE"),
+                sigma_e = get0(".hiket_sigma_e")) else NULL),
     # Convergence summaries: stored as ranges for quick inspection
     rhat_range      = if (!is.null(gr))       range(gr$psrf[,1], na.rm=TRUE) else NA,
     ess_range        = if (!is.null(ess_vals)) range(ess_vals, na.rm=TRUE)   else NA,

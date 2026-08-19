@@ -50,8 +50,35 @@ export SINGULARITYENV_SLURM_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 # so it cannot confound the trend.
 # NB the SINGULARITYENV_ prefix is REQUIRED -- r-env execs a singularity
 # container, and a bare export never reaches R.
-export SINGULARITYENV_HIKET_SIGMA_TOTAL=0.80
-export SINGULARITYENV_HIKET_LIK_DF=6
+# ---- RUN CONFIG SUPERSEDED 2026-08-19: the CORRELATED-ERROR LIKELIHOOD --------
+# The block above describes the PREVIOUS run (fixed total 0.80 + Student-t nu=6).
+# Both of those settings are now REPLACED, not supplemented:
+#
+#   HIKET_SIGMA_TOTAL is IGNORED under the correlated likelihood -- the total is
+#   HIKET_SIGMA_TOT (default 0.800, UNCHANGED) and it is SPLIT across four
+#   components: tau_R 0.117 (latitude bands), tau_P 0.396 (2006-2024 pair
+#   covariance), tau_C 0.06 (1985) / 0.03 (others), sigma_e 0.685 as the
+#   remainder. Nothing is estimated; the three offsets are marginalised.
+#
+#   HIKET_LIK_DF is DROPPED. A Student-t does NOT decompose into shared +
+#   independent Gaussian components, so the tails and this feature do not stack.
+#   The engine REFUSES to run with both set rather than silently combining them.
+#
+#   HIKET_SIGMA_1985_INFL -> 1. tau_C REPLACES the 1985 inflation; it does not
+#   remove 1985's extra weight (tau_C = 0.06 is twice the others, and downweights
+#   the 1985 LEVEL 2.4x). Stacking the two would give an effective tau_C of
+#   ~0.085 -- the broad scheme by accident. The engine refuses that too.
+#
+# Gate passed before launch: doublechecks/test_correlated_likelihood.R shows
+# tau = 0 reproduces the independent log-likelihood to 1.7e-10 (SP1) / 5.9e-12
+# (Yasso15). Cost: +8% to +12% per likelihood evaluation.
+#
+# ⚠ Log-likelihoods are NOT comparable across this change (the normalising
+#   constant moves). Compare against the previous run on RMSE distributions.
+# NB the SINGULARITYENV_ prefix is REQUIRED -- a bare export never reaches R.
+export SINGULARITYENV_HIKET_CORRELATED_LIK=1
+export SINGULARITYENV_HIKET_SIGMA_1985_INFL=1
+export SINGULARITYENV_HIKET_SIGMA_TOT=0.800
 # ---- memory instrumentation (2026-08-14) ----------------------------------
 # Record the cgroup high-water mark and the limit-breach counter for the WHOLE
 # run. sacct samples every 10 s and has reported only 12-16 GB at every ceiling

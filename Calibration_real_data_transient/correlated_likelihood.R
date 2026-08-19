@@ -166,3 +166,33 @@ hiket_corr_ll <- function(r, S) {
   z <- backsolve(S$R, r, transpose = TRUE)     # z = R'^{-1} r  =>  r' Sigma^{-1} r = z'z
   -0.5 * (sum(z * z) + S$logdet + S$n * log(2 * pi))
 }
+
+# =============================================================================
+# hiket_total_sigma()
+#
+# The TOTAL observation+model error on the log scale, resolved the same way the
+# likelihood resolves it, for use by the PREDICTIVE stage.
+#
+# ⚠ THE KEY FACT, and the reason the predictive stage needs almost no change:
+#   the correlated likelihood SPLITS a fixed total, it does not add to it. So the
+#   MARGINAL variance of a SINGLE observation is
+#       tau_R^2 + tau_P^2 + tau_C^2 + sigma_e^2 = sigma_total^2
+#   -- identical to the independent model. A posterior-predictive interval for
+#   one plot-year is therefore the SAME width either way, and per-observation
+#   coverage cannot distinguish the two error models. What the shared offsets
+#   change is JOINT statements over many observations (the national level, a
+#   campaign mean, a trend) -- see doublechecks/effective_n.R, where the level
+#   inflates 2.18x while a single observation does not move at all.
+#
+# ⚠ This ALSO closes a long-standing defect that predates the correlated work:
+#   the predictive scripts quoted "95% coverage" from the spread of the model
+#   MEAN across draws, with NO observation error injected, giving ~0.05. That
+#   column was relabelled "Param cov" as a stopgap; a true posterior-predictive
+#   interval needs this sigma. Both are now reported side by side.
+# =============================================================================
+hiket_total_sigma <- function(sigma_obs_fixed = NA_real_) {
+  if (.hiket_correlated_lik) return(HIKET_SIGMA_TOT)
+  s <- suppressWarnings(as.numeric(Sys.getenv("HIKET_SIGMA_TOTAL", NA)))
+  if (is.finite(s)) return(s)
+  sigma_obs_fixed
+}
