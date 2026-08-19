@@ -10,10 +10,23 @@
 # builds iff sigma_init < 1, full stop. The whole "[0.64, 0.82] window" is wrong on
 # both ends.
 #
-# ⚠ ALSO OPEN (discussion unfinished, resume 2026-08-19): even corrected, this
-# bounds the LITTER FLUX ratio, not the soil carbon stock. sigma_init additionally
-# equilibrates the 1917 soil at that flux, and the NFI record says nothing about
-# whether 1917 soils had caught up. See memory sigma-init-growing-stock-bound.
+# ⚠⚠ RETIRED AS A BOUND, 2026-08-19 (decision, Lorenzo). Even corrected, this
+# constrains the LITTER FLUX ratio, not the soil carbon stock. sigma_init also
+# equilibrates the 1917 soil at that flux, and the NFI is silent on whether 1917
+# soils had caught up -- after a century of slash-and-burn, raking and heavy
+# cutting, plausibly they had not, and the one-parameter transient init cannot
+# express "high flux, disequilibrated soil". Judging our own initial state by an
+# EQUILIBRIUM-INIT benchmark would also re-import the convention the manuscript
+# argues against (Lehtonen 2016, Palosuo 2008, Peltoniemi 2004).
+#
+# The bound is set aside so the correlated-likelihood run is judged without it;
+# it may return. The replacement test is BIOLOGICAL PLAUSIBILITY of the derived
+# state -- 1917 SOC stock and the implied pre-run rate:
+#
+#         >>>  doublechecks/init_state_plausibility.R  <<<
+#
+# Keep this script only as the record of where 0.90 came from. Do NOT quote its
+# verdict column.
 #
 # THE POINT: sigma_init has an INDEPENDENT physical referent, and it is currently
 # violated by every multi-pool model.

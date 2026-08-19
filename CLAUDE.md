@@ -850,22 +850,52 @@ noise the error model should absorb, not as data error.
   withdrawn (choosing the 1985 weighting to make the sink come out right is circular), but the
   **live question is now σ_init**, not the 1985 weighting. See "σ_init pre-run inversion" below.
 
-- **⚠⚠ OPEN THREAD — RESUME 2026-08-19: the σ_init growing-stock bound is over-stated.** Traced
-  2026-08-18: **0.90 = (1400/1775)^0.43** — V(1917)=1400 Mm³ (Korhonen NFI1, ⚠ **extrapolated flat**
-  from the 1921–24 inventory), V(1985)=1775, elasticity **0.43 [0.23,0.63] fitted on OUR OWN litter
-  record**, so the benchmark is only part-external. **It is sound for LITTER FLUX and over-strong for
-  SOC STOCKS**: σ_init also *equilibrates* the 1917 soil at that flux, and the NFI says nothing about
-  whether 1917 soils had caught up — after a century of slash-and-burn, raking and heavy cutting,
-  disequilibrium is plausible and the parameterisation cannot express it. **σ_init = 0.90 is in fact
-  UNREACHABLE for the Yassos** (implies 1917 stocks of 92–98 tC/ha, above their own modelled 1985
-  value of 57–63). Proposed replacement criteria, **NOT yet agreed**: (1) a 1917 stock of **40–45
-  tC/ha** (needs σ_init ≈ 0.37–0.44; TP3 and SP1 already there); (2) the **implied pre-run rate**,
-  currently +0.37…+0.40 tC/ha/yr sustained over 68 yr against an observed +0.259 the models already
-  overshoot — this check is independent of the equilibrium confound. ⚠ The **~0.64** in older records
-  is a STALE quantity (1400 ÷ the 1986–2024 mean, the pre-P1 `J_full` definition), and
-  **`doublechecks/sigma_init_vs_growing_stock.R` still implements it** — fix before citing.
-  ⚠ The correlated likelihood is **not expected to relieve σ_init**. Memory:
-  [[sigma-init-growing-stock-bound]]. Superseded framing follows:
+- **✅ SETTLED 2026-08-19 — the σ_init growing-stock bound is RETIRED (provisionally).** Decision
+  (Lorenzo): set it aside now, run the correlated likelihood without it, judge the result on
+  BIOLOGICAL PLAUSIBILITY of the derived state; it may return. **Why it was the wrong target:**
+  `0.903 = (1400/1775)^0.43` constrains the 1917 **litter flux**, but σ_init *also* equilibrates the
+  1917 soil at that flux, and the NFI is silent on whether 1917 soils had caught up — after a century
+  of slash-and-burn, raking and heavy cutting they plausibly had not, and the one-parameter transient
+  init **cannot express "high flux, disequilibrated soil"**. ⚠ **The decider:** judging our own
+  initial state by an *equilibrium-init* benchmark re-imports the exact convention the manuscript
+  argues against (Lehtonen 2016, Palosuo 2008, Peltoniemi 2004). What survives is a criticism of the
+  **parameterisation**, not of the posterior: the data want a low 1917 *stock*, the only dial that
+  delivers one is σ_init, and it drags the *flux* down with it — on-thesis, and stronger than "five
+  of six violate a bound".
+  **Replacement test: `doublechecks/init_state_plausibility.R`** (25 draws, per-draw evaluation;
+  C_1917 obtained by setting `lm$preinit_shape <- rep(0, 68)`, which holds the flux at J_1917 so the
+  initialiser returns its own starting state — works for both families). Run `20260817_12*`:
+
+  | | σ_init | J_1917 | J_1985 | **C_1917** | C_1985 | **pre-run rate** |
+  |---|---|---|---|---|---|---|
+  | SP1 | 0.630 | 2.32 | 3.68 | **39.5** | 49.1 | **+0.148** |
+  | TP2 | 0.451 | 1.90 | 4.36 | **32.8** | 44.8 | **+0.181** |
+  | TP3 | 0.425 | 1.73 | 4.14 | **32.6** | 44.6 | **+0.177** |
+  | Yasso07 | 0.320 | 1.50 | 4.67 | **30.8** | 45.2 | **+0.217** |
+  | Yasso15 | 0.294 | 1.27 | 4.22 | **30.1** | 47.0 | **+0.242** |
+  | Yasso20 | 0.332 | 1.47 | 4.56 | **31.3** | 47.9 | **+0.235** |
+
+  ⚠⚠ **TWO NUMBERS RECORDED 2026-08-18 WERE WRONG.** (1) The implied pre-run rate is **+0.148…+0.242,
+  BELOW the observed +0.259** — not the "+0.37…+0.40, 1.5× observed" recorded. That criterion is
+  currently **SATISFIED in all six**, and the "soil accumulates faster while its driver grew 4× slower"
+  argument does **not** apply to this run. The old figure paired C_1917 with a 1985 endpoint of 57–63;
+  the initialiser's actual endpoint is **44.6–49.1**. (2) 1917 stocks were mis-recorded (SP1 44.4,
+  TP3 45.0); true 39.5 / 32.6. **So the STOCK criterion is the binding one, alone:** all six sit at
+  **30–40 tC/ha** in 1917, and 20–30 is too little for a forest.
+  ⬜ **TODO — source the floor.** Screen the boreal SOC literature and take the **MINIMUM**, so a
+  failing model fails conservatively. ⚠ Comparable basis only: whole profile to per-plot `z_cap`
+  (organic + mineral + modelled deep tail), **not** 0–30 cm, not mineral-only. `STOCK_FLOOR = 40`
+  in the script is a **placeholder**. Peltoniemi 2004 is the natural anchor.
+  ⚠ **Do NOT touch the σ_init prior before the correlated-likelihood run** — that launch is one-factor
+  by design, and is not expected to relieve σ_init anyway. The τ_C revisit trigger stays **evidence**
+  (post-run campaign residual spreads), never the σ_init value — that is the C5 circularity again.
+  ⚠ Two extraction traps were hit building this and are live: the posterior `.rds` is **PHYSICAL**
+  while `*_chains_*.rds` is **SAMPLING** space (running `to_original` on the posterior gave SP1
+  `beta1` 0.099 → 1.104, ξ → 1.2e7), and `getSample()` on the saved list returns each internal DEzs
+  chain's **first retained iteration** — extract per sampler with `start = 2`.
+  `doublechecks/sigma_init_vs_growing_stock.R` is marked RETIRED in its header; keep it only as the
+  record of where 0.90 came from, and **do not quote its verdict column**.
+  Memory: [[sigma-init-growing-stock-bound]]. Superseded framing follows:
 
 - **⭐⭐ ~~σ_init IS A MEASURABLE RATIO, AND FIVE OF SIX MODELS VIOLATE IT~~ (2026-08-17, SEE ABOVE).**
   The engine builds `J_1917 = J_t0_mean × σ_init × σ_input` while the forward run carries `σ_input`
