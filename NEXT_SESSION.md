@@ -20,6 +20,30 @@
 > all six**, because the run would complete normally and look like a valid repeat.
 >
 > ✅ Fortran rebuilt on Roihu 10:23, ONE SHLIB call per .f90, both .so present.
+>
+> ✅ **LAUNCH VERIFIED 10:40.** All six show the CORRELATED line, the full tau line, `Cores per
+> chain: 40` and `5 chains x 50000`. Stronger still, `Likelihood at defaults` matches the LOCAL
+> unit-test values to 3 dp in all six (SP1 -966.200 vs -966.1996; Yasso15 -1039.396 vs
+> -1039.3965). That one comparison clears four failure modes at once: the input bundle is the
+> corrected target, the freshly built .so is right (the three Yasso values are Fortran-dependent),
+> R 4.6.1 changes nothing at this precision **so the run IS effectively single-factor after all**,
+> and the SINGULARITYENV_ exports reached R.
+>
+> **WHEN THEY LAND (~2026-08-20 early):**
+> 1. `sacct -j 726678,726679,726680,726681,726682,726683 --format=JobID,JobName%14,State,Elapsed,MaxRSS`
+> 2. rsync back `runs/`, `diagnostics/` AND `Data/model_inputs/` (the predictive stage hard-loads
+>    the bundle keyed to each RUN_ID).
+> 3. `Rscript --no-save Calibration_real_data_transient/run_hiket_pipeline.R --skip-calibration`
+>    — safe in any shell now; it reads sigma from the run's own `error_model_spec` and says so.
+> 4. `doublechecks/intrinsic_mrt.R` (CHECK THE ECHOED RUN_IDs), `doublechecks/init_state_plausibility.R`,
+>    `doublechecks/effective_n.R`.
+> 5. Compare against `snapshots/20260818_pre_correlated_likelihood/` on **RMSE distributions** —
+>    log-likelihoods are NOT comparable across this change.
+>
+> **READ IT AGAINST THE PRE-REGISTRATION BELOW, not against hope.** `sigma_input` and the MRT
+> ridge should move; `sigma_init` and the 1917 stock were pre-registered NOT to. If the initial
+> state is still implausible that is the EXPECTED result, not a failure of the instrument — the
+> derived-stock prior is the separate lever for it ([[sigma-init-growing-stock-bound]]).
 
 
 Implemented, gated and wired. Commits `ab4861a` (likelihood), `aaad558` (effective n),
