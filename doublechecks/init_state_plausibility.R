@@ -39,15 +39,31 @@
 #       not a central estimate, so a model that fails it fails conservatively.
 #       ⚠ Screen on a COMPARABLE basis: our target is the whole profile to a
 #       per-plot z_cap (organic + mineral + modelled deep tail), NOT "0-30 cm"
-#       and not mineral-only. STOCK_FLOOR below is a PLACEHOLDER pending that.
+#       and not mineral-only. Screened 2026-08-19: whole-profile Nordic anchors are
+#       Liski & Westman 1995 (organic + 1 m, 30 mature S-Finland sites) 40-119 Mg C/ha,
+#       Swedish podzols nationally 82 +- 3, and our OWN observed distribution on the
+#       exact basis -- 1985 mean 66.0, 2024 p05 = 35.5, p10 = 40.3, only 2.3% of plots
+#       below 30. The models put the national MEAN of 1917 at 30-40, i.e. what the
+#       poorest few percent of individual plots hold today.
+#       ⚠ REPORT_THRESHOLD IS A PRINT THRESHOLD FOR THE VERDICT COLUMN. It constrains
+#       NOTHING. To actually constrain the 1917 state, the derived stock needs a prior
+#       built like `flux_pair` (which already bounds the derived FLUX rather than the
+#       raw multiplier, for exactly the same reason). Not implemented; see CLAUDE.md.
+#       DEPLETION EVIDENCE (2026-08-19 screen), which is what makes 30-40 hard to hold:
+#       Swiss forests raked for 275 years show only 3-4% less SOC than unraked (measured
+#       80 yr after abandonment); long-term experimental litter removal costs up to 24%;
+#       slash-and-burn conversion costs 14-19%. The models need 40-55%. And the entire
+#       forest floor is only ~21 Mg/ha of a 66-76 profile, so removing 100% of it -- more
+#       than raking, grazing or fire does -- lands at ~45-55, not 30.
 #   (2) PRE-RUN RATE, which is independent of the equilibrium confound because
 #       it reads the trajectory rather than the initial condition. Context from
 #       Korhonen 2024: growing stock rose +5.5 Mm3/yr over 1917-1985 and
 #       +21.1 Mm3/yr over 1985-2024, so a pre-run rate ABOVE the observed modern
-#       +0.259 tC/ha/yr has soil carbon accumulating faster while its driver grew
-#       ~4x slower. ⚠ Not decisive on its own: a depleted soil relaxes fastest
-#       early whatever the driver does, so this bounds how large the implied
-#       depletion is, it does not by itself refute it.
+#       +0.259 tC/ha/yr would have soil carbon accumulating faster while its driver
+#       grew ~4x slower. ⚠ MEASURED 2026-08-19: the rate is +0.148..+0.242, i.e.
+#       BELOW +0.259 in all six -- this criterion is SATISFIED and that argument does
+#       not apply. ⚠ Not decisive either way: a depleted soil relaxes fastest early
+#       whatever the driver does.
 #
 # ⚠ TWO EXTRACTION TRAPS, both already documented and both hit while writing this:
 #   * the posterior .rds is in PHYSICAL space, the *_chains_*.rds in SAMPLING space.
@@ -73,7 +89,8 @@ set.seed(2025)
 MODELS      <- strsplit(Sys.getenv("HIKET_MODELS", "SP1,TP2,TP3,Yasso07,Yasso15,Yasso20"), ",")[[1]]
 N_PRE       <- 68L          # 1917 -> 1985
 OBS_RATE    <- 0.259        # observed 1985->2024, balanced set (obs_basis.R)
-STOCK_FLOOR <- 40           # PLACEHOLDER, tC/ha whole profile -- to be sourced
+REPORT_THRESHOLD <- 45      # tC/ha whole profile. A REPORTING threshold for the verdict
+#                             column ONLY -- it constrains NOTHING in the calibration.
 DIR_RUNS    <- "Calibration_real_data_transient/runs"
 NCORE       <- max(1L, parallel::detectCores() - 1L)
 
@@ -131,7 +148,7 @@ state_for_draw <- function(e, p_free, plots, cbp, lms) {
 
 cat("\n=== Derived 1917 state: is it biologically plausible? ===\n")
 cat(sprintf("stock floor (PLACEHOLDER) %.0f tC/ha whole profile | observed modern rate %+.3f tC/ha/yr\n",
-            STOCK_FLOOR, OBS_RATE))
+            REPORT_THRESHOLD, OBS_RATE))
 cat("NFI context: growing stock +5.5 Mm3/yr over 1917-1985 vs +21.1 Mm3/yr over 1985-2024\n\n")
 cat(sprintf("%-8s %-16s %7s %8s %8s %8s %8s %8s   %s\n", "model", "run_id",
             "s_init", "J_1917", "J_1985", "C_1917", "C_1985", "rate", "verdict"))
@@ -170,7 +187,7 @@ for (M in MODELS) {
   q <- function(v) unname(quantile(v, c(.05, .5, .95)))
 
   verdict <- paste(
-    if (median(C17) < STOCK_FLOOR) sprintf("STOCK %.0f < floor", median(C17)) else "stock ok",
+    if (median(C17) < REPORT_THRESHOLD) sprintf("STOCK %.0f < floor", median(C17)) else "stock ok",
     if (median(RT) > OBS_RATE) sprintf("| rate %.1fx obs", median(RT) / OBS_RATE) else "| rate ok")
 
   cat(sprintf("%-8s %-16s %7.3f %8.2f %8.2f %8.1f %8.1f %+8.3f   %s\n",
