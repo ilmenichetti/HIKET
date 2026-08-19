@@ -1,6 +1,26 @@
 # NEXT SESSION — start here
 
-## 🚀 0-NOW. THE CORRELATED-LIKELIHOOD RUN IS READY TO LAUNCH (2026-08-19)
+## 🚀 0-NOW. THE CORRELATED-LIKELIHOOD RUN IS IN FLIGHT (2026-08-19)
+
+> **⏳ Jobs 726678-726683** (SP1 / TP2 / TP3 / Yasso07 / Yasso15 / Yasso20), submitted
+> 2026-08-19 ~10:30 from commit `5477ed1`. Expect ~14-20 h ⇒ results 2026-08-20 early.
+> **Tests ONE factor: the correlated-error likelihood.** Everything else is byte-identical
+> to `20260817_12*`, which is snapshotted whole in
+> `snapshots/20260818_pre_correlated_likelihood/`.
+>
+> ⚠ **Second difference, unavoidable: r-env moved to R 4.6.1** (the comparison run was
+> R 4.5.2). Recorded in the metadata. Should not change results, but it is not a
+> single-factor run in the strictest sense -- note it if anything looks odd.
+>
+> **First check, ~10 min in** (restrict the glob or you read July's logs):
+> `grep -H -E "CORRELATED likelihood|tau_R 0.117|Cores per chain|chains x|Likelihood at defaults" progress_logs/*_7266*.err`
+> Expect the CORRELATED line, `tau_R 0.117 | ... sigma_e 0.685`, `Cores per chain: 40`,
+> `5 chains x 50000`, and SP1's `Likelihood at defaults` near **-966** (not -1090).
+> **A missing CORRELATED line means the SINGULARITYENV_ export did not reach R -- scancel
+> all six**, because the run would complete normally and look like a valid repeat.
+>
+> ✅ Fortran rebuilt on Roihu 10:23, ONE SHLIB call per .f90, both .so present.
+
 
 Implemented, gated and wired. Commits `ab4861a` (likelihood), `aaad558` (effective n),
 `96509a6` (launch wiring). **Nothing is estimated** -- all four variances fixed, the three
