@@ -263,7 +263,10 @@ names(litter_means) <- plots_real
 # C3: attach the growing-stock-derived pre-run input shape (one source of truth,
 # Data/forest_history/nfi_growing_stock.csv; saved with the bundle -> predictive inherits it).
 source("./Model_functions_real_data_transient/preinit_input_shape.R")
-PREINIT_SHAPE <- growing_stock_preinit_shape()   # 1917->1985, 68 steps, [0,1]
+PREINIT_SHAPE <- preinit_shape()                # 1917->1985, 68 steps, [0,1]
+# Driver selected by HIKET_PREINIT_SHAPE = liski (default) | growing_stock | linear.
+# Default changed 2026-08-20 from the growing-stock shape to the Liski et al. 2006
+# reconstructed input to soil (per hectare, tree basis) -- see preinit_input_shape.R.
 litter_means  <- lapply(litter_means, function(x) { x$preinit_shape <- PREINIT_SHAPE; x })
 
 # --- Inject J_bar into the flux_pair transform (needs litter_means) ----------

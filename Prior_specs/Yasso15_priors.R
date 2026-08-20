@@ -49,7 +49,28 @@ YASSO15_FREE_DEFAULTS <- c(
   # (tree + understorey) = 2.70 [2.43, 2.97]. Adding the missing understorey is exactly
   # this parameter's job => 2.70/2.511 = 1.08. The old 1.30 was directionally right but
   # had no source. Coupled to sigma_init through J_1917 -- do not move one alone.
-  sigma_input = 1.08
+  #
+  # RECENTRED 1.08 -> 1.27, 2026-08-20 (decision: Lorenzo), on Liski et al. 2006
+  # (Ann. For. Sci. 63:687-697), which is the closer benchmark: same country, same
+  # period, same model (Yasso), same NFI source -- and A. Lehtonen and M. Peltoniemi
+  # are coauthors. Their Fig. 7 (1990s, kg C/m2/yr -> tC/ha/yr) splits as tree litter
+  # 1.58 + ground vegetation 0.61 + harvest residues 0.63 + natural mortality 0.06,
+  # using their statement (S4.2) that ground vegetation is 28% of the litter production
+  # of living vegetation. The subtotal COMPARABLE to our J_bar (tree + residues +
+  # mortality, understorey excluded) is 2.27; their TOTAL input to soil is 2.88.
+  #   => understorey correction = 2.88/2.27 = 1.27
+  # ⚠ TWO defensible recentrings; we take the RATIO, not the absolute. Matching their
+  # absolute total instead would give 2.88/2.511 = 1.15. They differ by the 11% gap
+  # between the two litter products (our J_bar 2.511 vs their 2.27). The RATIO is the
+  # right invariant here because sigma_input exists to correct OUR J_bar for the
+  # understorey gap -- but it does accept our J_bar's level as given.
+  # ⚠ Liski (1.27) and Lehtonen & Heikkinen (1.08) DISAGREE on the understorey share
+  # (27% vs 8%). Candidate reason: whether L&H's "total litter" carries harvest
+  # residues, which our J_bar does. Unresolved -- ask A. Lehtonen (author of both).
+  # Independent support for the larger share: Liski S4.2 warns that ignoring ground
+  # vegetation underestimates "not only these parameters but also the soil carbon
+  # stock and sink" -- exactly this parameter's failure mode.
+  sigma_input = 1.27
 )
 
 # sigma_ppm in unconstrained (transformed) space. All free params listed

@@ -61,6 +61,14 @@ Data/forest_history/*
 !Data/forest_history/*.csv
 !Data/forest_history/*.md
 
+# Liski et al. 2006 litter-input extraction: small, source-derived, and needed to
+# reproduce the pre-run shape. Tracked like forest_history above.
+!Data/liski2006_litter_input/
+Data/liski2006_litter_input/*
+!Data/liski2006_litter_input/*.csv
+!Data/liski2006_litter_input/*.md
+!Data/liski2006_litter_input/*.py
+
 # Zenodo deposit archive (build artifact)
 Reporting/NextgenC_report/*.zip
 

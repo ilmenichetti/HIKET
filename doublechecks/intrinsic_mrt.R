@@ -43,11 +43,19 @@ DCOL <- c("alpha_A","alpha_W","alpha_E","alpha_N","p_WA","p_EA","p_NA","p_AW","p
           "p_AE","p_WE","p_NE","p_AN","p_WN","p_EN","w1","w2","w3","w4","w5",
           "beta1","beta2","betaN1","betaN2","betaH1","betaH2","gamma","gammaN","gammaH",
           "p_H","alpha_H","delta1","delta2","r")
-# Default = the current run (695142-47: auxiliary-sigma priors tightened, 2026-08-17).
-# Override for an older run with HIKET_MRT_RID="Yasso07=<id>,Yasso15=<id>,Yasso20=<id>".
-# NB this was hard-coded and went stale once already -- the 20260814 run was reported
-# with the 20260812 posteriors' MRT. Always check the RUN_IDs echoed at startup.
-RID <- c(Yasso07="20260817_120827", Yasso15="20260817_120828", Yasso20="20260817_120829")
+# Default = the NEWEST posterior on disk, auto-selected (same rule as
+# manuscript/figures/run_ids.R). Override for a like-for-like comparison with an
+# older run via HIKET_MRT_RID="Yasso07=<id>,Yasso15=<id>,Yasso20=<id>".
+# NB this WAS hard-coded and went stale twice: the 20260814 run was reported with
+# the 20260812 posteriors' MRT, and on 2026-08-20 the hard-coded 20260817 ids were
+# still here and reported the pre-correlated-likelihood MRT for the 20260819 run.
+# Auto-selecting removes the class. Always check the RUN_IDs echoed at startup.
+RID <- vapply(c("Yasso07","Yasso15","Yasso20"), function(m) {
+  fs <- list.files("Calibration_real_data_transient/runs",
+                   pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
+  if (!length(fs)) stop("intrinsic_mrt.R: no posterior found for ", m, call. = FALSE)
+  sub(sprintf("^%s_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
+}, character(1))
 .rid_env <- Sys.getenv("HIKET_MRT_RID", "")
 if (nzchar(.rid_env)) {
   kv <- strsplit(strsplit(.rid_env, ",")[[1]], "=")

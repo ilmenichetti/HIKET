@@ -342,7 +342,7 @@ factor is largely definitional, and Gower's stands are a sample selected for hav
 budgets, not a sample representative of Finnish managed forest.
 \end{caveat}
 
-\subsection{What $\bar{J}$ actually contains --- two assumptions were wrong}
+\subsection{What $\bar{J}$ actually contains --- two assumptions were wrong}\label{sec:jbar}
 
 Established from the Zenodo deposit and from the \texttt{YaYasso} implementation of the LUKE
 calculation chain: $\bar{J}$ is a \emph{flux} (biomass $\times$ turnover, Liski et al.\ 2006
@@ -361,6 +361,271 @@ analyses.''} Their $\pm10\%$ is therefore a floor. \textbf{Open question for B.\
 fine-root biomass model and turnover rate were used?} One variant
 (\texttt{fineroot.total.tsum}) is annotated as including understorey, which would make the
 $1.30$ centre a partial double-count.
+
+\subsection{The depth basis of Yasso's soil-carbon calibration --- checked, and it MATCHES}
+\label{sec:yassodepth}
+
+\textbf{Question (2026-08-20):} Yasso was calibrated against a soil-carbon basis of its own; if that
+basis were shallower than our whole-profile target, we would be asking Yasso's humus term to hold
+carbon it was never tuned on, and at prior-pinned rates the only free dial is $\sinput$. That would
+inflate $\sinput$ for a reason that has nothing to do with the litter flux.
+
+\textbf{Answer: the hypothesis is REJECTED --- the two bases coincide.} The Finnish soil-carbon data
+behind the Yasso lineage is Liski \& Westman, and it is explicitly \emph{organic layer $+$ $0$--$1$\,m
+mineral soil}. Liski \& Westman (1995) report carbon density for ``the organic horizon plus 1 meter
+thick mineral soil layer'' ($4.0$--$11.9$\,kg\,C\,m$^{-2}$), and extended augering at eight sites to
+the groundwater table ($2.4$--$4.6$\,m) to show what lies below. Liski \& Westman (1997) then build
+national statistical models for ``the carbon densities of the organic and $0$--$1$\,m mineral soil
+layers'', applying a constant density below $1$\,m; their national storage splits
+\textbf{28\,\% organic / 68\,\% mineral $0$--$1$\,m / 4\,\% below $1$\,m}.
+
+Our target is organic $+$ measured mineral $0$--$40$ $+$ modelled deep tail integrated to
+$z_{\mathrm{cap}}=\min(100\,\text{cm},\,\text{augering depth})$, whose median is exactly $100$\,cm.
+That is the same compartment.
+
+\textbf{Independent corroboration of our target's construction.} The two profiles agree in shape,
+which is a check we had not previously made:
+
+\begin{center}\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+ & ours (1408 plot-years) & Liski \& Westman (1997) \\
+\midrule
+organic            & 30.7\,\% & 29.2\,\% \\
+mineral $0$--$1$\,m & 69.3\,\% & 70.8\,\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent(Liski \& Westman renormalised to exclude their $4\,\%$ below $1$\,m, which our
+$z_{\mathrm{cap}}$ also excludes.) Our modelled deep tail below $40$\,cm is $16.4\,\%$ of the target.
+
+\textbf{Consequences.}
+\begin{enumerate}
+\item The depth-mismatch explanation for high $\sinput$ is \textbf{dead}. It would have been worth
+      $1.18\times$ against an organic\,$+$\,$0$--$40$ basis and $1.30\times$ against
+      organic\,$+$\,$0$--$30$; neither applies.
+\item Comparing our MRT against published Yasso MRT is \textbf{basis-consistent} --- one fewer
+      confound in the single most-quoted comparison in the paper.
+\item What survives is the \emph{belowground input} term, and it survives \emph{because} it has no
+      depth basis at all: fine-root litter is derived allometrically from foliage mass
+      (\S\ref{sec:jbar}, $\times 0.18$--$2.5$), never by integrating a root profile over depth. If
+      those allometries rest on shallow root sampling, the flux is short relative to a $1$\,m target
+      volume --- and nothing in the chain would reveal it. This is the question already queued for
+      B.\ Tupek, and it is now the \emph{only} depth-related candidate left.
+\end{enumerate}
+
+\textbf{Caveats, stated because they are not resolvable from the papers.} Yasso07's rate vector comes
+from litterbag mass-loss data, which is depth-independent by construction; a depth basis can enter
+only through the humus term ($\alpha_H$, $p_H$) tuned against soil carbon, which is what the above
+concerns. Yasso20's calibration additionally used the Oak Ridge global SOC dataset, for which
+Viskari et al.\ (2022) give no sampling depth --- the paper notes such metadata was unavailable.
+So the match established here is firm for the \emph{Finnish} calibration data and unverified for the
+global component. \textbf{One line from T.\ Viskari would close it.}
+
+\subsection{OPEN ITEM --- the 1917--1985 pre-run input shape is too steep}
+\label{sec:preinitshape}
+
+\textbf{Status: identified 2026-08-20, NOT fixed. Raised by the coauthors, who expected the
+true ramp to be flatter and closer to linear. It is worth $\sim$18--27\,\% of $C_{1985}$.}
+
+\paragraph{The chain as implemented.} \texttt{Model\_functions\_real\_data\_transient/preinit\_input\_shape.R}
+(C3, 2026-07-16): national \emph{total} growing stock (13 NFI points, 1922--2021, from Korhonen
+et al.\ 2024 Fig.\ 10a) $\rightarrow$ linear interpolation to annual $\rightarrow$ normalise
+$(V_t-V_{1917})/(V_{1985}-V_{1917})$ $\rightarrow$ clamp to $[0,1]$ $\rightarrow$
+$J_t = J_{1917} + \text{shape}_t\,(J_{1985}-J_{1917})$.
+
+The resulting ramp is strongly convex: mean shape \textbf{0.194} against 0.500 for a linear ramp,
+staying $\le 0.26$ until 1973 and then climbing to 1 \emph{in the final 12 years}. Because the
+1985 stock weights each pre-run year by $\exp(-(1985-t)/\mathrm{MRT})$ with MRT $\approx$ 22--27\,yr,
+the entire rise sits exactly where the soil's memory is strongest.
+
+\paragraph{Four assumptions, two of them load-bearing.}
+\begin{enumerate}
+\item \textbf{National TOTAL volume is used to drive a PER-HECTARE, mineral-soil-only model.}
+      This is the primary defect. Total stock rose partly because productive forest \emph{area} rose:
+      Korhonen et al.\ (2024) state that \emph{``since the mid 1960s the area of productive forest has
+      increased by 1.6 million hectares due to drainage of treeless or poorly productive peatlands.
+      Most of this change was before the 1980s.''} Our plot population \textbf{excludes peatlands}
+      (Cajander KA 11--13). So the driver contains an area component the target is defined to leave
+      out, and by Korhonen's own dating that component is concentrated \emph{before 1980} --- inside
+      the pre-run, in its steepest segment. Peatland forests now hold 26\,\% of national volume.
+\item \textbf{Litter per unit volume is assumed constant.} Litter is biomass\,$\times$\,turnover and
+      both terms break this. (i) \emph{Age structure}: the heavily-cut 1920s--60s forest was young,
+      and young stands shed far more foliage and fine-root litter per m$^3$ than the older forest of
+      1985 --- so litter per m$^3$ was \emph{higher} early. (ii) \emph{Foliage saturates, stem volume
+      does not}: the dominant litter term (\texttt{nwl} $=$ foliage $+$ fine roots, \S\ref{sec:jbar})
+      is derived from \emph{foliage} mass, which plateaus with LAI, while stem volume keeps
+      accumulating. Both push the same way --- litter rose \emph{less} than volume. Note the internal
+      inconsistency: the litter product is built from foliage mass, the pre-run shape from stem volume.
+\item \textbf{The normalisation amplifies noise.} The denominator is $1775-1400=375$\,M\,m$^3$ on a
+      base of 1400, so the $\pm 50$\,M\,m$^3$ digitisation error on Fig.\ 10a is
+      $\pm 0.13$ \emph{in shape units --- 13\,\% of the entire $0\to1$ range}.
+\item \textbf{The clamp is load-bearing.} The raw shape is negative for \textbf{19 years
+      (1922--1940)}, deepest $-0.076$, driven by a 29\,M\,m$^3$ dip that is \emph{smaller than the
+      $\pm 50$\,M\,m$^3$ error bar on the points defining it}. Those 19 years are pinned to exactly
+      zero, manufacturing a hard floor at the 1917 litter level out of digitisation noise.
+\end{enumerate}
+
+\paragraph{The obvious fix does NOT work.} Applying the fitted litter--growing-stock elasticity
+($\varepsilon = 0.43$) before normalising changes nothing: normalisation removes scale, so
+$V^{0.43}$ gives a shape within \textbf{0.017} of the affine one everywhere (mean 0.201 vs 0.194).
+Do not spend effort there.
+
+\paragraph{What it is worth.} Switching to a linear ramp adds \textbf{+2.3 (SP1), +14.1 (TP2),
++12.7 (TP3), +12.8 (Yasso07), +11.7 (Yasso15), +10.0 (Yasso20)} tC\,ha$^{-1}$ to $C_{1985}$, i.e.
+18--27\,\% for five of six. $C_{1917}$ is \textbf{unchanged} --- it is the equilibrium at $J_{1917}$,
+which the shape does not touch. That carbon would arrive from input history rather than from a fitted
+multiplier, so a flatter ramp is a genuine candidate for part of the $\sinput$ excess
+(\S\ref{sec:priorspec}).
+
+⚠ \textbf{The counter-argument I first raised does not survive.} A flatter ramp lifts the implied
+pre-run accumulation to $+0.27\ldots+0.32$\,tC\,ha$^{-1}$\,yr$^{-1}$, above the observed modern
+$+0.259$. That is \emph{not} a valid objection: $\mathrm{d}C/\mathrm{d}t = J(t) - C(t)/\tau$ depends
+on \emph{disequilibrium}, not on $\mathrm{d}J/\mathrm{d}t$, so a depleted soil relaxes fastest early
+whatever the driver does (as \texttt{init\_state\_plausibility.R} already notes); the pre-run rate is
+an artefact of assuming 1917 equilibrium, so judging the initial state by it re-imports the very
+convention this paper argues against; and the ``$4\times$ slower driver'' is an absolute-flux
+comparison --- in relative terms it is $\sim$0.35 vs 0.98\,\%\,yr$^{-1}$, damped further by
+$\varepsilon = 0.43$. \textbf{The 1917 STOCK criterion is the sound one, and it is unaffected.}
+
+\paragraph{The real risk is coupling, and it is testable.} If the pre-run delivers 18--27\,\% more
+carbon by 1985, the calibration may respond by \emph{lowering} $\sinit$ --- less initial-state help
+being needed --- which would push $C_{1917}$ back down and partly undo the gain measured on the
+correlated-likelihood run. This must be checked by re-running, not argued.
+
+\paragraph{What to do.}
+\begin{enumerate}
+\item Rebuild the shape from \textbf{per-hectare volume on mineral-soil forest land}. ⚠ Korhonen
+      et al.\ (2024) report volume by soil class \emph{only for NFI13} (mineral 123.9, peatland
+      117.3\,m$^3$\,ha$^{-1}$); \textbf{there is no published per-soil-class series back to 1921}.
+      The series must be requested (Aleksi Lehtonen / Mikko Peltoniemi) or reconstructed.
+\item Sanity-check against a \emph{foliage}-based proxy rather than stem volume, since that is what
+      the litter chain actually uses.
+\item Replace the clamp with a small floor, or propagate the $\pm 50$\,M\,m$^3$ as shape uncertainty.
+      A noise-level dip should not become a 19-year structural feature.
+\item Ablations available now: \texttt{HIKET\_PREINIT\_LINEAR=1} (already wired) brackets the effect.
+\end{enumerate}
+
+⚠ \textbf{A related figure bug was found and fixed while investigating this (2026-08-20).}
+\texttt{build\_F4\_initialization.R} hard-coded a \emph{linear} spin-up ramp, while the wrappers have
+followed the growing-stock shape since C3. The figure named after the initialization problem was
+drawing an initialization the calibration never ran --- the same class of defect as the
+\texttt{J\_full\_mean}/\texttt{J\_t0\_mean} bug fixed in that file on 2026-08-17. Fixed by reading
+\texttt{lm\$preinit\_shape}; caches re-keyed \texttt{c3}. F4 now also carries a lower panel showing
+the mean litter input flux with posterior bands, so the assumed ramp is visible to the reader.
+This CSV also feeds F10b, so any revision propagates there.
+
+\subsection{Our input assumptions against Liski et al.\ (2006) --- the closest comparator}
+\label{sec:liskicompare}
+
+\textbf{Liski, Lehtonen, Palosuo, Peltoniemi, Eggers, Muukkonen \& Mäkipää (2006),
+\emph{Ann.\ For.\ Sci.} 63:687--697} is the nearest thing to a like-for-like study: Finland,
+1922--2004, the \emph{same} soil model (Yasso), the same NFI source, and the same soil compartment
+(upland forest, organic $+$ 1\,m mineral --- \S\ref{sec:yassodepth}). Two of its authors,
+A.\ Lehtonen and M.\ Peltoniemi, are collaborators here. It must be cited in the Discussion.
+
+\paragraph{The governing difference is PRESCRIPTION versus INFERENCE.} They resolve every unknown in
+the input chain by prescribing it --- fixed turnover rates per species and region (their Tab.~I),
+biomass expansion factors, an assumed historical age-class distribution, Yasso run at its
+\emph{published} parameters --- and propagate no uncertainty from any of it (they recommend a Monte
+Carlo analysis; they do not perform one). We resolve the same unknowns by inference: a small number
+of free auxiliary parameters carrying full posterior uncertainty. \textbf{Neither is free of
+assumption; the assumptions sit in different places.} Theirs are many, explicit and unpropagated;
+ours are few, implicit and absorbed into parameters that then take the strain --- which is exactly
+how $\sinput$ became a repository for everything the litter product omits (\S\ref{sec:priorspec}).
+\emph{Decision (Lorenzo, 2026-08-20): where the two approaches conflict, we prefer the
+assumption-lighter one, and we do not import their prescriptive machinery.}
+
+\begin{center}\small
+\begin{tabular}{@{}p{3.0cm}p{4.6cm}p{4.6cm}p{2.6cm}@{}}
+\toprule
+ & Liski et al.\ 2006 & HIKET & status \\
+\midrule
+litter source & NFI stem volume $\to$ BEFs $\to$ biomass $\times$ fixed turnover rates & Tupek product
+(Zenodo 10.5281/zenodo.19736499) $\times$ calibrated $\sinput$ & --- \\
+understorey & modelled explicitly; ground vegetation $=$ 28\,\% of living-vegetation litter &
+one global multiplier, $\sinput$ & \textbf{recentred to their 1.27} \\
+historical trajectory & annual, from reconstructed biomass & normalised shape from growing stock &
+\textbf{Tier 1 only} (per-ha) \\
+age structure & fixed turnover by species/region; fine-root:foliage $80\%\!\to\!20\%$ (age 10$\to$150)
+& none & \textbf{only if Boris concurs} \\
+initialisation & \textbf{steady state at 1922} & transient pre-run, $\sinit$ & our contribution \\
+soil parameters & Yasso at published values & Bayesian calibration & --- \\
+areal basis & national totals $+$ explicit land-use transfers & per plot, fixed area & see below \\
+uncertainty & none propagated & full posterior & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Where they agree with us --- and it is worth saying so.} Their comparable litter subtotal
+(tree $+$ residues $+$ mortality, understorey excluded) is 2.27\,tC\,ha$^{-1}$\,yr$^{-1}$ against our
+$\bar J = 2.511$, i.e.\ \textbf{1.11$\times$}: two independently built litter products for the same
+forests agree to about 10\,\%. Their soil carbon, 6.3\,kg\,C\,m$^{-2}$, sits inside the
+measurement-based range 6.2--7.2 and is consistent with our target of 66--72\,tC\,ha$^{-1}$ on the
+same depth basis. The two studies are therefore genuinely comparable, and the disagreements below
+are not artefacts of incommensurable quantities.
+
+\paragraph{Decision 1 --- $\sinput$ recentred $1.08 \to 1.27$ (IMPLEMENTED 2026-08-20).}
+Their total input to soil is 2.88 against the 2.27 comparable subtotal, so the understorey correction
+is $2.88/2.27 = 1.27$. We take the \emph{ratio} rather than their absolute total (which would give
+$2.88/2.511 = 1.15$), because $\sinput$ exists to correct \emph{our} $\bar J$ for the understorey gap;
+the two differ only by the 11\,\% between the litter products.
+⚠ This puts Liski (27\,\% understorey share) against Lehtonen \& Heikkinen 2015 (8\,\%, the source of
+the old 1.08). The candidate reconciliation is whether L\&H's ``total litter'' carries harvest
+residues, which our $\bar J$ does. \textbf{Unresolved --- A.\ Lehtonen authored both.} Effect: the
+prior centre moves from an implied flux of 2.71 to 3.19\,tC\,ha$^{-1}$\,yr$^{-1}$, and the posterior
+excess measured against it falls from 40--60\,\% to 20--36\,\%, with SP1 becoming essentially correct.
+
+\paragraph{Decision 2 --- the ramp: Tier 1 only.} We adopt their \emph{diagnosis} but not their
+machinery. Their §4.3 states it plainly: \emph{``the expansion of forested areas by 16\,\% accounted
+for most of the 13\,\% increase [in litter and soil carbon], while the carbon density did not increase
+by more than 4\,\%.''} Our shape is driven by national \emph{total} growing stock and therefore
+inherits that areal expansion, which a per-hectare, mineral-soil-only model must not
+(\S\ref{sec:preinitshape}). \textbf{Fix: divide by forest area to obtain a per-hectare series.}
+⚠ Blocked on data: Korhonen et al.\ (2024) supplement S2 is NFI13-only and carries no historical
+area-by-soil-class series; the area series must come from their Fig.~1, Luke statistics, or be
+requested. We explicitly \emph{decline} Tier 2 (replicating biomass $\times$ turnover), because it
+would import an assumed historical age-class distribution --- Liski et al.\ had to assume the NFI8
+volume-per-age-class shape held in earlier inventories --- in exchange for refinement that largely
+cancels in a normalised $[0,1]$ shape.
+
+\paragraph{Decision 3 --- the age-dependent fine-root:foliage ratio is CONDITIONAL.} Their
+$80\% \to 20\%$ decline from stand age 10 to 150 is the one prescriptive element that would flatten
+our ramp for a defensible reason, and it acts on the dominant \texttt{nwl} term. \textbf{It goes in
+only if it is compatible with B.\ Tupek's fine-root estimates} --- his chain already carries a
+foliage$\,\to\,$fine-root ratio spanning $\times 0.18$--$2.5$ (\S\ref{sec:jbar}), and adopting Liski's
+age dependence on top of an incompatible allometry would double-count. This is now a second reason
+to put the fine-root question to him.
+
+\paragraph{The disagreement that matters most, and it is not about the shape.} Since
+$\sinit = J_{1917}/J_{1985}$, our calibration infers a per-hectare litter rise across the pre-run of
+$+10\,\%$ (SP1), $+66$, $+70$, $+87$, $+96$, $+97\,\%$ (Yasso20, Yasso15, Yasso07, TP2, TP3). Liski
+et al.\ give, per hectare and over the \emph{longer} 1922--2004 window, a biomass carbon density rise
+of $+29\,\%$; since they compute litter as biomass $\times$ fixed turnover, per-hectare litter tracks
+that, and over our shorter window it must be less --- less still once age-driven turnover decline is
+allowed for. \textbf{Five of six models infer roughly a doubling where the best independent
+reconstruction supports well under a third.}
+
+This does \emph{not} reinstate a growing-stock bound on $\sinit$ (retired, and for a reason that still
+holds: $\sinit$ also equilibrates the 1917 soil, so constraining it through the flux silently fixes
+the state). What it does is \textbf{quantify the parameterisation criticism}: the data want a low 1917
+\emph{stock}; the only dial that delivers one is $\sinit$; and it drags the \emph{flux} ratio to a
+value 2.5--3.5$\times$ away from an independent reconstruction by our own coauthors. The implied
+remedy is to decouple --- an NFI-informed flux ratio plus a \emph{free} 1917 soil disequilibrium ---
+so that the initialisation can express ``moderate flux rise, soil still far from equilibrium'', which
+the present one-parameter form cannot. \textbf{Not implemented; this is the strongest available
+argument for doing it.}
+
+⚠ \textbf{Provenance caveat.} The per-hectare litter rise attributed to Liski et al.\ above is
+\emph{derived} by combining their 28\,\% ground-vegetation share with their 29/16/4\,\% density,
+area and soil-carbon figures. They never state it. Digitise their Fig.~5, or ask A.\ Lehtonen,
+before this appears in the paper.
+
+⚠ \textbf{Their 1922 initial state is a steady state} (mean litter 1922--36, mean climate 1901--30) ---
+i.e.\ the equilibrium convention this manuscript argues against
+(\S\ref{sec:leveltrend}). Their early-period values inherit it, and the comparison should say so
+rather than treat their 1922 as observation.
 
 \subsection{Candidate windows, and what each would do}
 

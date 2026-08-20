@@ -5,7 +5,16 @@ DCOL <- c("alpha_A","alpha_W","alpha_E","alpha_N","p_WA","p_EA","p_NA","p_AW","p
           "p_AE","p_WE","p_NE","p_AN","p_WN","p_EN","w1","w2","w3","w4","w5",
           "beta1","beta2","betaN1","betaN2","betaH1","betaH2","gamma","gammaN","gammaH",
           "p_H","alpha_H","delta1","delta2","r")
-RID <- c(Yasso07="20260807_165552", Yasso15="20260807_165549", Yasso20="20260807_165548")
+# Auto-selected default (was a hard-coded 20260807 literal until 2026-08-20). Every
+# consumer sources this lib and then overrides RID -- but only because they happen to
+# source it BEFORE run_ids.R. A reorder would have silently reinstated a stale run, so
+# the default is now the newest posterior rather than a literal.
+RID <- vapply(c("Yasso07","Yasso15","Yasso20"), function(m) {
+  fs <- list.files("Calibration_real_data_transient/runs",
+                   pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
+  if (!length(fs)) stop("intrinsic_mrt_lib.R: no posterior found for ", m, call. = FALSE)
+  sub(sprintf("^%s_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
+}, character(1))
 
 setup <- function(M) {
   src <- readLines(sprintf("Calibration_real_data_transient/run_%s_transient_calibration.R", M),

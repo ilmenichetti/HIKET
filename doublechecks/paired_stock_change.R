@@ -4,14 +4,23 @@
 # The balanced set matters: on the pairwise 2006->2024 set (n=409) the observed
 # rate is +0.209; on the balanced set (n=310) it is +0.117. Same data, 1.8x.
 
-runs <- c(SP1     = "20260813_080305",
-          TP2     = "20260813_080306",
-          TP3     = "20260813_080306",
-          Yasso07 = "20260814_105614",
-          Yasso15 = "20260814_105757",
-          Yasso20 = "20260814_105907")
+# RUN_IDs auto-selected (were hard-coded to 20260813/14 until 2026-08-20, which would
+# have reported the PREVIOUS run's stock change for the current one). Pin an older run
+# for comparison with HIKET_PSC_RID="SP1=<id>,...".
+runs <- vapply(c("SP1","TP2","TP3","Yasso07","Yasso15","Yasso20"), function(m) {
+  fs <- list.files("Calibration_real_data_transient/runs",
+                   pattern = sprintf("^%s_posterior_predictive_[0-9]{8}_[0-9]{6}\\.rds$", m))
+  if (!length(fs)) stop("paired_stock_change.R: no posterior_predictive for ", m, call. = FALSE)
+  sub(sprintf("^%s_posterior_predictive_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
+}, character(1))
+local({
+  ov <- Sys.getenv("HIKET_PSC_RID", "")
+  if (nzchar(ov)) { kv <- strsplit(strsplit(ov, ",")[[1]], "=")
+    for (e in kv) runs[[trimws(e[1])]] <<- trimws(e[2]) }
+})
+cat("RUN_IDs:", paste(names(runs), runs, sep="=", collapse=" | "), "\n")
 
-om  <- readRDS("Data/model_inputs/Yasso15_inputs_20260814_105757.rds")$obs_meta
+om  <- readRDS(sprintf("Data/model_inputs/Yasso15_inputs_%s.rds", runs[["Yasso15"]]))$obs_meta
 BAL <- as.integer(names(om)[vapply(om, function(z) length(z$soc_obs) >= 3L, logical(1))])
 cat("balanced plot set: n =", length(BAL), "\n")
 
