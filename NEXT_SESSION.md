@@ -1,115 +1,57 @@
 # NEXT SESSION — start here
 
-## 🚀 0-NOW. THE CORRELATED-LIKELIHOOD RUN IS IN FLIGHT (2026-08-19)
+## 🚀 0-NOW. THE LISKI-INPUT RUN IS QUEUED (2026-08-20)
 
-> **⏳ Jobs 726678-726683** (SP1 / TP2 / TP3 / Yasso07 / Yasso15 / Yasso20), submitted
-> 2026-08-19 ~10:30 from commit `5477ed1`. Expect ~14-20 h ⇒ results 2026-08-20 early.
-> **Tests ONE factor: the correlated-error likelihood.** Everything else is byte-identical
-> to `20260817_12*`, which is snapshotted whole in
-> `snapshots/20260818_pre_correlated_likelihood/`.
+> **⏳ Jobs 749703–749708** (SP1 / TP2 / TP3 / Yasso07 / Yasso15 / Yasso20), submitted
+> 2026-08-20 ~14:40 from commit `d4a223e`.
+> ⚠ **QUEUED, NOT RUNNING.** SLURM estimated start **2026-08-23** (1340 jobs ahead in `small`).
+> Those estimates are pessimistic — they assume every running job burns its full walltime — but
+> plan for results ~Sunday, not overnight. `squeue -u menichet --start` for the current estimate.
 >
-> ⚠ **Second difference, unavoidable: r-env moved to R 4.6.1** (the comparison run was
-> R 4.5.2). Recorded in the metadata. Should not change results, but it is not a
-> single-factor run in the strictest sense -- note it if anything looks odd.
+> **TWO FACTORS, deliberately** (decision Lorenzo 2026-08-20; every run since 08-17 was
+> one-factor, this one is not):
+> 1. **Pre-run ramp**: national-total growing stock → the Liski et al. 2006 reconstructed
+>    **input to soil, per hectare, tree basis**. Normalised shape mean **0.194 → 0.450**.
+> 2. **`sigma_input` prior centre 1.08 → 1.27** (Liski's understorey correction, 2.88/2.27).
 >
-> **First check, ~10 min in** (restrict the glob or you read July's logs):
-> `grep -H -E "CORRELATED likelihood|tau_R 0.117|Cores per chain|chains x|Likelihood at defaults" progress_logs/*_7266*.err`
-> Expect the CORRELATED line, `tau_R 0.117 | ... sigma_e 0.685`, `Cores per chain: 40`,
-> `5 chains x 50000`, and SP1's `Likelihood at defaults` near **-966** (not -1090).
-> **A missing CORRELATED line means the SINGULARITYENV_ export did not reach R -- scancel
-> all six**, because the run would complete normally and look like a valid repeat.
+> Comparison basis: `snapshots/20260820_pre_liski_recentring/` (862 MB + MANIFEST).
 >
-> ✅ Fortran rebuilt on Roihu 10:23, ONE SHLIB call per .f90, both .so present.
+> ### FIRST CHECK when they start (~10 min in)
+> ```
+> grep -H -E "PREINIT SHAPE|CORRELATED likelihood|Cores per chain|chains x" progress_logs/*_7497*.err
+> ```
+> Expect in all six:
+> ```
+> [PREINIT SHAPE] liski | mean 0.450 | 1950 0.760 | 1970 0.645
+> [ERROR MODEL] CORRELATED likelihood: n = 959 obs, 365 plots, 8 bands, 3 campaigns
+> Cores per chain: 40        5 chains x 50000
+> ```
+> ⚠ **`growing_stock` or a missing PREINIT SHAPE line ⇒ the run tests nothing new — scancel.**
+> It would complete normally and look like a valid repeat.
 >
-> ✅ **LAUNCH VERIFIED 10:40.** All six show the CORRELATED line, the full tau line, `Cores per
-> chain: 40` and `5 chains x 50000`. Stronger still, `Likelihood at defaults` matches the LOCAL
-> unit-test values to 3 dp in all six (SP1 -966.200 vs -966.1996; Yasso15 -1039.396 vs
-> -1039.3965). That one comparison clears four failure modes at once: the input bundle is the
-> corrected target, the freshly built .so is right (the three Yasso values are Fortran-dependent),
-> R 4.6.1 changes nothing at this precision **so the run IS effectively single-factor after all**,
-> and the SINGULARITYENV_ exports reached R.
+> ### PRE-REGISTERED — read the results against this
+> - **`sigma_input`** should rise toward ~1.27 (effective flux → Liski's 2.88). Lorenzo expects
+>   little change. If it tracks the centre 1:1 *again*, that repeats the 20260817 pattern and
+>   undercuts "the likelihood pins σ_input".
+> - ⭐ **WATCH THE 1917 STOCK, NOT `sigma_init`.** (Correction, Lorenzo 2026-08-20: my
+>   pre-registration had this wrong.) `sigma_init` is a flux ratio and `C_1917 ∝ sigma_init ×
+>   sigma_input`, so σ_init falling while σ_input rises leaves the stock untouched. **σ_init
+>   falling is not a problem; C_1917 falling a lot is.** Run
+>   `doublechecks/init_state_plausibility.R` — this run's C_1917 was **44–56 tC/ha**, up from
+>   30–40. Losing that is the failure mode.
+> - **MRT** should fall slightly (MRT × σ_input has been near-conserved).
+> - **The litter-history disagreement will NOT close**: models infer +66–97% per-hectare litter
+>   rise 1917→1985, Liski gives **+14.6%**, NFI+elasticity **+10.7%**. That lives in σ_init's
+>   amplitude, which neither factor touches.
+> - Compare on **RMSE distributions**, never log-likelihood.
 >
-> **WHEN THEY LAND (~2026-08-20 early):**
-> 1. `sacct -j 726678,726679,726680,726681,726682,726683 --format=JobID,JobName%14,State,Elapsed,MaxRSS`
-> 2. rsync back `runs/`, `diagnostics/` AND `Data/model_inputs/` (the predictive stage hard-loads
->    the bundle keyed to each RUN_ID).
-> 3. `Rscript --no-save Calibration_real_data_transient/run_hiket_pipeline.R --skip-calibration`
->    — safe in any shell now; it reads sigma from the run's own `error_model_spec` and says so.
-> 4. `doublechecks/intrinsic_mrt.R` (CHECK THE ECHOED RUN_IDs), `doublechecks/init_state_plausibility.R`,
->    `doublechecks/effective_n.R`.
-> 5. Compare against `snapshots/20260818_pre_correlated_likelihood/` on **RMSE distributions** —
->    log-likelihoods are NOT comparable across this change.
->
-> **READ IT AGAINST THE PRE-REGISTRATION BELOW, not against hope.** `sigma_input` and the MRT
-> ridge should move; `sigma_init` and the 1917 stock were pre-registered NOT to. If the initial
-> state is still implausible that is the EXPECTED result, not a failure of the instrument — the
-> derived-stock prior is the separate lever for it ([[sigma-init-growing-stock-bound]]).
-
-
-Implemented, gated and wired. Commits `ab4861a` (likelihood), `aaad558` (effective n),
-`96509a6` (launch wiring). **Nothing is estimated** -- all four variances fixed, the three
-offsets marginalised: tau_R 0.117, tau_P 0.396, tau_C 0.06 (1985) / 0.03, sigma_e 0.685 as the
-remainder of an UNCHANGED total 0.800.
-
-**The gate passed.** `doublechecks/test_correlated_likelihood.R`: tau = 0 reproduces the
-independent log-likelihood to **1.7e-10** (SP1) / **5.9e-12** (Yasso15); all three guards refuse
-(Student-t, SIGMA_1985_INFL != 1, multiplicative normal); rejected draws agree as -Inf on both
-paths. All six models build Sigma identically -- 959 obs, 365 plots, 8 bands, 3 campaigns.
-
-**What it does, measured on the real Sigma** (`doublechecks/effective_n.R`):
-
-| | inflate | n_eff |
-|---|---|---|
-| national LEVEL | **2.18x** | 959 -> **202** |
-| 1985 campaign level | 1.79x | 269 -> 84 |
-| trend 1985->2024 | 1.35x | -- |
-| trend 2006->2024 | 1.11x | -- |
-
-The level is hit; the trends are not (u^P and u^R cancel on differencing). That asymmetry is
-the instrument working, and if a future change makes the trends fall as far as the level, the
-implementation is wrong.
-
-### PRE-REGISTERED, before the run
-
-- **Should move:** `sigma_input` and the MRT x sigma_input ridge -- the correction removes LEVEL
-  information and the level is what pins them.
-- **Should NOT move much:** `sigma_init`. u^P/u^R cancel on within-plot differencing, and
-  tau_C = 0.06/0.03 leaves the trend constraint ~12% TIGHTER than the SIGMA_1985_INFL = 2 it
-  replaces. **Expect this run to under-deliver on sigma_init and on the 1917 stock.**
-- **Watch ESS.** The likelihood now couples every plot and the level direction just got 2.18x
-  looser, so `sigma_input`'s posterior should widen. Not a bug; a mixing risk.
-
-### ⚠ THE REMAINING TRAPS ARE ALL OUTSIDE THE CODE
-
-1. **Recompile the Fortran on Roihu.** `.so` files are gitignored. ONE `R CMD SHLIB` call PER
-   `.f90` -- a combined call silently produces no `yasso15.so` and breaks Yasso15 AND Yasso20.
-   Check: `yasso07_transient_init` at defaults ~69 tC/ha; ~0 means stale.
-2. **Verify the log line before walking away.** Expect BOTH of these in the `.err`:
-   `[ERROR MODEL] CORRELATED likelihood: n = ... tau_R 0.117 | tau_P 0.396 | ... sigma_e 0.685`
-   and `Cores per chain: 40` (not 383). If the correlated line is ABSENT the
-   SINGULARITYENV_ export did not reach R and the run is a plain repeat of the last one.
-3. **Submit through an interactive shell** -- MODULEPATH is interactive-only:
-   `ssh roihu 'bash -ic "module load r-env && cd /scratch/project_2019134/HIKET && sbatch ..."'`
-   A bare `ssh ... sbatch` dies in ~1 s.
-
-⚠ **`ll` at defaults CHANGES with this run** (the normalising constant moved: SP1 -1090 -> -966).
-Do NOT use ll-at-defaults as the cross-run sanity check any more, and **compare runs on RMSE
-distributions, never on log-likelihood.** The stale-`.so` check is the ~69 tC/ha one, unaffected.
-
-✅ Snapshot already taken: `snapshots/20260818_pre_correlated_likelihood/` (825 MB, the
-`20260817_12*` run). `run_ids.R` auto-selects the newest posterior, so without it the next run
-erases the comparison.
-
-✅ Walltime is fine: last run 12.4-17.7 h, +12% worst case = 19.8 h against a 36 h limit.
-
-✅ **Stage 2 is safe to run in any shell.** The predictive scripts now read the error model from
-the posterior's own `error_model_spec`, not from the environment -- previously a stage-2 run
-without the SLURM exports would have built intervals at 0.442 for a run fitted at 0.800,
-silently. They also now report a TRUE posterior-predictive coverage alongside the parameter CI
-(validated on the current run: ParamCov 0.092, **ppCov 0.963** -- the error model is well
-calibrated per observation).
+> ### Reverting without a code change
+> `HIKET_PREINIT_SHAPE=growing_stock` restores the old ramp **bit-identically** (verified,
+> max |diff| = 0); `=linear` or the legacy `HIKET_PREINIT_LINEAR=1` gives the linear ramp.
+> ⚠ On Roihu it needs the `SINGULARITYENV_` prefix to reach R inside the container.
 
 ---
+
 
 ## 🚨 0-NOW. STATE AT 2026-08-17 — READ THIS FIRST
 
