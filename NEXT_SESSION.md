@@ -52,6 +52,33 @@
 
 ---
 
+## ⭐⭐ STANDING ITEM — forecast robustness: SINK vs SOURCE (raised 2026-08-20, Lorenzo)
+
+**Politically decisive and not yet defensible. Re-check after every change to the input
+specification.** Memory: `forecast-sink-robustness`.
+
+Measured on run `20260819_1025*`, 2024→2084, balanced set, tC/ha/yr:
+
+| TP2 | TP3 | Yasso07 | Yasso15 | Yasso20 | SP1 |
+|---|---|---|---|---|---|
+| **+0.218** | +0.206 | +0.101 | +0.081 | +0.060 (→ SOURCE by the 2070s) | **−0.001** |
+
+**The projection freezes litter input at its 2024 value**, so the entire sink is disequilibrium
+relaxation — the soil catching up to *past* input increases. Consequently:
+
+- **r(inferred historical litter rise, projected sink) = +0.870**; r(σ_init, sink) = −0.800,
+  Spearman −0.943.
+- ⚠⚠ The inferred historical rise (+66–97%) is precisely what Liski (**+14.6%**) and
+  NFI+elasticity (**+10.7%**) contradict. **If the input history is 4–6× too steep, so is the
+  projected sink.** SP1 — the only model with a defensible input history — is the only one
+  projecting no sink.
+
+**To do, in order:** (1) re-measure after the Liski-ramp run lands; (2) treat constant-2024 input as
+a *scenario* and test alternatives (the post-2006 litter decline is real); (3) **verify whether
+CLIMATE is also frozen in the projection — inputs demonstrably are, climate was never checked**;
+(4) report the ensemble spread, never a central estimate; (5) pair with the equifinality result —
+fit explains only 10–18% of forecast spread, so a good fit says nothing about a right forecast.
+
 
 ## 🚨 0-NOW. STATE AT 2026-08-17 — READ THIS FIRST
 
