@@ -1,12 +1,45 @@
 # NEXT SESSION — start here
 
-## 🚀 0-NOW. THE LISKI-INPUT RUN IS QUEUED (2026-08-20)
+## 🚀 0-NOW. THE LISKI-INPUT RUN HAS LANDED (checked 2026-08-21 16:15)
 
-> **⏳ Jobs 749703–749708** (SP1 / TP2 / TP3 / Yasso07 / Yasso15 / Yasso20), submitted
-> 2026-08-20 ~14:40 from commit `d4a223e`.
-> ⚠ **QUEUED, NOT RUNNING.** SLURM estimated start **2026-08-23** (1340 jobs ahead in `small`).
-> Those estimates are pessimistic — they assume every running job burns its full walltime — but
-> plan for results ~Sunday, not overnight. `squeue -u menichet --start` for the current estimate.
+> **✅ Jobs 749703–749708** (SP1 / TP2 / TP3 / Yasso07 / Yasso15 / Yasso20), submitted
+> 2026-08-20 ~14:40 from commit `d4a223e`. **They started 2026-08-20T15:54 — 1.2 h after
+> submission, NOT the 2026-08-23 SLURM estimated.** Ignore `squeue --start` estimates in this
+> project; they have been pessimistic by days.
+>
+> **FIVE COMPLETED CLEAN** (exit 0:0, all chains 100% finite, 0 R-hat warnings):
+>
+> | job | model | RUN_ID | wallclock | R-hat | ESS |
+> |---|---|---|---|---|---|
+> | 749703 | SP1 | `20260820_155430` | 888 min | 1.000–1.001 | 9911–11002 |
+> | 749704 | TP2 | `20260820_155431` | 949 min | 1.000–1.002 | 6999–7837 |
+> | 749705 | TP3 | `20260820_155430` | 1046 min | 1.000–1.004 | 5730–6541 |
+> | 749706 | Yasso07 | `20260820_155430` | 1002 min | 1.001–1.005 | 2192–3643 |
+> | 749707 | Yasso15 | `20260820_155430` | 934 min | 1.001–1.008 | 1817–3175 |
+> | 749708 | Yasso20 | `20260820_155433` | chain 4/5 at 16:15 | — | — |
+>
+> **Yasso20 was projected to finish ≈23:45 on 2026-08-21**, ~4 h inside its 36 h wall
+> (2026-08-22T03:54). It was the wall risk of this run — chains ran 287 / 457 / 461 min under
+> heavy `rc5120` contention, then chain 4 *sped up* to 2.37 eval/s while the node got busier
+> (another entry for [[roihu-runtime-is-node-contention]]). **VERIFY it completed before using
+> anything**: `sacct -j 749708 --format=State,Elapsed,ExitCode`. If it hit the wall it is a total
+> loss (no per-chain checkpointing) and needs a solo relaunch.
+>
+> ### ✅ FIRST CHECK — PASSED IN ALL SIX, nothing to redo
+> ```
+> [PREINIT SHAPE] liski | mean 0.450 | 1950 0.760 | 1970 0.645
+> [ERROR MODEL] CORRELATED likelihood: n = 959 obs, 365 plots, 8 bands, 3 campaigns
+> Cores per chain: 40        5 chains x 50000
+> ```
+> `sigma_input = 1.27` confirmed in `Prior_specs/*_priors.R` at `d4a223e`. So this IS the clean
+> two-factor step; the likelihood is unchanged from the 08-19 correlated run.
+> Logs live in `Calibration_real_data_transient/progress_logs/*_7497*.{err,out}` (NOT the repo root).
+>
+> ### NEXT ACTIONS
+> 1. `rsync` back `runs/`, `diagnostics/` **and** `Data/model_inputs/` — the predictive stage
+>    hard-loads `<MODEL>_inputs_<RUN_ID>.rds` with no fallback.
+> 2. Stages 2–4 locally: `Rscript --no-save …/run_hiket_pipeline.R --skip-calibration`.
+> 3. Read the results against the pre-registration below.
 >
 > **TWO FACTORS, deliberately** (decision Lorenzo 2026-08-20; every run since 08-17 was
 > one-factor, this one is not):
@@ -15,19 +48,6 @@
 > 2. **`sigma_input` prior centre 1.08 → 1.27** (Liski's understorey correction, 2.88/2.27).
 >
 > Comparison basis: `snapshots/20260820_pre_liski_recentring/` (862 MB + MANIFEST).
->
-> ### FIRST CHECK when they start (~10 min in)
-> ```
-> grep -H -E "PREINIT SHAPE|CORRELATED likelihood|Cores per chain|chains x" progress_logs/*_7497*.err
-> ```
-> Expect in all six:
-> ```
-> [PREINIT SHAPE] liski | mean 0.450 | 1950 0.760 | 1970 0.645
-> [ERROR MODEL] CORRELATED likelihood: n = 959 obs, 365 plots, 8 bands, 3 campaigns
-> Cores per chain: 40        5 chains x 50000
-> ```
-> ⚠ **`growing_stock` or a missing PREINIT SHAPE line ⇒ the run tests nothing new — scancel.**
-> It would complete normally and look like a valid repeat.
 >
 > ### PRE-REGISTERED — read the results against this
 > - **`sigma_input`** should rise toward ~1.27 (effective flux → Liski's 2.88). Lorenzo expects
