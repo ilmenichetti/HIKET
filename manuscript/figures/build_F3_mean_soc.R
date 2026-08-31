@@ -7,7 +7,7 @@ source("manuscript/figures/model_palette.R")
 source("manuscript/figures/obs_basis.R")   # shared observed-SOC basis
 # Must match the RUN_ID-keyed cache written by build_F4_initialization.R (run that
 # first). Keyed so a re-calibration cannot leave this figure silently stale.
-.f4_cache <- sprintf("manuscript/figures/F4_cache_bal_%s.rds",
+.f4_cache <- sprintf("manuscript/figures/F4_cache_bal_c3_%s.rds",
                      substr(paste(RID[FIG_MODELS], collapse = "-"), 1, 120))
 if (!file.exists(.f4_cache))
   stop("F4 cache for the current RUN_IDs is missing -- run build_F4_initialization.R first:\n  ",
