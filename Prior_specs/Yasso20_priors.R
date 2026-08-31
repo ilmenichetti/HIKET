@@ -70,7 +70,11 @@ YASSO20_FREE_DEFAULTS <- c(
   # Independent support for the larger share: Liski S4.2 warns that ignoring ground
   # vegetation underestimates "not only these parameters but also the soil carbon
   # stock and sink" -- exactly this parameter's failure mode.
-  sigma_input = 1.27
+  # SENSITIVITY ARM B (2026-08-31): Lehtonen & Heikkinen anchor, 2.70/2.511 = 1.08.
+  # Arm A (Liski, 1.27) is run 20260820_1554*. The two anchors disagree by 18% on the
+  # understorey share and the disagreement is UNRESOLVED (see above) -- we report both
+  # rather than choose. Revert to 1.27 to reproduce arm A.
+  sigma_input = 1.08
 )
 
 # Published Viskari 2022 parameter vector — used by run_yasso20_baseline.R only.

@@ -1,6 +1,129 @@
 # NEXT SESSION — start here
 
-## 🚀 0-NOW. THE LISKI-INPUT RUN HAS LANDED (checked 2026-08-21 16:15)
+## 🧪 0-NOW. ARM B PRE-REGISTERED, NOT YET LAUNCHED (2026-08-31)
+
+> **What it is.** One factor vs the Liski-input run (`20260820_1554*`, arm A): the `sigma_input`
+> prior CENTRE, 1.27 → **1.08**. Width stays 0.25; the Liski per-hectare pre-1985 ramp stays ON;
+> everything else byte-identical. Wired in all six `Prior_specs/*_priors.R`.
+>
+> ### ⚠ This is a SENSITIVITY ARM, not a correction
+> 1.08 is NOT "the right value we drifted from". The two anchors genuinely disagree on the
+> understorey share — **Liski 2006 says 27% (⇒ 1.27), Lehtonen & Heikkinen 2015 says 8% (⇒ 1.08)** —
+> and the prior files record the disagreement as UNRESOLVED, pending **A. Lehtonen, who authored
+> both**. So: run both, report both, let Aleksi settle the anchor. Framing it as a revert would be
+> the tuning trap CLAUDE.md warns about in three places, because 1.08 also happens to move MRT
+> toward the published values.
+>
+> **Second, independent reason to run it:** arm A moved TWO factors (ramp + centre), so its MRT drop
+> is attributed by inference from the near-conserved ridge, not demonstrated. Arm B isolates the ramp.
+>
+> ### Pre-registered expectations (extrapolated from arm A's response; NOT intervals)
+> Arm A moved the centre +17.6% and the posteriors followed +6.3…+9.1%, ridge product near-conserved.
+> Running that backwards:
+> - `sigma_input` posteriors **−6 to −9%**
+> - intrinsic MRT **+7 to +9%** ⇒ ≈ 24.0 / 27.6 / 22.5 (Yasso07/15/20), restoring Yasso15's overlap
+>   with the published value
+> - effective flux ⇒ ≈ SP1 3.14 · Yasso15 3.76 · Yasso07 3.98 · Yasso20 4.11 · TP2 4.36 · TP3 4.38,
+>   i.e. all six back under the Gower Nordic max 4.62
+> - **C_1917 unchanged**, `sigma_init` unchanged (arm A moved it −0.3…+5.1%)
+> - RMSE within ±0.3 either way
+>
+> **If MRT moves much MORE than +9%**, the ridge is not as conserved as arm A suggested and the
+> two-factor attribution needs redoing. **If C_1917 moves**, something other than the centre changed.
+>
+> ### ⚠ The flux window stays WIDE — decided 2026-08-31 (Lorenzo)
+> The hard window `[0.05, 4.62]` is **deliberately NOT implemented**. Reason: on arm A the absurdity
+> it existed to kill is gone (TP2/TP3 are at 4.71/4.73, not the old 34/50), and bounding would
+> IMPOSE the input conclusion instead of finding it. **Consequence for the manuscript:** the
+> Discussion's §"multiplier crosses a physical line" counterfactual (bounding costs skill only for
+> TP2/TP3) describes an experiment that was never run and numbers that no longer exist — rewrite it
+> as a straight comparison against the literature anchors.
+>
+> ### ⚠ Do NOT overstate the input finding
+> Decided 2026-08-31: "previous calibrations underestimate inputs" is defensible and stays, but is
+> NOT to be strengthened. It and "MRT too short" are the same ridge from two ends — arm B weakens
+> the first and helps the second by construction. Do not bank both.
+>
+> ### Launch checklist
+> - ✅ Snapshot of arm A: `snapshots/20260831_pre_sigma_input_armB/`
+> - ⬜ commit + push the prior change; `git pull` on Roihu; confirm clean tree
+> - ⬜ `ssh roihu 'bash -ic "module load r-env && cd /scratch/project_2019134/HIKET && sbatch ..."'`
+>       — MODULEPATH is interactive-only; a bare `ssh … sbatch` dies in 1 s
+> - ⬜ verify in the `.err` logs: `sigma_input` centre **1.08**, `Cores per chain: 40`,
+>       `5 chains x 50000`, `liski | mean 0.450` (ramp still on), 1205 obs / 456 calib-ready
+>
+> ### Still open, independent of this run
+> - ⬜ `metrics_calib` fix in `run_multimodel_comparison.R` §2 (quantified 2026-08-31: true calib
+>       R² **0.0150–0.0206**, holdout R² **1.2e-07 to 1.1e-03** — holdout skill is ZERO, not "low")
+> - ⬜ F3/T1 cache-key fix is FIXED but UNCOMMITTED
+> - ⬜ T1 caption still prints the superseded `[0.5, 8.7]` window
+> - ⬜ Discussion §"over-prediction is a property of the likelihood" — premise FLIPPED SIGN, dead as written
+> - ⬜ manuscript is a skeleton where it matters: Results unwritten, 0 `\cite`, 0 `\includegraphics`,
+>       no `.bib`, title/abstract/coauthors all `[PLACEHOLDER]`
+
+---
+
+
+## 🚀 0-NOW. THE LISKI-INPUT RUN IS ANALYSED — NEXT MOVE DECIDED (2026-08-24)
+
+> All six of jobs **749703–749708** COMPLETED (Yasso20 took 30 h 25 min, clearing its wall by ~5.5 h).
+> R-hat 1.000–1.009, ESS 1752–11002. Synced, stages 2–4 run, all 30 manuscript figure builders
+> re-run. Provenance verified: **Roihu ran `d4a223e` with a clean tree**, local HEAD differs only in
+> this file, so the priors the KL/marginal figures compare against are the ones that ran.
+>
+> ### Results, against the pre-registration
+> - ⭐ **C_1917 HELD at 43.4–55.9 tC/ha** (prev 44–56) — the pre-registered failure mode did NOT fire.
+>   σ_init barely moved (−0.3% to +5.1%).
+> - **σ_input rose only ~half the prior's step**: centre +17.6%, posteriors **+6.3 to +9.1%**
+>   (SP1 1.350 · Yasso15 1.619 · Yasso07 1.714 · Yasso20 1.770 · TP2 1.876 · TP3 1.885).
+>   **Breaks the 20260817 1:1-tracking pattern.**
+> - ⚠ **MRT FELL**: 25.66→**22.13** / 27.35→**25.60** / 22.42→**20.82** (Yasso07/15/20).
+>   Yasso15 **lost** its overlap with the published posterior median.
+> - **Ridge product back to near-conserved** (Yasso15 −0.5%, Yasso20 −0.6%, Yasso07 −6.3%). So the
+>   MRT loss is the mirror of the σ_input rise ⇒ traces to factor 2. **Strong inference, not proof:
+>   two factors moved.**
+> - RMSE +0.28…+0.81 calib, +0.31…+0.84 holdout. Stock change: **1985→2006 best yet at 0.99–1.37×**;
+>   full span 0.32–1.23×; 2006→2024 a SOURCE in 4 of 6.
+> - ⚠ **TP2 (1.876) / TP3 (1.885) now exceed the σ_input ≤ 1.84 implied by the decided flux window
+>   `[0.05, 4.62]`** (effective flux 4.64 / 4.66 vs a 4.62 ceiling). `T1_model_summary.tex` still
+>   prints the superseded `[0.5, 8.7]` and claims "all within" — caption to update.
+>
+> ### ⭐⭐ NEXT ACTIONS, decided by Lorenzo 2026-08-24, in order
+> 1. **Re-run the calibration with the `sigma_input` prior centre back to 1.08** — ONE factor,
+>    isolating whether the Liski ramp alone is a gain. Only that prior line changes (the ramp has
+>    `HIKET_PREINIT_SHAPE`). ⚠ Snapshot first — `run_ids.R` auto-selects the newest posterior.
+> 2. **Then the forward exploration** — see `memory/equifinality-forward-exploration-design.md`:
+>    LL-threshold cut on the posterior, **uniform resampling** in the retained region, compare two
+>    MRT/σ_input regions of near-equal fitness for their **extrapolation**. Profiling was proposed and
+>    **REJECTED** (parameter interactions; the optimiser's bias manufactures discrimination).
+> 3. **Deferred a few days — Lorenzo is consulting FMI first.**
+>
+> ### ⭐ The threshold blocker is largely solved, at zero machine cost
+> `manuscript/figures/F14_mrt_ridge.rds` already holds per-draw `mrt`/`si`/`ll` for **225,015 draws**.
+> Δll at the published MRT POINT = **13.70 / 5.03 / 1.13** (Yasso07/15/20) against each posterior's
+> own 95% LL spread of **9.9–12.1**. ⚠⚠ **"Yasso07 unreachable" is DEAD** — its MRT now reaches
+> **35.3 yr** (above the published 33.47). **Δ = 6 is the sweet spot** (2.6–9.3% retained, spans both
+> regions); Δ ≤ 3 never reaches the published values; Δ = 10 retains 30–65% and the contrast
+> dissolves. **Better: stratify along MRT instead of picking one global Δ** — then Δ is an output, and
+> machine time is set by (bins × draws per bin) with no wasted volume.
+>
+> ### 🚫 Blocking prerequisite for the climate half
+> **There is NO climate change in any projection** — all six recycle the last `RECYCLE_YEARS = 20`
+> observed years cyclically over `PROJ_YEARS = 60`. Scenario forcing must be added first, through
+> `compute_xi_mean()` (never `mean(xi_array)`).
+>
+> ### ⚠ Two defects found 2026-08-24
+> - **NOT FIXED:** the multimodel "calibration" metrics read `metrics` (all 1205 obs, holdout
+>   included), not `metrics_calib`. True calibration R² is **0.015–0.021**, not 0.010–0.015; any
+>   calib–holdout gap claim is mechanically shrunk. `T1` is correct ⇒ two builders disagree.
+> - **FIXED but UNCOMMITTED:** `build_F3_mean_soc.R` and `build_T1_model_summary.R` read the old
+>   `F4_cache_bal_` key after F4 was renamed to `F4_cache_bal_c3_`, so both had been erroring since
+>   2026-08-20 and the F3/T1 in the manuscript came from a **pre-C3 linear-ramp cache**.
+> - Also unwired: `doublechecks/paired_stock_change.R` **ignores `HIKET_FIG_RID`**.
+
+---
+
+## 📦 SUPERSEDED — 0-NOW as of 2026-08-21 16:15
 
 > **✅ Jobs 749703–749708** (SP1 / TP2 / TP3 / Yasso07 / Yasso15 / Yasso20), submitted
 > 2026-08-20 ~14:40 from commit `d4a223e`. **They started 2026-08-20T15:54 — 1.2 h after
