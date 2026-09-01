@@ -1,6 +1,38 @@
 # NEXT SESSION — start here
 
-## 🧪 0-NOW. ARM B PRE-REGISTERED, NOT YET LAUNCHED (2026-08-31)
+## 🚀 0-NOW. ARM B IS IN FLIGHT — jobs 972096–972101, launched 2026-08-31 16:25 EEST
+
+> **Launched** from `78f8ac4`; all six RUNNING within 2 s on separate nodes
+> (rc4139/rc5140/rc4106/rc4124/rc5125/rc5126). 36 h wall ⇒ hard deadline **04:25 on 2026-09-02**.
+> **Expected landing 09:00–15:30 on 2026-09-01** (from iteration rates at 3 h 41 m, not from
+> previous wallclocks): Yasso07 ~16.5 h · TP3 ~17.5 h · SP1/Yasso15 ~20.5 h · TP2 ~22 h ·
+> Yasso20 ~23 h.
+>
+> **Launch verified in all six logs:** `Cores per chain: 40` · `5 chains x 50000` ·
+> `[PREINIT SHAPE] liski | mean 0.450 | 1950 0.760 | 1970 0.645` (identical to arm A ⇒ ramp truly
+> fixed) · `SOC observations: 1205 | obs CV 0.432` · log-normal ·
+> `flux_pair J_bar = 2.511 | sigma_input window [0.020, 3.465]` (the WIDE window). The prior centre
+> is not echoed to the log — verified by grepping the six prior files on the cluster after `git pull`.
+>
+> **Health at 3 h 41 m:** memory peaks 9.4–13.4 GB against 156 GB, `events:max 0`, `oom_kill 0`,
+> node free 304 GB–1.46 TB. Nothing to watch.
+>
+> ⚠ **Three traps when checking the logs, all hit in-session:** `grep -i error` matches the
+> `[ERROR MODEL]` banner (false positive); the glob `*_9720*.err` **misses jobs 972100/972101**;
+> `memlog_*.csv` is in **MB** with a `#` comment line before the header (`tail -n +3`, /1024).
+> ⚠ **The `.out` iteration counter RESETS per chain** — read it with the count of `complete (`
+> lines in the `.err`, or a job that is ahead looks stalled.
+>
+> ### When it lands
+> 1. rsync `runs/`, `diagnostics/` AND `Data/model_inputs/` (the predictive stage hard-loads the
+>    bundle keyed to each RUN_ID)
+> 2. stages 2–4 locally: `run_hiket_pipeline.R --skip-calibration`
+> 3. `doublechecks/intrinsic_mrt.R` — **check the RUN_IDs it echoes**
+> 4. read against the pre-registration below BEFORE forming a view
+
+---
+
+## 🧪 THE PRE-REGISTRATION (written before launch, 2026-08-31)
 
 > **What it is.** One factor vs the Liski-input run (`20260820_1554*`, arm A): the `sigma_input`
 > prior CENTRE, 1.27 → **1.08**. Width stays 0.25; the Liski per-hectare pre-1985 ramp stays ON;
