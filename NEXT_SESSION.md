@@ -1,5 +1,51 @@
 # NEXT SESSION — start here
 
+## ✅ 0-NOW. ARM B HAS LANDED — the one-factor test PASSED (2026-09-01)
+
+> All six of jobs **972096–972101** COMPLETED. RUN_IDs **`20260831_162458`** (SP1, TP2) ·
+> **`_162456`** (TP3) · **`_162457`** (Yasso07, Yasso15, Yasso20). R-hat 1.000–1.008 (0 warnings),
+> ESS 1747–10821, all chains 100% finite, memory peaks 12.3–14.2 GB, `events:max 0`.
+> Synced (`runs/`, `diagnostics/`, `Data/model_inputs/`), stages 2–4 run, MRT extracted with
+> provenance verified (`intrinsic_mrt.rds` stamped `20260831_162457`).
+>
+> ### Against the pre-registration
+>
+> | pre-registered | actual | |
+> |---|---|---|
+> | σ_input −6…−9% | **−5.0…−8.3%** | ✅ |
+> | MRT +7…+9% (24.0/27.6/22.5) | **+5.9…+11.0% (24.57 / 27.11 / 22.56)** | ✅ |
+> | flux ≈3.14–4.38, all < 4.62 | **3.19–4.34**, all under | ✅ |
+> | RMSE ±0.3 | −0.79…+0.43 (SP1 outside) | ~✅ |
+> | σ_init unchanged | **−3.9…−6.7% in all six** | ❌ |
+> | C_1917 unchanged | **−2…−4 tC/ha** (43.4–55.9 → 41.9–52.3) | ❌ |
+>
+> ⭐ **Arm A's inference is now DEMONSTRATED**: the MRT drop rode the σ_input rise along the
+> near-conserved ridge, not the Liski ramp. Yasso15 regained overlap with its published posterior;
+> Yasso20 sits entirely above its published POINT; Yasso07's shortfall stays structural (single ξ).
+>
+> ### ⚠⚠ Arm B also FITS BETTER — not pre-registered either way
+> Calibration R² up in **all six** (0.0166–0.0209); RMSE better in **five of six**; **bias down in
+> five** (SP1 3.16→1.52, Yasso20 2.46→1.17, Yasso15 3.87→2.99). Holdout R² unchanged at ~zero.
+> **The lower input anchor costs nothing and is marginally preferred by the data.**
+> ⚠ **This is exactly when NOT to decide from the table.** The anchor question is Liski's 27% vs
+> Lehtonen & Heikkinen's 8% understorey share, and **Aleksi authored both papers**. Decide on his
+> answer, before looking at which arm reads better.
+>
+> ### ⬜ BINDING TASK — source the 1917 stock floor
+> It is the **only** axis favouring arm A: C_1917 41.9–52.3 puts **TP2 42.9 · TP3 41.9 ·
+> Yasso07 43.2** below it. But the floor is an **unsourced placeholder reading 45 in
+> `doublechecks/init_state_plausibility.R` and 40 in the memory** — so "three models fail" is not yet
+> a finding, and it flips on a 5 tC/ha invented threshold. Take the **MINIMUM** from the boreal SOC
+> literature, whole profile to `z_cap` (Peltoniemi 2004 the natural anchor), then reconcile both.
+> ⚠ The pre-run RATE criterion does NOT discriminate — it passes in all six, both arms.
+>
+> ### Tomorrow: does the story hold?
+> Read [[manuscript-readiness-gaps]] first. The writing-side items are unchanged and none of them
+> depends on the anchor decision: the `metrics_calib` fix, the T1 caption, the dead over-prediction
+> subsection, and the §"multiplier crosses a physical line" rewrite.
+
+---
+
 ## 🚀 0-NOW. ARM B IS IN FLIGHT — jobs 972096–972101, launched 2026-08-31 16:25 EEST
 
 > **Launched** from `78f8ac4`; all six RUNNING within 2 s on separate nodes
