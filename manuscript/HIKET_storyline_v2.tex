@@ -315,69 +315,45 @@ scored on the three campaign means (balanced set).
 \FIG{doublechecks/published\_kinetics\_input\_refit.R}
 
 \begin{center}\small
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \hline
-& \multicolumn{2}{c}{published arm} & \multicolumn{2}{c}{our arm} & \multicolumn{2}{c}{misfit (rms log)} \\
-& MRT & $\sinput$ & MRT & $\sinput$ & published & ours \\
+& \multicolumn{2}{c}{published arm} & \multicolumn{2}{c}{our arm} & \multicolumn{2}{c}{contrast}
+& misfit (pub/ours) \\
+& MRT & $\sinput$ & MRT & $\sinput$ & MRT & input & rms log \\
 \hline
-Yasso07 & 33.47 & 1.249 & 24.57 & 1.585 & \textbf{0.020} & 0.029 \\
-Yasso15 & 30.44 & 1.324 & 27.11 & 1.538 & \textbf{0.024} & 0.034 \\
-Yasso20 & 22.13 & \multicolumn{5}{l}{\emph{blocked by our integrator --- see below}} \\
+Yasso07 & 33.47 & 1.249 & 24.57 & 1.585 & $\times0.73$ & $\times1.27$ & 0.020 / 0.029 \\
+Yasso15 & 29.97 & 1.358 & 27.11 & 1.538 & $\times0.90$ & $\times1.13$ & 0.023 / 0.034 \\
+Yasso20 & 22.10 & 1.708 & 22.56 & 1.659 & $\times1.02$ & $\times0.97$ & 0.029 / 0.035 \\
 \hline
 \end{tabular}
 \end{center}
 
-\paragraph{No compromise was needed.} The published arm matches the observed window \emph{at least
-as well as our calibration does} in all three models. So any divergence downstream is extrapolation,
-not level mismatch --- which is exactly the condition the experiment required.
+\paragraph{No compromise was needed.} The published arm matches the observed window \emph{better
+than our calibration does} in all three models. So any divergence downstream is extrapolation, not
+level mismatch --- which is exactly the condition the experiment required.
 
 \paragraph{Both arms are on the same ridge.} The product $\mathrm{MRT} \times \sinput$ is conserved
-to within $7\%$ (Yasso07 $41.8$ vs $38.9$; Yasso15 $40.3$ vs $41.7$). We are moving \emph{along} the
-ridge, not off it --- which is what makes the contrast interpretable.
+to $7\%$, $2.5\%$ and $0.8\%$ respectively. We are moving \emph{along} each model's ridge, not off
+it --- which is what makes the contrast interpretable.
 
-\paragraph{\textbf{Yasso20 is blocked by our integrator, not by its structure.}} Published
-Yasso20 routes $\sim\!99.6\%$ of pool A and $\sim\!98\%$ of E into W. Our Yasso wrapper's
-diagonal-dominance guard falls back to explicit Euler near that boundary, and with
-$\alpha_W \approx 4.4$ and $\xi$ up to $3.4$ the Euler factor is about $-14$, so the solution
-oscillates and diverges. It is a \emph{threshold}: $p_{AW} = 0.9926$ (ours) integrates fine,
-$0.9957$ (published) diverges --- a change of $0.003$, with outgoing sums $\le 0.996$ in both, so
-mass conservation is intact throughout. \textbf{FMI's own Yasso20 does not do this}; the fix is to
-make our step exact there, not to drop the model. Until then the experiment runs on Yasso07 and
-Yasso15.
-
-\begin{warn}
-\textbf{F12 overstates published Yasso20's turnover by $11.6\%$, and this must be fixed before the
-figure is used again.} \texttt{assemble\_model\_params} builds
-\texttt{c(fixed\_rates, p\_free[MODEL\_FREE\_NAMES])}, and for Yasso20 the \emph{rates are fixed at
-Yasso15's values} --- they are not free names, so a published draw never overrides them. F12's
-``published Yasso20'' therefore pairs Yasso20 fractions and climate with Yasso15's $\alpha_E$
-($0.242$ against the published $0.117$) and Yasso15's non-zero $w_1$--$w_5$ (published Yasso20 sets
-them to zero). Corrected: $25.04 \to \mathbf{22.13}$~yr. Yasso15 is unaffected ($30.44 \to 30.54$,
-$+0.3\%$) because its fixed rates \emph{are} its own published ones.
-\smallskip
-
-\textbf{Consequence for the story:} corrected published Yasso20 ($22.13$) is within $2\%$ of ours
-($22.56$). \textbf{Yasso20's turnover is not displaced from its published value at all}, and any
-claim that it is --- including ``Yasso20 now exceeds its published point'' --- must be restated.
-\end{warn}
+\paragraph{\textbf{The contrast is graded, and Yasso20 is a negative control.}} Yasso07 is displaced
+hard ($\times0.73$ in turnover, $\times1.27$ in input), Yasso15 moderately, and \textbf{Yasso20
+hardly at all} --- its published parameterisation already sits where our calibration puts it. That
+is a gift for the design: if climate response tracks position on the ridge, Yasso07 must separate,
+Yasso15 less, and \textbf{Yasso20 must not separate at all}. A within-family null is a far stronger
+control than three replicates of one contrast.
 
 \begin{note}
-\textbf{Retracted 2026-09-02:} an earlier version of this section claimed Yasso20 ran ``backwards''
---- shorter published turnover and higher published input than ours --- and offered it as a built-in
-sign control. That came from using \texttt{to\_original(best\_x)} as ``the published
-parameterisation''. For Yasso20 that vector is a \emph{hybrid}: Yasso20 climate and size parameters
-with \textbf{Yasso15's transfer fractions}, because that is where its prior centres come from
-(\texttt{Prior\_specs/Yasso20\_priors.R}, line 3). Its MRT is $19.03$ against the genuine published
-$25.04$. On the correct basis the family is ordered consistently --- published slower than ours in
-all three --- which is what \texttt{F12\_mrt\_yasso.png} showed all along.
-\end{note}
-
-\begin{note}
-\textbf{What this already tells us, before any forward run.} On the aggregate trajectory,
-slow-and-lean and fast-and-rich are \emph{indistinguishable}. That is the ridge demonstrated
-directly rather than inferred from a posterior correlation --- and it \textbf{bounds what the input
-claim of Act VI may rest on}. The national trajectory does not support it; the plot-level
-likelihood does. The manuscript must say which.
+\textbf{Getting Yasso20 in required a fix, and the fix is documented.} Published Yasso20 is
+calibrated with the AWEN transfer fractions \emph{plus} $p_H$ exhausting the pool budget
+\textbf{exactly} (median $1.000000$; Yasso15 sits at $0.99939$). Our Fortran \texttt{model\_step}
+declares a matrix ill-conditioned when a column's off-diagonal sum exceeds $0.9999\times$ the
+diagonal --- which is precisely this budget --- and falls back to an explicit Euler step that
+diverges. The exact path is in fact stable \emph{and fast} ($1$~ms) at $0.9998$, and SOC converges
+smoothly as the budget rises ($0.990 \to 51.3$; $0.998 \to 52.5$; $0.9998 \to 52.75$), so we clamp
+the budget at $0.9998$, costing $\sim\!0.02\%$. \textbf{The proper fix is in the Fortran} (raise the
+threshold; fall back only above $1$, where the system genuinely creates mass), but that touches a
+\texttt{.so} shared by Yasso15 and Yasso20 and needs its own verification.
 \end{note}
 
 \subsubsection{Pre-registration}
