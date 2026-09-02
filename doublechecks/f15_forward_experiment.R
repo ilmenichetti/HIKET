@@ -9,7 +9,33 @@
 #   ARM "ours"      : arm B posterior (RUN_IDs 20260831_1624*)
 #
 # Forcing: observed 1985-2024, then 60 projection years recycling the last 20
-# observed years; warming applied to the PROJECTION ONLY. Response = warm - control.
+# observed years, with a LINEAR WARMING RAMP over the projection (not a step).
+#
+# ---- CLIMATE SCENARIOS -------------------------------------------------------
+# Ruosteenoja, K. and Jylha, K. (2021). "Projected climate change in Finland
+# during the 21st century calculated from CMIP6 model simulations."
+# Geophysica 56(1-2), 39-69.  Annual mean temperature change for FINLAND,
+# CMIP6 multi-model, relative to a 1981-2010 baseline:
+#
+#     scenario    2040-2069            2070-2099
+#     SSP1-2.6    +1.6 [1.3, 1.9]      +2.3 [1.9, 2.7]
+#     SSP2-4.5    +2.0 [1.7, 2.3]      +3.6 [3.0, 4.2]
+#     SSP3-7.0    +2.2 [1.9, 2.5]      +4.9 [4.2, 5.6]
+#     SSP5-8.5    +2.5 [2.2, 2.8]      +6.4 [5.5, 7.3]
+#
+# ⚠ BASELINE ADJUSTMENT. Those changes are relative to 1981-2010, but our
+# projection recycles the 2005-2024 climate, which in OUR OWN forcing data is
+# already +1.00 C above 1985-2010 (measured, not assumed: plot-mean annual T
+# 2.953 -> 3.950 C). Applying the published number unadjusted would count the
+# warming that has already happened TWICE. So the ramp target is the warming
+# STILL TO COME from the recycled baseline:
+#     SSP1-2.6 -> +1.3    SSP2-4.5 -> +2.6    SSP5-8.5 -> +5.4
+# ⚠ Our 1985-2010 window approximates Ruosteenoja's 1981-2010 (four years short,
+# and on our plot network rather than all-Finland). State this in the methods.
+# ⚠ The ramp starts at 0 in 2025; 2024 is itself slightly above the 2005-2024
+# MEAN, so near-term warming is marginally understated. Immaterial over 60 years.
+#
+# Response = scenario - control, at 2084.
 #
 # BOOTSTRAP. Our arm: posterior draws. Published Yasso15/20: FMI .dat draws.
 # Yasso07 has NO .dat, so its published arm is a POINT -- a line against a band.
@@ -24,6 +50,7 @@
 # biased toward loss. This is a sensitivity, not a projection.
 #
 # Usage:  Rscript doublechecks/f15_forward_experiment.R [N_DRAW] [N_PLOT]
+# All scenarios are RECORDED; the manuscript figure plots only SSP2-4.5.
 # =============================================================================
 
 suppressWarnings(suppressMessages(library(BayesianTools)))
@@ -42,7 +69,12 @@ rid <- vapply(c("Yasso07","Yasso15","Yasso20"), function(m) {
                    pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
   sub(sprintf("^%s_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
 }, character(1))
-N_PROJ <- 60L; N_RECYCLE <- 20L; DTS <- c(0, 2, 5)
+N_PROJ <- 60L; N_RECYCLE <- 20L
+# terminal warming (C) at 2084, already baseline-adjusted; 0 = control
+SCEN <- c(control = 0, ssp126 = 1.3, ssp245 = 2.6, ssp585 = 5.4)
+SCEN_LAB <- c(control = "no further warming", ssp126 = "SSP1-2.6",
+              ssp245 = "SSP2-4.5", ssp585 = "SSP5-8.5")
+DTS <- SCEN
 
 extend <- function(inp, clim) {
   ny <- nrow(inp); rpy <- nrow(clim)/ny
@@ -64,7 +96,8 @@ traj_mean <- function(e, mp, keep, dT) {
   v <- parallel::mclapply(pl, function(pid) {
     x <- extend(ibp[[pid]], cbp[[pid]]); cl <- x$clim
     tc <- TCOL(cl); j <- (x$n_obs*x$rpy + 1):nrow(cl)
-    if (dT != 0) cl[[tc]][j] <- cl[[tc]][j] + dT
+    # LINEAR RAMP: 0 at the first projection year, dT at the last (2084)
+    if (dT != 0) cl[[tc]][j] <- cl[[tc]][j] + dT * rep(seq_len(N_PROJ)/N_PROJ, each = x$rpy)
     xa <- tryCatch(e$.compute_xi(cl, mp), error=function(z) NULL); if (is.null(xa)) return(NULL)
     xs <- tryCatch(e$.compute_xi_mean(cl[seq_len(x$n_obs*x$rpy), , drop=FALSE], mp),
                    error=function(z) NULL); if (is.null(xs)) return(NULL)
@@ -122,7 +155,7 @@ for (M in c("Yasso07","Yasso15","Yasso20")) {
     t0 <- Sys.time()
     res <- lapply(seq_along(mps), function(i) {
       mp <- mps[[i]]
-      tr <- lapply(DTS, function(d) traj_mean(e, mp, keep, d)); names(tr) <- paste0("dT", DTS)
+      tr <- lapply(DTS, function(d) traj_mean(e, mp, keep, d)); names(tr) <- names(SCEN)
       if (any(vapply(tr, is.null, logical(1)))) return(NULL)
       list(traj = tr, mrt = mrt_of(mp), s_input = unname(mp[["sigma_input"]]))
     })
@@ -132,6 +165,8 @@ for (M in c("Yasso07","Yasso15","Yasso20")) {
                 as.numeric(difftime(Sys.time(), t0, units="mins"))))
   }
 }
-saveRDS(list(out=OUT, n_draw=N_DRAW, n_proj=N_PROJ, dts=DTS, arm=ARM, rid=rid),
+saveRDS(list(out=OUT, n_draw=N_DRAW, n_proj=N_PROJ, scen=SCEN, scen_lab=SCEN_LAB,
+             ref="Ruosteenoja & Jylha 2021, Geophysica 56(1-2), 39-69; CMIP6, Finland, annual mean, vs 1981-2010; baseline-adjusted -1.00 C for our 2005-2024 recycled climate",
+             arm=ARM, rid=rid),
         "doublechecks/f15_forward_experiment.rds")
 cat("\nwrote doublechecks/f15_forward_experiment.rds\n")
