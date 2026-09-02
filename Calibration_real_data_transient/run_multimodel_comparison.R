@@ -118,8 +118,15 @@ message("All bundles loaded and validated.\n")
 # 2.  Metrics table
 # =============================================================================
 
+# ⚠ FIXED 2026-09-02. This read pp[[m]]$metrics, which the predictive scripts label
+# "kept for backward compat" and compute over the FULL residuals_df -- i.e. the 959
+# fitted observations PLUS the 246 held out. The headline "calibration" column was
+# therefore the all-data figure, understating calibration R2 by ~50% relative
+# (0.010-0.015 reported against a true 0.015-0.021) and mechanically shrinking any
+# calibration-vs-holdout gap. T1_model_summary.tex already read metrics_calib and
+# was correct, so the two builders disagreed for the same run.
 metrics_df <- do.call(rbind, lapply(MODELS, function(m) {
-  mt <- pp[[m]]$metrics
+  mt <- pp[[m]]$metrics_calib
   data.frame(
     Model       = m,
     R2          = mt$R2,
@@ -128,7 +135,7 @@ metrics_df <- do.call(rbind, lapply(MODELS, function(m) {
     RMSE_mean   = mt$RMSE_mean,
     Bias_mean   = mt$bias_mean,
     Coverage_95 = mt$coverage_95,
-    N_obs       = nrow(pp[[m]]$residuals_df),
+    N_obs       = sum(!pp[[m]]$residuals_df$is_holdout),
     stringsAsFactors = FALSE
   )
 }))

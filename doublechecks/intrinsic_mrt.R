@@ -114,7 +114,7 @@ cat(sprintf("  litter split: nwl %.3f | fwl %.3f | cwl %.3f   (total %.3f)\n\n",
 # which trips model_step's 0.9999 guard; the steady-state route used here does not
 # time-step so it returns finite values, but the matrix is on the boundary. The
 # clamp keeps it just inside, costing ~0.02%. See doublechecks/published_arm_dat.R.
-BUDGET_MAX <- 0.9998
+BUDGET_MAX <- 0.99999
 OUTG <- list(c("p_AW","p_AE","p_AN"), c("p_WA","p_WE","p_WN"),
              c("p_EA","p_EW","p_EN"), c("p_NA","p_NW","p_NE"))
 clamp_budget <- function(mp) {

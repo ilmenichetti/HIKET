@@ -108,7 +108,7 @@ fit_input <- function(e, p_base, keep, mp_base = NULL) {
 # budget genuinely exceeds 1, where the system really does create mass). That
 # touches a .so shared by Yasso15 and Yasso20 and needs its own verification, so it
 # is deliberately NOT done here. This clamp is the minimal, documented alternative.
-BUDGET_MAX <- 0.9998
+BUDGET_MAX <- 0.99999
 OUTG <- list(A=c("p_AW","p_AE","p_AN"), W=c("p_WA","p_WE","p_WN"),
              E=c("p_EA","p_EW","p_EN"), N=c("p_NA","p_NW","p_NE"))
 clamp_budget <- function(mp) {

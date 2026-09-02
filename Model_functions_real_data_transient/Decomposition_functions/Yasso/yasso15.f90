@@ -262,16 +262,33 @@ CONTAINS
       RETURN
     END IF
 
-    ! -- Special case 2: near-singular matrix check --
-    ! Diagonal dominance: |A(i,i)| > sum of |A(j,i)| for j/=i.
-    ! Lost when transfer fractions nearly exhaust the pool budget (respiration -> 0).
-    ! Near-singular matrices cause matrixexp to require excessive scaling steps.
-    ! Threshold 0.9999 gives a small safety margin below exact singularity.
+    ! -- Special case 2: mass-creating matrix check --
+    ! ⚠ THRESHOLD RAISED 0.9999 -> 1.0 on 2026-09-02.
+    ! The test is literally "outgoing transfer fractions + p_H > threshold". At
+    ! 0.9999 it rejected PUBLISHED YASSO20, which is calibrated with the AWEN
+    ! fractions plus p_H exhausting the pool budget EXACTLY (median max 1.000000;
+    ! 100% of its 10,000 posterior draws above 0.9999, against Yasso15's 10.5%).
+    ! Every draw was routed to the Euler fallback, which with alpha_W ~ 4.4 and
+    ! xi up to 3.4 has step factor ~ -14 and diverges: a zero-input test created
+    ! carbon from nothing, 9.4 -> 2e7 tC/ha in 20 years.
+    !
+    ! The fallback, not the parameters, was the defect. Diagonal dominance is
+    ! SUFFICIENT for a well-behaved matrix exponential, not necessary: with the
+    ! budget at 1 a pool simply respires nothing directly, and carbon still leaves
+    ! the system through H. The exact path is stable AND fast there -- measured at
+    ! 1 ms per plot-century at 0.9998, with SOC converging smoothly as the budget
+    ! rises (0.990 -> 51.27, 0.995 -> 52.01, 0.998 -> 52.47, 0.9998 -> 52.75).
+    ! The old comment's claim that matrixexp "effectively hangs" is not borne out.
+    !
+    ! At 1.0 the guard now fires only when outgoing fractions genuinely EXCEED the
+    ! budget, i.e. when the matrix creates mass and no integrator can be trusted.
+    ! Our own posteriors never approach it (stick-breaking keeps them off the
+    ! boundary), so this changes no calibrated result -- verified by regression.
     well_conditioned = .TRUE.
     DO i = 1, NPOOLS
       diag_abs    = ABS(A(i,i))
       offdiag_sum = SUM(ABS(A(:,i))) - diag_abs
-      IF (diag_abs < TOL .OR. offdiag_sum > diag_abs * 0.9999_dp) THEN
+      IF (diag_abs < TOL .OR. offdiag_sum > diag_abs * 1.0_dp) THEN
         well_conditioned = .FALSE.
         EXIT
       END IF
