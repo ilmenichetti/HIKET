@@ -1,0 +1,349 @@
+% HIKET -- storyline v2. A SKELETON, deliberately.
+% Successor to HIKET_storyline_note.tex (retired 2026-09-02).
+%
+% PURPOSE. Lay the story out as headers first, so the ARC can be argued about
+% before any of it is written. Each block carries one to three sentences and the
+% figure it rests on -- nothing more. Prose belongs in the manuscript, not here.
+%
+% WHAT IS NEW vs THE OLD NOTE. Two things:
+%   (1) Thread A is restated. "Complexity does not help" has become "fit does not
+%       discriminate structure, but dynamics do" -- a positive claim, and the one
+%       that matters for applied use.
+%   (2) A new central beat: the calibration wants MORE INPUT and FASTER KINETICS
+%       than the published parameterisations, and that joint displacement should
+%       have consequences we can TEST -- starting with climate reactivity.
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}\usepackage{xcolor}
+\usepackage{float}\usepackage[hidelinks]{hyperref}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\titlespacing*{\paragraph}{0pt}{0.9\baselineskip}{0.4em}
+\setcounter{secnumdepth}{4}\setcounter{tocdepth}{3}
+
+\definecolor{notebg}{HTML}{EAF2FB}\definecolor{noterule}{HTML}{2C6FB5}
+\newtcolorbox{note}{colback=notebg, colframe=noterule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+\definecolor{testbg}{HTML}{EAF7EE}\definecolor{testrule}{HTML}{2E8B57}
+\newtcolorbox{test}{colback=testbg, colframe=testrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+\definecolor{warnbg}{HTML}{FDF3E3}\definecolor{warnrule}{HTML}{C08A2E}
+\newtcolorbox{warn}{colback=warnbg, colframe=warnrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+\newcommand{\FIG}[1]{\textcolor{noterule}{\small$\blacktriangleright$ \textsf{#1}}}
+\newcommand{\NEW}[1]{\textcolor{testrule}{\small$\bigstar$ \textsf{TO BUILD: #1}}}
+
+\title{\vspace{-1.4cm}\textbf{HIKET --- the storyline, v2}\\[2pt]
+\large skeleton for discussion: headers, one-line arguments, figures}
+\author{}
+\date{\small Version of \today. Numbers keyed to RUN\_IDs \texttt{20260831\_1624*} (arm B).
+Deliberately not prose --- the point is to argue about the ARC.}
+
+\begin{document}\maketitle
+
+\begin{note}
+\textbf{How to read this.} Every block is a claim we intend to make, its evidence, and nothing
+else. \FIG{name} marks a figure that exists; \NEW{name} marks one that does not yet.
+Green boxes are \emph{tests we could run}; amber boxes are \emph{things that could sink the claim}.
+\end{note}
+
+\tableofcontents
+\bigskip
+
+% =====================================================================
+\section{The arc in one paragraph}
+Finnish forest soils are accumulating carbon and the accumulation is beginning to level off. A model
+started at steady state cannot show that, because a steady state is already the end of it. Started
+instead from a calibrated past, all six models reach the observed levels and two of them reproduce
+the rate exactly --- but doing so requires \emph{more litter input and faster turnover} than the
+published parameterisations carry. That displacement is the finding, and it is not free: it should
+change how the soil responds to a warming climate. \textbf{The new work is to test whether it does.}
+
+% =====================================================================
+\part{Act I --- Opening}
+
+\section{A sink caught saturating}
+\paragraph{The observed dynamic.} On the balanced plot set the mean stock runs $64.5 \to 71.5 \to
+73.6$~tC\,ha$^{-1}$ across the three campaigns: $+7.0$ then $+2.1$. Accumulation, bending over.
+\FIG{F3\_mean\_soc}
+
+\paragraph{The rate is what an inventory reports.} $+0.259 \pm 0.040$~tC\,ha$^{-1}$\,yr$^{-1}$ over
+the full span. \FIG{F5\_stock\_change}
+
+\paragraph{Why it is politically live.} The Finnish GHG inventory turns on whether this sink
+persists or saturates. \FIG{F10b\_forest\_history}
+
+\section{The convention that cannot see it}
+\paragraph{Steady-state initialisation is near-universal and rarely examined.} Lehtonen 2016,
+Palosuo 2008, Peltoniemi 2004 --- our own group's lineage, to be framed as evolving, not attacked.
+
+\paragraph{An equilibrium start is already at the end.} It cannot produce a rise, so it cannot
+produce a rise that is levelling off.
+
+% =====================================================================
+\part{Act II --- Challenge}
+
+\section{To show the saturation, the model must remember it was rising}
+\paragraph{The soil carries a memory the model is told to forget.} Slow pools integrate a century
+of inputs; setting them to equilibrium erases exactly the transient the data show.
+
+\paragraph{Managed landscapes are rarely at equilibrium.} Finland is the vivid case, not a special
+one: exploitation, then a century of managed regrowth. \FIG{F10b\_forest\_history}
+
+% =====================================================================
+\part{Act III --- Action}
+
+\section{Transient initialisation under a fair frame}
+\paragraph{The unknown start becomes a calibrated parameter.} Each draw spins up from 1917;
+$\sinit$ is the ratio of 1917 to 1985 litter input. Uncertainty propagates rather than being patched.
+\FIG{F4\_initialization}
+
+\paragraph{Fair means equal \emph{information}, not equal parameter count.} Yasso does not fit its
+decomposition rates, so neither do the simple models: rates externally anchored (ICBM), fractions
+free. Otherwise structure and calibration asymmetry are confounded.
+
+\paragraph{One likelihood, and it does not pretend the plots are independent.} Log-normal with a
+fixed correlated error structure (region, plot, campaign), total $\sigma = 0.800$ partitioned, not
+added. \NEW{schematic of the variance partition --- optional}
+
+% =====================================================================
+\part{Act IV --- Resolution, part 1: it works}
+
+\section{The models reach the observations}
+\paragraph{Levels.} No model sits more than $3.5$~tC\,ha$^{-1}$ from any campaign mean. The old
+``$26$~tC\,ha$^{-1}$ too high at 1985'' caveat is gone. \FIG{F3\_mean\_soc}
+
+\paragraph{The rate.} Against observed $+0.259$: Yasso07 $+0.258$, Yasso15 $+0.250$. TP2/TP3 about a
+third strong; SP1/Yasso20 about half weak. The ensemble brackets the answer.
+\FIG{F5\_stock\_change}
+
+\paragraph{\textbf{The three-way split --- new, and better than ``all six work''.}}
+Yasso07/Yasso15 rise then flatten (\emph{saturation reproduced}); TP2/TP3 rise and keep rising
+(\emph{no saturation}); SP1/Yasso20 overshoot then decline. Structure is legible in the shape.
+\NEW{F3b --- trajectory shape, three groups, explicitly grouped}
+
+\begin{warn}
+The 2006--2024 interval discriminates far less than it looks: observed $+0.117 \pm 0.066$, CI
+includes zero. Do not lean on ``two models get the sign wrong'' over eighteen years.
+\end{warn}
+
+% =====================================================================
+\part{Act V --- Thread A, restated}
+
+\section{Fit does not discriminate structure; dynamics do}
+\begin{note}
+\textbf{This replaces ``does complexity improve the answer?''.} The old answer (``no, and the most
+complex fits worst'') is no longer true --- Yasso15 has the best calibration $R^2$ \emph{and} the
+best holdout RMSE. The defensible and more useful claim is the one below.
+\end{note}
+
+\subsection{In-sample, structure is invisible}
+\paragraph{Skill does not climb the pool ladder.} Calibration $R^2$ $0.016$--$0.021$; holdout $R^2$
+$\le 0.0012$ in all six; holdout RMSE spans $3.6\%$. One pool and five pools are indistinguishable.
+\FIG{T1\_model\_summary} \FIG{F6b\_skill\_vs\_complexity}
+
+\paragraph{The ordering does not follow structure at all.} Best and worst holdout RMSE belong to a
+five-pool and a three-pool model.
+
+\subsection{Out of sample, structure is nearly everything}
+\paragraph{The forecast diverges where the calibration agreed.} \FIG{F4\_initialization} (panel b)
+
+\paragraph{Climate sensitivity differs $\sim$2$\times$ across the family.} Equilibrium SOC change at
+$+2$\,\textdegree C: Yasso07 $-21.7\%$, Yasso20 $-13.7\%$, Yasso15 $-9.6\%$. Between-model range is
+$3.1\times$ the mean within-model band. \FIG{climate\_sensitivity\_sweep}
+\begin{warn}
+Measured on an earlier run and as a \emph{demonstration} (step change, single-exponential on bulk
+MRT). Must be recomputed on the current calibration before it goes in a figure.
+\end{warn}
+
+\subsection{The applied consequence}
+\paragraph{Model choice is a forecast decision, not a fit decision.} Selecting an inventory model on
+calibration skill selects on a quantity that carries almost no information about what the model will
+project. This is the practical message of the paper.
+
+\paragraph{So the deliverable is an ensemble, not a winner.} An estimate plus its structural
+uncertainty.
+
+% =====================================================================
+\part{Act VI --- Thread B, the new centre}
+
+\section{The calibration wants more input \emph{and} faster kinetics}
+\begin{note}
+\textbf{This is the beat the old note did not have.} Previously ``inputs are the binding
+uncertainty''. Now something sharper and more falsifiable: the published parameterisations appear to
+\emph{underestimate both} the litter reaching the soil and the rate at which it decomposes --- and
+that is a statement about \emph{where on the ridge} the truth sits, which has consequences.
+\end{note}
+
+\subsection{Inputs}
+\paragraph{The multiplier has a physical referent.} $\sinput \times \bar J$ is an effective litter
+flux: $3.19$--$4.34$~tC\,ha$^{-1}$\,yr$^{-1}$ across the six, i.e.\ $18$--$61\%$ above the national
+total including understorey ($\sim$2.7). \FIG{SX\_input\_vs\_literature}
+
+\paragraph{Independent corroboration exists.} Liski 2006 --- same country, period, model family and
+inventory --- implies a comparable correction. \FIG{F1\_inputs}
+
+\subsection{Kinetics}
+\paragraph{Turnover is displaced from published values.} Intrinsic MRT $24.6$ / $27.1$ / $22.6$~yr
+(Yasso07/15/20) against published points $33.5$ / $30.4$ / $19.0$. \FIG{F12\_mrt\_yasso}
+
+\paragraph{Not one phenomenon.} Yasso07's whole gap is its \emph{single} climate modifier
+($\mathrm{MRT} = \mathrm{MRT}_{\mathrm{ref}}/\xi$ exactly); Yasso15/20 carry three pool-specific
+modifiers and cannot use that lever. Do not discuss the family's gaps as one.
+
+\subsection{Why these are ONE claim, not two}
+\paragraph{The level pins only the product.} $\mathrm{level} \sim \mathrm{MRT} \times \sinput \times
+\bar J$. Faster-with-more and slower-with-less fit identically; the posterior rides that ridge
+(Yasso07/15/20 corr $-0.73$/$-0.68$/$-0.64$; the simple models stronger still).
+\FIG{F14\_mrt\_ridge} \FIG{S13\_mrt\_ridge\_benchmark}
+
+\begin{warn}
+\textbf{The discipline this imposes.} ``Inputs too low'' and ``turnover too slow'' are two
+coordinates of \emph{one} displacement. Report it once. Claiming both as independent findings would
+double-count, and CLAUDE.md flags this in three places.
+\end{warn}
+
+\paragraph{So what \emph{is} the claim?} That the ensemble's best-fitting position on the ridge lies
+at higher input and faster turnover than the published parameterisations sit. That is a single,
+well-posed statement about location --- and it is testable, because the two ends of the ridge are
+\emph{not} equivalent in everything.
+
+\subsection{The independent witness (not on the ridge)}
+\paragraph{The models leave an input-shaped signal in their residuals.} They explain $\sim$2\% of SOC
+variance; a random forest explains $44$--$65\%$ of what they leave. \FIG{F11\_rf\_heatmap}
+
+\paragraph{And the covariate is the same in all six.} Stand basal area --- a productivity proxy, not
+a kinetic one. This does not ride the ridge, so it is genuinely separate evidence that the limitation
+is on the input side.
+
+% =====================================================================
+\part{Act VII --- Consequences, and how to test them}
+
+\section{If the ensemble sits elsewhere on the ridge, what changes?}
+\begin{note}
+\textbf{The scientific core of the next phase.} A displacement that changed nothing observable would
+be bookkeeping. The bet is that it changes the \emph{climate response} --- which would make the
+position on the ridge an empirically decidable question rather than a prior-driven one.
+\end{note}
+
+\subsection{The hypothesis}
+\paragraph{Equal fit, unequal reactivity.} Two calibrations indistinguishable in fit, sitting at
+different points on the $\mathrm{MRT} \times \sinput$ ridge, project \emph{different} sensitivity to
+warming.
+
+\paragraph{Why it should be so.} Temperature acts on the \emph{rate constants}. A faster-turnover
+solution has more of its carbon in pools that feel $\xi$ on a decadal timescale, so the same warming
+moves more carbon. The input side responds through productivity instead --- a different pathway, and
+one held fixed in these projections.
+
+\paragraph{Already partly visible.} Fit explains only $10$--$18\%$ of forecast spread: $82$--$90\%$
+of the projected divergence is among draws the data cannot rank.
+
+\subsection{The test can be run now}
+\begin{test}
+\textbf{Arm A vs arm B is the two-calibration experiment.} The $\sinput$ anchor sensitivity produced
+exactly the required design --- the same six models calibrated under two input assumptions, both on
+disk with chains:
+\smallskip
+
+\begin{center}\small
+\begin{tabular}{lccc}
+\hline
+ & arm A (Liski, centre 1.27) & arm B (L\&H, centre 1.08) & shift \\
+\hline
+$\sinput$ (Yasso15) & 1.619 & 1.538 & $-5\%$ \\
+MRT Yasso07 & 22.13 & 24.57 & $+11\%$ \\
+MRT Yasso15 & 25.60 & 27.11 & $+6\%$ \\
+MRT Yasso20 & 20.82 & 22.56 & $+8\%$ \\
+effective flux & 3.39--4.73 & 3.19--4.34 & lower \\
+fit & --- & \emph{marginally better} & --- \\
+\hline
+\end{tabular}
+\end{center}
+\smallskip
+Two positions on the ridge, comparable fit, no new runs required. Apply the climate-sensitivity
+machinery to both and read off the difference.
+\end{test}
+
+\paragraph{Pre-registration, before looking.} Structure predicts \emph{where} the effect should
+appear: Yasso07 large (single $\xi$ ties MRT and climate sensitivity together; corr $-0.58$),
+Yasso15/20 small (three pool-specific $\xi$ decouple them; corr $-0.10$/$-0.16$).
+
+\paragraph{What would falsify the bet.} A uniform, negligible difference across all three Yassos.
+That would mean the ridge is degenerate in climate response too, and the position on it is
+\emph{not} empirically decidable from projection --- a real result, and one worth reporting.
+
+\NEW{F15 --- climate reactivity, arm A vs arm B, per model, posterior bands}
+
+\subsection{Stronger versions, if the cheap test pays off}
+\paragraph{Forward runs rather than a step response.} Replace the single-exponential demonstration
+with actual forward integration under a warming scenario.
+
+\paragraph{Deliberate ridge-walking.} Calibrate under a restrictive and a permissive $\sinput$
+prior --- wider separation than the anchor arms give.
+
+\paragraph{Break the degeneracy from outside.} Radiocarbon constrains turnover independently of
+input magnitude. The degeneracy is a property of the observation design, not of nature. Worth
+stating even if we cannot do it here.
+
+\begin{warn}
+\textbf{The projections currently contain no climate change} --- the last twenty observed years are
+recycled. Everything above is therefore about \emph{sensitivity}, computed separately, and the
+forecast figures are disequilibrium relaxation under stationary climate. The paper must say so.
+\end{warn}
+
+% =====================================================================
+\part{Act VIII --- Thread C}
+
+\section{What the data can and cannot constrain}
+\paragraph{Convergence is not identifiability.} R-hat $\le 1.008$ everywhere, yet the transfer
+fractions are prior-pinned, ridge-correlated and carry $<1$ nat. A clean sampler on a flat ridge.
+\FIG{F8b\_fraction\_ridges} \FIG{T2\_fraction\_ridges}
+
+\paragraph{The data pin a level, and little else.} Two observations per plot; no cross-plot skill.
+\FIG{F6\_obs\_vs\_pred\_holdout}
+
+\paragraph{Report it, do not fix it.} Non-identifiability here is a property of the observation
+design and belongs in the results.
+
+% =====================================================================
+\part{Act IX --- Landing}
+
+\section{The policy deliverable}
+\paragraph{An estimate plus its irreducible structural uncertainty.} Not a single number, and not a
+selected winner.
+
+\paragraph{Aggregate, not plot-level.} These models capture the national trajectory; they do not
+rank plots. Say it early --- otherwise ``captures the dynamic'' and ``$R^2 \approx 0$'' read as a
+contradiction.
+
+\paragraph{Maps as the landing figure.} \FIG{NextGenC ensemble maps}
+
+% =====================================================================
+\part{Act X --- Outlook}
+
+\section{Where the recoverable signal hides}
+\paragraph{Historical inputs.} The deepest uncertainty; $\sinit$ stands in for a century.
+\paragraph{Understorey and belowground.} The named gap in the litter product.
+\paragraph{Stratified inputs.} The fraction rises strongly south to north; one national multiplier
+cannot carry it.
+\paragraph{Radiocarbon.} The clean external constraint on turnover.
+
+% =====================================================================
+\part{Appendix}
+\section{Figure inventory}
+\paragraph{Exist, need rebuilding on arm B.} F1, F3, F4, F6, F6b, F11, F12, F14, S13, T1, T2 ---
+all PNGs currently predate the current calibration.
+\paragraph{Exist and are current.} F5 (rebuilt 2026-09-02).
+\paragraph{To build.} F3b (shape groups), F15 (climate reactivity, arm A vs arm B), the variance
+partition schematic (optional).
+
+\end{document}
