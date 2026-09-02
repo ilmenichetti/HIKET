@@ -371,8 +371,44 @@ estimate Yasso was originally calibrated against. State it; it is the cleanest a
 it is a choice.
 \end{warn}
 
-\NEW{F15 --- climate response (warming $-$ control) at 2084, published vs ours, three Yassos,
-posterior bands}
+\subsubsection{What we actually publish: one figure in the main text}
+\begin{note}
+This is an important \emph{side} story, not the spine. One figure in the manuscript, everything
+else in the appendix --- and the main-text one leads with the \textbf{consequence}, not the
+mechanism.
+\end{note}
+
+\paragraph{F15, three panels, read left to right as an argument.} The rhetorical risk is that a
+divergence in projection is dismissed as ``their models just differ''. So the figure must earn the
+divergence before showing it.
+\paragraph{(a) They agree on everything observable.} Continuous axis $1917 \to 2084$, Yasso07 (the
+largest displacement). Both arms, the three campaign points with CIs, a rule at 2024. A thin ribbon
+of \emph{arm difference} pinned near zero makes the agreement unmissable; the misfits
+($0.020$ vs $0.029$) are annotated so nobody wonders whether it is only approximate.
+\paragraph{(b) They separate the moment warming is applied.} Same axis past 2024: control and
+warming for both arms, bootstrap bands. Two lines that are one line, then a fan.
+\paragraph{(c) The size of the disagreement, and it grows with warming.}
+$\Delta(\text{response}) = \text{ours} - \text{published}$ at 2084, per model, at $+2$ and
+$+5$\,\textdegree C. \textbf{Yasso20 sits at zero, labelled as the control} --- no displacement, no
+divergence. That null inside the same figure is what makes the other two credible.
+\paragraph{Units and honesty.} All panels in tC\,ha$^{-1}$: the absolute response carries both the
+kinetics and the input difference, which is the consequence a reader cares about. The relative
+version --- $\sinput$-invariant, therefore pure kinetics --- goes to the appendix. Yasso07's
+published arm has no \texttt{.dat}, so it is a \emph{line} where the others have bands, and must be
+drawn to look different rather than silently thinner.
+
+\paragraph{Appendix.} The MRT-collapse figure (every draw, both arms, all three models, response
+against intrinsic MRT --- do they fall on ONE curve?); the full three-model trajectory set; the
+arm-construction table; and the relative-response version of panel (c).
+
+\begin{note}
+\textbf{Why the collapse figure matters even in an appendix.} It is what converts ``two
+parameterisations differ'' into ``position on the ridge governs reactivity''. If the clouds do not
+collapse onto one curve, the effect is model identity rather than ridge position --- a different
+claim, and one this design would not support.
+\end{note}
+
+\NEW{F15 (main text, 3 panels) + appendix: MRT collapse, all-model trajectories, arm table}
 
 \subsection{Stronger versions, if this one pays off}
 \paragraph{A real scenario rather than a temperature offset.} Replace the $+2$/$+5$\,\textdegree C
@@ -435,7 +471,8 @@ cannot carry it.
 \paragraph{Exist, need rebuilding on arm B.} F1, F3, F4, F6, F6b, F11, F12, F14, S13, T1, T2 ---
 all PNGs currently predate the current calibration.
 \paragraph{Exist and are current.} F5 (rebuilt 2026-09-02).
-\paragraph{To build.} F3b (shape groups), F15 (climate reactivity, arm A vs arm B), the variance
-partition schematic (optional).
+\paragraph{To build.} F3b (shape groups); \textbf{F15} (main text, three panels: agreement $\to$
+divergence $\to$ size of the disagreement, with Yasso20 as the visible null); appendix set (MRT
+collapse, all-model trajectories, arm-construction table, relative-response version).
 
 \end{document}
