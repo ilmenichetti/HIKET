@@ -65,7 +65,10 @@
 % ---------------------------------------------------------------------
 \usepackage{xcolor}
 \newif\ifstrat
-\strattrue        % <-- \stratfalse drops the entire stratified-calibration strand
+% DROPPED 2026-09-02 (Lorenzo): the stratified-calibration strand is not part of
+% THIS publication. Possibly revisited later, so the material is kept behind the
+% switch rather than deleted -- set \strattrue to bring it all back.
+\stratfalse       % <-- \strattrue restores the entire stratified-calibration strand
 \newcommand{\stratnote}[1]{\ifstrat{\color{red}#1}\fi}  % inline red, droppable
 
 % Number and list every heading level down to subparagraph.
@@ -971,8 +974,8 @@ litter-based centre, not by a wall.
 
 Two cautions bound how far this can be pushed. First, the discrepancy is
 \emph{consistent with} input or forcing error, not proof of it: a global
-calibration cannot exclude local kinetic variation (see the excursus, and the
-stratified strand that would be its fair test). Second --- and this is the
+calibration cannot exclude local kinetic variation, and the fair test of that ---
+a spatially stratified calibration --- is beyond this paper. Second --- and this is the
 constraint that governs the whole Discussion --- ``inputs too low'' and ``turnover
 too fast'' are one under-determination viewed from two ends, not two independent
 findings. The level of a soil carbon stock constrains the \emph{product}
