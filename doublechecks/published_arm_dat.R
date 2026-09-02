@@ -188,6 +188,9 @@ for (M in MODELS) {
   cat(sprintf("  contrast: MRT x%.2f  input x%.2f   ridge product %.1f vs %.1f (%+.1f%%)\n\n",
               mrt_ours/mrt_pub, p_ours["sigma_input"]/A$s, mrt_pub*A$s, mrt_ours*p_ours["sigma_input"],
               100*(mrt_ours*p_ours["sigma_input"]/(mrt_pub*A$s)-1)))
+  # ⚠ store mp_pub WITH the fitted sigma_input. It was saved without it once, and
+  # every downstream run then used the prior centre and sat ~25 tC/ha low.
+  mp_pub["sigma_input"] <- A$s
   OUT[[M]] <- list(basis=basis, mrt_pub=mrt_pub, s_pub=A$s, pred_pub=A$r$pred, rms_pub=A$rms,
                    mrt_ours=mrt_ours, s_ours=unname(p_ours["sigma_input"]),
                    pred_ours=r_ours$pred, rms_ours=rms_ours, sigma_init=si_ours,
