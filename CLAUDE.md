@@ -713,6 +713,10 @@ noise the error model should absorb, not as data error.
   `build_F5_stock_change.R`'s campaign mapping and rate denominator; `build_T1`'s `J_bar` 2.472 → 2.511.
   **All 31 figure builders re-run on arm B.** New: **F15** (forward experiment) + **A1/T_A1**.
   Memories: [[decisions-20260902]], [[published-yasso20-two-defects]], [[f5-basis-bugs]].
+  **STORYLINE:** the live one is `manuscript/HIKET_storyline_v2.tex` (13 pp, [[storyline-v2]]);
+  `HIKET_storyline_note.tex` is RETIRED. OCAR is four visible `\part`s; the Jung role map sits in a
+  source comment and must never enter the text; the **residual study is a hook whose METHOD IS
+  DELIBERATELY UNNAMED** (report the recoverable variance and argue mechanism, do not name it).
   ⚠ **F5's fix OVERTURNS a recorded finding below** — "every model is a sink 1.6–2.5× too strong" is
   dead; on the corrected basis Yasso07 (+0.258) and Yasso15 (+0.250) land on the observed +0.259.
 
