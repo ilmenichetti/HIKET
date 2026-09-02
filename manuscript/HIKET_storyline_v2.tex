@@ -336,12 +336,55 @@ well-posed statement about location --- and it is testable, because the two ends
 \emph{not} equivalent in everything.
 
 \subsection{The independent witness (not on the ridge)}
-\paragraph{The models leave an input-shaped signal in their residuals.} They explain $\sim$2\% of SOC
-variance; a random forest explains $44$--$65\%$ of what they leave. \FIG{F11\_rf\_heatmap}
+% ⚠ The FUTURE-WORK METHOD IS NOT NAMED HERE (decided 2026-09-02). The stratified
+% strand is dropped from this paper, so this section reports the unexplained
+% variance and argues about MECHANISM only, and lets the reader draw the obvious
+% inference. Naming the method would promise a paper we are not writing.
+\paragraph{The models leave a signal in their residuals, and it is not noise.} They explain
+$\sim$2\% of the between-plot variance in SOC; a random forest on site covariates explains
+$44$--$65\%$ of what they leave behind (out-of-bag, and $52$--$70\%$ on the holdout residuals).
+\FIG{F11\_rf\_heatmap}
 
-\paragraph{And the covariate is the same in all six.} What the models miss is tracked by stand basal
-area --- a productivity proxy, not a kinetic one. Because this evidence does not ride the ridge, it
-is genuinely independent of everything above: the limitation is on the input side.
+\paragraph{The distinction that matters: recoverable, not irreducible.} A model can fail because the
+signal is not there --- measurement noise, or genuine stochasticity --- or because it is there and
+the model has no way to see it. Observation reliability is $\sim$0.49, so this is not a noise
+ceiling. \textbf{The information is present in covariates we have already measured, and none of the
+six models can use it.}
+
+\paragraph{The same covariates come up in all six.} Stand basal area leads everywhere, followed by
+development class and coarse-fragment content. The importance is \emph{diffuse} --- no single
+covariate dominates --- which is what a broad gradient looks like rather than one missing term.
+
+\subsubsection{What could be behind it}
+\paragraph{The models make SOC almost a deterministic function of litter; the data do not.}
+Litter correlates $0.86$ with \emph{predicted} SOC and only $0.18$ with \emph{observed} SOC. That
+gap is the whole of the missing skill, and no re-calibration closes it: it is a statement about
+which variables the models are allowed to respond to.
+
+\paragraph{Mechanism 1 --- the input level is not one national number.} $\sinput$ is a single global
+scalar, yet basal area and development class say the local input rate departs from the national mean
+systematically, not randomly. A productivity proxy leading the residuals in all six models is what
+that would look like.
+
+\paragraph{Mechanism 2 --- the understorey share is a gradient, not a constant.} It rises strongly
+south to north, and the litter product excludes it. A single multiplier applied nationally must
+therefore be wrong in opposite directions at the two ends of the country.
+
+\paragraph{Mechanism 3 --- nothing in any of the six responds to the soil itself.} Coarse fragments,
+texture and mineralogy carry stabilisation-capacity information, and \textbf{not one of the six
+models has a term that could use it}. This is a shared structural blind spot rather than a
+parameter that was set badly --- and it is the one mechanism that could not be fixed by better
+inputs.
+
+\paragraph{Mechanism 4 --- site history.} Drainage, management legacy and past land use act on both
+the input history and the initial state, and neither is observed per plot.
+
+\begin{note}
+\textbf{Why this belongs in Thread B rather than beside it.} The evidence does not ride the
+$\mathrm{MRT}\times\sinput$ ridge, so it is genuinely independent of everything above. Two of the
+four mechanisms point at inputs, which corroborates the thread; the third points somewhere else
+entirely, and we should say so rather than absorb it.
+\end{note}
 
 
 \section{The consequence, tested --- what changes if we sit elsewhere on the ridge}
@@ -629,10 +672,14 @@ early, they are one finding. Say it early.
 \section{Where the recoverable signal hides}
 \paragraph{Historical inputs.} The deepest uncertainty; $\sinit$ stands in for a century.
 \paragraph{Understorey and belowground.} The named gap in the litter product.
-\paragraph{Stratified inputs.} The understorey fraction rises strongly south to north; one national
-multiplier cannot carry it. \textbf{Explicitly NOT part of this paper} (decided 2026-09-02) --- the
-stratified-calibration strand is dropped, kept behind a switch in the manuscript source in case it
-is picked up later.
+\paragraph{The variance the models cannot see.} Roughly half of what they leave behind is
+recoverable from covariates already in hand, and the leading ones are a productivity proxy and a
+soil-physical one. That is a well-posed target for the next study, and we frame it as a diagnosis
+rather than a proposal --- the mechanisms are argued in the Resolution; the method is not this
+paper's to choose.
+% ⚠ Do NOT name the stratified-calibration method here. Dropped from this publication
+% (2026-09-02) and kept behind \stratfalse in the manuscript source. The hook is the
+% unexplained variance and its candidate mechanisms, nothing more.
 \paragraph{Radiocarbon.} The clean external constraint on turnover.
 
 % =====================================================================
