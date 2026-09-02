@@ -6,8 +6,8 @@
 #
 #   (a) trajectories, climate held stationary   [3 models x 2 arms]
 #   (b) trajectories, warmed to SSP2-4.5        [same design and axes as (a)]
-#   (c) predicted SOC at 2084, by arm           [boxplots]
-#   (d) the difference between arms             [boxplots, both scenarios]
+#   (c) (b) minus (a) at 2084, by arm           [boxplots]
+#   (d) the difference between arms in that      [boxplots, zero line]
 #
 # THE RESULT IS STRUCTURAL, and the wording matters: Yasso15/20 prove RESILIENT
 # to the input-anchor choice, not "right". Their pool-specific climate modifiers
@@ -16,19 +16,28 @@
 # modifier -- and AWE holds ~13% of the stock. Yasso07 has ONE modifier for every
 # pool, so displacing it displaces the sensitivity of all the carbon at once.
 #
-# EVERYTHING IS IN tC/ha, AND (c)/(d) ARE ABOUT THE PREDICTION ITSELF, not about
-# the response to warming. The question the figure answers is the general one:
-# HOW FAR APART ARE THE TWO PARAMETERISATIONS' PREDICTIONS? So (c) is the 2084
-# stock per arm -- literally the right-hand edge of (b) -- and (d) is the gap
-# between those, under both a stationary climate and SSP2-4.5.
+# EVERYTHING IS IN tC/ha. (a) and (b) are the raw simulations; (c) and (d) are the
+# difference between them -- warmed minus stationary -- so the running titles must
+# SAY that, which is the whole fix for the confusion below.
 #
-# ⚠ WHY THIS REPLACED A RESPONSE-BASED VERSION. (c)/(d) previously showed the
-# warming response (warmed minus each arm's own control), which made (d) a
-# DIFFERENCE-IN-DIFFERENCES. That is a correct quantity but it cannot be read off
-# (a) and (b) in one step, and it inverts against the visible level gap: Yasso15's
-# arms differ +0.73 in level while its response differs -0.38, and Yasso20's differ
-# -1.80 in level while its response differs +0.81. The figure looked
-# self-contradictory to a reader who -- reasonably -- tried to read (d) off (b).
+# ⚠ (b) MINUS (a) IS NOT THE GAP YOU SEE IN (b). The visible arm gap in (a)/(b) is
+# a LEVEL difference and it inverts against the response: Yasso15's arms differ
+# +0.73 in level but -0.38 in response, Yasso20's -1.80 in level but +0.81. Do not
+# try to read (d) off (b) as a single gap; it is the CHANGE in that gap between
+# (a) and (b). The subtitles now state the quantity outright.
+#
+# ⚠ (c)/(d) ARE PAIRED WITHIN A DRAW (warmed and stationary share the parameter
+# vector), which cancels most of the parameter uncertainty and is why the
+# intervals are tight. The UNPAIRED alternative -- comparing predicted 2084 stocks
+# directly -- gives medians of the same size but intervals that all cross zero,
+# because absolute stock carries the full within-arm spread (our Yasso07 arm spans
+# 60.6-76.2 at 2084). Both are legitimate answers to different questions; if the
+# unpaired version is quoted anywhere, say so explicitly. Do not let the framing
+# silently create or destroy significance.
+#
+# ⚠ The framing also changes which model looks resilient: on the RESPONSE both
+# Yasso15 and Yasso20 are insensitive to the anchor; on the PREDICTED STOCK
+# Yasso15 is robust and Yasso20 carries a real 1.8 tC/ha disagreement.
 #
 # ⚠⚠ THE FRAMING CHANGES WHICH MODEL LOOKS RESILIENT, and both readings are true
 # of different things. On the RESPONSE, Yasso15 and Yasso20 are both insensitive
@@ -56,17 +65,17 @@ PLOT_S <- "ssp245"
 # pattern ("22" = 2 on, 2 off) is legible against the solid arm.
 ARM_LTY <- c(published = "22", ours = "solid")
 
-# predicted 2084 STOCK, tC/ha -- the right-hand edge of (a)/(b)
+# (b) minus (a) at 2084, tC/ha -- PAIRED within each draw
 resp <- function(M, arm, sc = PLOT_S) {
   z <- R$out[[M]][[arm]]; if (!length(z)) return(numeric(0))
-  vapply(z, function(d) tail(d[["traj"]][[sc]], 1), numeric(1))
+  vapply(z, function(d) tail(d[["traj"]][[sc]], 1) - tail(d[["traj"]][["control"]], 1), numeric(1))
 }
 resp_pct <- function(M, arm, sc = PLOT_S) {          # appendix / console only
   z <- R$out[[M]][[arm]]; if (!length(z)) return(numeric(0))
   vapply(z, function(d) { c0 <- tail(d[["traj"]][["control"]],1)
                           100*(tail(d[["traj"]][[sc]],1)/c0 - 1) }, numeric(1))
 }
-dif <- function(M, sc = PLOT_S) {          # ours - published, in PREDICTED STOCK
+dif <- function(M, sc = PLOT_S) {          # ours - published of the (b)-(a) change
   o <- resp(M,"ours",sc); p <- resp(M,"published",sc)
   if (!length(o) || !length(p)) return(numeric(0))
   v <- as.vector(outer(o, p, "-")); if (length(v) > 6000) sample(v, 6000) else v
@@ -127,7 +136,7 @@ traj_panel(PLOT_S, "(b)", "modelled SOC, warming to SSP2-4.5",
 par(mar = c(4.1, 4.6, 3.1, 0.9))
 rr <- unlist(lapply(MODELS, function(M) lapply(c("published","ours"), function(a) resp(M,a))))
 plot(NA, xlim=c(.5,3.5), ylim=range(rr)+c(-.7,.7), xaxt="n", xlab="",
-     ylab=expression("predicted SOC in 2084 (tC ha"^-1*")"))
+     ylab=expression("SOC change, warmed - stationary (tC ha"^-1*")"))
 axis(1, at=1:3, labels=MODELS); abline(h=0, col="grey65")
 for (i in seq_along(MODELS)) {
   bx(resp(MODELS[i],"published"), i-0.22, "#4C72A8",           w=0.16)
@@ -137,40 +146,33 @@ legend("bottomleft", bty="n", cex=.83,
   fill=c(adjustcolor("#4C72A8",.35), adjustcolor(MODEL_COL[["Yasso15"]],.35)),
   border=c("#4C72A8", MODEL_COL[["Yasso15"]]),
   legend=c("published parameters", "our calibration (model colour)"))
-mtext("(c) predicted SOC in 2084 under SSP2-4.5", 3, line=1.0, adj=0, font=2, cex=.95)
-mtext("the right-hand edge of (b); boxes = IQR of 200 draws; Yasso07 published = point",
+mtext("(c) SOC in 2084: warmed minus stationary, by arm", 3, line=1.0, adj=0, font=2, cex=.95)
+mtext("panel (b) minus panel (a) at 2084; boxes = IQR of 200 draws; Yasso07 published = point",
       3, line=0.0, adj=0, cex=.72, col="grey35")
 
 # (d) difference
 par(mar = c(4.1, 4.9, 3.1, 0.9))
-dc <- lapply(MODELS, dif, sc="control"); dw <- lapply(MODELS, dif, sc=PLOT_S)
-plot(NA, xlim=c(.5,3.5), ylim=range(unlist(c(dc,dw)))+c(-.4,.4), xaxt="n", xlab="",
-     ylab=expression("difference in prediction, ours - published (tC ha"^-1*")"))
+dd <- lapply(MODELS, dif)
+plot(NA, xlim=c(.5,3.5), ylim=range(unlist(dd))+c(-.4,.4), xaxt="n", xlab="",
+     ylab=expression("difference, ours - published (tC ha"^-1*")"))
 axis(1, at=1:3, labels=MODELS); abline(h=0, col="grey25", lwd=1.5)
-for (i in seq_along(MODELS)) {
-  bx(dc[[i]], i-0.20, "grey45",            w=0.15)
-  bx(dw[[i]], i+0.20, MODEL_COL[MODELS[i]], w=0.15)
-}
-legend("topleft", bty="n", cex=.83,
-  fill=c(adjustcolor("grey45",.35), adjustcolor(MODEL_COL[["Yasso15"]],.35)),
-  border=c("grey45", MODEL_COL[["Yasso15"]]),
-  legend=c("climate stationary", "SSP2-4.5 (model colour)"))
-mtext("(d) how far apart the two predictions are", 3, line=1.0, adj=0, font=2, cex=.95)
-mtext("the gap visible in (a) and (b); crossing zero = the input anchor changes nothing",
+for (i in seq_along(MODELS)) bx(dd[[i]], i, MODEL_COL[MODELS[i]], w=0.28)
+mtext("(d) difference between the two arms in that change", 3, line=1.0, adj=0, font=2, cex=.95)
+mtext("the distance between (c)'s two boxes; crossing zero = the input anchor changes nothing",
       3, line=0.0, adj=0, cex=.72, col="grey35")
 dev.off()
 cat("wrote manuscript/figures/F15_forward_arms.png\n\n")
 
-cat("PREDICTED SOC at 2084 and the arm gap -- ALL SCENARIOS (tC/ha)\n")
+cat("WARMED MINUS STATIONARY at 2084 -- ALL SCENARIOS (tC/ha)\n")
 for (sc in setdiff(names(R$scen), "control")) {
   cat(sprintf("\n-- %s (ramp to +%.1f C) --\n", R$scen_lab[[sc]], R$scen[[sc]]))
   for (M in MODELS) {
     for (arm in c("published","ours")) { v <- resp(M, arm, sc); if (!length(v)) next
       w <- resp_pct(M, arm, sc)
-      cat(sprintf("   %-8s %-10s stock %6.2f [%6.2f, %6.2f]   (warming response %6.2f%%)\n",
+      cat(sprintf("   %-8s %-10s %6.2f [%6.2f, %6.2f] tC/ha   (%6.2f%%)\n",
                   M, arm, median(v), quantile(v,.05), quantile(v,.95), median(w))) }
     d <- dif(M, sc)
-    if (length(d)) cat(sprintf("   %-8s %-10s %6.2f [%6.2f, %6.2f] tC/ha%s\n\n", M, "GAP",
+    if (length(d)) cat(sprintf("   %-8s %-10s %6.2f [%6.2f, %6.2f] tC/ha%s\n\n", M, "DIFF",
         median(d), quantile(d,.05), quantile(d,.95),
         if (quantile(d,.05) > 0 || quantile(d,.95) < 0) "   EXCLUDES ZERO" else ""))
   }
