@@ -64,8 +64,12 @@ Finnish forest soils are accumulating carbon and the accumulation is beginning t
 started at steady state cannot show that, because a steady state is already the end of it. Started
 instead from a calibrated past, all six models reach the observed levels and two of them reproduce
 the rate exactly --- but doing so requires \emph{more litter input and faster turnover} than the
-published parameterisations carry. That displacement is the finding, and it is not free: it should
-change how the soil responds to a warming climate. \textbf{The new work is to test whether it does.}
+published parameterisations carry --- in two of the three Yassos. That displacement is the finding,
+and it is not free: it changes how the soil responds to warming, but \textbf{only where a single
+climate modifier ties turnover and temperature sensitivity to the same parameter}. Where a model
+carries pool-specific modifiers, the same displacement costs nothing, and the projection is
+\emph{resilient} to an input assumption the data cannot settle. \textbf{That contrast, measured, is
+the contribution.}
 
 % =====================================================================
 \part{Act I --- Opening}
@@ -214,8 +218,16 @@ total including understorey ($\sim$2.7). \FIG{SX\_input\_vs\_literature}
 inventory --- implies a comparable correction. \FIG{F1\_inputs}
 
 \subsection{Kinetics}
-\paragraph{Turnover is displaced from published values.} Intrinsic MRT $24.6$ / $27.1$ / $22.6$~yr
-(Yasso07/15/20) against published points $33.5$ / $30.4$ / $19.0$. \FIG{F12\_mrt\_yasso}
+\paragraph{Turnover is displaced from published values --- in two of three.} Intrinsic MRT
+$24.6$ / $27.1$ / $22.6$~yr (Yasso07/15/20) against published $33.5$ / $30.5$ / $\mathbf{22.1}$.
+\FIG{F12\_mrt\_yasso}
+\begin{warn}
+\textbf{Yasso20's published figure was corrected on 2026-09-02 and the claim changes with it.} The
+old $19.0$ came from a vector that paired Yasso20's fractions with \emph{Yasso15's} rates. Corrected,
+published Yasso20 is $22.1$ against our $22.6$ --- \textbf{no meaningful displacement}. So the
+turnover claim holds for Yasso07 and Yasso15 and \emph{not} for Yasso20, which is consistent with
+what the forward experiment then found.
+\end{warn}
 
 \paragraph{Not one phenomenon.} Yasso07's whole gap is its \emph{single} climate modifier
 ($\mathrm{MRT} = \mathrm{MRT}_{\mathrm{ref}}/\xi$ exactly); Yasso15/20 carry three pool-specific
@@ -247,17 +259,18 @@ a kinetic one. This does not ride the ridge, so it is genuinely separate evidenc
 is on the input side.
 
 % =====================================================================
-\part{Act VII --- Consequences, and how to test them}
+\part{Act VII --- Consequences, tested}
 
 \section{If the ensemble sits elsewhere on the ridge, what changes?}
 \begin{note}
-\textbf{The scientific core of the next phase.} A displacement that changed nothing observable would
-be bookkeeping. The bet is that it changes the \emph{climate response} --- which would make the
-position on the ridge an empirically decidable question rather than a prior-driven one, and would
-turn the surprise of Act VI from a curiosity into a consequence for anyone projecting these soils.
+\textbf{The scientific core, and it has now been run.} A displacement that changed nothing observable
+would be bookkeeping. The bet was that it changes the \emph{climate response}. It does --- in
+Yasso07, and not in Yasso15 or Yasso20 --- which turns the surprise of Act VI from a curiosity into a
+consequence for anyone projecting these soils, and simultaneously bounds how far that consequence
+generalises.
 \end{note}
 
-\subsection{The hypothesis}
+\subsection{The hypothesis (as posed, before the run)}
 \paragraph{Equal fit, unequal reactivity.} Two calibrations indistinguishable in fit, sitting at
 different points on the $\mathrm{MRT} \times \sinput$ ridge, project \emph{different} sensitivity to
 warming.
@@ -311,8 +324,9 @@ comparison that is about inputs versus kinetics.
 
 \subsubsection{The published arm agrees with the data. That is the whole point.}
 \paragraph{Holding published kinetics fixed, only the input multiplier is refitted.} One parameter,
-scored on the three campaign means (balanced set).
-\FIG{doublechecks/published\_kinetics\_input\_refit.R}
+scored on the three campaign means (balanced set), with $\sinit$ pinned to our posterior in
+\emph{both} arms so the contrast is exactly two coordinates on the ridge.
+\FIG{doublechecks/published\_arm\_dat.R} \FIG{T\_A1\_published\_arm}
 
 \begin{center}\small
 \begin{tabular}{lccccccc}
@@ -322,53 +336,90 @@ scored on the three campaign means (balanced set).
 & MRT & $\sinput$ & MRT & $\sinput$ & MRT & input & rms log \\
 \hline
 Yasso07 & 33.47 & 1.249 & 24.57 & 1.585 & $\times0.73$ & $\times1.27$ & 0.020 / 0.029 \\
-Yasso15 & 29.97 & 1.358 & 27.11 & 1.538 & $\times0.90$ & $\times1.13$ & 0.023 / 0.034 \\
-Yasso20 & 22.10 & 1.708 & 22.56 & 1.659 & $\times1.02$ & $\times0.97$ & 0.029 / 0.035 \\
+Yasso15 & 30.54 & 1.335 & 27.11 & 1.538 & $\times0.89$ & $\times1.15$ & 0.022 / 0.034 \\
+Yasso20 & 22.13 & 1.724 & 22.56 & 1.659 & $\times1.02$ & $\times0.96$ & 0.029 / 0.035 \\
 \hline
 \end{tabular}
 \end{center}
 
-\paragraph{No compromise was needed.} The published arm matches the observed window \emph{better
-than our calibration does} in all three models. So any divergence downstream is extrapolation, not
-level mismatch --- which is exactly the condition the experiment required.
+\paragraph{No compromise was needed.} The published arm matches the observed window \emph{at least
+as well as our calibration does} in all three models. So any divergence downstream is extrapolation,
+not level mismatch --- exactly the condition the experiment required.
 
-\paragraph{Both arms are on the same ridge.} The product $\mathrm{MRT} \times \sinput$ is conserved
-to $7\%$, $2.5\%$ and $0.8\%$ respectively. We are moving \emph{along} each model's ridge, not off
-it --- which is what makes the contrast interpretable.
+\paragraph{Both arms are on the same ridge.} $\mathrm{MRT} \times \sinput$ is conserved to
+$6.9\%$, $2.2\%$ and $2.0\%$. We move \emph{along} each model's ridge, not off it.
 
-\paragraph{\textbf{The contrast is graded, and Yasso20 is a negative control.}} Yasso07 is displaced
-hard ($\times0.73$ in turnover, $\times1.27$ in input), Yasso15 moderately, and \textbf{Yasso20
-hardly at all} --- its published parameterisation already sits where our calibration puts it. That
-is a gift for the design: if climate response tracks position on the ridge, Yasso07 must separate,
-Yasso15 less, and \textbf{Yasso20 must not separate at all}. A within-family null is a far stronger
-control than three replicates of one contrast.
+\paragraph{The contrast is graded.} Yasso07 is displaced hard, Yasso15 moderately, and
+\textbf{Yasso20 hardly at all} --- its published parameterisation already sits where our calibration
+puts it, which makes it a within-family control rather than a third replicate.
 
 \begin{note}
-\textbf{Getting Yasso20 in required a fix, and the fix is documented.} Published Yasso20 is
-calibrated with the AWEN transfer fractions \emph{plus} $p_H$ exhausting the pool budget
-\textbf{exactly} (median $1.000000$; Yasso15 sits at $0.99939$). Our Fortran \texttt{model\_step}
-declares a matrix ill-conditioned when a column's off-diagonal sum exceeds $0.9999\times$ the
-diagonal --- which is precisely this budget --- and falls back to an explicit Euler step that
-diverges. The exact path is in fact stable \emph{and fast} ($1$~ms) at $0.9998$, and SOC converges
-smoothly as the budget rises ($0.990 \to 51.3$; $0.998 \to 52.5$; $0.9998 \to 52.75$), so we clamp
-the budget at $0.9998$, costing $\sim\!0.02\%$. \textbf{The proper fix is in the Fortran} (raise the
-threshold; fall back only above $1$, where the system genuinely creates mass), but that touches a
-\texttt{.so} shared by Yasso15 and Yasso20 and needs its own verification.
+\textbf{Two defects in our own code had to be fixed to get here, and both are worth knowing.}
+\textbf{(1)} \texttt{assemble\_params} keeps a fixed-rate block, and for Yasso20 those are
+\emph{Yasso15's} rates and $w$ parameters --- so a published draw never overrode them. The
+``published Yasso20'' MRT was a chimera and F12 plotted it: corrected, the point moves
+$19.03 \to 21.85$ and the posterior $25.04 \to 22.13$. \textbf{Yasso20's turnover is therefore not
+displaced from its published value at all}, and any claim that it is must be dropped.
+\textbf{(2)} Published Yasso20 exhausts the pool budget \emph{exactly} (AWEN fractions plus $p_H$;
+median $1.000000$ against Yasso15's $0.99939$), which tripped \texttt{model\_step}'s $0.9999$
+diagonal-dominance guard and sent every draw to an Euler fallback that diverges --- a zero-input test
+created carbon from nothing. The guard, not the parameters, was wrong: the exact path is stable and
+fast at the boundary. Threshold raised to $1.0$, so it fires only when fractions genuinely exceed the
+budget. \textbf{Our own posteriors are bit-identical on the new binary}, so no calibrated result
+changes.
 \end{note}
 
-\subsubsection{Pre-registration}
-\paragraph{Direction.} Ours should be \emph{more} reactive: faster turnover puts more carbon in pools
-that feel $\xi$ on a decadal horizon, so the same warming moves more of it.
-\paragraph{Where the effect should be largest.} Yasso07, whose single $\xi$ ties turnover and climate
-sensitivity to the same parameter (corr $-0.58$); smaller in Yasso15/20, where three pool-specific
-modifiers decouple them ($-0.10$, $-0.16$).
-\paragraph{What would falsify it.} Responses that coincide within the posterior bands. That would say
-the ridge is degenerate in climate response as well as in fit --- the position on it is then not
-decidable from projection, which is itself worth reporting.
+\subsubsection{Pre-registration, and what happened}
+\paragraph{Registered before looking.} Ours should be \emph{more} reactive, with the effect largest
+in Yasso07 (single $\xi$ ties turnover and climate sensitivity to one parameter; corr $-0.58$) and
+smallest in Yasso15/20 (three pool-specific modifiers decouple them; $-0.10$, $-0.16$). Falsifier:
+responses coinciding everywhere, which would mean the ridge is degenerate in climate response too.
+
+\paragraph{Outcome --- SSP2-4.5 at 2084, tC\,ha$^{-1}$, warmed minus stationary.}
+\begin{center}\small
+\begin{tabular}{lccc}
+\hline
+& published & ours & difference (90\%) \\
+\hline
+Yasso07 & $-5.00$ & $-7.08$ & $\mathbf{-2.08\ [-3.57,\ -0.79]}$ \quad excludes zero \\
+Yasso15 & $-5.11$ & $-5.50$ & $-0.38\ [-1.30,\ 0.52]$ \\
+Yasso20 & $-6.60$ & $-5.82$ & $+0.73\ [-0.42,\ 1.75]$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{The registered direction held, but the claim is narrower than registered.} Only Yasso07
+separates. Yasso15 does not either, despite a $10\%$ turnover displacement --- so this is \emph{not}
+the general statement that ridge position governs reactivity. It is the specific one: \textbf{the
+displacement reaches the projection only where a single climate modifier ties turnover and
+sensitivity to the same parameter.}
+
+\paragraph{Measured mechanism.} $\mathrm{d}\log\xi_H$ per $+5$\,\textdegree C is $+0.338$ vs
+$+0.340$ across Yasso20's arms --- $0.6\%$ --- and $+0.182$ vs $+0.165$ for Yasso15, while Yasso07's
+single $\xi$ goes $+0.308 \to +0.412$ and applies to \emph{every} pool. H and N hold $\sim$60\% of
+the carbon; the arms differ mainly in the AWE modifier, and AWE holds $\sim$13\%. A steady-state
+decomposition predicts the forward runs to a few percent (ratios $1.35/1.05/0.96$ against measured
+$1.41/1.03/0.93$), so this is a property of the generators, not of the projection set-up.
+
+\begin{note}
+\textbf{The words for it (Lorenzo).} Yasso15 and Yasso20 prove \textbf{resilient to the input-anchor
+choice} --- \emph{not} ``right''. This is not a frontal attack on Yasso; it is a measured statement
+about which structure is robust to a calibration assumption the data cannot settle.
+\end{note}
+
 \begin{warn}
-$\sinput = 1$ on the published arm means \emph{our} litter product taken as given, not the litter
-estimate Yasso was originally calibrated against. State it; it is the cleanest available choice but
-it is a choice.
+\textbf{Two things that must travel with any number quoted from this experiment.}
+\textbf{(1)} The contrast is \emph{paired within a draw} (warmed and stationary share the parameter
+vector), which cancels most parameter uncertainty. The unpaired version --- comparing predicted 2084
+stocks --- has the same central values but every interval crosses zero, because absolute stock
+carries the full within-arm spread. Say which one is being quoted.
+\textbf{(2)} Yasso07's published arm is a \emph{point}: no \texttt{.dat} exists, so its interval
+carries only our posterior spread while the others convolve two. Its significance is flattered.
+\end{warn}
+
+\begin{warn}
+$\sinput$ on the published arm is \emph{refitted} to our litter product, not taken from the litter
+estimate Yasso was originally calibrated against. The cleanest available choice, but a choice.
 \end{warn}
 
 \subsubsection{What we actually publish: one figure in the main text}
@@ -506,11 +557,14 @@ cannot carry it.
 % =====================================================================
 \part{Appendix}
 \section{Figure inventory}
-\paragraph{Exist, need rebuilding on arm B.} F1, F3, F4, F6, F6b, F11, F12, F14, S13, T1, T2 ---
-all PNGs currently predate the current calibration.
-\paragraph{Exist and are current.} F5 (rebuilt 2026-09-02).
-\paragraph{To build.} F3b (shape groups); \textbf{F15} (main text, three panels: agreement $\to$
-divergence $\to$ size of the disagreement, with Yasso20 as the visible null); appendix set (MRT
-collapse, all-model trajectories, arm-construction table, relative-response version).
+\paragraph{Current.} \textbf{All 31 builders re-run on arm B} (\texttt{20260831\_1624*}) on
+2026-09-02, zero failures --- F1--F14, S2--S14, R3/R4, T1, T2, plus the new \textbf{F15}
+(four panels) and \textbf{A1}/\textbf{T\_A1} (the forward-experiment appendix).
+\paragraph{Fixed in the same pass.} T1's $\bar J$ constant ($2.472 \to 2.511$); the multimodel
+metrics table, which had been reporting all-data rather than calibration-only skill and now agrees
+with T1 for the first time; F5's campaign mapping and rate denominator; and F12's published Yasso20.
+\paragraph{Still to build.} F3b (the three trajectory-shape groups of Act IV).
+\paragraph{Not started.} Citations, a \texttt{.bib}, figure placement in the manuscript, and the
+title/abstract/coauthor block --- deliberately held until this storyline is settled.
 
 \end{document}
