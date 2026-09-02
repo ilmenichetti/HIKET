@@ -322,7 +322,7 @@ scored on the three campaign means (balanced set).
 \hline
 Yasso07 & 33.47 & 1.249 & 24.57 & 1.585 & \textbf{0.020} & 0.029 \\
 Yasso15 & 30.44 & 1.324 & 27.11 & 1.538 & \textbf{0.024} & 0.034 \\
-Yasso20 & 25.04 & \multicolumn{5}{l}{\emph{not constructible --- see below}} \\
+Yasso20 & 22.13 & \multicolumn{5}{l}{\emph{blocked by our integrator --- see below}} \\
 \hline
 \end{tabular}
 \end{center}
@@ -335,18 +335,30 @@ not level mismatch --- which is exactly the condition the experiment required.
 to within $7\%$ (Yasso07 $41.8$ vs $38.9$; Yasso15 $40.3$ vs $41.7$). We are moving \emph{along} the
 ridge, not off it --- which is what makes the contrast interpretable.
 
-\paragraph{\textbf{Yasso20 cannot enter this experiment as published.}} Its published
-parameterisation (Viskari 2022) fixes \textbf{six transfer fractions at structural zero} and derives
-\textbf{three more algebraically}; ours frees all twelve. The published vector therefore has no image
-in our parameter space --- assigning the published columns leaves the three derived fractions
-uncomputed, and every one of the $10{,}000$ published draws diverges in forward integration. The
-experiment runs on \textbf{Yasso07 and Yasso15}; Yasso20 is reported as a structural limitation.
+\paragraph{\textbf{Yasso20 is blocked by our integrator, not by its structure.}} Published
+Yasso20 routes $\sim\!99.6\%$ of pool A and $\sim\!98\%$ of E into W. Our Yasso wrapper's
+diagonal-dominance guard falls back to explicit Euler near that boundary, and with
+$\alpha_W \approx 4.4$ and $\xi$ up to $3.4$ the Euler factor is about $-14$, so the solution
+oscillates and diverges. It is a \emph{threshold}: $p_{AW} = 0.9926$ (ours) integrates fine,
+$0.9957$ (published) diverges --- a change of $0.003$, with outgoing sums $\le 0.996$ in both, so
+mass conservation is intact throughout. \textbf{FMI's own Yasso20 does not do this}; the fix is to
+make our step exact there, not to drop the model. Until then the experiment runs on Yasso07 and
+Yasso15.
 
 \begin{warn}
-\textbf{This also puts a question mark over F12's published Yasso20 band.} That band
-($25.04$~yr) is computed from the same raw draws through the steady-state route, which returns
-finite values where the forward run does not. Whether a steady state built from an inconsistent
-fraction matrix is meaningful must be checked before F12 is used again.
+\textbf{F12 overstates published Yasso20's turnover by $11.6\%$, and this must be fixed before the
+figure is used again.} \texttt{assemble\_model\_params} builds
+\texttt{c(fixed\_rates, p\_free[MODEL\_FREE\_NAMES])}, and for Yasso20 the \emph{rates are fixed at
+Yasso15's values} --- they are not free names, so a published draw never overrides them. F12's
+``published Yasso20'' therefore pairs Yasso20 fractions and climate with Yasso15's $\alpha_E$
+($0.242$ against the published $0.117$) and Yasso15's non-zero $w_1$--$w_5$ (published Yasso20 sets
+them to zero). Corrected: $25.04 \to \mathbf{22.13}$~yr. Yasso15 is unaffected ($30.44 \to 30.54$,
+$+0.3\%$) because its fixed rates \emph{are} its own published ones.
+\smallskip
+
+\textbf{Consequence for the story:} corrected published Yasso20 ($22.13$) is within $2\%$ of ours
+($22.56$). \textbf{Yasso20's turnover is not displaced from its published value at all}, and any
+claim that it is --- including ``Yasso20 now exceeds its published point'' --- must be restated.
 \end{warn}
 
 \begin{note}
