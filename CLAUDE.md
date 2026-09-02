@@ -698,6 +698,25 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-09-02 — decisions taken and defects fixed.** Recorded here because several
+  supersede statements elsewhere in this file.
+  **DECIDED:** (1) the **input anchor is Lehtonen & Heikkinen** — `sigma_input` prior centre **1.08**,
+  i.e. arm B; Liski's 1.27 (arm A) is a **sensitivity**, kept out of the draft. (2) The forward
+  side-arm **concludes about CLIMATE RESPONSE**, not predicted stock. (3) The **stratified-calibration
+  strand is DROPPED** from this publication (kept behind `\stratfalse` in the manuscript source).
+  (4) The 1917 stock floor stays **undecided**.
+  **FIXED:** `intrinsic_mrt.R` (published draws no longer inherit Yasso15's fixed rates; Yasso20's
+  published POINT now from `ParY20.dat`) ⇒ **Yasso20 published MRT 19.03/25.04 → 21.85/22.13, so its
+  turnover is NOT displaced from published**; the Fortran diagonal-dominance guard 0.9999 → **1.0**
+  (our posteriors bit-identical, ⚠ **`.so` must be recompiled on Roihu**); `run_multimodel_comparison.R`
+  now reads `metrics_calib` (calibration R² was the all-data figure, understated ~50% relative);
+  `build_F5_stock_change.R`'s campaign mapping and rate denominator; `build_T1`'s `J_bar` 2.472 → 2.511.
+  **All 31 figure builders re-run on arm B.** New: **F15** (forward experiment) + **A1/T_A1**.
+  Memories: [[decisions-20260902]], [[published-yasso20-two-defects]], [[f5-basis-bugs]].
+  ⚠ **F5's fix OVERTURNS a recorded finding below** — "every model is a sink 1.6–2.5× too strong" is
+  dead; on the corrected basis Yasso07 (+0.258) and Yasso15 (+0.250) land on the observed +0.259.
+
+
 - **⭐⭐ NEXT ACTION — the CORRELATED LIKELIHOOD; design SETTLED 2026-08-18, not yet implemented.**
   `log y_ij = log f_ij(θ) + u^R_r(i) + u^P_i + u^C_j + e_ij`. **Nothing is estimated** — all four
   variances FIXED, offsets marginalised: **τ_R = 0.117** (latitude bands), **τ_P = 0.396**

@@ -854,16 +854,25 @@ active store, is the outlier.
 % Provenance: doublechecks/intrinsic_mrt.rds, stamped 20260831_162457
 % (provenance verified). ⚠ Use intrinsic_mrt.R ONLY -- the engine binding named
 % steady_state is transient_init and is contaminated by sigma_init.
-% ⚠ TWO published-MRT bases exist. These are the published POINT values.
+% ⚠ TWO published-MRT bases exist (POINT vs the .dat posterior); both are given.
+% ⚠ CORRECTED 2026-09-02: Yasso20's published figures were a CHIMERA -- assemble_params
+% keeps a fixed-rate block that for Yasso20 holds YASSO15's rates and w parameters, so a
+% published draw never overrode them. Point 19.03 -> 21.85, posterior 25.04 -> 22.13.
+% The old text read "Yasso20 sits entirely above its published point", which is now
+% trivial rather than a finding. See doublechecks/intrinsic_mrt.R.
 For the three Yasso variants a published parameterisation exists, so the
 calibrated turnover can be compared with an external estimate of the same
 quantity. Intrinsic mean residence time --- a property of the generator alone,
 computed at a fixed reference climate and litter composition, independent of
 both auxiliary parameters --- is $24.6$~yr for Yasso07 ($90\%$ interval
 $20.7$--$29.1$), $27.1$ for Yasso15 ($23.6$--$30.9$) and $22.6$ for Yasso20
-($19.6$--$26.4$). The published point values are $33.5$, $30.4$ and $19.0$~yr.
-Yasso15 overlaps its published posterior; Yasso20 sits entirely above its
-published point; Yasso07 falls well short of its own.
+($19.6$--$26.4$). The corresponding published values are $33.5$, $30.5$ and
+$22.1$~yr. Two of the three are displaced and one is not: Yasso07 falls well
+short of its published value and Yasso15 moderately so, while \textbf{Yasso20 is
+within $2\%$ of its own} --- its published parameterisation already sits where
+our calibration puts it. That split is not incidental, and Section~[Discussion]
+returns to it: the models whose turnover moves least are also the ones whose
+projections prove least sensitive to the input assumption.
 
 These displacements should not be read as three independent findings, and in
 particular should not be added to the input result above. A soil carbon stock
