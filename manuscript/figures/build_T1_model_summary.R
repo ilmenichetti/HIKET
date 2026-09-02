@@ -8,7 +8,10 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 
 rid <- as.list(RID)
 pools <- c(SP1=1, TP2=2, TP3=3, Yasso07=5, Yasso15=5, Yasso20=5)   # AWENH = 5 for Yasso
-JBAR  <- 2.472                                                     # shared mean litter (flux_pair)
+JBAR  <- 2.511   # shared mean litter, tC/ha/yr. ⚠ CORRECTED 2026-09-02 from 2.472:
+                 # 2.511 is the flux_pair value echoed by every launch log and used to
+                 # derive the sigma_input prior centre in Prior_specs/*_priors.R. The
+                 # stale constant understated every effective flux by 1.6%.
 runs  <- "Calibration_real_data_transient/runs"
 
 # RUN_ID-keyed cache written by build_F4_initialization.R (run that first). It used to
@@ -54,5 +57,5 @@ wl("\\hline")
 wl("\\end{tabular}")
 close(con)
 cat("\nwrote", f, "\n")
-cat("(Eff. flux = median sigma_input x Jbar=2.472 tC/ha/yr; all within the physical [0.5,8.7] envelope.)\n")
+cat("(Eff. flux = median sigma_input x Jbar=2.511 tC/ha/yr; all within the physical [0.5,8.7] envelope.)\n")
 cat("2084 forecast (tC/ha):", paste(sprintf("%s %.0f", T$model, T$soc2084), collapse="  "), "\n")

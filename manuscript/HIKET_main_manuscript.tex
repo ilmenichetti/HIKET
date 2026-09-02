@@ -91,27 +91,35 @@
 
 
 % ---------------------------------------------------------------------------
-% STATUS BLOCK inserted 2026-08-10. Delete once the run below has landed and
-% the affected passages have been rewritten.
+% STATUS BLOCK -- rewritten 2026-09-02. The 2026-08-10 version listed four
+% staleness items (multiplicative-normal likelihood, the wrong-in-sign
+% over-prediction section, sigma_obs = 0.442 used as the total error, and MRT
+% computed through transient_init). ALL FOUR ARE NOW RESOLVED in the text.
+% Keep this block updated or delete it; do not let it drift again.
 % ---------------------------------------------------------------------------
 \begin{center}
 \fbox{\begin{minipage}{0.93\textwidth}
 \small
-\textbf{DRAFT STATUS --- 2026-08-10.} A recalibration is in flight (Roihu jobs 563524--563529,
-commit \texttt{3b0d533}); every number below is keyed to the superseded
-\texttt{20260807\_1655*} posteriors. Specifically stale:
-\textbf{(i)} the likelihood is described as \emph{multiplicative-normal} in
-four places (calibration set-up, shared-likelihood statement, error-model subsection, and the over-prediction discussion) --- \textbf{log-normal has been the default since
-2026-08-07};
-\textbf{(ii)} the section arguing that the systematic over-prediction is \emph{a property of the
-likelihood} is \textbf{superseded and wrong in sign} --- the multiplicative-normal artefact alone
-\emph{under}-predicts;
-\textbf{(iii)} the error scale $\sigma_{\mathrm{obs}}=0.442$ is the \emph{measurement} CV but was
-used as the \emph{total} error (measured residual spread 0.708--0.735, implied model error
-0.55--0.59); the run in flight uses 0.72;
-\textbf{(iv)} any mean-residence-time figure must be recomputed with
-\texttt{doublechecks/intrinsic\_mrt.R} --- earlier values ran through \texttt{transient\_init},
-which is not a steady state.
+\textbf{DRAFT STATUS --- 2026-09-02.} All numbers are keyed to the calibration
+completed 2026-09-01, RUN\_IDs \texttt{20260831\_1624*} (Roihu jobs
+972096--972101), with the log-normal correlated-error likelihood
+($\sigma_{\mathrm{tot}}=0.800$) and the $\sigma_{\mathrm{input}}$ prior centred
+on the Lehtonen \& Heikkinen understorey anchor ($1.08$). All six models
+converged (R-hat $\le 1.008$, ESS $\ge 1747$).
+\textbf{Open:}
+\textbf{(i)} \emph{the input anchor is not settled} --- the two external
+estimates of the understorey share of boreal litter disagree ($27\%$ vs $8\%$),
+implying $\sigma_{\mathrm{input}}$ prior centres of $1.27$ and $1.08$. A
+companion calibration on the higher anchor exists and is held aside; the choice
+is with A.\ Lehtonen, who authored both sources. Numbers keyed to that arm are
+deliberately absent here.
+\textbf{(ii)} figures are one calibration behind the text and must be rebuilt
+before submission;
+\textbf{(iii)} no citations or figure placements yet --- there is no
+bibliography file;
+\textbf{(iv)} the projections contain \emph{no} climate change (the last
+twenty observed years are recycled), so every forecast statement is about
+disequilibrium relaxation under stationary climate and must say so.
 \end{minipage}}
 \end{center}
 
@@ -426,7 +434,7 @@ would confound climate-integration differences with a calibration asymmetry.
 Each model is calibrated in a Bayesian framework (the \texttt{BayesianTools}
 DEzs differential-evolution sampler): five chains of $50{,}000$ iterations each,
 the first $5{,}000$ discarded as burn-in, with a fixed seed for
-reproducibility. The posterior combines the multiplicative-normal likelihood
+reproducibility. The posterior combines the log-normal, correlated-error likelihood
 (below) with the homogenized priors; inference returns full joint posteriors
 over rates, fractions, and the two auxiliary uncertainty parameters. The role of
 the Bayesian frame here is enabling rather than novel: it is the machinery that
@@ -492,7 +500,7 @@ structure alone.
 
 \subsubsection{Shared data, likelihood, forcing, filtering}
 All six models see exactly the same inputs: the same $512$ plots, the same
-litter and climate forcing, the same multiplicative-normal likelihood, the same
+litter and climate forcing, the same likelihood and error structure, the same
 plot-exclusion filtering, the same holdout split, and the same fixed seed. Any
 residual difference between models is therefore attributable to structure, not
 to a difference in what each model was shown.
@@ -573,14 +581,51 @@ humus-formation fraction --- see the optional strand in the Outlook.}
 \subsection{Calibration and inference}
 
 \subsubsection{Error model}
-The likelihood is multiplicative-normal (proportional error): the observation
-standard deviation scales with the predicted stock rather than being constant.
-This is the appropriate form for SOC stocks, which span an order of magnitude
-across plots, and it operates on the log scale where residuals are near-Gaussian.
-One consequence is an asymmetric penalisation of under- versus over-prediction,
-which leaves a small systematic offset in the fitted bias; we flag it here and
-return to it in the Discussion, where the $\sim\!11\%$ over-prediction is shown
-to be a property of this error model rather than of the biogeochemistry.
+% ⚠ REWRITTEN 2026-09-02. This described a multiplicative-normal likelihood and
+% promised a Discussion section attributing an ~11% over-prediction to it. BOTH
+% are superseded: log-normal has been the default since 2026-08-07, the correlated
+% error structure since 2026-08-19 (SLURM: HIKET_CORRELATED_LIK=1,
+% HIKET_SIGMA_TOT=0.800, HIKET_SIGMA_1985_INFL=1), and the over-prediction is gone.
+Residuals are modelled on the log scale, where they are near-Gaussian and where
+the error is proportional to the stock --- the appropriate form for SOC, which
+spans an order of magnitude across plots.
+
+The scale of that error is not the measurement error. The homogenisation of the
+SOC campaigns yields a measurement CV of $0.43$, but the observed spread of log
+residuals is close to $0.8$ in every model; the difference is model error, and
+it is the larger of the two. We therefore set the \emph{total} error scale to
+$\sigma_{\mathrm{tot}} = 0.800$ rather than using the measurement CV in its
+place, and verify afterwards that the fitted residual spread reproduces it.
+
+Crucially, that total is \emph{partitioned} rather than treated as independent
+noise. Plot-years are not independent observations: repeated measurements of the
+same plot correlate strongly across campaigns, plots within a latitude band share
+a level, and each campaign carries its own comparability offset. Treating $1205$
+plot-years as independent overstates the information they carry about the
+national \emph{level} --- which is precisely the quantity that pins
+$\mathrm{MRT}\times\sigma_{\mathrm{input}}$. We therefore write
+\[
+  \log y_{ij} \;=\; \log f_{ij}(\theta) \;+\; u^{R}_{r(i)} \;+\; u^{P}_{i} \;+\; u^{C}_{j} \;+\; e_{ij},
+\]
+with a regional offset $u^R$, a plot offset $u^P$, a campaign offset $u^C$ and
+independent noise $e$. No variance component is estimated: all four are fixed
+from the observations with campaign levels removed --- $\tau_R = 0.117$ from
+latitude-band means, $\tau_P = 0.396$ from the $2006$--$2024$ pair covariance,
+$\tau_C = 0.06$ for $1985$ and $0.03$ for $2006$ and $2024$, and
+$\sigma_e = 0.685$ as the remainder of the unchanged total. The offsets are
+marginalised analytically, so no parameters are added; because every variance is
+fixed, the covariance matrix is constant and is factorised once. Setting all
+$\tau$ to zero reproduces the independent log-normal likelihood exactly, which is
+the unit test the implementation is held to.
+
+Two consequences are worth stating plainly. First, this is a decision about how
+much the data constrain the level, and $\tau_C = 0$ --- the implicit choice in a
+conventional likelihood --- is also a decision, and the least defensible one.
+Second, the correction removes information about the \emph{level} while leaving
+within-plot contrasts untouched, so it loosens what the level pins and should not
+be expected to move quantities fixed by trajectory shape. Log-likelihoods are not
+comparable across this change, since the normalising constant moves; models are
+compared on predictive skill, not on likelihood.
 
 \subsubsection{Physically-bounded input priors}
 % Now a METHODS choice (implemented for the production re-calibration), not only
@@ -642,38 +687,213 @@ and input proxy, not a kinetic variable --- pointing the refinement toward
 better inputs rather than more pool structure.
 
 \section{Results}
+% =====================================================================
+% WRITTEN 2026-09-02, replacing the bullet skeleton. Every number here is
+% keyed to RUN_IDs 20260831_1624* (Roihu jobs 972096-972101) and was pulled
+% from the posteriors and predictive bundles directly, not from the figure
+% PNGs, which are still one calibration behind. Provenance per subsection is
+% given in the comment above it. When the figures are rebuilt, CHECK THESE
+% NUMBERS AGAINST THEM rather than assuming they agree.
+%
+% Observed rates and levels use the DECIDED reporting basis (Lorenzo,
+% 2026-08-17): balanced plot set (observed in all three campaigns, n = 310),
+% unweighted, whole profile, TRUE observation years. build_F5_stock_change.R
+% was brought onto that basis on 2026-09-02; before then it used its own
+% campaign cutoff (which filed the 65 plots dated 1995 as 2006 observations)
+% and a nominal 39-yr denominator for a span that is really ~35 yr.
+% =====================================================================
+
+\subsection{All six models converged}
+% Provenance: <MODEL>_rhat_20260831_*.txt, <MODEL>_ess_20260831_*.txt.
+Every model converged cleanly. Across the six, the largest univariate
+Gelman--Rubin statistic is $1.008$ and the largest multivariate potential scale
+reduction factor is $1.028$ (Yasso20); the smallest effective sample size for
+any parameter is $1747$, from five chains of $50{,}000$ iterations with the
+first $5{,}000$ discarded. No chain contained a non-finite log-likelihood.
+
+This matters more than a routine diagnostic statement, because the natural
+expectation for these models is the opposite. With of order twenty free
+parameters and two SOC observations per plot, the transfer fractions are
+structurally under-determined, and it is tempting to read that as something
+that should show up as poor mixing. It does not, and we return to why in
+Section~\ref{sec:identifiability}: clean convergence is what a well-mixed
+sampler does on a non-identified ridge, and it is evidence about the sampler,
+not about the information in the data.
 
 \subsection{Capturing accumulation-then-saturation}
-The headline: transiently-initialized models reproduce the rise and its
-incipient bend-over; the equilibrium-started flat/declining shape was the
-start, not the structure.
+% Provenance: modelled vs observed campaign means, balanced n=310, computed
+% from <MODEL>_residuals_20260831_*.csv aggregated by campaign_of(year).
+% Observed campaign levels from obs_campaigns(): 64.5 / 71.5 / 73.6.
+The observations describe accumulation that is beginning to level off. On the
+balanced plot set the mean stock rises from $64.5$~tC\,ha$^{-1}$ at the first
+campaign (mean year $1989$) to $71.5$ in $2006$ and $73.6$ in $2024$: a gain of
+$7.0$~tC\,ha$^{-1}$ over the first interval and $2.1$ over the second. That is
+the shape an equilibrium start cannot produce, because an equilibrium start is
+already at the end of it.
 
-\subsubsection{Trajectory shape vs.\ level}
-Shape change, not just offset. [placeholder figure]
+Started transiently, all six models reproduce the accumulation
+(Figure~[F3]). None sits more than $3.5$~tC\,ha$^{-1}$ from the observed level
+at any campaign, and every one of them rises across the first interval. The
+\emph{shape} of the later trajectory, however, separates them into three
+groups, and the separation is structural rather than a matter of skill:
 
-\subsubsection{Match to campaign means}
-2006 and 2024 means tracked. [placeholder]
+\begin{itemize}
+\item \textbf{Accumulation then flattening} --- Yasso07 ($66.1 \to 74.9 \to
+  75.0$) and Yasso15 ($66.9 \to 76.4 \to 75.5$) reproduce the bend-over,
+  rising steeply to $2006$ and then approximately holding.
+\item \textbf{Accumulation without saturation} --- TP2 ($64.2 \to 73.0 \to
+  76.3$) and TP3 ($64.3 \to 72.9 \to 76.1$) match the early levels most
+  closely of any model but keep climbing, so they end above the observations
+  having passed through them.
+\item \textbf{Accumulation then decline} --- SP1 ($67.4 \to 75.7 \to 71.5$) and
+  Yasso20 ($68.0 \to 74.7 \to 71.3$) overshoot at $2006$ and then turn down,
+  ending below the observed $2024$ level.
+\end{itemize}
 
-\subsection{Structural differences under the fair frame}
-Real but modest skill spread across the six. [placeholder table]
+\subsubsection{The rate of change, which is what an inventory reports}
+% Provenance: build_F5_stock_change.R, rebuilt 2026-09-02 on the balanced set
+% with per-plot true intervals. Observed +0.259 +/- 0.040 (1985-2024) and
+% +0.117 +/- 0.066 (2006-2024) reproduce the decided basis exactly.
+% ⚠ This SUPERSEDES the previously recorded picture ("over the full span every
+% model is a sink but 1.6-2.5x too strong"), which was measured on the
+% contaminated campaign mapping and the nominal denominator.
+Stocks are what these models predict; \emph{changes} in stock are what a
+greenhouse-gas inventory reports, and they are a far more demanding target
+(Figure~[F5]).
 
-\subsubsection{Where simple beats complex}
-TP2/TP3 track shape best; stiffer Yasso family worst. Brief.
+Over the full span the ensemble brackets the observations and two members land
+on them. Against an observed $+0.259 \pm 0.040$~tC\,ha$^{-1}$\,yr$^{-1}$,
+Yasso07 gives $+0.258$ and Yasso15 $+0.250$ --- agreement to within a hundredth
+of a unit, and well inside the observational standard error. TP2 ($+0.347$) and
+TP3 ($+0.339$) run about a third too strong; SP1 ($+0.124$) and Yasso20
+($+0.097$) about half too weak. The spread across six structures, $+0.10$ to
+$+0.35$, is roughly six times the standard error on the observed value: the
+ensemble contains the answer but cannot identify it.
 
-\subsection{What the data can and cannot constrain}
-Set up the Discussion: kinetics weakly constrained; inputs do the work.
+Over the recent interval the picture is different, and the reason is as much
+observational as structural. The observed $2006$--$2024$ rate on this basis is
+$+0.117 \pm 0.066$~tC\,ha$^{-1}$\,yr$^{-1}$ --- positive, but with a confidence
+interval that includes zero. The models spread from $+0.182$ (TP2) to $-0.237$
+(SP1), with Yasso20 also negative ($-0.191$) and Yasso07 and Yasso15 close to
+flat ($+0.010$, $-0.048$). Two models therefore report a source over the recent
+period. We resist the obvious reading that they are simply wrong: over an
+eighteen-year interval the observations themselves cannot establish a sink at
+conventional confidence, so this interval discriminates far less than its
+apparent precision suggests, and the campaign-comparability corrections of
+Section~\ref{sec:socdata} bear on it much more heavily than on the full span.
 
-\subsubsection{Convergence vs.\ identifiability}
-Good R-hat coexisting with non-identified fractions. State the apparent
-paradox, resolve in Discussion.
+\subsection{Structural differences are a weak lever in-sample}
+% Provenance: predictive bundles, metrics_calib / metrics_holdout.
+% ⚠ metrics_calib is known to include held-out observations in the multimodel
+% builder; the values here are read from the bundles, where T1 also reads them.
+Under the fair frame --- same plots, same forcing, same likelihood, same
+priors by construction, same holdout --- the six models are close to
+indistinguishable in fit (Table~[T1]).
 
-\subsubsection{Input multiplier behaviour}
-$\sigma_{\mathrm{input}}$ does different work in different models. The hinge
-result.
+Calibration $R^2$ ranges from $0.016$ (TP3) to $0.021$ (Yasso15). On the
+holdout it is indistinguishable from zero in every model, the largest being
+$0.0012$. Root-mean-square error on the holdout spans $46.9$ to
+$48.6$~tC\,ha$^{-1}$, a range of $3.6\%$, against stocks near
+$70$~tC\,ha$^{-1}$. Median bias runs $+1.0$ to $+3.3$~tC\,ha$^{-1}$ on the
+calibration plots and $-0.9$ to $+0.7$ on the holdout.
 
-\subsection{Residual structure}
-RF importance; stand basal area as the leading, diffuse, shared driver.
-[placeholder figure]
+Two features of that table deserve emphasis. First, \textbf{complexity buys
+essentially nothing}: SP1, with one pool and six free parameters, and Yasso15,
+with five pools and twenty-six, differ by $0.005$ in calibration $R^2$ and by
+$0.1$~tC\,ha$^{-1}$ in holdout RMSE. The best and worst holdout RMSEs belong to
+a five-pool and a three-pool model respectively; the ordering does not follow
+structure. Second, \textbf{none of the models has meaningful cross-plot skill}.
+An $R^2$ near zero on held-out plots means that, given a plot's litter input and
+climate, these models cannot say whether its soil carbon is high or low. This is
+not a failure of any one structure --- it is shared by all six, which is what
+makes it informative.
+
+\subsection{What the data can and cannot constrain}\label{sec:identifiability}
+
+\subsubsection{Convergence without identifiability}
+% Provenance: KL/marginal diagnostics per model (F7, F8, F8b, S11).
+The paradox flagged above --- clean convergence in a model whose fractions
+cannot be determined from two observations per plot --- resolves as follows.
+The transfer fractions converge in R-hat and are simultaneously not learned from
+the data: their posteriors sit within a fraction of a prior standard deviation
+of their prior centres, they carry very little information relative to those
+priors, and fractions leaving the same pool are almost perfectly
+anti-correlated. That last signature is the mechanism --- the SOC observations
+constrain the net flux out of a pool, not how it is divided --- and it is why
+good mixing and weak identification coexist. A sampler that traverses a flat
+ridge cleanly will report excellent diagnostics; poor R-hat would indicate a
+mixing problem, not an information problem, and conflating the two would have
+led us to fix the wrong thing.
+
+\subsubsection{The input multiplier does the work}
+% Provenance: posterior medians of sigma_input/sigma_init; Jbar = 2.511
+% (flux_pair, confirmed in the launch logs). NB build_T1_model_summary.R still
+% hard-codes Jbar = 2.472 and should be corrected to 2.511.
+What the data \emph{do} constrain is the level, and the level is carried by the
+input multiplier. Posterior medians of $\sigma_{\mathrm{input}}$ run $1.27$
+(SP1) to $1.73$ (TP3); multiplied by the shared litter baseline $\bar J =
+2.511$~tC\,ha$^{-1}$\,yr$^{-1}$ these are effective litter fluxes of $3.19$ to
+$4.34$~tC\,ha$^{-1}$\,yr$^{-1}$. Every model raises its inputs above the
+tree-litter baseline, and the ordering is not by complexity: the one-pool model
+asks for the least and the three-pool model for the most, with the three Yasso
+variants in between.
+
+The historical anchor behaves the same way. $\sigma_{\mathrm{init}}$ --- the
+ratio of $1917$ litter input to $1985$ litter input --- takes posterior medians
+of $0.49$ (TP3) to $0.84$ (SP1), placing the implied $1917$ carbon stock at
+$41.9$ to $52.3$~tC\,ha$^{-1}$ and the implied pre-observation accumulation rate
+at $+0.05$ to $+0.19$~tC\,ha$^{-1}$\,yr$^{-1}$, in every case below the observed
+modern rate. Five of the six models cluster tightly ($0.49$--$0.59$); SP1, which
+has only one pool and therefore no way to hold a legacy separately from the
+active store, is the outlier.
+
+\subsubsection{Turnover, and the ridge it shares with the inputs}
+% Provenance: doublechecks/intrinsic_mrt.rds, stamped 20260831_162457
+% (provenance verified). ⚠ Use intrinsic_mrt.R ONLY -- the engine binding named
+% steady_state is transient_init and is contaminated by sigma_init.
+% ⚠ TWO published-MRT bases exist. These are the published POINT values.
+For the three Yasso variants a published parameterisation exists, so the
+calibrated turnover can be compared with an external estimate of the same
+quantity. Intrinsic mean residence time --- a property of the generator alone,
+computed at a fixed reference climate and litter composition, independent of
+both auxiliary parameters --- is $24.6$~yr for Yasso07 ($90\%$ interval
+$20.7$--$29.1$), $27.1$ for Yasso15 ($23.6$--$30.9$) and $22.6$ for Yasso20
+($19.6$--$26.4$). The published point values are $33.5$, $30.4$ and $19.0$~yr.
+Yasso15 overlaps its published posterior; Yasso20 sits entirely above its
+published point; Yasso07 falls well short of its own.
+
+These displacements should not be read as three independent findings, and in
+particular should not be added to the input result above. A soil carbon stock
+constrains the \emph{product} of turnover time and input rate. Faster turnover
+with larger inputs and slower turnover with smaller inputs fit the observed
+level equally well, and the posterior explores that trade-off directly: within
+the Yasso family the two are strongly anti-correlated, so ``inputs too high''
+and ``turnover too fast'' are one under-determination described from two ends.
+Where a model lands along that ridge is set by the priors, and we treat the
+displacement as a single result reported once.
+
+\subsection{Residual structure: the missing predictor is not kinetic}
+% Provenance: <MODEL>_rf_summary_20260831_*.rds (oob_r2) and
+% <MODEL>_rf_importance_20260831_*.csv. n = 954 calibration observations.
+% ⭐ This is the sharpest result in the section: predictability EXISTS in the
+% data (RF explains 44-65% of the residuals) but no model captures it, and the
+% covariate that carries it is an input proxy, not a kinetic variable.
+The models explain about two percent of the variance in observed SOC. A random
+forest trained on site covariates explains between $44\%$ and $65\%$ of what
+they leave behind (out-of-bag $R^2$, $n = 954$; $52\%$--$70\%$ on the holdout
+residuals). The predictability is therefore present in the data. No model
+recovers it.
+
+The covariate carrying most of it is the same in all six: stand basal area at
+the first campaign, followed by development class and coarse-fragment content.
+Basal area is a productivity and standing-biomass proxy --- an \emph{input}
+variable --- not a kinetic one, and the fact that six structurally unrelated
+models leave the same input-shaped signal in their residuals is the strongest
+in-sample evidence in this study that the binding limitation is the
+representation of carbon entering the soil rather than the representation of its
+decay. The importance is diffuse: no single covariate dominates, which is
+consistent with a broad productivity gradient the models see only through a
+single national litter multiplier (Figure~[F11]).
 
 % =====================================================================
 \part{Resolution}
@@ -708,28 +928,57 @@ cannot. So the frontier is inputs, not soil chemistry.
 % the current global design cannot exclude local kinetic variation (see excursus +
 % the optional stratified strand, which is exactly the fair test of that).
 
-\subsubsection{The multiplier crosses a physical line (quantitative payoff)}
-% The Trickster's tell: sigma_input is not a nuisance, it has a physical referent.
-% Effective flux = sigma_input * raw litter (raw ~2.5 tC/ha/yr, shared by all six).
-% Spread: SP1 0.8, Yasso07 3.5, Yasso15 4.8, Yasso20 7.5 (all physical, <= ~9 NPP
-% ceiling) BUT TP2 34, TP3 50 tC/ha/yr -- 13-20x, above boreal NPP -> IMPOSSIBLE.
-% The good R^2 of TP2/TP3 is bought by manufacturing carbon. Same finding as the
-% TP3 oscillation (fast pool force-fed). Reframe: sigma_input distance from ~1 is a
-% STRUCTURAL-ADEQUACY GAUGE, interpretable only once the prior encodes the physical
-% litter bound. Homogenizing sigma_input as a weak Tier-3 nuisance (log-SD 0.5)
-% threw away external litter information -- the one prior class that HAS a referent.
-The physical bound turns this into a clean counterfactual, and that counterfactual
-is the cleanest proof that inputs --- not kinetics --- were the lever. Rescored
-against the earlier \emph{unbounded} calibration, the ceiling costs predictive skill
-for \emph{only} the two runaway models (TP2, TP3), the ones that had reached
-$34$--$50$~tC\,ha$^{-1}$\,yr$^{-1}$ of manufactured litter; SP1 and the three
-Yassos, already inside the envelope, are unchanged. Had the good fit of TP2/TP3
-rested on structure, bounding a \emph{shared} input nuisance could not have singled
-those two models out. The \emph{selectivity} of the skill drop is therefore evidence
-that the surplus fit was bought with unphysical carbon. We frame this as
-\emph{consistent with} input/forcing error, not proof: the global design cannot
-exclude local kinetic variation (see the excursus and the optional stratified
-strand). Before/after diagnostic: Appendix~\ref{app:input-bounds}.
+\subsubsection{The multiplier has a physical referent (quantitative payoff)}
+% The Trickster's tell: sigma_input is NOT a nuisance -- it converts to a flux
+% that external litter budgets can be laid against. Effective flux =
+% sigma_input x Jbar, with Jbar = 2.511 tC/ha/yr shared by all six.
+%
+% ⚠ REWRITTEN 2026-09-02. The previous version argued from a bounded-vs-unbounded
+% counterfactual ("the ceiling costs skill for ONLY TP2/TP3, which is the cleanest
+% proof that inputs were the lever"). THAT EXPERIMENT WAS NEVER RUN, and the hard
+% flux window [0.05, 4.62] was deliberately abandoned (2026-08-31): on the current
+% calibration nothing is absurd, and bounding would IMPOSE the input conclusion
+% rather than find it. The old text also quoted TP2 at 34 and TP3 at 50 tC/ha/yr
+% from a calibration three runs back. Both are gone. What survives -- and it is the
+% part that was always doing the work -- is that sigma_input is dimensionally a
+% litter flux and can therefore be confronted with independent budgets.
+The reason this parameter is worth reading at all is that it is not scale-free.
+Multiplied by the shared litter baseline
+($\bar J = 2.511$~tC\,ha$^{-1}$\,yr$^{-1}$), $\sigma_{\mathrm{input}}$ becomes an
+\emph{effective litter flux to the soil} --- a quantity that independent budgets
+can be laid against. Calibration places all six models in a narrow band,
+$3.19$--$4.34$~tC\,ha$^{-1}$\,yr$^{-1}$ (SP1 lowest, TP3 highest), with the
+complexity ordering conspicuously absent: the one-pool and five-pool models
+bracket each other rather than separating.
+
+That band sits above every independent estimate of Finnish litter input, and by
+a margin that is modest rather than absurd. Against the national total litter
+including understorey of Lehtonen and Heikkinen ($\sim\!2.7$~tC\,ha$^{-1}$\,yr$^{-1}$),
+the six models want $18$--$61\%$ more. Against the Nordic mean aboveground NPP
+compiled by Gower and colleagues ($\sim\!3.2$~tC\,ha$^{-1}$\,yr$^{-1}$), SP1,
+Yasso07 and Yasso15 sit comfortably inside while TP2, TP3 and Yasso20 sit
+$30$--$35\%$ above it --- tolerable only if Finnish productivity runs above that
+compilation's mean. No model exceeds the Nordic \emph{maximum} ($4.62$), so the
+comparison that is comfortable is the one against NPP, and the comparison that
+is uncomfortable is the one against litter. We state both.
+
+We deliberately did not close this gap by fiat. A hard ceiling on the effective
+flux was specified and then not imposed, because imposing it would have written
+the conclusion into the prior: the unbounded calibration is the better evidence
+that these models want more input than the published budgets supply. The prior
+window remains wide enough that the posterior is located by the data and the
+litter-based centre, not by a wall.
+
+Two cautions bound how far this can be pushed. First, the discrepancy is
+\emph{consistent with} input or forcing error, not proof of it: a global
+calibration cannot exclude local kinetic variation (see the excursus, and the
+stratified strand that would be its fair test). Second --- and this is the
+constraint that governs the whole Discussion --- ``inputs too low'' and ``turnover
+too fast'' are one under-determination viewed from two ends, not two independent
+findings. The level of a soil carbon stock constrains the \emph{product}
+$\mathrm{MRT}\times\sigma_{\mathrm{input}}\times\bar J$; where that product is
+split between the two factors is set by the priors, not by the SOC data. We
+therefore report the displacement once, and do not bank it twice.
 
 \subsubsection{Historical inputs: the unrecoverable past}
 No forcing data pre-observation; $\sigma_{\mathrm{init}}$ stands in for an
@@ -833,11 +1082,41 @@ and litter-manipulation experiments, and process-based limits on how much carbon
 boreal soil can hold. Until such constraints exist, the divergence is a genuine, reportable
 uncertainty, not a modelling failure.
 
-\subsection{The over-prediction is a property of the likelihood}
+\subsection{A level offset that turned out to be ours, not the soil's}
 % Persona/candor beat.
-Slight, systematic over-prediction follows from the multiplicative-normal
-error model, not from biogeochemistry. Only the bias is likelihood-sensitive;
-rankings are not.
+%
+% ⚠ REWRITTEN 2026-09-02. The previous version asserted that a "slight, systematic
+% over-prediction follows from the multiplicative-normal error model". The premise
+% has since inverted twice over: (i) that artefact, taken alone, was shown to
+% UNDER-predict, so the sign was wrong; and (ii) the uniform over-prediction it
+% sought to explain NO LONGER EXISTS -- it closed when the likelihood moved to
+% log-normal and the SOC target was rebuilt on a single homogenised basis. Kept as
+% a candour beat because the episode is instructive, not because the bias survives.
+An earlier stage of this work carried a uniform over-prediction: all six models
+sat $17$--$20\%$ above the observations, by almost exactly the same margin,
+despite being structurally unrelated. Uniformity across six independent
+structures is not a biogeochemical signal; it points at something the six share.
+They shared two things --- the fitting criterion and the target --- and both
+turned out to be implicated. Replacing the multiplicative-normal likelihood with
+a log-normal one removed the mechanism by which a prediction could widen its own
+error bar, and rebuilding the SOC target on a single homogenised basis (coarse
+fragments, layer definitions and campaign dating treated identically across
+$1985$, $2006$ and $2024$) removed a stock inflation of comparable size.
+
+What is left is small and no longer one-signed: median bias runs
+$+1.0$ to $+3.3$~tC\,ha$^{-1}$ on the calibration plots and $-0.9$ to
+$+0.7$~tC\,ha$^{-1}$ on the holdout, against stocks near $65$~tC\,ha$^{-1}$.
+There is no longer a level offset to explain.
+
+We report this because it is the kind of finding a model intercomparison is
+built to produce and easy to misread. Had we not homogenised the target and the
+likelihood first, the offset would have been available for attribution to soil
+processes --- to a missing stabilisation mechanism, or to inputs --- in six
+models at once, and the agreement between them would have looked like
+corroboration. It was an artefact of the frame the six were being compared in.
+The general point survives the specific one: in an intercomparison, a residual
+common to \emph{every} structure is evidence about the comparison, not about the
+soil.
 
 \subsection{Limitations}
 

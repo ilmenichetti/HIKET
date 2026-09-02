@@ -21,7 +21,15 @@ setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_model
 source("manuscript/figures/run_ids.R")
 source("manuscript/figures/model_palette.R")
 
-campaign <- function(y) ifelse(y <= 1990, "c1985", ifelse(y <= 2015, "c2006", "c2024"))
+# ⚠ FIXED 2026-09-02. This file carried its OWN campaign rule with a 1990 cutoff:
+#   ifelse(y <= 1990, "c1985", ifelse(y <= 2015, "c2006", "c2024"))
+# Since the 1985 dating correction the first campaign spans 1986/87/88/89/1995, so
+# that rule filed the 65 plots dated 1995 as 2006 OBSERVATIONS -- inflating the
+# 2006-2024 observed sink and creating duplicate plot_id x campaign rows that
+# reshape() resolved silently (the "12 warnings"). obs_basis.R is the single source
+# of truth for this mapping (cutoff 2000) and F2/F3/F4 already use it.
+source("manuscript/figures/obs_basis.R")
+campaign <- function(y) c("c1985","c2006","c2024")[campaign_of(y)]
 
 # --- paired change per model, per period -------------------------------------
 periods <- list("1985-2024" = c("c1985","c2024", 39),
@@ -35,9 +43,20 @@ collect <- function(m) {
   d <- read.csv(f, stringsAsFactors = FALSE)
   d$plot_id <- as.character(d$plot_id); d$cp <- campaign(d$year)
   d <- d[!is.na(d$soc_obs_tCha), ]
+  # DECIDED REPORTING BASIS (Lorenzo, 2026-08-17; wired here 2026-09-02): restrict to
+  # the BALANCED set -- plots observed in all THREE campaigns -- so both periods
+  # describe one fixed population. Pairing per period instead uses more plots for
+  # 2006-2024 (409 vs 310) but changes the population between panels, and it is worth
+  # 1.8x on that headline rate: pairwise +0.209, balanced +0.117 tC/ha/yr.
+  bal <- balanced_plots(readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", m, RID[[m]]))$obs_meta)
+  d <- d[as.integer(d$plot_id) %in% bal, ]
   o <- reshape(d[, c("plot_id","cp","soc_obs_tCha")], idvar="plot_id", timevar="cp", direction="wide")
   p <- reshape(d[, c("plot_id","cp","soc_mean")],     idvar="plot_id", timevar="cp", direction="wide")
-  merge(o, p, by = "plot_id")
+  # TRUE per-plot observation years, so the rate denominator is the interval that
+  # actually elapsed for THAT plot. The nominal 39 yr for 1985-2024 was wrong by 11%:
+  # the first campaign ran 1986-1995 (mean ~1989), so the real mean span is ~35 yr.
+  y <- reshape(d[, c("plot_id","cp","year")],         idvar="plot_id", timevar="cp", direction="wide")
+  merge(merge(o, p, by = "plot_id"), y, by = "plot_id")
 }
 
 res <- lapply(MODEL_ORDER, collect); names(res) <- MODEL_ORDER
@@ -48,8 +67,9 @@ stats <- do.call(rbind, lapply(names(periods), function(pn) {
     d  <- res[[m]]
     oa <- d[[paste0("soc_obs_tCha.",a)]]; ob <- d[[paste0("soc_obs_tCha.",b)]]
     pa <- d[[paste0("soc_mean.",a)]];     pb <- d[[paste0("soc_mean.",b)]]
-    k  <- is.finite(oa)&is.finite(ob)&is.finite(pa)&is.finite(pb)
-    od <- (ob[k]-oa[k])/yrs; pd <- (pb[k]-pa[k])/yrs
+    dt <- d[[paste0("year.",b)]] - d[[paste0("year.",a)]]
+    k  <- is.finite(oa)&is.finite(ob)&is.finite(pa)&is.finite(pb)&is.finite(dt)&dt>0
+    od <- (ob[k]-oa[k])/dt[k]; pd <- (pb[k]-pa[k])/dt[k]
     data.frame(period = pn, model = m, n = sum(k),
                obs = mean(od), obs_se = sd(od)/sqrt(sum(k)),
                pred = mean(pd), pred_se = sd(pd)/sqrt(sum(k)),
