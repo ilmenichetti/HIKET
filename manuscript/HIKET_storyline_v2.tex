@@ -19,6 +19,7 @@
 \usepackage{float}\usepackage[hidelinks]{hyperref}
 \usepackage{caption}\captionsetup{font=small,labelfont=bf}
 \usepackage[most]{tcolorbox}
+\usepackage{tikz}\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds}
 \usepackage{titlesec}
 \titlespacing*{\paragraph}{0pt}{0.9\baselineskip}{0.4em}
 \setcounter{secnumdepth}{4}\setcounter{tocdepth}{3}
@@ -70,6 +71,70 @@ climate modifier ties turnover and temperature sensitivity to the same parameter
 carries pool-specific modifiers, the same displacement costs nothing, and the projection is
 \emph{resilient} to an input assumption the data cannot settle. \textbf{That contrast, measured, is
 the contribution.}
+
+
+% =====================================================================
+% THE ARC AT A GLANCE. ⚠ The RIDGE row is the 2026-09-02 addition: factoring in
+% the input-estimation difference lands the calibration in a different region of
+% parameter space, and that has consequences -- unevenly, which is the point.
+% =====================================================================
+\begin{center}
+\begin{tikzpicture}[
+  font=\scriptsize,
+  prem/.style={rectangle, rounded corners, draw=blue!55!black, fill=blue!8, align=center,
+               text width=158mm, inner sep=4pt},
+  setb/.style={rectangle, rounded corners, align=left, text width=35mm, inner sep=3pt,
+               minimum height=12mm},
+  payb/.style={rectangle, rounded corners, align=left, text width=35mm, inner sep=3pt,
+               minimum height=20mm},
+  mc/.style={draw=blue!55!black, fill=blue!7},
+  ac/.style={draw=orange!80!black, fill=orange!13},
+  tc/.style={draw=teal!65!black, fill=teal!9},
+  ridge/.style={rectangle, rounded corners, draw=violet!70!black, fill=violet!8, align=center,
+                text width=158mm, inner sep=5pt},
+  land/.style={rectangle, rounded corners, draw=green!50!black, fill=green!10, align=center,
+               text width=158mm, inner sep=4pt},
+  dn/.style={-{Latex[length=1.9mm]}, thick, blue!45!black},
+  cv/.style={-{Latex[length=2.2mm]}, very thick, green!45!black},
+  rv/.style={-{Latex[length=2.4mm]}, very thick, violet!60!black},
+  hz/.style={-{Latex[length=1.8mm]}, thick, dashed, orange!85!black}]  % (unused: the
+  % inter-thread connectors were dropped -- the ridge row carries that logic now)
+\def\ca{0}\def\cb{4.3}\def\cc{8.6}\def\cd{12.9}
+\node[prem, anchor=north] (P) at (6.45,0)
+  {\textbf{Opening \& Challenge.} A carbon sink \emph{caught saturating} --- but an equilibrium-start
+   model is \emph{already} saturated and cannot show it. To capture the sink, the model must remember
+   it was still rising. \quad\textbf{One frame throughout: non-equilibrium.}};
+\node[setb, mc, anchor=north] (M1) at (\ca,-1.7) {\textbf{MAIN LINE}\\ calibrate the start (transient init), six models on one fair frame.};
+\node[setb, ac, anchor=north] (A1) at (\cb,-1.7) {\textbf{THREAD A}\\ does structural complexity help?};
+\node[setb, tc, anchor=north] (B1) at (\cc,-1.7) {\textbf{THREAD B}\\ where does the misfit go, if not into structure?};
+\node[setb, tc, anchor=north] (C1) at (\cd,-1.7) {\textbf{THREAD C}\\ what do the data actually constrain?};
+\node[payb, mc, anchor=north] (M2) at (\ca,-3.9) {\emph{it works:} the models reach the observed levels and two reproduce the rate --- the shape an equilibrium start forecloses.};
+\node[payb, ac, anchor=north] (A2) at (\cb,-3.9) {\emph{fit does not discriminate structure; dynamics do.} $R^2$ cannot tell the six apart; trajectory shape and forecast can.};
+\node[payb, tc, anchor=north] (B2) at (\cc,-3.9) {\textbf{the turn:} matching the trajectory needs \emph{more input and faster turnover} than the published parameterisations carry.};
+\node[payb, tc, anchor=north] (C2) at (\cd,-3.9) {only the \textbf{net flux} out of a pool, not the split --- and only a \emph{level}, which is what pins the ridge.};
+\node[ridge, anchor=north] (R) at (6.45,-6.6)
+  {\textbf{So we land in a different region of parameter space} --- the same
+   $\mathrm{MRT}\times\sigma_{\mathrm{input}}$ ridge, at a different point on it. Both points fit the
+   observed window equally well, so the data cannot choose between them.
+   \textbf{Does the choice matter?} Run them forward.\\[2pt]
+   \textbf{Yasso07: yes} --- one climate modifier governs every pool, so moving along the ridge moves
+   the temperature sensitivity of \emph{all} the carbon
+   ($-2.1$~tC\,ha$^{-1}$ at SSP2-4.5). \quad
+   \textbf{Yasso15 / Yasso20: no} --- pool-specific modifiers leave the pools that \emph{hold} the
+   carbon responding almost identically, so the same displacement costs nothing.\\[2pt]
+   \emph{Not that they are right --- that they are \textbf{resilient} to a calibration assumption the
+   data cannot settle.}};
+\node[land, anchor=north] (L) at (6.45,-10.5)
+  {\textbf{Landing.} The deliverable is a calibrated estimate \emph{plus} its irreducible structural
+   uncertainty --- and a warning about which structures let an untestable input assumption reach the
+   forecast.};
+\foreach \n in {M1,A1,B1,C1} \draw[dn] (P.south) -- (\n.north);
+\foreach \s/\p in {M1/M2,A1/A2,B1/B2,C1/C2} \draw[dn] (\s) -- (\p);
+\draw[rv] (B2.south) -- (B2.south |- R.north);
+\foreach \p in {M2,A2,C2} \draw[cv, violet!40!black] (\p.south) -- (\p.south |- R.north);
+\draw[cv] (R.south) -- (L.north);
+\end{tikzpicture}
+\end{center}
 
 % =====================================================================
 \part{Act I --- Opening}
