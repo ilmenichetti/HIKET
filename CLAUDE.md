@@ -747,7 +747,14 @@ noise the error model should absorb, not as data error.
   13.4–15.6 GB against 160 GB. Node separation was never the whole story; nothing was killed.
   **Results:** (1) **MRT ROSE — and this was pre-registered as NOT an MRT run**: 21.68 / 25.13 /
   21.40 (Yasso07/15/20), i.e. +24 / +9 / +13% on this run alone. **Yasso20 now EXCEEDS its published
-  POINT** (19.03); Yasso15's gap to published fell 24%→17%. (2) **It was nearly free in fit** —
+  POINT** (19.03); Yasso15's gap to published fell 24%→17%.
+  ⚠⚠ **CORRECTED 2026-09-02 — Yasso20's published MRT was a CHIMERA.** `intrinsic_mrt.R` kept
+  `fixed_rates`, which for Yasso20 are **Yasso15's** alphas and `w1`–`w5`, so a published draw never
+  overrode them. Corrected: published POINT **19.03 → 21.85** (now from `ParY20.dat`, the FMI MAP,
+  not the hybrid `to_original(best_x)`) and published POSTERIOR **25.04 → 22.12** [21.24, 22.92].
+  Ours is 22.56, i.e. **Yasso20's turnover is NOT meaningfully displaced from published** (2–3%).
+  The "exceeds its published point" claim survives in direction only and is now trivial. Yasso15 is
+  unaffected (30.44 → 30.54); Yasso07 has no `.dat`. See [[published-yasso20-two-defects]]. (2) **It was nearly free in fit** —
   R² 0.011–0.024 → 0.010–0.022. ⚠ **This contradicts "MRT is likelihood-limited, not prior-limited"**;
   a prior-only change moved MRT further than the error-model lever ever did. (3) The pre-registered
   cost DID appear, but in RMSE not R²: calibration RMSE degraded in five of six (+0.25 to +1.06),

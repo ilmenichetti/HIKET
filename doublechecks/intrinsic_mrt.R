@@ -100,11 +100,38 @@ cat(sprintf("  T = %.2f C | amplitude = %.2f C | precip = %.0f mm\n",
 cat(sprintf("  litter split: nwl %.3f | fwl %.3f | cwl %.3f   (total %.3f)\n\n",
             sum(ref$nwl), sum(ref$fwl), sum(ref$cwl), sum(ref$nwl)+sum(ref$fwl)+sum(ref$cwl)))
 
+# ⚠ FIXED 2026-09-02. assemble_params builds c(fixed_rates, p_free[MODEL_FREE_NAMES]),
+# and for YASSO20 the fixed block (alpha_A..alpha_N, p_H, alpha_H, w1-w5) holds
+# YASSO15's values -- they are not free names, so a published .dat draw never
+# overrode them. The "published Yasso20" MRT was therefore a CHIMERA: Yasso20
+# fractions and climate with Yasso15's alpha_E (0.242 against the published 0.117)
+# and Yasso15's non-zero w1-w5 (published Yasso20 sets them to zero). It read 25.04
+# against a true 22.13, 11.6% high, and F12 plotted it. `raw` now overrides the
+# whole DCOL block after assembly. Yasso15 is unaffected (its fixed rates ARE its
+# own published ones: 30.44 -> 30.54, +0.3%); Yasso07 has no .dat.
+#
+# Published Yasso20 also exhausts the pool budget EXACTLY (AWEN outgoing + p_H = 1),
+# which trips model_step's 0.9999 guard; the steady-state route used here does not
+# time-step so it returns finite values, but the matrix is on the boundary. The
+# clamp keeps it just inside, costing ~0.02%. See doublechecks/published_arm_dat.R.
+BUDGET_MAX <- 0.9998
+OUTG <- list(c("p_AW","p_AE","p_AN"), c("p_WA","p_WE","p_WN"),
+             c("p_EA","p_EW","p_EN"), c("p_NA","p_NW","p_NE"))
+clamp_budget <- function(mp) {
+  pH <- if ("p_H" %in% names(mp)) mp[["p_H"]] else 0
+  for (g in OUTG) { g <- intersect(g, names(mp)); if (!length(g)) next
+    sm <- sum(mp[g]); tgt <- BUDGET_MAX - pH
+    if (is.finite(sm) && sm > tgt) mp[g] <- mp[g] * (tgt/sm) }
+  mp
+}
+
 mrt_fun <- function(M, e) {
   if (M == "Yasso07") {
     ss <- get("yasso07_steady_state", e); cxm <- get("compute_xi_mean_yasso07", e)
-    function(p) {
+    function(p, raw = NULL) {
       mp <- e$.assemble(p)
+      if (!is.null(raw)) { for (v in intersect(names(mp), names(raw))) mp[v] <- raw[[v]]
+                           mp <- clamp_budget(mp) }
       xi <- cxm(ref$clim, mp[["beta1"]], mp[["beta2"]], mp[["gamma"]])
       sum(ss(mp, ref$nwl, ref$fwl, ref$cwl, xi))
     }
@@ -112,8 +139,10 @@ mrt_fun <- function(M, e) {
     ss <- get("yasso15_steady_state", e); cxm <- get("compute_xi_mean_yasso15", e)
     .ypn <- sprintf("%s_PARAM_NAMES", toupper(M))
     YP <- if (exists(.ypn, envir = e, inherits = FALSE)) get(.ypn, envir = e) else NULL
-    function(p) {
+    function(p, raw = NULL) {
       mp <- e$.assemble(p)
+      if (!is.null(raw)) { for (v in intersect(names(mp), names(raw))) mp[v] <- raw[[v]]
+                           mp <- clamp_budget(mp) }
       xi <- cxm(clim_ss = ref$clim, params = if (is.null(YP)) mp else mp[YP])
       sum(ss(mp, ref$nwl, ref$fwl, ref$cwl, xi, precip_mean = ref$clim$precip))
     }
@@ -124,7 +153,13 @@ out <- list()
 for (M in names(RID)) {
   e <- setup(M); f <- mrt_fun(M, e)
   p_def <- e$.to_original(get("best_x", e))
-  pub_pt <- tryCatch(f(p_def), error = function(z) NA_real_)
+  # PUBLISHED POINT. For Yasso20 to_original(best_x) is a HYBRID (Yasso15 fractions
+  # + Yasso15 fixed rates), so its MRT of 19.03 is not a published quantity at all.
+  # ParY20.dat is the FMI MAP for Yasso20 and is used instead. Yasso07 has no .dat
+  # and its defaults ARE its published values.
+  par_f <- file.path(DAT, sprintf("Par%s.dat", sub("Yasso", "Y", M)))
+  pub_raw <- if (file.exists(par_f)) setNames(as.numeric(read.table(par_f)[1, ]), DCOL) else NULL
+  pub_pt <- tryCatch(f(p_def, raw = pub_raw), error = function(z) NA_real_)
 
   smp <- getSample(readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds",
                                    M, RID[[M]])))
@@ -140,7 +175,7 @@ for (M in names(RID)) {
     j <- round(seq(1, nrow(X), length.out = min(N_DRAW, nrow(X))))
     pub <- vapply(j, function(i) {
       p <- p_def; nm <- intersect(names(p), DCOL); p[nm] <- X[i, nm]
-      tryCatch(f(p), error = function(z) NA_real_) }, numeric(1))
+      tryCatch(f(p, raw = setNames(X[i, ], DCOL)), error = function(z) NA_real_) }, numeric(1))
     pub <- pub[is.finite(pub)]
   }
   ours <- ours[is.finite(ours)]
