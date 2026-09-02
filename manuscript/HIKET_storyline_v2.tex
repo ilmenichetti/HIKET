@@ -288,13 +288,13 @@ engine, same plots, same litter series, same climate, same integrator. Nothing i
 sidesteps the objection that a re-calibration lets every other parameter readjust, and it is cheap.
 
 \begin{test}
-\textbf{Design.} Two axes, one readout.
+\textbf{Design --- settled, and the published arm is built.} Two axes, one readout.
 \smallskip
 
 \begin{center}\small
 \begin{tabular}{ll}
 \hline
-\textbf{Axis 1 --- parameters} & published (Yasso07/15/20 defaults, $\sinput = 1$) \\
+\textbf{Axis 1 --- parameters} & published kinetics, $\sinput$ refitted to the observed window \\
                                & ours (arm B posterior) \\
 \textbf{Axis 2 --- climate}    & control (recycled observed, as now) \\
                                & warming ($+2$\,\textdegree C, $+5$\,\textdegree C) \\
@@ -304,29 +304,67 @@ sidesteps the objection that a re-calibration lets every other parameter readjus
 \end{tabular}
 \end{center}
 \smallskip
-\textbf{Uncertainty.} Bootstrap over MCMC draws for ours; over the FMI \texttt{.dat} draws
-($n = 400$) for published Yasso15/20; Yasso07 has a published \emph{point} only, so it enters as a
-line against our band. The machinery for building published parameter vectors already exists and is
-proven in \texttt{doublechecks/intrinsic\_mrt.R}.
+\textbf{$\sinit$ is pinned to our posterior in BOTH arms}, so the two differ in exactly two
+coordinates --- turnover and input --- and no initialisation difference is smuggled into a
+comparison that is about inputs versus kinetics.
 \end{test}
 
-\paragraph{Read the \emph{response}, not the trajectory.} The two parameter sets start from
-different stocks, so absolute trajectories differ for two reasons at once. The scenario-minus-control
-contrast removes the initial state and isolates reactivity.
+\subsubsection{The published arm agrees with the data. That is the whole point.}
+\paragraph{Holding published kinetics fixed, only the input multiplier is refitted.} One parameter,
+scored on the three campaign means (balanced set).
+\FIG{doublechecks/published\_kinetics\_input\_refit.R}
 
-\subsubsection{The one design decision to settle first}
-\paragraph{What initial state does the published arm get?} Three defensible answers, and they ask
-different questions:
-\paragraph{(a) Shared state.} Both start from the same stock. Isolates kinetics cleanly; artificial.
-\paragraph{(b) Own transient init.} Each parameterisation initialises itself the way we do. Fair
-comparison of parameters, holding method constant.
-\paragraph{(c) Own \emph{steady-state} init.} The published arm gets the convention it was actually
-used with. This is the honest ``what would the conventional setup have projected'' --- but it moves
-two things at once, so it answers the paper's \emph{other} question, not this one.
+\begin{center}\small
+\begin{tabular}{lcccccc}
+\hline
+& \multicolumn{2}{c}{published arm} & \multicolumn{2}{c}{our arm} & \multicolumn{2}{c}{misfit (rms log)} \\
+& MRT & $\sinput$ & MRT & $\sinput$ & published & ours \\
+\hline
+Yasso07 & 33.47 & 1.249 & 24.57 & 1.585 & \textbf{0.020} & 0.029 \\
+Yasso15 & 30.44 & 1.324 & 27.11 & 1.538 & \textbf{0.024} & 0.034 \\
+Yasso20 & 25.04 & \multicolumn{5}{l}{\emph{not constructible --- see below}} \\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{No compromise was needed.} The published arm matches the observed window \emph{at least
+as well as our calibration does} in all three models. So any divergence downstream is extrapolation,
+not level mismatch --- which is exactly the condition the experiment required.
+
+\paragraph{Both arms are on the same ridge.} The product $\mathrm{MRT} \times \sinput$ is conserved
+to within $7\%$ (Yasso07 $41.8$ vs $38.9$; Yasso15 $40.3$ vs $41.7$). We are moving \emph{along} the
+ridge, not off it --- which is what makes the contrast interpretable.
+
+\paragraph{\textbf{Yasso20 cannot enter this experiment as published.}} Its published
+parameterisation (Viskari 2022) fixes \textbf{six transfer fractions at structural zero} and derives
+\textbf{three more algebraically}; ours frees all twelve. The published vector therefore has no image
+in our parameter space --- assigning the published columns leaves the three derived fractions
+uncomputed, and every one of the $10{,}000$ published draws diverges in forward integration. The
+experiment runs on \textbf{Yasso07 and Yasso15}; Yasso20 is reported as a structural limitation.
+
+\begin{warn}
+\textbf{This also puts a question mark over F12's published Yasso20 band.} That band
+($25.04$~yr) is computed from the same raw draws through the steady-state route, which returns
+finite values where the forward run does not. Whether a steady state built from an inconsistent
+fraction matrix is meaningful must be checked before F12 is used again.
+\end{warn}
+
 \begin{note}
-\textbf{Suggestion:} (b) as primary --- it isolates the parameter displacement, which is what this
-test is for --- with (c) reported alongside, because the difference between (b) and (c) is precisely
-the initialisation effect the first half of the paper is about. (a) as a diagnostic only.
+\textbf{Retracted 2026-09-02:} an earlier version of this section claimed Yasso20 ran ``backwards''
+--- shorter published turnover and higher published input than ours --- and offered it as a built-in
+sign control. That came from using \texttt{to\_original(best\_x)} as ``the published
+parameterisation''. For Yasso20 that vector is a \emph{hybrid}: Yasso20 climate and size parameters
+with \textbf{Yasso15's transfer fractions}, because that is where its prior centres come from
+(\texttt{Prior\_specs/Yasso20\_priors.R}, line 3). Its MRT is $19.03$ against the genuine published
+$25.04$. On the correct basis the family is ordered consistently --- published slower than ours in
+all three --- which is what \texttt{F12\_mrt\_yasso.png} showed all along.
+
+\begin{note}
+\textbf{What this already tells us, before any forward run.} On the aggregate trajectory,
+slow-and-lean and fast-and-rich are \emph{indistinguishable}. That is the ridge demonstrated
+directly rather than inferred from a posterior correlation --- and it \textbf{bounds what the input
+claim of Act VI may rest on}. The national trajectory does not support it; the plot-level
+likelihood does. The manuscript must say which.
 \end{note}
 
 \subsubsection{Pre-registration}

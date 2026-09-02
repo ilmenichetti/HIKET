@@ -17,9 +17,17 @@
 # reporting basis. This is a LEVEL-and-SHAPE match on the aggregate, which is
 # what the projection experiment needs; it is NOT a calibration.
 #
-# ⚠ This is a refit of two auxiliary parameters, not of the model. It puts the
+# ⚠ This is a refit of ONE auxiliary parameter, not of the model. It puts the
 # published kinetics at the point on the MRT x sigma_input ridge that agrees
 # with our data, which is exactly what makes the forward comparison fair.
+#
+# ⚠⚠ sigma_init IS PINNED TO OUR POSTERIOR MEDIAN IN BOTH ARMS (Lorenzo,
+# 2026-09-02). The published default is 0.900 against our 0.53-0.58, so leaving
+# it free would make the arms differ in TWO auxiliaries and put an
+# initialisation difference inside a comparison that is supposed to be about
+# inputs vs turnover. Pinned, the contrast is exactly two coordinates on the
+# ridge: sigma_input against MRT. The sigma_init = 0.900 variant is still
+# computed and reported, but only as a sensitivity.
 #
 # Usage:  Rscript doublechecks/published_kinetics_input_refit.R
 # =============================================================================
@@ -77,42 +85,8 @@ pred_means <- function(e, p_free, keep) {
 cat(sprintf("cores: %d\n\n", NCORE))
 OUT <- list()
 
-for (M in MODELS) {
-  e <- setup(M)
-  p_def <- e$.to_original(get("best_x", e))              # PUBLISHED point, physical
-  om    <- get("obs_meta", e)
-  keep  <- names(om)[vapply(om, function(z) length(z$soc_obs) >= 3L, logical(1))]
-
-  # --- 1-D: sigma_input only, sigma_init at the published/default value -------
-  s_init0 <- unname(p_def["sigma_init"])
-  obj <- function(s) {
-    p <- p_def; p["sigma_input"] <- s
-    r <- pred_means(e, p, keep)
-    if (is.null(r)) return(1e6)
-    sum((log(r$pred) - log(r$obs))^2)                    # match all three campaigns
-  }
-  op <- optimize(obj, interval = c(0.3, 6), tol = 1e-3)
-  s_hat <- op$minimum
-  p <- p_def; p["sigma_input"] <- s_hat; r <- pred_means(e, p, keep)
-
-  # baseline: sigma_input = 1 (tree litter as given), published kinetics
-  p1 <- p_def; p1["sigma_input"] <- 1; r1 <- pred_means(e, p1, keep)
-
-  cat(sprintf("=== %s ===  (published kinetics fixed; sigma_init = %.3f)\n", M, s_init0))
-  cat(sprintf("  observed campaign means      : %.1f  %.1f  %.1f\n", r$obs[1], r$obs[2], r$obs[3]))
-  cat(sprintf("  sigma_input = 1.000          : %.1f  %.1f  %.1f\n", r1$pred[1], r1$pred[2], r1$pred[3]))
-  cat(sprintf("  BEST sigma_input = %.3f      : %.1f  %.1f  %.1f   (rms log %.4f, n=%d)\n",
-              s_hat, r$pred[1], r$pred[2], r$pred[3], sqrt(op$objective/3), r$n))
-  cat(sprintf("  => effective flux = %.2f tC/ha/yr  (our arm B for this model differs; see below)\n\n",
-              s_hat * 2.511))
-  OUT[[M]] <- list(s_hat = s_hat, sigma_init = s_init0, pred = r$pred, obs = r$obs,
-                   pred_s1 = r1$pred, rms_log = sqrt(op$objective/3), n = r$n)
-}
-
-# --- the same metric for OUR calibration, so the comparison is like-for-like --
-# Without this the published arm's fit has nothing to be judged against, and the
-# whole point is whether the observed window can TELL THEM APART.
-cat("\n================ OUR calibration, same metric ================\n")
+# OUR posterior medians -- needed BEFORE the published arm, because sigma_init is
+# now pinned to them.
 rid <- vapply(MODELS, function(m) {
   fs <- list.files("Calibration_real_data_transient/runs",
                    pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
@@ -120,22 +94,62 @@ rid <- vapply(MODELS, function(m) {
 }, character(1))
 cat("our RUN_IDs:", paste(names(rid), rid, sep="=", collapse=" | "), "\n\n")
 
+fit_input <- function(e, p_base, keep) {
+  obj <- function(s) {
+    p <- p_base; p["sigma_input"] <- s
+    r <- pred_means(e, p, keep)
+    if (is.null(r)) return(1e6)
+    sum((log(r$pred) - log(r$obs))^2)
+  }
+  op <- optimize(obj, interval = c(0.3, 6), tol = 1e-3)
+  p <- p_base; p["sigma_input"] <- op$minimum
+  list(s = op$minimum, r = pred_means(e, p, keep), rms = sqrt(op$objective/3))
+}
+
 for (M in MODELS) {
   e <- setup(M)
-  p_def <- e$.to_original(get("best_x", e))
+  p_def <- e$.to_original(get("best_x", e))              # PUBLISHED point, physical
   om    <- get("obs_meta", e)
   keep  <- names(om)[vapply(om, function(z) length(z$soc_obs) >= 3L, logical(1))]
-  smp   <- getSample(readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds",
-                                     M, rid[[M]])))
-  p <- p_def
-  for (n in intersect(names(p), colnames(smp))) p[n] <- median(smp[, n])
-  r <- pred_means(e, p, keep)
-  rms <- sqrt(sum((log(r$pred) - log(r$obs))^2) / 3)
-  cat(sprintf("%-8s sigma_input %.3f  sigma_init %.3f : %.1f %.1f %.1f  (obs %.1f %.1f %.1f)  rms log %.4f\n",
-              M, p["sigma_input"], p["sigma_init"], r$pred[1], r$pred[2], r$pred[3],
-              r$obs[1], r$obs[2], r$obs[3], rms))
-  OUT[[M]]$ours <- list(s_input = unname(p["sigma_input"]), s_init = unname(p["sigma_init"]),
-                        pred = r$pred, rms_log = rms)
+
+  smp <- getSample(readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds",
+                                   M, rid[[M]])))
+  p_ours <- p_def
+  for (n in intersect(names(p_ours), colnames(smp))) p_ours[n] <- median(smp[, n])
+  si_ours <- unname(p_ours["sigma_init"])
+
+  # PRIMARY: published kinetics, sigma_init PINNED to ours, sigma_input free
+  pb <- p_def; pb["sigma_init"] <- si_ours
+  A  <- fit_input(e, pb, keep)
+
+  # SENSITIVITY: published kinetics with the published sigma_init 0.900
+  B  <- fit_input(e, p_def, keep)
+
+  # OURS, same metric
+  r_ours <- pred_means(e, p_ours, keep)
+  rms_ours <- sqrt(sum((log(r_ours$pred) - log(r_ours$obs))^2)/3)
+
+  # published kinetics at sigma_input = 1, sigma_init pinned to ours
+  p1 <- pb; p1["sigma_input"] <- 1; r1 <- pred_means(e, p1, keep)
+
+  cat(sprintf("=== %s ===  (sigma_init PINNED at our %.3f in both arms)\n", M, si_ours))
+  cat(sprintf("  observed                       : %.1f  %.1f  %.1f\n", A$r$obs[1], A$r$obs[2], A$r$obs[3]))
+  cat(sprintf("  published kin., sigma_input 1.000: %.1f  %.1f  %.1f\n", r1$pred[1], r1$pred[2], r1$pred[3]))
+  cat(sprintf("  published kin., BEST %.3f       : %.1f  %.1f  %.1f   rms log %.4f   effJ %.2f\n",
+              A$s, A$r$pred[1], A$r$pred[2], A$r$pred[3], A$rms, A$s*2.511))
+  cat(sprintf("  OURS,            sigma_input %.3f: %.1f  %.1f  %.1f   rms log %.4f   effJ %.2f\n",
+              p_ours["sigma_input"], r_ours$pred[1], r_ours$pred[2], r_ours$pred[3],
+              rms_ours, p_ours["sigma_input"]*2.511))
+  cat(sprintf("  [sensitivity: sigma_init 0.900 -> sigma_input %.3f, rms log %.4f]\n\n",
+              B$s, B$rms))
+
+  OUT[[M]] <- list(
+    pinned = list(sigma_init = si_ours, s_hat = A$s, pred = A$r$pred, rms_log = A$rms,
+                  pred_s1 = r1$pred),
+    sens_090 = list(sigma_init = unname(p_def["sigma_init"]), s_hat = B$s, rms_log = B$rms),
+    ours = list(s_input = unname(p_ours["sigma_input"]), s_init = si_ours,
+                pred = r_ours$pred, rms_log = rms_ours),
+    obs = A$r$obs, n = A$r$n)
 }
 
 saveRDS(OUT, "doublechecks/published_kinetics_input_refit.rds")
