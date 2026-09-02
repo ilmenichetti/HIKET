@@ -177,11 +177,33 @@ uncertainty.
 
 \section{The calibration wants more input \emph{and} faster kinetics}
 \begin{note}
-\textbf{This is the beat the old note did not have.} Previously ``inputs are the binding
-uncertainty''. Now something sharper and more falsifiable: the published parameterisations appear to
-\emph{underestimate both} the litter reaching the soil and the rate at which it decomposes --- and
-that is a statement about \emph{where on the ridge} the truth sits, which has consequences.
+\textbf{This is the turn, and it should land as a surprise.} The paper sets out to fix an
+initialisation convention. The expected ending is the tidy one: the convention was the problem, we
+replaced it, the models work. That ending is \emph{half} true --- and the other half is the
+interesting part. Making the models reproduce the observed trajectory requires a soil that is
+\textbf{fed more and turns over faster} than any of the published parameterisations describe. A
+methods fix walks into a claim about the models themselves.
 \end{note}
+
+\subsection{Why the surprise is the method's own doing}
+\paragraph{A steady-state start hides exactly this.} At equilibrium $C = J/k$: only the
+\emph{product} matters, so any input-and-turnover pair with the right product reproduces the stock.
+Nothing in the fit can object to the published pair.
+
+\paragraph{A transient start adds timing, and timing separates them.} Once the model must
+\emph{travel} from 1917 through three observed campaigns, the rate of approach matters, and that is
+set by the turnover time on its own. The constraint the convention discarded is the one that moves
+the ensemble off the published point.
+
+\paragraph{So the twist is not incidental to the method --- it is caused by it.} The initialisation
+fix is what makes the parameter displacement visible. That is why the two halves belong in one paper.
+
+\begin{warn}
+\textbf{Do not overstate the separation.} The timing constraint \emph{weakens} the ridge, it does not
+break it: MRT and $\sinput$ still correlate $-0.64$ to $-0.73$ in the Yasso family, and the
+displacement remains a joint one. The claim is that the ridge acquired a slope, not that the two
+became independently identified.
+\end{warn}
 
 \subsection{Inputs}
 \paragraph{The multiplier has a physical referent.} $\sinput \times \bar J$ is an effective litter
@@ -231,7 +253,8 @@ is on the input side.
 \begin{note}
 \textbf{The scientific core of the next phase.} A displacement that changed nothing observable would
 be bookkeeping. The bet is that it changes the \emph{climate response} --- which would make the
-position on the ridge an empirically decidable question rather than a prior-driven one.
+position on the ridge an empirically decidable question rather than a prior-driven one, and would
+turn the surprise of Act VI from a curiosity into a consequence for anyone projecting these soils.
 \end{note}
 
 \subsection{The hypothesis}
@@ -247,48 +270,90 @@ one held fixed in these projections.
 \paragraph{Already partly visible.} Fit explains only $10$--$18\%$ of forecast spread: $82$--$90\%$
 of the projected divergence is among draws the data cannot rank.
 
-\subsection{The test can be run now}
+\subsection{The proper test: published Yasso vs.\ ours, forward only}
+\begin{note}
+\textbf{Rejected first: arm A vs arm B.} The $\sinput$ anchor arms look like a two-calibration
+experiment but are not a useful one. They share the same model freedom and the same data, and their
+optima barely separate --- MRT $22.1$ vs $24.6$~yr, $\sinput$ within $5$--$8\%$. That is a nudge
+along the ridge, not the two ends of it.
+\end{note}
+
+\paragraph{The real contrast is already published.} The old Yasso parameterisation sits at
+\emph{lower input and slower turnover}; our calibration sits at \emph{higher input and faster
+turnover}. That is a genuine separation --- Yasso07 MRT $33.5$ with tree-litter-only input, against
+$24.6$ with $\sinput = 1.59$: $36\%$ in turnover and $59\%$ in input, three to ten times the arms'.
+
+\paragraph{Forward mode only --- no re-calibration.} Both parameter sets are pushed through the same
+engine, same plots, same litter series, same climate, same integrator. Nothing is fitted. This
+sidesteps the objection that a re-calibration lets every other parameter readjust, and it is cheap.
+
 \begin{test}
-\textbf{Arm A vs arm B is the two-calibration experiment.} The $\sinput$ anchor sensitivity produced
-exactly the required design --- the same six models calibrated under two input assumptions, both on
-disk with chains:
+\textbf{Design.} Two axes, one readout.
 \smallskip
 
 \begin{center}\small
-\begin{tabular}{lccc}
+\begin{tabular}{ll}
 \hline
- & arm A (Liski, centre 1.27) & arm B (L\&H, centre 1.08) & shift \\
+\textbf{Axis 1 --- parameters} & published (Yasso07/15/20 defaults, $\sinput = 1$) \\
+                               & ours (arm B posterior) \\
+\textbf{Axis 2 --- climate}    & control (recycled observed, as now) \\
+                               & warming ($+2$\,\textdegree C, $+5$\,\textdegree C) \\
 \hline
-$\sinput$ (Yasso15) & 1.619 & 1.538 & $-5\%$ \\
-MRT Yasso07 & 22.13 & 24.57 & $+11\%$ \\
-MRT Yasso15 & 25.60 & 27.11 & $+6\%$ \\
-MRT Yasso20 & 20.82 & 22.56 & $+8\%$ \\
-effective flux & 3.39--4.73 & 3.19--4.34 & lower \\
-fit & --- & \emph{marginally better} & --- \\
+\textbf{Readout} & \multicolumn{1}{l}{\emph{the response}: warming $-$ control, per parameter set} \\
 \hline
 \end{tabular}
 \end{center}
 \smallskip
-Two positions on the ridge, comparable fit, no new runs required. Apply the climate-sensitivity
-machinery to both and read off the difference.
+\textbf{Uncertainty.} Bootstrap over MCMC draws for ours; over the FMI \texttt{.dat} draws
+($n = 400$) for published Yasso15/20; Yasso07 has a published \emph{point} only, so it enters as a
+line against our band. The machinery for building published parameter vectors already exists and is
+proven in \texttt{doublechecks/intrinsic\_mrt.R}.
 \end{test}
 
-\paragraph{Pre-registration, before looking.} Structure predicts \emph{where} the effect should
-appear: Yasso07 large (single $\xi$ ties MRT and climate sensitivity together; corr $-0.58$),
-Yasso15/20 small (three pool-specific $\xi$ decouple them; corr $-0.10$/$-0.16$).
+\paragraph{Read the \emph{response}, not the trajectory.} The two parameter sets start from
+different stocks, so absolute trajectories differ for two reasons at once. The scenario-minus-control
+contrast removes the initial state and isolates reactivity.
 
-\paragraph{What would falsify the bet.} A uniform, negligible difference across all three Yassos.
-That would mean the ridge is degenerate in climate response too, and the position on it is
-\emph{not} empirically decidable from projection --- a real result, and one worth reporting.
+\subsubsection{The one design decision to settle first}
+\paragraph{What initial state does the published arm get?} Three defensible answers, and they ask
+different questions:
+\paragraph{(a) Shared state.} Both start from the same stock. Isolates kinetics cleanly; artificial.
+\paragraph{(b) Own transient init.} Each parameterisation initialises itself the way we do. Fair
+comparison of parameters, holding method constant.
+\paragraph{(c) Own \emph{steady-state} init.} The published arm gets the convention it was actually
+used with. This is the honest ``what would the conventional setup have projected'' --- but it moves
+two things at once, so it answers the paper's \emph{other} question, not this one.
+\begin{note}
+\textbf{Suggestion:} (b) as primary --- it isolates the parameter displacement, which is what this
+test is for --- with (c) reported alongside, because the difference between (b) and (c) is precisely
+the initialisation effect the first half of the paper is about. (a) as a diagnostic only.
+\end{note}
 
-\NEW{F15 --- climate reactivity, arm A vs arm B, per model, posterior bands}
+\subsubsection{Pre-registration}
+\paragraph{Direction.} Ours should be \emph{more} reactive: faster turnover puts more carbon in pools
+that feel $\xi$ on a decadal horizon, so the same warming moves more of it.
+\paragraph{Where the effect should be largest.} Yasso07, whose single $\xi$ ties turnover and climate
+sensitivity to the same parameter (corr $-0.58$); smaller in Yasso15/20, where three pool-specific
+modifiers decouple them ($-0.10$, $-0.16$).
+\paragraph{What would falsify it.} Responses that coincide within the posterior bands. That would say
+the ridge is degenerate in climate response as well as in fit --- the position on it is then not
+decidable from projection, which is itself worth reporting.
+\begin{warn}
+$\sinput = 1$ on the published arm means \emph{our} litter product taken as given, not the litter
+estimate Yasso was originally calibrated against. State it; it is the cleanest available choice but
+it is a choice.
+\end{warn}
 
-\subsection{Stronger versions, if the cheap test pays off}
-\paragraph{Forward runs rather than a step response.} Replace the single-exponential demonstration
-with actual forward integration under a warming scenario.
+\NEW{F15 --- climate response (warming $-$ control) at 2084, published vs ours, three Yassos,
+posterior bands}
 
-\paragraph{Deliberate ridge-walking.} Calibrate under a restrictive and a permissive $\sinput$
-prior --- wider separation than the anchor arms give.
+\subsection{Stronger versions, if this one pays off}
+\paragraph{A real scenario rather than a temperature offset.} Replace the $+2$/$+5$\,\textdegree C
+construct with a proper climate projection, so the answer is a projection and not a sensitivity.
+
+\paragraph{Let productivity respond too.} Warming acts on inputs as well as on decomposition; here
+the input side is held fixed, which biases the comparison toward loss in \emph{both} arms. Coupling
+it is the honest version and a much larger job.
 
 \paragraph{Break the degeneracy from outside.} Radiocarbon constrains turnover independently of
 input magnitude. The degeneracy is a property of the observation design, not of nature. Worth
