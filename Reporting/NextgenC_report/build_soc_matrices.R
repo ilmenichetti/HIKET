@@ -17,20 +17,18 @@ RUNS   <- file.path(PROJ, "Calibration_real_data_transient", "runs")
 OUTDIR <- file.path(PROJ, "Reporting", "NextgenC_report")
 dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
-# --- model -> predictive bundle (latest production RUN_IDs) ---
-# All six from the Roihu flux_pair re-calibration (physically-bounded litter input;
-# RUN 20260710_*, synced 2026-07-13). TP3 uses the exact matrix-exp integrator, so
-# its mean-SOC trajectory shows the genuine (physical) interannual oscillation of the
-# fast active pool, not the former Euler ringing.
-bundles <- c(
-  SP1     = "SP1_posterior_predictive_20260710_104903.rds",
-  TP2     = "TP2_posterior_predictive_20260710_104904.rds",
-  TP3     = "TP3_posterior_predictive_20260710_104904.rds",
-  Yasso07 = "Yasso07_posterior_predictive_20260710_104902.rds",
-  Yasso15 = "Yasso15_posterior_predictive_20260710_104902.rds",
-  Yasso20 = "Yasso20_posterior_predictive_20260710_102431.rds"
-)
-
+# --- model -> predictive bundle (AUTO-SELECTED, never hardcoded) --------------
+# Sources manuscript/figures/run_ids.R, the single source of truth for which
+# calibration everything is built from. It picks the newest production posterior,
+# FAILS LOUDLY if the companion predictive/input files are missing, and echoes the
+# RUN_IDs it chose. Rewired 2026-09-03: these four NextGenC scripts had carried
+# hardcoded 20260710_* bundles since July and were five production runs stale --
+# they did not error, they rebuilt happily from old posteriors.
+# Pin an older run for comparison with HIKET_FIG_RID (see run_ids.R).
+local({ owd <- setwd(PROJ); on.exit(setwd(owd)); source("manuscript/figures/run_ids.R") })
+bundles <- setNames(sprintf(
+  "%s_posterior_predictive_%s.rds", FIG_MODELS, RID[FIG_MODELS]),
+  FIG_MODELS)
 # --- pivot posterior_summary -> plot x year matrix for one value column ---
 make_matrix <- function(summary_df, value_col) {
   w <- pivot_wider(

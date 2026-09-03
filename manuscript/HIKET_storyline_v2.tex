@@ -54,7 +54,33 @@
 
 \newcommand{\sinit}{\sigma_{\mathrm{init}}}
 \newcommand{\sinput}{\sigma_{\mathrm{input}}}
-\newcommand{\FIG}[1]{\textcolor{noterule}{\small$\blacktriangleright$ \textsf{#1}}}
+% --- figure embedding (2026-09-03) ---------------------------------------
+% \FIG{basename} keeps the inline blue marker AND places the actual figure, so the
+% storyline can be read against its evidence. Resolution order:
+%   figures/<basename>.png  -> image float
+%   figures/<basename>.tex  -> \input as a table float
+%   neither                 -> amber "missing" marker, nothing placed
+% The catcode dance lets call sites write raw underscores (F14_mrt_ridge), which is
+% what the filesystem needs; \FIGlabel prints the name safely either way.
+\usepackage{placeins}
+\graphicspath{{figures/}{../Reporting/NextgenC_report/SOC_maps/thumbnails/}}
+\newcommand{\FIGlabel}[1]{\textcolor{noterule}{\small$\blacktriangleright$ \textsf{#1}}}
+\newcommand{\FIG}{\begingroup\catcode`\_=12\relax\FIGaux}
+\newcommand{\FIGaux}[1]{%
+  \FIGlabel{#1}\endgroup
+  \IfFileExists{figures/#1.png}{%
+    \begin{figure}[htbp]\centering
+      \includegraphics[width=0.92\linewidth,height=0.42\textheight,keepaspectratio]{figures/#1.png}
+      \caption{\textsf{#1}}\end{figure}}{%
+  \IfFileExists{figures/#1.tex}{%
+    \begin{table}[htbp]\centering\scriptsize\input{figures/#1.tex}\end{table}}{%
+  \IfFileExists{../Reporting/NextgenC_report/SOC_maps/thumbnails/#1.png}{%
+    \begin{figure}[htbp]\centering
+      \includegraphics[width=0.62\linewidth,height=0.44\textheight,keepaspectratio]{#1.png}
+      \caption{\textsf{#1} (NextGenC deliverable)}\end{figure}}{%
+  \textcolor{warnrule}{\small[\textsf{#1} --- FILE NOT FOUND]}}}}}
+% A figure reference that must NOT place anything (illustrative, or a script).
+\newcommand{\FIGX}[1]{\textcolor{noterule}{\small$\blacktriangleright$ \textsf{#1}}}
 \newcommand{\NEW}[1]{\textcolor{testrule}{\small$\bigstar$ \textsf{TO BUILD: #1}}}
 
 \title{\vspace{-1.4cm}\textbf{HIKET --- the storyline, v2}\\[2pt]
@@ -69,13 +95,17 @@ Deliberately not prose --- the point is to argue about the ARC.}
 \textbf{The spine is OCAR} (Schimel): \textbf{O}pening --- a sink caught saturating;
 \textbf{C}hallenge --- an equilibrium start cannot show it; \textbf{A}ction --- calibrate the past
 under a fair frame; \textbf{R}esolution --- it works, and doing so moves us to a different point on
-the input/turnover ridge, which matters for some structures and not others. Those are the four
-\texttt{\textbackslash part} divisions; the threads are sections inside the Resolution.
+the input/turnover ridge. Those are the four \texttt{\textbackslash part} divisions.
+\textbf{Inside the Resolution the order is deliberate}: fit cannot arbitrate, and the data pin only a
+level --- so by the time the ridge arrives, the displacement is unavoidable rather than one finding
+among three. The ridge then does double duty: it \emph{closes} the Resolution and \emph{opens} a side
+arc (its own \texttt{\textbackslash part}), which asks whether sitting elsewhere on it has
+consequences. Landing, Coda and Appendix follow.
 \end{note}
 
 \begin{note}
 \textbf{How to read this.} Every block is a claim we intend to make, its evidence, and nothing
-else. \FIG{name} marks a figure that exists; \NEW{name} marks one that does not yet.
+else. \FIGX{name} marks a figure that exists; \NEW{name} marks one that does not yet.
 Green boxes are \emph{tests we could run}; amber boxes are \emph{things that could sink the claim}.
 \end{note}
 
@@ -165,13 +195,13 @@ the contribution.}
 \section{A sink caught saturating}
 \paragraph{The observed dynamic.} On the balanced plot set the mean stock runs $64.5 \to 71.5 \to
 73.6$~tC\,ha$^{-1}$ across the three campaigns: $+7.0$ then $+2.1$. Accumulation, bending over.
-\FIG{F3\_mean\_soc}
+\FIG{F3_mean_soc}
 
 \paragraph{The rate is what an inventory reports.} $+0.259 \pm 0.040$~tC\,ha$^{-1}$\,yr$^{-1}$ over
-the full span. \FIG{F5\_stock\_change}
+the full span. \FIG{F5_stock_change}
 
 \paragraph{Why it is politically live.} The Finnish GHG inventory turns on whether this sink
-persists or saturates. \FIG{F10b\_forest\_history}
+persists or saturates. \FIG{F10b_forest_history}
 
 \section{The convention that cannot see it}
 \paragraph{Steady-state initialisation is near-universal and rarely examined.} Lehtonen 2016,
@@ -188,7 +218,7 @@ produce a rise that is levelling off.
 of inputs; setting them to equilibrium erases exactly the transient the data show.
 
 \paragraph{Managed landscapes are rarely at equilibrium.} Finland is the vivid case, not a special
-one: exploitation, then a century of managed regrowth. \FIG{F10b\_forest\_history}
+one: exploitation, then a century of managed regrowth. \FIG{F10b_forest_history}
 
 % =====================================================================
 \part{A \textnormal{---} Action}
@@ -196,7 +226,7 @@ one: exploitation, then a century of managed regrowth. \FIG{F10b\_forest\_histor
 \section{Transient initialisation under a fair frame}
 \paragraph{The unknown start becomes a calibrated parameter.} Each draw spins up from 1917;
 $\sinit$ is the ratio of 1917 to 1985 litter input. Uncertainty propagates rather than being patched.
-\FIG{F4\_initialization}
+\FIG{F4_initialization}
 
 \paragraph{Fair means equal \emph{information}, not equal parameter count.} Yasso does not fit its
 decomposition rates, so neither do the simple models: rates externally anchored (ICBM), fractions
@@ -211,12 +241,12 @@ added. \NEW{schematic of the variance partition --- optional}
 
 \section{The models reach the observations}
 \paragraph{Levels.} No model sits more than $3.5$~tC\,ha$^{-1}$ from any campaign mean. The old
-``$26$~tC\,ha$^{-1}$ too high at 1985'' caveat is gone. \FIG{F3\_mean\_soc}
+``$26$~tC\,ha$^{-1}$ too high at 1985'' caveat is gone. \FIG{F3_mean_soc}
 
 \paragraph{The rate.} TP2 and TP3 run about a third too strong, SP1 and Yasso20 about half too
 weak, and the ensemble brackets the observed $+0.259$. Two members land on it: Yasso07 at $+0.258$
 and Yasso15 at $+0.250$.
-\FIG{F5\_stock\_change}
+\FIG{F5_stock_change}
 
 \paragraph{\textbf{The three-way split --- new, and better than ``all six work''.}}
 Yasso07/Yasso15 rise then flatten (\emph{saturation reproduced}); TP2/TP3 rise and keep rising
@@ -229,7 +259,7 @@ includes zero. Do not lean on ``two models get the sign wrong'' over eighteen ye
 \end{warn}
 
 
-\section{Thread A --- fit does not discriminate structure; dynamics do}
+\section{Fit cannot arbitrate between the structures}
 \begin{note}
 \textbf{This replaces ``does complexity improve the answer?''.} The old answer (``no, and the most
 complex fits worst'') is no longer true --- Yasso15 has the best calibration $R^2$ \emph{and} the
@@ -239,21 +269,37 @@ best holdout RMSE. The defensible and more useful claim is the one below.
 \subsection{In-sample, structure is invisible}
 \paragraph{Skill does not climb the pool ladder.} Calibration $R^2$ $0.016$--$0.021$; holdout $R^2$
 $\le 0.0012$ in all six; holdout RMSE spans $3.6\%$. One pool and five pools are indistinguishable.
-\FIG{T1\_model\_summary} \FIG{F6b\_skill\_vs\_complexity}
+\FIG{T1_model_summary} \FIG{F6b_skill_vs_complexity}
 
 \paragraph{The ordering does not follow structure at all.} Best and worst holdout RMSE belong to a
 five-pool and a three-pool model.
 
 \subsection{Out of sample, structure is nearly everything}
-\paragraph{The forecast diverges where the calibration agreed.} \FIG{F4\_initialization} (panel b)
-
-\paragraph{Climate sensitivity differs $\sim$2$\times$ across the family.} Equilibrium SOC change at
-$+2$\,\textdegree C: Yasso07 $-21.7\%$, Yasso20 $-13.7\%$, Yasso15 $-9.6\%$. Between-model range is
-$3.1\times$ the mean within-model band. \FIG{climate\_sensitivity\_sweep}
+\paragraph{The forecast diverges where the calibration agreed.} \FIG{F4_initialization} (panel b)
 \begin{warn}
-Measured on an earlier run and as a \emph{demonstration} (step change, single-exponential on bulk
-MRT). Must be recomputed on the current calibration before it goes in a figure.
+\textbf{Both drivers are held stationary in this projection, and the paper must say so.} Climate is
+the last twenty observed years recycled cyclically over sixty; litter input is frozen at its 2024
+value. So the projected sink is the models finishing the accumulation they were initialised into ---
+relaxation toward equilibrium, not a response to anything --- and its magnitude inherits the
+historical input reconstruction (it correlates $r=+0.87$ with each model's inferred historical litter
+rise, which independent evidence says is $4$--$6\times$ too steep).
+\textbf{The claim made here survives that}: with no external forcing the spread between models is
+\emph{purely structural}, which is cleaner evidence for this paragraph than a scenario run would be.
+What must not be read off panel~b is the absolute sink. Climate change is out of scope for the main
+forecast by choice; the side arc explores it as a consequence of the ridge position, and doing it
+properly needs far more than bolting scenarios on --- at minimum letting productivity respond to
+warming, which currently biases every arm toward loss.
 \end{warn}
+
+\begin{note}
+\textbf{The $+2$\,\textdegree C equilibrium sweep was CUT here on 2026-09-03.} It reported
+``climate sensitivity differs $\sim$2$\times$ across the family'' from a step change and a
+single-exponential on bulk MRT, measured on a superseded run. Two reasons it goes: the side arc
+measures the same quantity properly (transient, current run, real scenarios), and the side arc's own
+collapse test \emph{refutes} the sweep's central assumption --- bulk MRT does not determine the
+warming response ($R^2=0.068$ within Yasso20). Keeping both would put a superseded method in the
+main text and its refutation in the appendix.
+\end{note}
 
 \subsection{The applied consequence}
 \paragraph{Model choice is a forecast decision, not a fit decision.} Calibration skill carries
@@ -264,7 +310,19 @@ selects on the wrong quantity. That is the practical message of the paper.
 uncertainty.
 
 
-\section{Thread B --- the calibration wants more input \emph{and} faster kinetics}
+\section{The data pin a level, and little else}
+\paragraph{Convergence is not identifiability.} R-hat $\le 1.008$ everywhere, yet the transfer
+fractions are prior-pinned, ridge-correlated and carry $<1$ nat. A clean sampler on a flat ridge.
+\FIG{F8b_fraction_ridges} \FIG{T2_fraction_ridges}
+
+\paragraph{The data pin a level, and little else.} Two observations per plot; no cross-plot skill.
+\FIG{F6_obs_vs_pred_holdout}
+
+\paragraph{Report it, do not fix it.} Non-identifiability here is a property of the observation
+design and belongs in the results.
+
+
+\section{So the displacement is real, and it is joint --- the ridge}
 \begin{note}
 \textbf{This is the turn, and it should land as a surprise.} The paper sets out to fix an
 initialisation convention. The expected ending is the tidy one: the convention was the problem, we
@@ -297,15 +355,15 @@ became independently identified.
 \subsection{Inputs}
 \paragraph{The multiplier has a physical referent.} $\sinput \times \bar J$ is an effective litter
 flux: $3.19$--$4.34$~tC\,ha$^{-1}$\,yr$^{-1}$ across the six, i.e.\ $18$--$61\%$ above the national
-total including understorey ($\sim$2.7). \FIG{SX\_input\_vs\_literature}
+total including understorey ($\sim$2.7). \FIG{SX_input_vs_literature}
 
 \paragraph{Independent corroboration exists.} Liski 2006 --- same country, period, model family and
-inventory --- implies a comparable correction. \FIG{F1\_inputs}
+inventory --- implies a comparable correction. \FIG{F1_inputs}
 
 \subsection{Kinetics}
 \paragraph{Turnover is displaced from published values --- in two of three.} Intrinsic MRT
 $24.6$ / $27.1$ / $22.6$~yr (Yasso07/15/20) against published $33.5$ / $30.5$ / $\mathbf{22.1}$.
-\FIG{F12\_mrt\_yasso}
+\FIG{F12_mrt_yasso}
 \begin{warn}
 \textbf{Yasso20's published figure was corrected on 2026-09-02 and the claim changes with it.} The
 old $19.0$ came from a vector that paired Yasso20's fractions with \emph{Yasso15's} rates. Corrected,
@@ -322,7 +380,7 @@ modifiers and cannot use that lever. Do not discuss the family's gaps as one.
 \paragraph{The level pins only the product.} $\mathrm{level} \sim \mathrm{MRT} \times \sinput \times
 \bar J$. Faster-with-more and slower-with-less fit identically; the posterior rides that ridge
 (Yasso07/15/20 corr $-0.73$/$-0.68$/$-0.64$; the simple models stronger still).
-\FIG{F14\_mrt\_ridge} \FIG{S13\_mrt\_ridge\_benchmark}
+\FIG{F14_mrt_ridge} \FIG{S13_mrt_ridge_benchmark}
 
 \begin{warn}
 \textbf{The discipline this imposes.} ``Inputs too low'' and ``turnover too slow'' are two
@@ -343,7 +401,7 @@ well-posed statement about location --- and it is testable, because the two ends
 \paragraph{The models leave a signal in their residuals, and it is not noise.} They explain
 $\sim$2\% of the between-plot variance in SOC; a random forest on site covariates explains
 $44$--$65\%$ of what they leave behind (out-of-bag, and $52$--$70\%$ on the holdout residuals).
-\FIG{F11\_rf\_heatmap}
+\FIG{F11_rf_heatmap}
 
 \paragraph{The distinction that matters: recoverable, not irreducible.} A model can fail because the
 signal is not there --- measurement noise, or genuine stochasticity --- or because it is there and
@@ -380,12 +438,34 @@ inputs.
 the input history and the initial state, and neither is observed per plot.
 
 \begin{note}
-\textbf{Why this belongs in Thread B rather than beside it.} The evidence does not ride the
+\textbf{Why this belongs with the ridge rather than beside it.} The evidence does not ride the
 $\mathrm{MRT}\times\sinput$ ridge, so it is genuinely independent of everything above. Two of the
 four mechanisms point at inputs, which corroborates the thread; the third points somewhere else
 entirely, and we should say so rather than absorb it.
 \end{note}
 
+% ---------------------------------------------------------------------
+% THE HINGE. Load-bearing: the same beat must CLOSE the Resolution and OPEN the
+% side arc. If it reads as a section break, the reader reads two papers.
+% ---------------------------------------------------------------------
+\begin{note}
+\textbf{The hinge --- draft it early, it carries the whole join.}\\[3pt]
+\emph{Resolution:} transient initialisation works --- the models reach the observed levels and two
+reproduce the rate --- \textbf{and} it puts the ensemble at a point on the input/turnover ridge
+where no published parameterisation sits.\\[3pt]
+\emph{Opening:} the data cannot choose between that point and the published one, because the ridge
+is flat in fit. So the question the result raises is not \emph{which point is right} --- nothing here
+can answer that --- but \textbf{whether the choice matters}. That is answerable, and it is what the
+next part does.
+\end{note}
+
+% =====================================================================
+% SIDE ARC. Opened by the ridge, closed by the forward experiment. Deliberately a
+% separate \part: it is a consequence of the main result, not part of the main
+% forecast. Climate change is OUT OF SCOPE for the main line (see the F4 caveat);
+% here it is the instrument for asking whether ridge position has consequences.
+% =====================================================================
+\part{Side arc \textnormal{---} does the ridge position matter?}
 
 \section{The consequence, tested --- what changes if we sit elsewhere on the ridge}
 \begin{note}
@@ -452,7 +532,7 @@ comparison that is about inputs versus kinetics.
 \paragraph{Holding published kinetics fixed, only the input multiplier is refitted.} One parameter,
 scored on the three campaign means (balanced set), with $\sinit$ pinned to our posterior in
 \emph{both} arms so the contrast is exactly two coordinates on the ridge.
-\FIG{doublechecks/published\_arm\_dat.R} \FIG{T\_A1\_published\_arm}
+\FIGX{doublechecks/published\_arm\_dat.R} \FIG{T_A1_published_arm}
 
 \begin{center}\small
 \begin{tabular}{lccccccc}
@@ -623,7 +703,9 @@ collapse onto one curve, the effect is model identity rather than ridge position
 claim, and one this design would not support.
 \end{note}
 
-\NEW{F15 (main text, 3 panels) + appendix: MRT collapse, all-model trajectories, arm table}
+\FIG{F15_forward_arms}
+\FIG{A1_forward_appendix}
+\FIG{T_A1_published_arm}
 
 \subsection{Stronger versions, if this one pays off}
 \paragraph{A real scenario rather than a temperature offset.} Replace the $+2$/$+5$\,\textdegree C
@@ -644,19 +726,10 @@ forecast figures are disequilibrium relaxation under stationary climate. The pap
 \end{warn}
 
 
-\section{Thread C --- what the data can and cannot constrain}
-\paragraph{Convergence is not identifiability.} R-hat $\le 1.008$ everywhere, yet the transfer
-fractions are prior-pinned, ridge-correlated and carry $<1$ nat. A clean sampler on a flat ridge.
-\FIG{F8b\_fraction\_ridges} \FIG{T2\_fraction\_ridges}
+% =====================================================================
+\part{Landing \textnormal{---} the policy deliverable}
 
-\paragraph{The data pin a level, and little else.} Two observations per plot; no cross-plot skill.
-\FIG{F6\_obs\_vs\_pred\_holdout}
-
-\paragraph{Report it, do not fix it.} Non-identifiability here is a property of the observation
-design and belongs in the results.
-
-
-\section{Landing --- the policy deliverable}
+\section{What we hand over}
 \paragraph{An estimate plus its irreducible structural uncertainty.} Not a single number, and not a
 selected winner.
 
@@ -664,7 +737,7 @@ selected winner.
 rank plots. Said late, ``captures the dynamic'' and ``$R^2 \approx 0$'' read as a contradiction; said
 early, they are one finding. Say it early.
 
-\paragraph{Maps as the landing figure.} \FIG{NextGenC ensemble maps}
+\paragraph{Maps as the landing figure.} \FIG{ENSEMBLE_SOC_mean}
 
 % =====================================================================
 \part{Coda \textnormal{---} the opened frontier}

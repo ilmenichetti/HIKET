@@ -12,14 +12,12 @@ site   <- read.csv(file.path(PROJ, "Data", "model_inputs", "site_raw.csv"))
 coords <- site[, c("plot_id", "x_ETRS", "y_ETRS")]
 coords <- coords[stats::complete.cases(coords), ]
 
-bundles <- c(
-  SP1     = "SP1_posterior_predictive_20260710_104903.rds",
-  TP2     = "TP2_posterior_predictive_20260710_104904.rds",
-  TP3     = "TP3_posterior_predictive_20260710_104904.rds",
-  Yasso07 = "Yasso07_posterior_predictive_20260710_104902.rds",
-  Yasso15 = "Yasso15_posterior_predictive_20260710_104902.rds",
-  Yasso20 = "Yasso20_posterior_predictive_20260710_102431.rds")
-
+# --- model -> predictive bundle (AUTO-SELECTED, never hardcoded) --------------
+# Sources manuscript/figures/run_ids.R (newest production posterior, fails loudly
+# if companion files are missing, echoes what it chose). Rewired 2026-09-03: this
+# script had carried hardcoded 20260710_* bundles since July.
+local({ owd <- setwd(PROJ); on.exit(setwd(owd)); source("manuscript/figures/run_ids.R") })
+bundles <- setNames(sprintf("%s_posterior_predictive_%s.rds", FIG_MODELS, RID[FIG_MODELS]), FIG_MODELS)
 png(OUT, width = 2400, height = 1500, res = 200)
 par(mfrow = c(2, 3), mar = c(4.2, 4.4, 3, 1), mgp = c(2.4, 0.8, 0))
 

@@ -698,6 +698,49 @@ noise the error model should absorb, not as data error.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-09-03 — the storyline moved onto the shape of the paper.**
+  **`manuscript/HIKET_storyline_v3.tex` (17 pp) is now the LIVE storyline**; v2 is superseded (kept
+  for its arc diagram and Jung map) and `HIKET_storyline_note.tex` was **DELETED** — its one unique
+  block, the F14 caption + method note, was rescued to `manuscript/figure_captions.tex`.
+  **v3 = the answer to Lorenzo's 19 annotations on v2** (archived
+  `manuscript/revisions/HIKET_storyline_v2_annotated_20260903.pdf`): **IMRaD outer shell with OCAR
+  moved inside**, Results and Discussion **combined** (`\combinedtrue` toggles the split),
+  **Conclusions that exist** (the policy deliverable is a bonus paragraph, not a conclusion), and a
+  **drawn weight budget — ~55% national trend / ~25% ridge position / ~20% local variance**
+  ([[paper-weight-budget]]). The draft must be **anchored in biology, not models**: hence the new
+  §"What might be missing from the input flux" (fine root MRT, exudates, mycorrhizal necromass,
+  understorey, pioneer vegetation), each flagged for literature review.
+  ⚠⚠ **THREE CLAIMS CORRECTED — do not revert.** (1) **The steady-state/equifinality claim was wrong**:
+  the ridge exists under EITHER initialisation; a transient start only **narrows** it, and only
+  partially (MRT/σ_input still −0.64…−0.73). The "surprise" staging is gone. (2) **Liski is the FLOOR
+  of our range, not a match** — 1.27 against our effective 1.27–1.73 (flux 3.19–4.34 ÷ J̄ 2.511).
+  (3) **"Structural uncertainty" is not a product claim** — the ladder is a benchmark design with Yasso
+  as the operational standard. Also: the observed rate is reported as **consistency, never
+  validation**, and the local-variance strand is OUT of the input argument (it read as evidence for it).
+  **Decisions in v2 restructured first (superseded by v3 but the reasoning stands):** A and C compressed
+  ahead of the ridge; the ridge closes the Resolution AND opens the side arc; the +2 °C equilibrium
+  sweep **CUT** (superseded run, and the F15 collapse test refutes its bulk-MRT assumption); F4's
+  projection caveat now states BOTH stationary drivers (recycled climate + litter frozen at 2024).
+  **NextGenC deliverable REBUILT on arm B** — see the item below. Memories: [[storyline-v3]],
+  [[paper-weight-budget]].
+
+- **⚠ THE REPORTING PIPELINE WAS FIVE RUNS STALE, SILENTLY (fixed 2026-09-03).**
+  `build_soc_matrices.R`, `build_soc_maps.R`, `build_vulnerability_map.R` and
+  `diagnostic_semivariogram.R` hardcoded the `20260710_*` bundles since July and rebuilt happily from
+  them — no error, because the old posteriors are still on disk. `run_ids.R`'s own header had
+  *diagnosed* exactly this ("four NextGenC scripts") but the fix was never applied to them.
+  **All four now source `manuscript/figures/run_ids.R`.** Everything regenerated on
+  `20260831_1624*`: 12 CSVs + ODS, trajectory panel, 14 GeoTIFFs, 14 thumbnails, delta map,
+  vulnerability layer, semivariogram. **What moved:** 447 → **456 plots**; ensemble decadal change
+  ~76% gaining / +0.13 → **87% gaining / +0.18** tC/ha/yr. `ZENODO_description.md` and
+  `SOC_maps/README.md` updated (incl. the stale R² 0.05–0.11 → 0.016–0.021 and the obsolete TP3
+  Euler caveat). ⚠ **`SOC_maps/` needs a manual re-sync after every refresh** — the matrices builder
+  writes to the PARENT directory, so the deposit had June CSVs beside September GeoTIFFs.
+  ⚠ **The maps are the six-model ENSEMBLE** (not Yasso-only; the labile-share layer is the exception)
+  and are **HISTORICAL 1985–2024 throughout** — they never touch the 60-year projection, so they carry
+  none of F4b's stationary-driver caveats. ⬜ Eyeball the far-south loss region (~−0.5 tC/ha/yr) before
+  anything is published — real, or a kriging corner artefact? Memory: [[nextgenc-soc-report]].
+
 - **✅ SESSION 2026-09-02 — decisions taken and defects fixed.** Recorded here because several
   supersede statements elsewhere in this file.
   **DECIDED:** (1) the **input anchor is Lehtonen & Heikkinen** — `sigma_input` prior centre **1.08**,
@@ -714,7 +757,8 @@ noise the error model should absorb, not as data error.
   **All 31 figure builders re-run on arm B.** New: **F15** (forward experiment) + **A1/T_A1**.
   Memories: [[decisions-20260902]], [[published-yasso20-two-defects]], [[f5-basis-bugs]].
   **STORYLINE:** the live one is `manuscript/HIKET_storyline_v2.tex` (13 pp, [[storyline-v2]]);
-  `HIKET_storyline_note.tex` is RETIRED. OCAR is four visible `\part`s; the Jung role map sits in a
+  `HIKET_storyline_note.tex` is RETIRED (and DELETED 2026-09-03; its one unique block, the F14
+  caption + method note, was rescued to `manuscript/figure_captions.tex`). OCAR is four visible `\part`s; the Jung role map sits in a
   source comment and must never enter the text; the **residual study is a hook whose METHOD IS
   DELIBERATELY UNNAMED** (report the recoverable variance and argue mechanism, do not name it).
   ⚠ **F5's fix OVERTURNS a recorded finding below** — "every model is a sink 1.6–2.5× too strong" is

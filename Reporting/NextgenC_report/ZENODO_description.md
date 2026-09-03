@@ -22,10 +22,10 @@ limitations* below before using the maps quantitatively.
   = years 1985–2024 (band *n* = year 1984 + *n*; year also stored as the layer
   name, e.g. `y1985`).
 - `ENSEMBLE_SOC_delta10yr.tif` — single-band annual SOC change (tC ha⁻¹ yr⁻¹) over
-  2015–2024, the per-cell OLS slope of the ensemble mean (~76 % of cells gaining,
-  mean +0.13).
+  2015–2024, the per-cell OLS slope of the ensemble mean (~87 % of cells gaining,
+  mean +0.18).
 - Per-plot value tables (the numbers behind the maps): `<MODEL>_SOC_mean.csv` /
-  `_sd.csv` (447 plots × 40 years) and `Finland_SOC_matrices.ods` (all 12 matrices).
+  `_sd.csv` (456 plots × 40 years) and `Finland_SOC_matrices.ods` (all 12 matrices).
 - `thumbnails/` — one PNG preview per raster (1985–2024 time-average; the delta is
   the 2015–2024 change). Peat = black, water/sea = white.
 - `README.md` (full file documentation) and `LICENSE`. A methods note is provided
@@ -59,10 +59,9 @@ deviations; smooth sub-regional gradients are not resolvable from these points, 
 detail between plots is interpolation, not measurement. Read the `_sd` layer as the
 honest statement of confidence — it inflates between plots and in data-sparse
 regions. Point SOC predictability is intrinsically low in this system (calibration
-R² ≈ 0.05–0.11). Note: the per-plot CSV/ODS `_sd` is the *parameter* spread on the
-predictive mean (observation error not added). The TP3 layers use the forward-Euler
-posterior, superseded by an exact matrix-exponential re-calibration; SOC levels
-change negligibly.
+R² ≈ 0.016–0.021). Note: the per-plot CSV/ODS `_sd` is the *parameter* spread on the
+predictive mean (observation error not added). All six models use the exact integrator
+(TP3's forward-Euler caveat no longer applies).
 
 ## Credits & attribution
 

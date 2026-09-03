@@ -1,0 +1,81 @@
+% =====================================================================
+% WORKED FIGURE CAPTIONS AND METHOD NOTES — staging file.
+%
+% Why this file exists: figures are not yet placed in HIKET_main_manuscript.tex
+% (deliberately held until the storyline settles), but some captions have already
+% been worked out and are too developed to re-derive. They live here until the
+% figures are placed, then move into the manuscript and this file goes away.
+%
+% Rescued 2026-09-03 from HIKET_storyline_note.tex (retired 2026-09-02) — that
+% file was the ONLY home of the F14 method note.
+%
+% ⚠ NUMBERS HAVE BEEN STRIPPED, NOT UPDATED. Every figure quoted in the original
+% was measured on a superseded run, and three of its claims have since died:
+% the "simple models show no such ridge" (falsified by S13 — with xi included the
+% trio rides a STRONGER ridge), the ll costs 1.6/14.7 at the published MRT, and
+% Yasso20's published 19.0 yr (a chimera: Yasso20 fractions paired with Yasso15
+% rates; corrected to 21.85 point / 22.13 posterior). Refill from the current run
+% before use. The prose below is structural and survives; the digits did not.
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% F14 — what a longer residence time would cost
+% ---------------------------------------------------------------------
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.98\linewidth]{\fig/F14_mrt_ridge.png}
+\caption{\textbf{What a longer residence time would cost.} \emph{Top:} best attainable fit over
+(intrinsic MRT, $\sinput$) for each Yasso model. \textbf{Colours are the likelihood alone --- the
+fit to the data, priors excluded --- blue is the best fit, through green and yellow to red at the
+worst. The white contour lines are the posterior --- likelihood \emph{and} priors together.} Colour
+is the log-likelihood deficit from the best fit found, clamped at 25 units. Dashed line: published
+MRT; white dot: posterior median. Regions the sampler visited fewer than five times are left blank.
+\emph{Bottom:} first-order variance indices of MRT. The colour peak lies up and to the left of the
+contours in all three panels: the data alone want an \emph{even shorter} residence time, and it is
+the prior that pulls the answer back toward the published value.}\label{fig:ridge}
+\end{figure}
+
+\begin{methodnote}
+\textbf{Reading the two layers.} The panels superimpose two different things on the same axes, and
+keeping them apart is the whole point of the figure.
+
+\emph{The white contour lines are the posterior} --- where the calibration actually ended up. That
+location is set by three ingredients at once: how well the data are fitted, what the priors say, and
+how many parameter combinations happen to land there (many parameters map onto the same residence
+time, and that alone attracts probability mass).
+
+\emph{The colours are the likelihood only} --- the best fit to the data achievable in that cell,
+with the priors switched off. They answer a different question: not ``where did we end up'', but
+``how well \emph{could} the data be fitted here''.
+
+So the offset between the bluest colour and the innermost contour \textbf{measures how far the prior
+pulls the answer away from where the data alone would put it}. Here that offset always points the
+same way: the likelihood wants shorter residence times and larger inputs than we report.
+
+\emph{Three honest limits.} (i) The colours are prior-free in \emph{value} but not in
+\emph{coverage}: each cell shows the best of the draws the sampler happened to visit, and the
+sampler was steered by the priors. It is therefore a lower bound on the true best fit, and it is
+weakest exactly where draws are thin --- and thinnest, for Yasso07, to the point of being absent
+around the published value. A blank cell means \emph{not visited}, never \emph{cannot be fitted},
+and Yasso07's blank is precisely why a profile likelihood is needed. (ii) The colour surface is
+estimated on a coarse grid --- one whose cells hold enough draws to support a maximum --- and then
+bilinearly interpolated for display, so it looks continuous without claiming resolution the draws
+cannot support. (iii) Colour is the log-likelihood \emph{deficit} from the best fit found, clamped
+at 25 units: a deficit past that is decisively rejected, so resolving 30 from 200 would convey
+nothing and would flatten the few units of structure along the ridge that actually matter.
+\end{methodnote}
+
+\begin{methodnote}
+\textbf{Which published value.} Costs are measured against the published \emph{point}
+parameterisation. Yasso15 and Yasso20 also publish posterior \emph{samples}, and because residence
+time is a nonlinear many-to-one function of the parameters, the median residence time of that sample
+is not the residence time of the median parameters. \textbf{The two comparators must never be
+mixed}; the figure uses the point throughout.
+\end{methodnote}
+
+\begin{provisional}
+\textbf{To be redone before submission.} Replace the sampled colour map with a true \emph{profile
+likelihood} --- an optimisation over the remaining parameters at each grid node --- which removes
+the prior from the coverage as well as from the value, prices the region beyond the posterior's
+reach, and is smooth enough to interpolate. Roughly 7\,h per model on a $20\times20$ grid;
+\textbf{Yasso07 first}, since it is the model for which no sampled estimate exists at all.
+\end{provisional}

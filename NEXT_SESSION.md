@@ -1,5 +1,37 @@
 # NEXT SESSION — start here
 
+## ⭐ 0-NOW. LORENZO REVISES v3, THEN WE START THE MANUSCRIPT (2026-09-03)
+
+> **The live storyline is `manuscript/HIKET_storyline_v3.tex` (17 pp).** Read it first; v2 is
+> superseded and the old note is deleted. v3 answers Lorenzo's 19 annotations on v2 — IMRaD shell,
+> OCAR inside, Results+Discussion combined, real Conclusions, and a drawn weight budget
+> (**~55% national trend / ~25% ridge position / ~20% local variance**).
+>
+> **Tomorrow:** he revises v3, we iterate, and then drafting the actual manuscript begins.
+>
+> ### Do not revert these three
+> 1. The ridge exists under **either** initialisation — a transient start only **narrows** it, partly.
+> 2. **Liski is the FLOOR** of our range (1.27 vs our 1.27–1.73), not a comparable correction.
+> 3. **"Structural uncertainty" is not a product claim** — benchmark design, Yasso the standard.
+>
+> ### Blocking before those sections can be written (all flagged \LIT in v3)
+> Steady-state initialisation across model lineages · the equilibrium-init theory paragraph · Finnish
+> management history · and all of §"What might be missing from the input flux" — fine root MRT,
+> exudates, mycorrhizal necromass, understorey, pioneer vegetation.
+>
+> ### Still open from before
+> ⬜ The **1917 stock floor** is an unsourced placeholder (45 in `init_state_plausibility.R`, 40 in
+> memory) — take the MINIMUM from the boreal literature, whole profile to `z_cap`.
+> ⬜ The **calibration relaunch** after the Fortran guard change. **⚠ THE POINT OF THE RUN IS THE
+> RECOMPILE** — the `.so` is gitignored; on Roihu `git pull`, `rm -f yasso*.so yasso*.o
+> yasso*_mod.mod`, then **one `R CMD SHLIB` call per `.f90`**. Submit with
+> `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'`.
+> ⬜ Citations, `.bib`, title/abstract, coauthor block, figure placement.
+> ⬜ Decide: is **F3b** built, or does the NextGenC trajectory panel already show the three groups?
+> ⬜ Decide: retire the arc diagram's "THREAD A/B/C" vocabulary, or keep it as working shorthand?
+
+---
+
 ## ✅ 0-NOW. ARM B HAS LANDED — the one-factor test PASSED (2026-09-01)
 
 > All six of jobs **972096–972101** COMPLETED. RUN_IDs **`20260831_162458`** (SP1, TP2) ·
@@ -386,14 +418,18 @@ lets every other parameter readjust, which a slice cannot capture. The only part
 corr(log σ_input, equilibrium change) = **−0.58 (Yasso07)** vs **−0.10 / −0.16 (Yasso15/20)**,
 suggesting the effect is large where a single ξ ties MRT to climate sensitivity and small where
 three pool-specific modifiers decouple them. **A hypothesis to test, not a result.** This is now the
-stated primary question of the two-calibration experiment in `HIKET_storyline_note.tex` §Outlook.
+stated primary question of the forward experiment. ✅ **ANSWERED 2026-09-02** — executed as
+published-Yasso vs ours, forward only (F15 + A1); the hypothesis held for Yasso07 and NOT for
+Yasso15/20. See `manuscript/HIKET_storyline_v2.tex` §"The consequence, tested".
 
 ⚠ **Both scripts are DEMONSTRATIONS, not projections.** Single-exponential transient on the bulk
 MRT (a multi-pool system is a sum of exponentials), a step change rather than a trajectory, and a
 common J̄ for absolute scale. A proper version needs forward runs — which is precisely the
-two-calibration experiment now recorded in `HIKET_storyline_note.tex` §Outlook as the **priority
-future direction, ahead of the stratification test**: restrictive vs permissive σ_input, compared on
-RMSE distributions, climate reactivity, sink/source sign, and 2100 trajectories. Publishable either
+forward experiment — ✅ **DONE 2026-09-02**, though not in the form sketched here. The
+restrictive-vs-permissive σ_input design was **abandoned** ([[sigma-input-physical-bounds]]); the
+experiment that ran instead contrasts the *published* parameterisation with ours under ramped IPCC
+scenarios, forward only. Compared on RMSE distributions, climate reactivity, and trajectories to
+2084. Publishable either
 way. It also notes that **radiocarbon would break the degeneracy directly**, since ¹⁴C constrains
 turnover independently of input magnitude — the degeneracy is a property of the observation design,
 not of nature.
@@ -534,8 +570,9 @@ Nothing here touches the data target or the runs; it is analysis of the **existi
 ### What landed
 
 1. **F14 is IN the manuscript** (Lorenzo's decision). `manuscript/figures/build_F14_mrt_ridge.R`
-   → `F14_mrt_ridge.png`, written into `HIKET_storyline_note.tex` §"What a longer residence time
-   would cost", with **two boxes**: a `methodnote` explaining the two layers and a `provisional`
+   → `F14_mrt_ridge.png`, and its caption now lives in
+   `manuscript/figure_captions.tex` (rescued 2026-09-03 when the storyline note was deleted), with
+   **two boxes**: a `methodnote` explaining the two layers and a `provisional`
    box recording the planned rework. **F13 was DELETED** as not useful — do not resurrect it; its
    variance panel survives as F14's lower row.
 2. **F14 now uses EVERY draw** (~75k, was 6000; one MRT eval is 1e-4 s). Not cosmetic: the
