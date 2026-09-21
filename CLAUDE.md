@@ -555,7 +555,7 @@ intercomparison result in its own right.
 |---|---|
 | NFI/Biosoil/MUSTIKKA/Komeetta plots | **512** calibration-ready Finnish plots |
 | Litter inputs | Tupek et al., Zenodo DOI: 10.5281/zenodo.19736499 |
-| Climate | `nfi_plot_weather_data_1961_2025.nc` (gridded daily) |
+| Climate | `nfi_plot_weather_data_1961_2025.nc` — FMI daily gridded observations, **10 km grid** (YKJ cell centres, spacing 10 000 m, verified on the file), 1961–2025, via the LUKE weather database; nearest-cell extraction. **Cite Aalto, Pirinen & Jylhä 2016** (FMI's own guidance; confirmed by LUKE Data Support 2026-09-14) |
 | SOC campaigns | VMI8 (1985–86), Biosoil (2006), Komeetta (2024) — all three wired |
 
 **Litter units:** `input_raw_monthly.csv` is already in **tC/ha/yr** — no
@@ -791,10 +791,10 @@ guards key on those filenames.
   37.2/34.2 t/ha, in 2006/2024 when all were measured together) and the 1985 down-weighting is
   **replaced** by the campaign offset, never stacked.
 
-  ⬜ **STILL OPEN IN M&M:** (i) the **climate citation is PROVISIONAL** — Aalto, Pirinen & Jylhä 2016
-  (FMI 10 km daily) fits what Lorenzo was told, but is unconfirmed and **our file is a *modified*
-  version whose modification is undescribed**; the NetCDF records only `CRS: YKJ-KKJ`. Do not let it
-  harden. (ii) The **parameter-class × prior-criteria table** still has to be ported from the methods
+  ⬜ **STILL OPEN IN M&M:** (i) ✅ the climate citation is CONFIRMED (2026-09-21): FMI daily gridded
+  observations on the 10 km grid via the LUKE weather database, Aalto et al. 2016 per FMI's own
+  guidance; the "modification" was only the nearest-cell extraction. Gap closed. (ii) The
+  **parameter-class × prior-criteria table** still has to be ported from the methods
   documentation — it is the backbone of the homogenisation argument.
 
 - **✅ SESSION 2026-09-04 — THE FIRST MANUSCRIPT DRAFT EXISTS.**

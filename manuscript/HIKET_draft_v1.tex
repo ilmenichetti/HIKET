@@ -1018,7 +1018,7 @@ information would the model need to explain it?
 
 \subsection{Study plots and soil carbon observations}
 
-The study uses permanent forest plots of the Finnish National Forest Inventory for
+The study is based on data from permanent forest plots of the Finnish National Forest Inventory for
 which soil carbon has been measured in three campaigns: the eighth national forest
 inventory (VMI8), the BioSoil campaign of 2006, and the Komeetta campaign of 2024.
 After the exclusions described below, $456$ plots are available for calibration,
@@ -1035,17 +1035,13 @@ between 1986 and 1995: 69 plots in 1986, 76 in 1987, 103 in 1988, 54 in 1989 and
 and that is the year at which the campaign is drawn whenever it is shown as a single
 point. In the calibration, each observation is compared with the model in the year in
 which that plot was actually sampled.
-% LORENZO note (2026-09-16) "what is the plot-count-weighted mean sampling year?": answered
-% 2026-09-21 -- it was only the average sampling year over the plots; now stated as such,
-% with the per-year counts (workbook MAANAYTE, before exclusions) so 1989 is not a mystery.
 
 On the plots measured in all three campaigns ($310$ plots, the set on which every
 observed rate of change in this paper is computed), the mean stock of the groups sampled
 in 1986, 1987, 1988, 1989 and 1995 differs by $18.3$ tonnes of carbon per hectare at
-first visit, which might reflect a trend within that same campaign.
-% LORENZO note (2026-09-16) "what is the BALANCED plot set? Why balanced?": answered
-% 2026-09-21 -- panel-data jargon for the plots observed in all three campaigns (n=310);
-% now defined in plain words here and the word "balanced" no longer appears in the prose. The same groups
+first visit, which might reflect a trend within that same campaign. 
+The same groups
+%LORENZO: which are "the same groups"? Qualify, and be in general more specific in the phrasing even at the cost of some redundancy. Implicit objects are usually not good in scientific writing.
 differ by $37.2$ tonnes in 2006 and by $34.2$ tonnes in 2024, years in which every one
 of those plots was measured at the same time, so the difference between the groups is
 a property of which plots they contain and is in fact larger when the year is held
@@ -1076,13 +1072,14 @@ year of its plots.
 %   * layer standardisation and sampling years -> rewritten as standardisation and
 %     as a choice, not as corrections, in your words.
 
-The soil carbon observations used here are not the values as originally published for
-each campaign, because the three campaigns were measured and processed under protocols
-that differed in ways that matter for a comparison between them. All three campaigns
-were therefore rebuilt on a single basis, starting from the layer-by-layer carbon
+Since the three campaigns were measured and processed under protocols
+that differed in ways that matter for a comparison between them, all three campaigns
+were rebuilt on a uniform basis, starting from the layer-by-layer carbon
 stocks measured in each of the three campaigns and applying one set of conventions to
 all three. Those stocks are corrected for bulk density and for the stones and coarse
-fragments that occupy part of the soil volume. The coarse-fragment correction matters
+fragments that occupy part of the soil volume. 
+%LORENZO: how? The bulk density and stoniness correction requires data. Which data are we using for that, and from where do they come from?
+The coarse-fragment correction matters
 because the coarse-fragment content of these plots has a median of $43$ per cent by
 volume, so a mineral stock computed without it is too large by a factor of about $1.6$.
 
@@ -1129,18 +1126,20 @@ depending on the campaign.
 
 \subsection{Litter input}
 
-Litter input is taken from a product built from the national forest inventory and
+Litter input is taken from a product built from the national forest inventory 
+%LORENZO: which product exactly? If it is a source it should be explicit.
+and
 satellite data \citep{TupekLitter}. The product supplies, for each plot and year,
 the carbon in litter falling from trees, separated into non-woody litter, fine
 woody litter and coarse woody litter, and each of the three classes is further
-separated into the four chemical fractions used by the Yasso models. The product
+separated into the four chemical fractions used by the Yasso models.
+%LORENZO: say in just one phrase how these fractions and separations were achieved, saying if one wantsh more details they are in the reference
+ The product
 includes harvest residues and the litter produced by natural mortality of trees.
 The product does not include the understorey vegetation, because the product is a
 tree litter product by design. Across the study plots the mean litter input carried
 by the product is $\bar{J} = 2.511$ tonnes of carbon per hectare per year.
 
-% ROUND 2, 2026-09-11: neutral and short, as you asked. The mechanism (biomass
-% differencing) is no longer asserted -- only the value and the treatment.
 The first year of the product is treated separately. The median litter input of 1985
 is $0.060$ tonnes of carbon per hectare per year against $1.398$ in 1986, a step that
 the series does not repeat in any later year. Because 1985 is both the first year of
@@ -1153,27 +1152,29 @@ trend over 1986--1990 and extrapolating one year backwards. The reconstruction p
 
 \subsection{Climate}
 
-% ⚠ PROVISIONAL, 2026-09-11. Lorenzo reports the product is FMI's and "probably"
-% their 10 x 10 km gridded daily climatology, "though modified". Aalto, Pirinen &
-% Jylha 2016 is the FMI 10 km daily gridded product and is almost certainly the one,
-% but it is NOT CONFIRMED and the nature of the modification is not known. The
-% NetCDF itself records only CRS = YKJ-KKJ and the extraction method. He is asking.
-% Do not let this citation harden into a verified one until he answers.
-Climate forcing comes from the gridded daily climatology of Finland produced by the
-Finnish Meteorological Institute on a $10$ by $10$ km grid \citep{Aalto2016}, covering
-1961--2025, from which daily mean, minimum and maximum temperature, precipitation and
-global radiation were extracted at the coordinates of each plot by nearest-neighbour
-sampling of the grid, and from which each model takes the variables it requires. Because
-the response of decomposition to climate is not a straight line, the average of the
-response over the years is not the response evaluated at the average climate.
-Averaging the climate first and evaluating the response afterwards biases the
-climate modifier by $5$ to $15$ per cent in boreal conditions. The climate modifier
-is therefore computed for each year and averaged afterwards, in all six models.
+% RESOLVED 2026-09-21. Source confirmed by LUKE Data Support (O. Hakuni, 2026-09-14, via
+% O.-P. Tikkasalo): FMI's gridded daily weather observations, bought from FMI and mirrored
+% daily into LUKE's weather database (lukedb2prod). Two grids exist there (10 km and 1 km);
+% OUR file is the 10 km one -- x_weather/y_weather are YKJ cell centres at ...5000 with a
+% uniform 10 000 m spacing (checked on the NetCDF). The "modification" is only the
+% nearest-cell extraction at the 2707 plot coordinates (global attribute
+% extraction_method = "nearest_neighbour"). FMI's own citation guidance for the daily
+% gridded observations is Aalto, Pirinen & Jylha 2016; the 2016 paper describes 1961-2010
+% and seven variables, the operational product extends it and adds global radiation.
 
-\gap{The climate citation is provisional. Confirm that the product is the
-\citet{Aalto2016} gridded climatology and not another Finnish Meteorological Institute
-product, and describe how it was modified for this use, since the version held here is
-not the published one unchanged.}
+Climate forcing comes from the gridded daily weather observations of the Finnish
+Meteorological Institute, interpolated from the station network onto a $10$ by $10$ km
+grid by kriging with external drift \citep{Aalto2016} and extended by the Institute to
+the present. The grids were obtained through the weather database of the Natural
+Resources Institute Finland, which mirrors them from the Finnish Meteorological
+Institute. From the grid cell nearest to each plot we took the daily mean, minimum and
+maximum temperature, precipitation and global radiation for 1961--2025, and each model
+takes from those series the variables it requires. Because the response of
+decomposition to climate is not a straight line, the average of the response over the
+years is not the response evaluated at the average climate. Averaging the climate first
+and evaluating the response afterwards biases the climate modifier by $5$ to $15$ per
+cent in boreal conditions. The climate modifier is therefore computed for each year and
+averaged afterwards, in all six models.
 
 \subsection{The six models}
 
