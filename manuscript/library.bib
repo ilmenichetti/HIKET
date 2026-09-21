@@ -1,0 +1,589 @@
+% =============================================================================
+% library.bib — HIKET manuscript bibliography
+% Assembled 2026-09-04 from literature/NN_topic/refs.bib + literature/README.md
+% + the model and method references the paper cannot avoid.
+%
+% ⚠ VERIFICATION RULE. An entry marked % UNVERIFIED has not been checked against
+% the source: the work exists and the claim attached to it in the storyline is
+% sourced, but volume / pages / DOI / author list may be wrong. CLEAR THE FLAG
+% BEFORE THE ENTRY IS CITED IN A SUBMITTED DRAFT. Entries with no flag were read
+% or checked in this project (see the folder READMEs for which quote came from where).
+%
+% Organisation follows the argument, not the alphabet:
+%   1 the antecedent lineage      5 Finnish forest, history and data
+%   2 initialisation, critiqued   6 litter input and what may be missing
+%   3 theory                      7 methods
+%   4 the models
+% =============================================================================
+
+% --- 1. THE ANTECEDENT LINEAGE ----------------------------------------------
+
+@article{Liski2006,
+  author  = {Liski, J. and Lehtonen, A. and Palosuo, T. and Peltoniemi, M. and Eggers, T. and
+             Muukkonen, P. and M{\"a}kip{\"a}{\"a}, R.},
+  title   = {Carbon accumulation in {Finland}'s forests 1922--2004 -- an estimate obtained by
+             combination of forest inventory data with modelling of biomass, litter and soil},
+  journal = {Annals of Forest Science}, volume = {63}, pages = {687--697}, year = {2006},
+  note    = {THE antecedent: transient national run, equilibrium initial state},
+  doi     = {10.1051/forest:2006049}
+}
+
+@article{Peltoniemi2004,
+  author  = {Peltoniemi, M. and M{\"a}kip{\"a}{\"a}, R. and Liski, J. and Tamminen, P.},
+  title   = {Changes in soil carbon with stand age -- an evaluation of a modelling method with
+             empirical data},
+  journal = {Global Change Biology}, volume = {10}, number = {12}, pages = {2078--2091}, year = {2004},
+  doi     = {10.1111/j.1365-2486.2004.00881.x}
+}
+
+@article{Peltoniemi2006,
+  author  = {Peltoniemi, M. and Palosuo, T. and Monni, S. and M{\"a}kip{\"a}{\"a}, R.},
+  title   = {Factors affecting the uncertainty of sinks and stocks of carbon in {Finnish} forests
+             soils and vegetation},
+  journal = {Forest Ecology and Management}, volume = {232}, number = {1-3}, pages = {75--85},
+  year    = {2006},
+  note    = {READ 2026-09-11. The NID rests its initialisation on this. Precision decomposition only:
+             initial-state share of the annual-sink SD 77\% (1989), 30\% (1998), 21\% (2004); the initial
+             state perturbed was itself a steady state; authors state "precision, not accuracy"},
+  doi     = {10.1016/j.foreco.2006.05.045}
+}
+
+@phdthesis{Palosuo2008,
+  author = {Palosuo, T.},
+  title  = {Soil carbon modelling as a tool for carbon balance studies in forestry},
+  school = {University of Helsinki}, year = {2008},
+  series = {Dissertationes Forestales}, number = {61},
+  doi     = {10.14214/df.61}
+}
+
+@article{Lehtonen2016,
+  author  = {Lehtonen, A. and Linkosalo, T. and Peltoniemi, M. and Siev{\"a}nen, R. and
+             M{\"a}kip{\"a}{\"a}, R. and Tamminen, P. and Salemaa, M. and Nieminen, T. and
+             {\v T}upek, B. and Heikkinen, J. and Komarov, A.},
+  title   = {Forest soil carbon stock estimates in a nationwide inventory: evaluating performance
+             of the {ROMULv} and {Yasso07} models in {Finland}},
+  journal = {Geoscientific Model Development}, volume = {9}, pages = {4169--4183}, year = {2016},
+  doi     = {10.5194/gmd-9-4169-2016}
+}
+
+@article{LehtonenHeikkinen2015,
+  author  = {Lehtonen, A. and Heikkinen, J.},
+  title   = {Uncertainty of upland soil carbon sink estimate for {Finland}},
+  journal = {Canadian Journal of Forest Research}, volume = {46}, pages = {310--322}, year = {2016},
+  note    = {Published 2016, widely cited as 2015. Source of the inventory's 31.5\% soil uncertainty
+             AND, via its Table A5, of the understorey litter figure},
+  doi     = {10.1139/cjfr-2015-0171}
+}
+
+@article{Rantakari2012,
+  author  = {Rantakari, M. and Lehtonen, A. and Linkosalo, T. and Tuomi, M. and Tamminen, P. and
+             Heikkinen, J. and Liski, J. and M{\"a}kip{\"a}{\"a}, R. and Ilvesniemi, H. and
+             Siev{\"a}nen, R.},
+  title   = {The {Yasso07} soil carbon model -- testing against repeated soil carbon inventory},
+  journal = {Forest Ecology and Management}, volume = {286}, pages = {137--147}, year = {2012},
+  doi     = {10.1016/j.foreco.2012.08.041}
+}
+
+@techreport{SwedenNID2026,
+  author      = {{Swedish Environmental Protection Agency}},
+  title       = {National Inventory Document {Sweden} 2026},
+  institution = {Swedish Environmental Protection Agency}, year = {2026},
+  note        = {Forest land mineral soils, \S6.4.2.4.1: Tier 3, "estimates are based on repeated
+                 measurements of several variables on the NFI plots". Verified in the PDF 2026-09-11},
+  url         = {https://unfccc.int/sites/default/files/resource/NID SE submission 2026.pdf}
+}
+
+@article{Ortiz2013,
+  author  = {Ortiz, C. A. and Liski, J. and G{\"a}rden{\"a}s, A. I. and Lehtonen, A. and
+             Lundblad, M. and Stendahl, J. and {\AA}gren, G. I. and Karltun, E.},
+  title   = {Soil organic carbon stock changes in {Swedish} forest soils -- a comparison of
+             uncertainties and their sources through a national inventory and two simulation models},
+  journal = {Ecological Modelling}, volume = {251}, pages = {221--231}, year = {2013},
+  note    = {The measured route and the modelled route set side by side for the same soils;
+             J. Liski and A. Lehtonen are coauthors},
+  doi     = {10.1016/j.ecolmodel.2012.12.017}
+}
+
+@techreport{StatFin2024NID,
+  author      = {{Statistics Finland}},
+  title       = {Greenhouse gas emissions in {Finland} 1990 to 2022. National Inventory Document},
+  institution = {Statistics Finland}, year = {2024}, month = {March},
+  note        = {Forest soil method in \S6.4; the initialisation sentence and the 31.5\% are quoted from it}
+}
+
+@techreport{StatFin2025NID,
+  author      = {{Statistics Finland}},
+  title       = {Greenhouse gas emissions in {Finland} 1990 to 2023. National Inventory Document},
+  institution = {Statistics Finland}, year = {2025}, month = {April},
+  note        = {The 2025 submission: recalculated litter input; mineral forest soils a net source from 2021 (\S6.4)}
+}
+
+@misc{Luke2025news,
+  author       = {{Natural Resources Institute Finland}},
+  title        = {Preliminary greenhouse gas inventory results for 2023: Forest land has turned into an emission source because the carbon sink of trees no longer cover emissions from forest soil},
+  year         = {2025}, month = {January},
+  howpublished = {News release, 15 January 2025, \url{https://www.luke.fi/en/news/}}
+}
+
+@techreport{NorwayNID2025,
+  author      = {{Norwegian Environment Agency}},
+  title       = {Greenhouse gas emissions 1990--2023. National Inventory Document},
+  institution = {Norwegian Environment Agency, Statistics Norway and Norwegian Institute of Bioeconomy Research},
+  year        = {2025}, number = {M-2948}, address = {Oslo},
+  note        = {Forest mineral soils: Yasso07 with a 1951--1990 backcast pre-run (\S6.4.1); soil sampling on NFI plots since 2022}
+}
+
+@article{Gruneberg2014,
+  author  = {Gr{\"u}neberg, Erik and Ziche, Daniel and Wellbrock, Nicole},
+  title   = {Organic carbon stocks and sequestration rates of forest soils in {Germany}},
+  journal = {Global Change Biology}, volume = {20}, number = {8}, pages = {2644--2662}, year = {2014},
+  doi     = {10.1111/gcb.12558}
+}
+
+@article{Didion2016,
+  author  = {Didion, Markus and Blujdea, Viorel and Grassi, Giacomo and Hern{\'a}ndez, Laura and Jandl, Robert and Kriiska, Kaie and Lehtonen, Aleksi and Saint-Andr{\'e}, Laurent},
+  title   = {Models for reporting forest litter and soil {C} pools in national greenhouse gas inventories: methodological considerations and requirements},
+  journal = {Carbon Management}, volume = {7}, number = {1--2}, pages = {79--92}, year = {2016},
+  doi     = {10.1080/17583004.2016.1166457}
+}
+
+@article{Pan2011,
+  author  = {Pan, Yude and Birdsey, Richard A. and Fang, Jingyun and Houghton, Richard and Kauppi, Pekka E. and Kurz, Werner A. and Phillips, Oliver L. and Shvidenko, Anatoly and Lewis, Simon L. and Canadell, Josep G. and Ciais, Philippe and Jackson, Robert B. and Pacala, Stephen W. and McGuire, A. David and Piao, Shilong and Rautiainen, Aapo and Sitch, Stephen and Hayes, Daniel},
+  title   = {A large and persistent carbon sink in the world's forests},
+  journal = {Science}, volume = {333}, pages = {988--993}, year = {2011},
+  doi     = {10.1126/science.1201609},
+  note    = {Boreal forests: about 60 per cent of ecosystem C in the soil}
+}
+
+@article{Beven2006,
+  author  = {Beven, Keith},
+  title   = {A manifesto for the equifinality thesis},
+  journal = {Journal of Hydrology}, volume = {320}, pages = {18--36}, year = {2006},
+  doi     = {10.1016/j.jhydrol.2005.07.007}
+}
+
+% --- 2. INITIALISATION, CRITIQUED -------------------------------------------
+
+@article{Wutzler2007,
+  author  = {Wutzler, T. and Reichstein, M.},
+  title   = {Soils apart from equilibrium -- consequences for soil carbon balance modelling},
+  journal = {Biogeosciences}, volume = {4}, pages = {125--136}, year = {2007},
+  doi     = {10.5194/bg-4-125-2007}
+}
+
+@article{Carvalhais2008,
+  author  = {Carvalhais, N. and Reichstein, M. and Seixas, J. and Collatz, G. J. and Pereira, J. S.
+             and Berbigier, P. and Carrara, A. and Granier, A. and Montagnani, L. and Papale, D.
+             and Rambal, S. and Sanz, M. J. and Valentini, R.},
+  title   = {Implications of the carbon cycle steady state assumption for biogeochemical modeling
+             performance and inverse parameter retrieval},
+  journal = {Global Biogeochemical Cycles}, volume = {22}, pages = {GB2007}, year = {2008},
+  doi     = {10.1029/2007GB003033}
+}
+
+@article{Luo2016,
+  author  = {Luo, Y. and Ahlstr{\"o}m, A. and Allison, S. D. and Batjes, N. H. and Brovkin, V. and
+             Carvalhais, N. and Chappell, A. and Ciais, P. and Davidson, E. A. and Finzi, A. and
+             Georgiou, K. and Guenet, B. and Hararuk, O. and Harden, J. W. and He, Y. and
+             Hopkins, F. and Jiang, L. and Koven, C. and Jackson, R. B. and Jones, C. and others},
+  title   = {Toward more realistic projections of soil carbon dynamics by {Earth} system models},
+  journal = {Global Biogeochemical Cycles}, volume = {30}, number = {1}, pages = {40--56}, year = {2016},
+  doi     = {10.1002/2015GB005239}
+}
+@article{Luo2017,
+  author  = {Luo, Y. and Shi, Z. and Lu, X. and Xia, J. and Liang, J. and Jiang, J. and Wang, Y. and
+             Smith, M. J. and Jiang, L. and Ahlstr{\"o}m, A. and Chen, B. and Hararuk, O. and
+             Hastings, A. and Hoffman, F. and Medlyn, B. and Niu, S. and Rasmussen, M. and
+             Todd-Brown, K. and Wang, Y.-P.},
+  title   = {Transient dynamics of terrestrial carbon storage: mathematical foundation and its
+             applications},
+  journal = {Biogeosciences}, volume = {14}, pages = {145--161}, year = {2017},
+  doi     = {10.5194/bg-14-145-2017}
+}
+@article{Kanari2022,
+  author  = {Kanari, E. and C{\'e}cillon, L. and Baudin, F. and Clivot, H. and Ferchaud, F. and
+             Houot, S. and Levavasseur, F. and Mary, B. and Souc{\'e}marianadin, L. and Chenu, C.
+             and Barr{\'e}, P.},
+  title   = {A robust initialization method for accurate soil organic carbon simulations},
+  journal = {Biogeosciences}, volume = {19}, pages = {375--387}, year = {2022},
+  doi     = {10.5194/bg-19-375-2022}
+}
+
+@article{Lee2020,
+  author  = {Lee, J. and Viscarra Rossel, R. A.},
+  title   = {Soil carbon simulation confounded by different pool initialisation},
+  journal = {Nutrient Cycling in Agroecosystems}, volume = {116}, pages = {245--255}, year = {2020},
+  doi     = {10.1007/s10705-019-10041-0}
+}
+
+@article{LeNoe2023,
+  author  = {Le No{\"e}, J. and Manzoni, S. and Abramoff, R. and B{\"o}lscher, T. and Bruni, E. and
+             Cardinael, R. and Ciais, P. and Chenu, C. and Clivot, H. and Derrien, D. and
+             Ferchaud, F. and Garnier, P. and Goll, D. and Lashermes, G. and Martin, M. and
+             Rasse, D. and Rees, F. and Sainte-Marie, J. and Salmon, E. and Schiedung, M. and others},
+  title   = {Soil organic carbon models need independent time-series validation for reliable prediction},
+  journal = {Communications Earth \& Environment}, volume = {4}, pages = {158}, year = {2023},
+  doi     = {10.1038/s43247-023-00830-5}
+}
+@article{Contreras2026,
+  author  = {Contreras, F. and Cayuela, M. L. and S{\'a}nchez-Garc{\'\i}a, M. and Ronchin, E. and
+             Mondini, C. and S{\'a}nchez-Monedero, M. A.},
+  title   = {Challenges in soil carbon modelling and measurement: a decade of experimental data
+             vs. {RothC} simulations in an organic olive grove},
+  journal = {SOIL}, volume = {12}, pages = {773--790}, year = {2026},
+  doi     = {10.5194/soil-12-773-2026}
+}
+
+% --- 3. THEORY --------------------------------------------------------------
+
+@article{Sierra2017,
+  author  = {Sierra, C. A. and M{\"u}ller, M. and Metzler, H. and Manzoni, S. and Trumbore, S. E.},
+  title   = {The muddle of ages, turnover, transit, and residence times in the carbon cycle},
+  journal = {Global Change Biology}, volume = {23}, number = {5}, pages = {1763--1773}, year = {2017},
+  note    = {READ 2026-09-11. Their Eqn 2 (mean transit time from the inverse of the rate matrix,
+             with a normalised input vector) is our formula exactly, and their Eqn 4 (steady-state
+             stock divided by input flux) is our numerical route. They discourage the use of the
+             term "residence time"},
+  doi     = {10.1111/gcb.13556}
+}
+
+@article{Rasmussen2016,
+  author  = {Rasmussen, M. and Hastings, A. and Smith, M. J. and Agusto, F. B. and Chen-Charpentier, B. M.
+             and Hoffman, F. M. and Jiang, J. and Todd-Brown, K. E. O. and Wang, Y. and Wang, Y.-P. and Luo, Y.},
+  title   = {Transit times and mean ages for nonautonomous and autonomous compartmental systems},
+  journal = {Journal of Mathematical Biology}, volume = {73}, pages = {1379--1398}, year = {2016},
+  note    = {Source of the closed-form mean transit time and mean system age used by Sierra et al. 2017},
+  doi     = {10.1007/s00285-016-0990-8}
+}
+
+@article{terBraakVrugt2008,
+  author  = {ter Braak, C. J. F. and Vrugt, J. A.},
+  title   = {Differential Evolution {Markov} Chain with snooker updater and fewer chains},
+  journal = {Statistics and Computing}, volume = {18}, number = {4}, pages = {435--446}, year = {2008},
+  doi     = {10.1007/s11222-008-9104-9}
+}
+
+@misc{BayesianTools,
+  author = {Hartig, F. and Minunno, F. and Paul, S.},
+  title  = {{BayesianTools}: General-Purpose {MCMC} and {SMC} Samplers and Tools for {Bayesian} Statistics},
+  year   = {2023}, note = {R package version 0.1.8},
+  url    = {https://CRAN.R-project.org/package=BayesianTools}
+}
+
+@manual{RCore,
+  author       = {{R Core Team}},
+  title        = {R: A Language and Environment for Statistical Computing},
+  organization = {R Foundation for Statistical Computing}, address = {Vienna, Austria},
+  year         = {2023}, note = {Version 4.3.1}
+}
+
+@article{Aalto2016,
+  author  = {Aalto, J. and Pirinen, P. and Jyl{\"h}{\"a}, K.},
+  title   = {New gridded daily climatology of {Finland}: Permutation-based uncertainty estimates
+             and temporal trends in climate},
+  journal = {Journal of Geophysical Research: Atmospheres}, volume = {121}, number = {8},
+  pages   = {3807--3823}, year = {2016},
+  note    = {PROVISIONAL: the FMI 10 km daily gridded product, almost certainly the source of our
+             weather file, but not yet confirmed and the file we hold is a modified version},
+  doi     = {10.1002/2015JD024651}
+}
+
+@article{Olson1963,
+  author  = {Olson, J. S.},
+  title   = {Energy storage and the balance of producers and decomposers in ecological systems},
+  journal = {Ecology}, volume = {44}, number = {2}, pages = {322--331}, year = {1963},
+  doi     = {10.2307/1932179}
+}
+
+@book{AgrenBosatta1998,
+  author    = {{\AA}gren, G. I. and Bosatta, E.},
+  title     = {Theoretical Ecosystem Ecology: Understanding Element Cycles},
+  publisher = {Cambridge University Press}, year = {1998}
+}
+
+@article{ManzoniPorporato2009,
+  author  = {Manzoni, S. and Porporato, A.},
+  title   = {Soil carbon and nitrogen mineralization: theory and models across scales},
+  journal = {Soil Biology and Biochemistry}, volume = {41}, pages = {1355--1379}, year = {2009},
+  doi     = {10.1016/j.soilbio.2009.02.031}
+}
+
+@article{Metzler2018,
+  author  = {Metzler, H. and M{\"u}ller, M. and Sierra, C. A.},
+  title   = {Transit-time and age distributions for nonlinear time-dependent compartmental systems},
+  journal = {Proceedings of the National Academy of Sciences}, volume = {115}, number = {6},
+  pages   = {1150--1155}, year = {2018}, doi = {10.1073/pnas.1705296115}
+}
+
+% --- 4. THE MODELS ----------------------------------------------------------
+
+@article{Tuomi2009,
+  author  = {Tuomi, M. and Thum, T. and J{\"a}rvinen, H. and Fronzek, S. and Berg, B. and
+             Harmon, M. and Trofymow, J. A. and Sevanto, S. and Liski, J.},
+  title   = {Leaf litter decomposition -- estimates of global variability based on {Yasso07} model},
+  journal = {Ecological Modelling}, volume = {220}, pages = {3362--3371}, year = {2009},
+  doi     = {10.1016/j.ecolmodel.2009.05.016}
+}
+
+@article{Tuomi2011woody,
+  author  = {Tuomi, M. and Laiho, R. and Repo, A. and Liski, J.},
+  title   = {Wood decomposition model for boreal forests},
+  journal = {Ecological Modelling}, volume = {222}, pages = {709--718}, year = {2011},
+  doi     = {10.1016/j.ecolmodel.2010.10.025}
+}
+
+@article{Tuomi2011gui,
+  author  = {Tuomi, M. and Rasinm{\"a}ki, J. and Repo, A. and Vanhala, P. and Liski, J.},
+  title   = {Soil carbon model {Yasso07} graphical user interface},
+  journal = {Environmental Modelling \& Software}, volume = {26}, pages = {1358--1362}, year = {2011},
+  doi     = {10.1016/j.envsoft.2011.05.009}
+}
+
+@article{Viskari2022,
+  author  = {Viskari, T. and Pusa, J. and Fer, I. and Repo, A. and Vira, J. and Liski, J.},
+  title   = {Calibrating the soil organic carbon model {Yasso20} with multiple datasets},
+  journal = {Geoscientific Model Development}, volume = {15}, pages = {1735--1752}, year = {2022},
+  doi     = {10.5194/gmd-15-1735-2022}
+}
+
+@article{AndrenKatterer1997,
+  author  = {Andr{\'e}n, O. and K{\"a}tterer, T.},
+  title   = {{ICBM}: the introductory carbon balance model for exploration of soil carbon balances},
+  journal = {Ecological Applications}, volume = {7}, number = {4}, pages = {1226--1236}, year = {1997},
+  doi     = {10.1890/1051-0761(1997)007[1226:ITICBM]2.0.CO;2}
+}
+
+@article{Parton1987,
+  author  = {Parton, W. J. and Schimel, D. S. and Cole, C. V. and Ojima, D. S.},
+  title   = {Analysis of factors controlling soil organic matter levels in {Great Plains} grasslands},
+  journal = {Soil Science Society of America Journal}, volume = {51}, pages = {1173--1179}, year = {1987},
+  doi     = {10.2136/sssaj1987.03615995005100050015x}
+}
+
+@incollection{ColemanJenkinson1996,
+  author    = {Coleman, K. and Jenkinson, D. S.},
+  title     = {{RothC-26.3} -- a model for the turnover of carbon in soil},
+  booktitle = {Evaluation of Soil Organic Matter Models},
+  publisher = {Springer}, year = {1996}, pages = {237--246},
+  doi     = {10.1007/978-3-642-61094-3_17}
+}
+
+@article{Kurz2009,
+  author  = {Kurz, W. A. and Dymond, C. C. and White, T. M. and Stinson, G. and Shaw, C. H. and
+             Rampley, G. J. and Smyth, C. and Simpson, B. N. and Neilson, E. T. and
+             Tr{\"o}fymow, J. A. and Metsaranta, J. and Apps, M. J.},
+  title   = {{CBM-CFS3}: a model of carbon-dynamics in forestry and land-use change implementing
+             {IPCC} standards},
+  journal = {Ecological Modelling}, volume = {220}, number = {4}, pages = {480--504}, year = {2009},
+  doi     = {10.1016/j.ecolmodel.2008.10.018}
+}
+
+% --- 5. FINNISH FOREST, HISTORY AND DATA ------------------------------------
+
+@article{Korhonen2024,
+  author  = {Korhonen, K. T. and R{\"a}ty, M. and Haakana, H. and Heikkinen, J. and
+             Hotanen, J.-P. and Kuronen, M. and Pitk{\"a}nen, J.},
+  title   = {Forests of {Finland} 2019--2023 and their development 1921--2023},
+  journal = {Silva Fennica}, volume = {58}, number = {5}, pages = {24045}, year = {2024},
+  doi     = {10.14214/sf.24045}
+}
+
+@article{Aakala2023,
+  author  = {Aakala, T. and Kulha, N. and Kuuluvainen, T.},
+  title   = {Human impact on forests in early twentieth century {Finland}},
+  journal = {Landscape Ecology}, volume = {38}, pages = {2417--2431}, year = {2023},
+  doi     = {10.1007/s10980-023-01688-w}
+}
+
+@article{Kumpu2025,
+  author  = {Kumpu, A. and Peltoniemi, M. and Forsius, M. and M{\"a}kel{\"a}, A.},
+  title   = {Soil carbon and nitrogen in unmanaged forests in {Southern} and {Eastern Finland}},
+  journal = {Silva Fennica}, volume = {59}, pages = {24072}, year = {2025},
+  doi     = {10.14214/sf.24072}
+}
+
+@article{MuukkonenMakipaa2006,
+  author  = {Muukkonen, P. and M{\"a}kip{\"a}{\"a}, R.},
+  title   = {Empirical biomass models of understorey vegetation in boreal forests according to
+             stand and site attributes},
+  journal = {Boreal Environment Research}, volume = {11}, pages = {355--369}, year = {2006},
+  note    = {Source of the understorey litter used by BOTH the NID (Table 6.4-3) and
+             Lehtonen \& Heikkinen (Table A5): 506 S / 666 N kg C ha-1 yr-1}
+}                                                            % UNVERIFIED — Boreal Env. Res. is not
+   % indexed by Crossref, so volume/pages must be checked against Lehtonen & Heikkinen's reference list
+
+@article{Muukkonen2006cover,
+  author  = {Muukkonen, P. and M{\"a}kip{\"a}{\"a}, R. and Laiho, R. and Minkkinen, K. and
+             Vasander, H. and Fin{\'e}r, L.},
+  title   = {Relationship between biomass and percentage cover in understorey vegetation of boreal
+             coniferous forests},
+  journal = {Silva Fennica}, volume = {40}, year = {2006}, doi = {10.14214/sf.340},
+  note    = {Companion to MuukkonenMakipaa2006; check which of the two the NID Table 6.4-3 uses}
+}
+@article{Helmisaari2007,
+  author  = {Helmisaari, H.-S. and Derome, J. and N{\"o}jd, P. and Kukkola, M.},
+  title   = {Fine root biomass in relation to site and stand characteristics in {Norway} spruce
+             and {Scots} pine stands},
+  journal = {Tree Physiology}, volume = {27}, pages = {1493--1504}, year = {2007},
+  doi     = {10.1093/treephys/27.10.1493}
+}
+
+@misc{TupekLitter,
+  author = {{\v T}upek, B. and H{\"a}myl{\"a}, O. and Tuominen, S. and Heikkinen, J. and Lehtonen, A.},
+  title  = {Annual forest biomass dynamics, harvesting, and litter inputs from 1985 to 2023
+            reconstructed by using {NFI} and satellite data},
+  year   = {2026}, publisher = {Zenodo}, doi = {10.5281/zenodo.19736499},
+  note   = {The source of J\_bar. Verified against DataCite 2026-09-04}
+}
+
+@mastersthesis{Kramarenko,
+  author = {Kramarenko, D.},
+  title  = {[Pro gradu on the {VMI8}/{BioSoil} soil carbon inventory]},
+  school = {University of Helsinki}, year = {2012}
+}                                                            % UNVERIFIED — independent methods critique of our own target
+
+% --- 6. LITTER INPUT AND WHAT MAY BE MISSING --------------------------------
+
+@article{Gower2001,
+  author  = {Gower, S. T. and Krankina, O. and Olson, R. J. and Apps, M. and Linder, S. and Wang, C.},
+  title   = {Net primary production and carbon allocation patterns of boreal forest ecosystems},
+  journal = {Ecological Applications}, volume = {11}, pages = {1395--1411}, year = {2001},
+  note    = {Reports g C m-2. Nordic Class I total NPP mean 321, range 215-462},
+  doi     = {10.1890/1051-0761(2001)011[1395:NPPACA]2.0.CO;2}
+}
+
+@article{Zheng2004,
+  author  = {Zheng, D. and Prince, S. and Wright, R.},
+  title   = {Estimating net primary production of boreal forests in {Finland} and {Sweden} from
+             field data and remote sensing},
+  journal = {Journal of Vegetation Science}, volume = {15}, pages = {161--170}, year = {2004},
+  note    = {⚠ REPORTS DRY MATTER, NOT CARBON -- divide by ~2 before comparing with Gower},
+  doi     = {10.1658/1100-9233(2004)015[0161:ENPPOB]2.0.CO;2}
+}
+
+@article{Bolinder2007,
+  author  = {Bolinder, M. A. and Janzen, H. H. and Gregorich, E. G. and Angers, D. A. and
+             VandenBygaart, A. J.},
+  title   = {An approach for estimating net primary productivity and annual carbon inputs to soil
+             for common agricultural crops in {Canada}},
+  journal = {Agriculture, Ecosystems \& Environment}, volume = {118}, pages = {29--42}, year = {2007},
+  doi     = {10.1016/j.agee.2006.05.013},
+  note    = {The x1.65 extra-root multiplier: extra-root material = 65\% of standing root biomass}
+}
+
+@article{Katterer2011,
+  author  = {K{\"a}tterer, T. and Bolinder, M. A. and Andr{\'e}n, O. and Kirchmann, H. and
+             Menichetti, L.},
+  title   = {Roots contribute more to refractory soil organic matter than above-ground crop
+             residues, as revealed by a long-term field experiment},
+  journal = {Agriculture, Ecosystems \& Environment}, volume = {141}, pages = {184--192}, year = {2011},
+  note    = {Root-derived C humification coefficient ~2.3x that of aboveground residues},
+  doi     = {10.1016/j.agee.2011.02.029}
+}
+
+@article{Clemmensen2013,
+  author  = {Clemmensen, K. E. and Bahr, A. and Ovaskainen, O. and Dahlberg, A. and Ekblad, A. and
+             Wallander, H. and Stenlid, J. and Finlay, R. D. and Wardle, D. A. and Lindahl, B. D.},
+  title   = {Roots and associated fungi drive long-term carbon sequestration in boreal forest},
+  journal = {Science}, volume = {339}, pages = {1615--1618}, year = {2013},
+  doi     = {10.1126/science.1231923}
+}
+
+@article{Ekblad2013,
+  author  = {Ekblad, A. and Wallander, H. and Godbold, D. L. and Cruz, C. and Johnson, D. and
+             Baldrian, P. and Bj{\"o}rk, R. G. and Epron, D. and Kieliszewska-Rokicka, B. and
+             Kj{\o}ller, R. and Kraigher, H. and Matzner, E. and Neumann, J. and Plassard, C.},
+  title   = {The production and turnover of extramatrical mycelium of ectomycorrhizal fungi in
+             forest soils: role in carbon cycling},
+  journal = {Plant and Soil}, volume = {366}, pages = {1--27}, year = {2013},
+  doi     = {10.1007/s11104-013-1630-3}
+}
+@article{Hagenbo2017,
+  author  = {Hagenbo, A. and Clemmensen, K. E. and Finlay, R. D. and Kyaschenko, J. and
+             Lindahl, B. D. and Fransson, P. and Ekblad, A.},
+  title   = {Changes in turnover rather than production regulate biomass of ectomycorrhizal fungal
+             mycelium across a {Pinus sylvestris} chronosequence},
+  journal = {New Phytologist}, volume = {214}, pages = {424--431}, year = {2017},
+  doi     = {10.1111/nph.14379}
+}
+
+@article{Strand2008,
+  author  = {Strand, A. E. and Pritchard, S. G. and McCormack, M. L. and Davis, M. A. and Oren, R.},
+  title   = {Irreconcilable differences: fine-root life spans and soil carbon persistence},
+  journal = {Science}, volume = {319}, pages = {456--458}, year = {2008},
+  doi     = {10.1126/science.1151382}
+}
+
+@article{Palviainen2005,
+  author  = {Palviainen, M. and Fin{\'e}r, L. and Mannerkoski, H. and Piirainen, S. and Starr, M.},
+  title   = {Responses of ground vegetation species to clear-cutting in a boreal forest: aboveground
+             biomass and nutrient contents during the first 7 years},
+  journal = {Ecological Research}, volume = {20}, pages = {652--660}, year = {2005},
+  doi     = {10.1007/s11284-005-0078-1}
+}
+
+@article{Grayston1997,
+  author  = {Grayston, S. J. and Vaughan, D. and Jones, D.},
+  title   = {Rhizosphere carbon flow in trees, in comparison with annual plants: the importance of
+             root exudation and its impact on microbial activity and nutrient availability},
+  journal = {Applied Soil Ecology}, volume = {5}, pages = {29--56}, year = {1997},
+  doi     = {10.1016/S0929-1393(96)00126-6}
+}
+
+% --- 7. METHODS -------------------------------------------------------------
+
+@article{terBraak2008,
+  author  = {ter Braak, C. J. F. and Vrugt, J. A.},
+  title   = {Differential evolution {Markov} chain with snooker updater and fewer chains},
+  journal = {Statistics and Computing}, volume = {18}, pages = {435--446}, year = {2008},
+  doi     = {10.1007/s11222-008-9104-9}
+}
+
+@article{Peltoniemi2007,
+  author  = {Peltoniemi, M. and Th{\"u}rig, E. and Ogle, S. and Palosuo, T. and Schrumpf, M. and
+             Wutzler, T. and Butterbach-Bahl, K. and Chertov, O. and Komarov, A. and Mikhailov, A. and
+             G{\"a}rden{\"a}s, A. and Perry, C. and Liski, J. and Smith, P. and M{\"a}kip{\"a}{\"a}, R.},
+  title   = {Models in country scale carbon accounting of forest soils},
+  journal = {Silva Fennica}, volume = {41}, number = {3}, pages = {575--602}, year = {2007},
+  doi     = {10.14214/sf.290},
+  note    = {Sec. 2.2.5 Model Initialization: steady state "likely to be violated in most
+             applications"; calibrating the equilibrium to a measured stock needs "a further
+             correction of the parameters and the pools". Read 2026-09-21}
+}
+
+@article{Menichetti2024,
+  author  = {Menichetti, L. and K{\"a}tterer, T. and Bolinder, M. A.},
+  title   = {Bayesian calibration of the {ICBM/3} soil organic carbon model constrained by data from
+             long-term experiments and uncertainties of {C} inputs},
+  journal = {Carbon Management}, volume = {15}, number = {1}, pages = {2304749}, year = {2024},
+  doi     = {10.1080/17583004.2024.2304749}
+}
+
+@article{Korhonen2021,
+  author  = {Korhonen, K. T. and Ahola, A. and Heikkinen, J. and Henttonen, H. M. and
+             Hotanen, J.-P. and Ihalainen, A. and Melin, M. and Pitk{\"a}nen, J. and
+             R{\"a}ty, M. and Sirvi{\"o}, M. and Strandstr{\"o}m, M.},
+  title   = {Forests of {Finland} 2014--2018 and their development 1921--2018},
+  journal = {Silva Fennica}, volume = {55}, number = {5}, pages = {10662}, year = {2021},
+  doi     = {10.14214/sf.10662},
+  note    = {Sec. 3.5.2: growing stock reduced in the 1950s and 1960s by wood use and construction;
+             logging low in the war years; strong increase in logging before NFI4}
+}
+
+@article{Mitrunen2024,
+  author  = {Mitrunen, M.},
+  title   = {War reparations, structural change, and intergenerational mobility},
+  journal = {The Quarterly Journal of Economics}, volume = {140}, number = {1},
+  pages   = {521--584}, year = {2024},
+  doi     = {10.1093/qje/qjae036},
+  note    = {1944--1952, on average 4\% of GDP per year in industrial goods to the USSR}
+}
+
+@incollection{Kochetkova2020,
+  author    = {Kochetkova, E.},
+  title     = {Finnish forestry: from the periphery to the centre of the {European} forestry},
+  booktitle = {Encyclop{\'e}die d'histoire num{\'e}rique de l'Europe (EHNE)},
+  publisher = {Sorbonne Universit{\'e}}, address = {Paris}, year = {2020},
+  note      = {ISSN 2677-6588, published 22 June 2020},
+  url       = {https://ehne.fr/en/node/12493}
+}

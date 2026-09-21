@@ -81,6 +81,79 @@ does, it has become a diary rather than a memo.
 \section{Open items}
 
 % -------------------------------------------------------------------------------------
+\begin{finding}{\stA\ \ D4 --- The litter product's between-plot gradient is eighteen-fold; the soil's is $1.2$}
+\textbf{Claim.} Across the observed basal-area range the litter input product varies by a factor of
+$\sim$18 between plots. Observed soil carbon varies by $1.2$. The models transmit the input gradient
+faithfully, so the plot-scale mismatch is a property of the \emph{input product} and of the
+\emph{soil}, not of the decomposition models.
+\end{finding}
+
+\noindent\textbf{Measured} (arm B; \texttt{doublechecks/basal\_area\_sign.R},
+\texttt{woody\_compartment\_test.R}), as $d\log(\cdot)/d\mathrm{BA}$ and as span over
+$40$~m$^2$\,ha$^{-1}$:
+
+\begin{center}\small
+\begin{tabular}{lrr}
+\toprule
+ & slope & span\\
+\midrule
+litter input $J_{t_0}$, matched in time to BA$_{85}$ & $+0.072$ & $\times 18.1$\\
+modelled stock (transient-init endpoint, six models) & $+0.073$ to $+0.076$ & $\times 18.6$--$20.5$\\
+model predictions after the forward run & $+0.044$ to $+0.049$ & $\times 6.3$\\
+observations & $+0.0044$ & $\times 1.19$\\
+observations, adjusted for region and soil type & $+0.0018$ ($p=0.12$) & $\times 1.08$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The residual falls with basal area in all six models ($p$ from $10^{-16}$ to $10^{-111}$,
+holdout, calibration and pooled alike). The models neither invent nor amplify the gradient --- the
+forward run in fact \emph{damps} it.
+
+\begin{caveat}
+\textbf{Two of my own errors are corrected here; do not reintroduce them.}
+\textbf{(1)} An earlier version of this item put $d\log J/d\mathrm{BA}$ at $0.016$ and concluded the
+models amplify the input gradient $\sim$3$\times$. That number came from averaging the annual
+\texttt{inputs\_by\_plot} series over all years while regressing on \emph{1985} basal area. Matched in
+time --- \texttt{J\_t0\_mean}, the flux the initialiser actually uses --- the input slope is $0.072$
+and there is \textbf{no amplification}.
+\textbf{(2)} The consequent hypothesis, that woody-derived carbon inflates high-biomass plots because
+Yasso's stock is DOM${+}$SOM while our target is a soil measurement, was \textbf{tested and refuted}:
+zeroing woody inputs moves the slope $6\%$ (Yasso15 $0.0755 \to 0.0710$) against a $15\times$ gap.
+The free control is decisive --- SP1/TP2/TP3 carry a single scalar flux with no composition
+information at all and give the \emph{same} slope, so a mechanism absent from three of the six cannot
+explain a gradient present in all six.
+\end{caveat}
+
+\medskip\noindent\textbf{What survives, and it is more useful than what died.} An eighteen-fold
+between-plot input gradient is not credible on its face. A stand-keyed litter product gives a freshly
+cut plot almost no input, and a freshly cut plot does not stop receiving carbon --- ground vegetation,
+dying roots and logging residues continue. So the plot-scale failure is evidence for the \emph{same}
+missing flux as the input argument, reached from the opposite end, and it points specifically at
+\textbf{understorey and early-succession vegetation}, the two components that argument is weakest on.
+\textbf{It is also independent evidence:} the national-scale argument comes from a level over time,
+this one from a gradient across space.
+
+\begin{caveat}
+\textbf{The alternative remains live and is not exclusive.} Plot-level soil carbon may simply not be
+set by current litter input, because each plot sits at a different point on its own disturbance
+trajectory and a single global initial state cannot express that --- this paper's thesis one level
+down. The observed gradient being far \emph{smaller} than the input gradient is consistent with both.
+\ \textbf{TEST:} the discriminating test would be residuals against time since disturbance, which our plots
+support.
+\end{caveat}
+
+\begin{caveat}
+\textbf{The compartment question itself is not dead, only demoted.} Whether our soil-only target
+should be compared with a DOM${+}$SOM model total is still a legitimate question about the
+\emph{level} --- it is simply not the explanation for the plot-scale gradient. Zeroing woody inputs
+removes $\sim$22\% of the input in the Yasso models, which is a level effect worth knowing when the
+$\sinput$ argument is written, since a compartment mismatch and a missing flux push the apparent input
+requirement in the same direction. \textbf{Not the same question as depth}, which was checked and is
+fine (memory \texttt{yasso-depth-basis-matches}).
+\end{caveat}
+
+% -------------------------------------------------------------------------------------
 \begin{finding}{\stB\ \ D1 --- The 2006--2024 model--observation disagreement is confined to the mineral soil}
 \textbf{Claim.} The six models do not fail to reproduce the recent SOC trend in general.
 They reproduce the \emph{organic layer}, and disagree with the \emph{mineral soil}.

@@ -696,7 +696,165 @@ noise the error model should absorb, not as data error.
 
 ---
 
+## Packaging for publication
+
+**`RELEASE_NOTES.md` (repo root) is where publication-packaging items are collected** —
+anything the code/data release must carry: naming conventions the reader needs, the
+software environment, build instructions, data availability. Started 2026-09-11.
+⚠ It is **not** a changelog: scientific decisions, corrections and run history stay in
+this file. Add to it whenever something surfaces that only matters at release time.
+
+⚠ First entry, and the one most likely to confuse a reader of the code: **`MRT` in the
+code is the manuscript's `MTT`** (mean transit time, Sierra et al. 2017). The quantity
+is unchanged; the identifiers were deliberately not renamed because the figure staleness
+guards key on those filenames.
+
+---
+
 ## Known outstanding items
+
+- **✅ SESSION 2026-09-11 — INTRODUCTION ROUND 2, THE WHOLE M&M, THE TRANSIT-TIME RENAME, AND THE
+  TITLE.** `manuscript/HIKET_draft_v1.tex` builds clean, **36 pp**, 0 undefined citations. Two
+  rounds of Lorenzo's marginal notes answered in full (16 on the Introduction, 18 on the M&M); the
+  disposition of every note is in source comments above `\section{Introduction}` and above the SOC
+  and integration subsections. Memories: [[intro-round2-20260911]], [[peltoniemi-2006-scope]],
+  [[mean-transit-time-rename]], [[manuscript-title]], [[release-notes-file]].
+
+  **⭐⭐ TITLE, chosen after two rounds:** *"Relaxing the steady-state assumption displaces forest
+  soil carbon models along the trade-off between litter input and turnover."* ⚠ **Three constraints
+  that kill the obvious alternatives:** the verb is **"displaces along", NEVER "reveals"** (the
+  trade-off exists under either initialisation; a transient start only *narrows* it, −0.64…−0.73 —
+  the 2026-09-03 correction, and the title is the easiest place to lose it); **"faster turnover"
+  must not appear as a direction**, because the input displacement is universal (flux 3.19–4.34 vs
+  J̄ 2.511, all six) while turnover is **graded** (0.73 / 0.89 / **1.03**, Yasso20 = the negative
+  control); and **Finland stays out** (the case, not the claim). Every tail that *promised* a
+  consequence was rejected — the cure for a weak tail was to delete it.
+
+  **⭐⭐ MEAN TRANSIT TIME replaces mean residence time throughout the manuscript** (Sierra et al.
+  2017, PDF in `literature/09_transit_time/`). **A rename, not a recomputation**: their Eqn (2) is
+  our formula character for character, and Eqn (4) (`Σx_ss/ΣI`) is our numerical route — which also
+  fixed the stock-vs-time units defect Lorenzo flagged. They *"discourage [the] use"* of "residence
+  time". 27 prose occurrences; **MRT → MTT** in F12/F14/S13/A1 labels and `T_A1`'s header (all
+  rebuilt). ⚠ **"mean residence time" is named ONCE in the Methods on purpose** (most readers know
+  it by that name) and "turnover time" gets one clause — do not delete either. ⚠ The fine-root
+  sentence says **"mean lifespan"**, a different quantity. ⚠⚠ **THE CODE IS DELIBERATELY NOT
+  RENAMED** — `intrinsic_mrt.R`, the `mrt` columns and the `build_*_mrt_*.R` filenames keep MRT
+  because the staleness guards key on them; recorded in `RELEASE_NOTES.md`.
+
+  **⭐⭐ THE ERROR-MODEL SUBSECTION HAD THREE DEFECTS — all fixed, none moved a number.**
+  (1) *"the measurement error of the soil carbon determination alone, which is 0.43"* **was not a
+  measurement error**: the code computes `sigma_obs_fixed <- sd(SOC_obs)/mean(SOC_obs)`, the
+  **between-plot CV** of the observed stocks (0.44/0.47/0.53 by campaign). The comparison is
+  **deleted** — we have no sourced determination error (Lehtonen & Heikkinen 2015 has none; no SOC
+  measurement enters that chain). (2) 0.800 is **not** "the measured spread of the residuals" —
+  measured is 0.71–0.74 and 0.72 was the plug-in value; 0.800 is a **deliberate** step above it.
+  (3) The four τ's were called **variances**; they are **standard deviations** —
+  √(0.117²+0.396²+0.030²+0.685²) = 0.8004, the fixed total (as variances the total SD would be
+  1.12). Why nothing moved: production is arm B, so `hiket_total_sigma()` returns `HIKET_SIGMA_TOT`
+  before `sigma_obs_fixed` is reached, and the predictive stage reads `sigma_total` from the run's
+  metadata. ⬜ The between-plot CV of 0.44 is a real number and belongs in the **Results**, next to
+  the near-zero R² — offered, not yet done.
+
+  **Two factual errors found and fixed.** (a) **ROMULv is NOT in the Finnish inventory** — the NID
+  says Yasso07 alone (`FI_NID_2024.txt:15977`); `Lehtonen2016` is a nationwide *evaluation*, not the
+  reporting instrument. **Never call it "the inventory"** — Aleksi is its first author. (b) **"The
+  soil term is modelled rather than measured" is FALSE in general — Sweden measures it.** Swedish
+  NID 2026 §6.4.2.4.1: *"estimates are based on repeated soil sampling … repeated measurements of
+  several variables on the NFI plots."* Title now says **"often modelled"**, and `Ortiz2013` (Liski
+  AND Lehtonen coauthors) sets the Swedish measured estimate against Yasso07 and Q.
+
+  **⭐ Peltoniemi et al. 2006 finally read** (`literature/02_steady_state_initialisation/`). The one
+  citation the inventory rests initialisation on is a **precision** decomposition (initial state's
+  share of the annual-sink SD: 77% → 30% → 21%) around an initial state that **was itself a steady
+  state**, and the authors state *"precision, not accuracy"*. ⚠ **Frame as scope, never as
+  contradiction** — Mikko is a coauthor. Two findings HELD BACK for the Discussion: his conclusion
+  is conditional on having no long forcing record (we build one and the state still moves — a
+  *result*, not a premise), and his litter autocorrelation result (ρ 0.99; at 0.9 the soil-sink SD
+  went 2.6→3.9 Tg) is our correlated-likelihood argument from 2006.
+
+  **⚠⚠ DO NOT CITE OUR OWN DATA AS A REFERENCE.** I named the LUKE SOC workbook and gave it a bib
+  entry; Lorenzo rejected it — *"we can refer only to reference sources, otherwise it's 'our' data."*
+  The Methods now describe **what the data are** and name no source; provenance and credit go to the
+  **data availability statement and acknowledgements** (a `\gap` tracks it). **Published sources only.**
+
+  **Other M&M content now written** (all from checking, not assuming): stoniness — **we do handle
+  it**, via the corrected source stocks; *"reproduces the official stocks exactly"* — **re-ran the
+  builder**, 59055/61047 against targets 59055/61047 on the official basis (n=446), and the text now
+  states the check rather than the adverb; **the pre-run shape is the Liski et al. 2006 reconstructed
+  input, NOT the growing-stock ramp** (three paragraphs, with the three adoption decisions and why
+  volume is the wrong driver); why Yasso's rates are fixed and why the simple models are *pinned*
+  rather than fixed to ICBM (Lorenzo's own reasoning — do not re-derive); **"all six integrate
+  exactly" OVERSTATED the Yasso case** — `matrixexp()` is scaling-and-squaring with a 20-term Taylor
+  series, so the text now contrasts exact solution of the linear system against an explicit step;
+  sampler cited (ter Braak & Vrugt 2008 DEzs via BayesianTools 0.1.8, R 4.3.1, 3 internal chains per
+  run ⇒ 15). Two `\gap`s closed: the sampling-year groups are **geographic** (they differ *more*,
+  37.2/34.2 t/ha, in 2006/2024 when all were measured together) and the 1985 down-weighting is
+  **replaced** by the campaign offset, never stacked.
+
+  ⬜ **STILL OPEN IN M&M:** (i) the **climate citation is PROVISIONAL** — Aalto, Pirinen & Jylhä 2016
+  (FMI 10 km daily) fits what Lorenzo was told, but is unconfirmed and **our file is a *modified*
+  version whose modification is undescribed**; the NetCDF records only `CRS: YKJ-KKJ`. Do not let it
+  harden. (ii) The **parameter-class × prior-criteria table** still has to be ported from the methods
+  documentation — it is the backbone of the homogenisation argument.
+
+- **✅ SESSION 2026-09-04 — THE FIRST MANUSCRIPT DRAFT EXISTS.**
+  **`manuscript/HIKET_draft_v1.tex` (32 pp, builds clean, 0 undefined citations)** — continuous prose
+  from storyline v3, 12 figures + Table 1 placed inline with written captions, `manuscript/library.bib`
+  (51 entries, 45 verified against the Crossref API; 3 flags left, all genuinely unindexed).
+  **M&M carried over from `HIKET_main_manuscript.tex` and CHECKED AGAINST THE CODE** — one drift found
+  and fixed: the old text described the *independent* log-normal likelihood, but the arm B SLURM
+  scripts set `HIKET_CORRELATED_LIK=1`, `HIKET_SIGMA_TOT=0.800`, `HIKET_SIGMA_1985_INFL=1`, so the
+  **correlated likelihood is what production ran** (τ_R 0.117, τ_P 0.396, τ_C 0.060/0.030, σ_e 0.685,
+  and the 1985 down-weighting OFF because τ_C replaces it). New M&M subsection on **how intrinsic MRT
+  is computed** (unit input, dataset-mean reference: 3.4 °C, 13.8 amplitude, 591 mm; litter 0.766
+  nwl / 0.219 fwl / 0.014 cwl). ⚠ **STYLE RULES ARE BINDING and are stated in the draft header**: no
+  jargon, no sentence-initial bare "This/It/These", redundant rather than compact.
+  **Old manuscript: keep the M&M, discard the Introduction, drop "the honest output is the spread"**
+  (claims the between-model spread as a product — walked back 2026-09-03) and the stratified strand.
+  Memories: [[manuscript-draft-v1]], [[sigma-input-is-likelihood-set]], [[equilibrium-headroom]],
+  [[compartment-mismatch-woody]], [[literature-topic-reviews]].
+
+- **⚠⚠ FOUR CORRECTIONS FROM 2026-09-04 — do not revert.**
+  1. **σ_input is LIKELIHOOD-set, not prior-set.** Arm A (centre 1.27) vs arm B (1.08): the posterior
+     moves only ~⅓ as far as the centre and stays **1.28–1.50× above the centre even in arm A**
+     (Yasso15 1.54→1.62, TP2 1.73→1.87). The input displacement survives either anchor. **DECIDED
+     (Lorenzo): stay on arm B.** ⚠ This kills the claim that a corrected anchor would shrink the
+     finding, and qualifies the earlier "σ_input tracked its prior centre nearly 1:1" (that was a
+     *width* change, not a *centre* change).
+  2. **The understorey anchor sources AGREE** at 0.51–0.67 tC/ha/yr (NID Table 6.4-3, L&H's own
+     Table A5, Liski's implied 0.61 — all Muukkonen & Mäkipää 2006). The 1.08 divides L&H's
+     **absolute total** by **our** J̄, mixing two litter products; the defensible centre is ≈**1.21**.
+     Arm A and arm B were never a sensitivity pair. `literature/UNDERSTOREY_ANCHOR.md`.
+  3. **The plot-scale gradient belongs to the litter product, not the models.** d log J/dBA = **+0.072**
+     (×18 across the basal-area range) against model slopes +0.073–0.076: **pass-through, no
+     amplification**; the forward run damps it to +0.044–0.049; observations +0.0044 (×1.19), and
+     +0.0018 n.s. once region and soil are controlled. ⚠⚠ The **compartment (woody/DOM) hypothesis was
+     TESTED AND REFUTED**: zeroing woody inputs moves the slope 6%, and SP1/TP2/TP3 carry no
+     composition information at all yet give the same slope. ⚠ **Never write "the models over-apply
+     basal area"** — it reads as a bug and it is not one. What survives: an ×18 input gradient is not
+     credible, and cut plots are **underpredicted by ~40%** (residual vs `any_cut_85_95` b=+0.334,
+     p<1e-4), which is evidence for the SAME missing flux from the opposite direction.
+     `doublechecks/basal_area_sign.R`, `woody_compartment_test.R`.
+  4. **Equilibrium headroom is +28…+49%** in five of six models (SP1 +5%), independently reproducing
+     Liski's **+38%**. `doublechecks/equilibrium_headroom.R`. Doubles as the Conclusions point that
+     headroom is real, costly to realise, and finite.
+
+- **✅ THE LITERATURE REVIEW IS DONE — `literature/NN_topic/` × 8 + `MISSING_FLUX_BUDGET.md`.**
+  One folder per `\LIT{}` topic, each with an evidence table (✅ verified / ⬜ needs the primary),
+  **draft manuscript text**, and gaps. ⚠ Three findings changed the paper: the NID's own spin-up
+  justification is quotable (*"approximately ten years of simulation since spin-up is enough to
+  cancel out the effect of the spin-up level"*); **Liski et al. 2006 is THE antecedent** (they ran the
+  transient simulation and *assumed* the state — frame as lineage, never correction, Aleksi and Mikko
+  are coauthors); and **HIKET is NOT the first to criticise equilibrium init** (Wutzler & Reichstein
+  2007 did it with Yasso), so "near-universal and rarely examined" is CUT and must not return.
+  ⚠ Bolinder 2007's ×1.65 is derived as 33/50 and covers **exudates plus fine roots and root hairs
+  that soil sampling misses** — so the cropland-to-forest objection is weaker than first written.
+
+- **⬜ THE EQUILIBRIUM-INIT COUNTERFACTUAL HAS NEVER BEEN RUN.** The Introduction's central claim is
+  still theoretical. Design in **`NEXT_RUN_equilibrium_init.md`**: one factor (init only), σ_init
+  **dropped** not fixed, equilibrium defined on the NID's own convention, after the Fortran recompile,
+  and **not** bundled with any anchor change. Pre-registered: both arms reach the level, only the
+  transient bends, and the number to watch is the equilibrium arm's rate against Liski's +0.024.
 
 - **✅ SESSION 2026-09-03 — the storyline moved onto the shape of the paper.**
   **`manuscript/HIKET_storyline_v3.tex` (17 pp) is now the LIVE storyline**; v2 is superseded (kept

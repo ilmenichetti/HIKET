@@ -6,6 +6,49 @@ row + anchors below. Started 2026-07-15.
 
 ---
 
+## Topic reviews (added 2026-09-04) — one subfolder each
+
+Each folder holds a `README.md` (scope → evidence table → **draft manuscript text** → what is still
+missing) and a `refs.bib`. They follow the order the topics appear in `HIKET_storyline_v3.tex`, and
+each names the storyline line it serves. **PDFs inside them are gitignored, the notes are tracked.**
+
+| # | Folder | Serves | State |
+|---|---|---|---|
+| 01 | `01_ghg_inventory_chain/` | §Why it matters (`:183`) | ✅ **primary source secured** — Finland's NID 2024, §6.4 quoted verbatim |
+| 02 | `02_steady_state_initialisation/` | §The convention (`:193`) — *blocking* | ✅ drafted; ⚠ **the claim needs softening**, see below |
+| 03 | `03_equilibrium_theory/` | §What steady state assumes (`:201`) | ✅ drafted (theory + the ridge derivation) |
+| 04 | `04_finnish_management_history/` | §Managed landscape (`:217`) — *load-bearing* | ✅ two legs sourced, ⬜ the lag leg is weak |
+| 05 | `05_fine_root_mrt/` | §missingflux (`:400`) | ⬜ ⚠ evidence may point the **wrong way** |
+| 06 | `06_root_exudates/` | §missingflux (`:404`) | ⬜ no verified number yet |
+| 07 | `07_mycorrhizal_necromass/` | §missingflux (`:407`) | ✅ strongest candidate; ⬜ primaries needed |
+| 08 | `08_pioneer_succession_litter/` | §missingflux (`:416`) | ⬜ weakest; sign unknown |
+| 10 | `10_national_soil_terms/` | §soil term modelled vs measured; §what the Finnish chain has reported | ✅ Sweden/Norway/Finland/USA read at the NID; Germany via Grüneberg 2014; ⚠ **Finnish mineral soils are a SOURCE from 2021 in the 2025 submission**; ⬜ Blujdea 2015 / Didion 2016 (Aleksi) for the count |
+| — | `MISSING_FLUX_BUDGET.md` | ties 05–08 together | ✅ **the gap is 0.68–1.83 tC ha⁻¹ yr⁻¹** |
+
+### The three findings that change the manuscript
+
+1. **⚠⚠ The inventory's own justification for equilibrium initialisation is quotable, and it is the
+   proposition this paper tests** (folder 01): *"approximately ten years of simulation since spin-up
+   is enough to cancel out the effect of the spin-up level (Peltoniemi et al. 2006)"* — NID 2024
+   §6.4. **Read Peltoniemi et al. 2006 before using it as a foil.**
+2. **⭐⭐ Liski et al. 2006 is the antecedent, and the difference is one assumption** (folder 02).
+   They ran the same transient national simulation — same country, model family and inventory litter
+   — but *"assuming a steady state"* for the 1922 initial pools. **HIKET keeps the run and calibrates
+   the state.** They also supply the lag claim (*"centuries later, these carbon stocks would stabilize
+   at a 38% higher level than in 1922"*) and, at 6.1 → 6.3 kg C m⁻² over 1922–2004, an accumulation
+   ~10× weaker than our repeated campaigns show — plausibly *because* they started full.
+   ⚠ Separately: HIKET is **not the first to criticise** equilibrium initialisation — Wutzler &
+   Reichstein (2007) made the theoretical argument with Yasso and Carvalhais et al. (2008) showed it
+   biases calibrated parameters — so "rarely examined" over-claims and must be softened.
+3. **✅ The σ_input understorey anchor, resolved** (`UNDERSTOREY_ANCHOR.md`). The three Finnish
+   sources **agree** at 0.51–0.67 tC ha⁻¹ yr⁻¹ (all tracing to Muukkonen & Mäkipää 2006, including
+   Lehtonen & Heikkinen's own Table A5). The apparent conflict was **our** derivation: arm B's 1.08
+   divides L&H's *absolute total* by *our* J̄, mixing two litter products — the very error the prior
+   file warns against for arm A. Corrected on our plot distribution the anchor is **≈1.21**, beside
+   Liski's **1.27**, so the "18% disagreement, unresolved" note in `Prior_specs/*_priors.R` closes.
+
+---
+
 ## 1. Andrén & Kätterer (1997) — ICBM
 `Andren_Katterer_1997_ICBM_EcolAppl.pdf`
 Andrén, O. & Kätterer, T. (1997). *ICBM: the introductory carbon balance model for
@@ -161,3 +204,24 @@ PDFs are untracked (as elsewhere here); this records what they are and what they
 **What they were used for:** M&M §"Prior specification: the litter-input flux window" — the decision
 to narrow the `flux_pair` window to `[0.05, 4.62]` (Gower's *Nordic* maximum) because the present
 ceiling bounds a **national mean** with a **global single-stand maximum**.
+
+---
+
+## 09 — Transit time, age, turnover (added 2026-09-11)
+
+`09_transit_time/` — Sierra et al. 2017 (*Glob. Change Biol.* 23:1763–1773). Read in full; it is why
+the manuscript says **mean transit time** rather than mean residence time. Their Eqn (2) is our
+formula exactly and their Eqn (4) is our numerical route, so the change was a rename and not a
+recomputation. See that folder's README for the quotes and the age / transit / turnover / residence
+distinctions.
+
+## 10 — How national inventories obtain the forest mineral-soil term (added 2026-09-16)
+
+`10_national_soil_terms/` — sources the Introduction's "few countries measure it, most model it".
+Read at the primary: Sweden (measured, SFSI since 1993), Norway (Yasso07 with a 1951–1990 backcast
+pre-run, **no soil measurement until 2035**, and the NID states "neither forest biomass, soil nor DOM pools
+can be assumed to be in an equilibrium state"), Finland (NID 2025), USA (empirical FIA stock model, no
+decomposition model). Germany measures (BZE, +0.41 Mg C/ha/yr mineral soil). ⚠ The Finnish inventory's
+modelled mineral-soil term went from ~−10 Mt CO₂ eq (early 2000s) to a **source from 2021** after the
+2025 recalculation of litter input — the draft's §"What the Finnish chain has reported" is restated on it.
+Aggregated sources to still read: Blujdea et al. 2015 (browser download) and Didion et al. 2016 (Aleksi).

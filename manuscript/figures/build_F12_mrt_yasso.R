@@ -77,10 +77,10 @@ for (i in seq_along(MODELS)) {
         side = 1, at = i, line = 1.15, cex = 0.86, col = "grey25", font = 2)
 }
 axis(2, las = 1)
-mtext("Intrinsic mean residence time (yr)", side = 2, line = 3.1, cex = 1.02)
+mtext("Intrinsic mean transit time (yr)", side = 2, line = 3.1, cex = 1.02)
 box(col = "grey55")
 
-title(main = "Intrinsic mean residence time, Yasso family", cex.main = 1.04, line = 1.9)
+title(main = "Intrinsic mean transit time, Yasso family", cex.main = 1.04, line = 1.9)
 mtext(sprintf("unit litter input at a fixed reference (T = %.1f\u00b0C, P = %.0f mm); independent of \u03c3_input and \u03c3_init",
               ref$clim$temp_mean, ref$clim$precip),
       side = 3, line = 0.55, cex = 0.76, col = "grey30")

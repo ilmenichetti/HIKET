@@ -210,14 +210,14 @@ for (M in names(RID)) {                       # --- row 1: the ridge ---
                                      grid.list = list(x = fx, y = fy))$z
 
   image(fx, fy, Zi2, col = pal, zlim = c(best - DLL, best),
-        xlab = "intrinsic MRT (yr)", ylab = expression(sigma[input]),
+        xlab = "intrinsic MTT (yr)", ylab = expression(sigma[input]),
         main = "", cex.main = 1.0)
   box()
   contour(MASS::kde2d(d$mrt, d$si, n = 60), add = TRUE, drawlabels = FALSE,
           col = adjustcolor("white", 0.75), lwd = 1.3, nlevels = 5)
   points(median(d$mrt), median(d$si), pch = 21, bg = "white", col = "black", cex = 1.5, lwd = 2)
   abline(v = PUB[[M]], lty = 2, lwd = 2, col = "grey15")
-  title(main = sprintf("%s  --  best attainable fit over (MRT, sigma_input)", M),
+  title(main = sprintf("%s  --  best attainable fit over (MTT, sigma_input)", M),
         line = 2.65, cex.main = 1.05)
   mtext(sprintf("posterior reaches %.1f-%.1f yr;  published %.1f (dashed)",
                 min(d$mrt), max(d$mrt), PUB[[M]]), side = 3, line = 1.45, cex = 0.60, col = "grey35")
@@ -229,8 +229,8 @@ par(mar = c(4.4, 4.8, 3.4, 1.2))
 for (M in names(RID)) {                       # --- row 2: variance of MRT ---
   v <- 100 * VAR[[M]]; v <- v[is.finite(v)]
   bp <- barplot(v, col = GC[names(v)], border = NA, ylim = c(0, max(115, max(v)*1.15)),
-                ylab = "share of posterior MRT variance (%)",
-                main = sprintf("%s  --  what makes MRT vary", M), cex.main = 1.0, cex.names = 0.95)
+                ylab = "share of posterior MTT variance (%)",
+                main = sprintf("%s  --  what makes MTT vary", M), cex.main = 1.0, cex.names = 0.95)
   abline(h = 100, lty = 3, col = "grey50")
   text(bp, v, sprintf("%.0f%%", v), pos = 3, cex = 0.85, font = 2)
   mtext(sprintf("first-order indices, total %.0f%%  (>100%% = the groups interact)", sum(v)),

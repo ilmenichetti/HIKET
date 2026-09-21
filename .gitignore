@@ -89,13 +89,20 @@ manuscript/*.toc
 manuscript/*.out
 manuscript/*.fls
 manuscript/*.fdb_latexmk
+manuscript/*.bbl
+manuscript/*.blg
 manuscript/*.synctex.gz
 manuscript/appendices/*.aux
 manuscript/appendices/*.log
+manuscript/appendices/*.out
 manuscript/appendices/*.pdf
 
-# Literature PDFs (copyright + size); keep the tracked catalogue literature/README.md
+# Literature PDFs (copyright + size); keep the tracked catalogues (README.md, refs.bib)
 literature/*.pdf
+literature/**/*.pdf
+# Text dumps extracted from big source documents (regenerable with pdftotext)
+literature/**/*_extract.txt
+literature/**/*_NID_*.txt
 
 # Ablation artefacts (regenerable; posteriors are large)
 doublechecks/ablation_logs/

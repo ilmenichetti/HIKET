@@ -78,9 +78,28 @@
       \includegraphics[width=0.58\linewidth,height=0.42\textheight,keepaspectratio]{#1.png}
       \caption{\textsf{#1} (NextGenC deliverable)}\end{figure}}{%
   \textcolor{warnrule}{\small[\textsf{#1} --- FILE NOT FOUND]}}}}}
-\newcommand{\FIGX}[1]{\textcolor{noterule}{\small$\blacktriangleright$ \textsf{#1}}}
+% \FIGX cites a figure without embedding it. Needs the same catcode dance as \FIG,
+% or an underscore in the name is read as a subscript and the build dies.
+\newcommand{\FIGX}{\begingroup\catcode`\_=12\relax\FIGXaux}
+\newcommand{\FIGXaux}[1]{\FIGlabel{#1}\endgroup}
 \newcommand{\NEW}[1]{\textcolor{testrule}{\small$\bigstar$ \textsf{TO BUILD: #1}}}
 \newcommand{\LIT}[1]{\textcolor{lorrule}{\small$\Box$ \textsf{LIT REVIEW: #1}}}
+
+% --- REFERENCE ANNOTATION (added 2026-09-04) ------------------------------
+% Every core claim carries the sources it rests on, in one short line under the
+% paragraph. \vd = quote/number verified against the source; \nd = still to check.
+% Full evidence tables and draft text: literature/NN_topic/README.md.
+\definecolor{refrule}{HTML}{45566B}
+\newcommand{\vd}{\textcolor{testrule}{$\checkmark$}}
+\newcommand{\nd}{\textcolor{lorrule}{$\square$}}
+% --- RESULT / DISCUSSION NESTING (added 2026-09-04) ------------------------
+% Combined Results and Discussion, nested at SUBSECTION level: each subsection
+% gives its result, then its interpretation, as SEPARATE paragraphs. \dparagraph
+% marks the interpretation half so the rhythm is visible at a glance and the two
+% halves stay mechanically separable if a journal demands the classic split.
+\newcommand{\dparagraph}[1]{\paragraph{\textcolor{noterule}{$\rightsquigarrow$}\ #1}}
+\newcommand{\refs}[1]{\par\vspace{-0.25em}{\footnotesize\color{refrule}%
+  \hangindent=1.3em\hangafter=1 $\vdash$~\textsc{refs}\,\ #1\par}\vspace{0.15em}}
 
 \title{\vspace{-1.4cm}\textbf{HIKET --- the storyline, v3}\\[2pt]
 \large second pass: the arc fitted to the structure of the paper}
@@ -97,7 +116,9 @@ be. \textbf{OCAR has not been abandoned; it has been moved inside.} The Opening 
 the Introduction, the Action is the Methods, and the Resolution is distributed across the Results in
 the order of importance set below. Each block is still one claim, its evidence, and nothing else.
 \FIGX{name} marks a figure; \NEW{name} one still to build; \LIT{topic} a literature review that must
-happen before the section can be written. Amber boxes are things that could sink a claim; green boxes
+happen before the section can be written. \textbf{New in this revision:} a grey $\vdash$~\textsc{refs}
+line under a claim lists the sources it rests on --- \vd\ verified against the source, \nd\ still to
+check. The evidence tables and draft text behind them live in \texttt{literature/NN\_topic/README.md}. Amber boxes are things that could sink a claim; green boxes
 are tests we could run; \textcolor{lorrule}{\textbf{violet boxes carry Lorenzo's v2 annotations}} and
 what was done about them.
 \end{note}
@@ -117,10 +138,10 @@ what was done about them.
 \node at (0.675*\W,0.42) {\textbf{ridge position} \quad$\sim$25\%};
 \node at (0.90*\W,0.42) {\textbf{local variance} \quad$\sim$20\%};
 \node[anchor=north west, text width=8.0cm, align=left] at (0,-0.15)
-  {does a transient start reproduce the observed national trajectory, and what does
-   fitting it require of the models?};
+  {once the start is estimated from the trajectory, where does it place the models on the
+   input/turnover exchange, and how far does the trajectory narrow it?};
 \node[anchor=north west, text width=3.4cm, align=left] at (0.55*\W,-0.15)
-  {does it matter where on the input/turnover ridge we land? (extrapolation)};
+  {does the position on the ridge reach the extrapolation, and for which structures?};
 \node[anchor=north west, text width=2.7cm, align=left] at (0.80*\W,-0.15)
   {what the models cannot see at all --- raised as questions, not solved};
 \end{tikzpicture}
@@ -134,6 +155,99 @@ last).}'' \textbf{Done:} the budget above governs this version, and the biologic
 input result demands is now \S\ref{sec:missingflux} rather than four lines in a mechanism list.
 \end{ann}
 
+% =====================================================================
+% THE WHOLE STORY ON ONE PAGE. IMRaD shell across the top, OCAR inside it,
+% the three weighted strands as the Resolution, and the two pending runs as
+% what is not yet closed. Redrawn for v3 -- v2's arc diagram is superseded
+% (it still carried the "structural uncertainty deliverable" framing).
+% =====================================================================
+\begin{center}
+\begin{tikzpicture}[
+  font=\scriptsize,
+  shell/.style={rectangle, rounded corners=1pt, draw=black!55, fill=black!5, align=center,
+                text width=36mm, inner sep=3pt, minimum height=7mm},
+  band/.style={rectangle, rounded corners, draw=blue!55!black, fill=blue!8, align=center,
+               text width=152mm, inner sep=4pt},
+  st/.style={rectangle, rounded corners, align=left, text width=46mm, inner sep=3.5pt},
+  s1/.style={draw=blue!55!black, fill=blue!9},
+  s2/.style={draw=teal!60!black, fill=teal!9},
+  s3/.style={draw=orange!75!black, fill=orange!11},
+  land/.style={rectangle, rounded corners, draw=green!50!black, fill=green!10, align=center,
+               text width=152mm, inner sep=4pt},
+  open/.style={rectangle, rounded corners, draw=violet!70!black, fill=violet!7, align=center,
+               text width=152mm, inner sep=4pt},
+  a/.style={-{Latex[length=1.9mm]}, thick, black!55},
+  ar/.style={-{Latex[length=2.2mm]}, very thick, blue!45!black}]
+
+\def\ca{0}\def\cb{5.4}\def\cc{10.8}
+% --- IMRaD shell, with OCAR underneath ---
+\foreach \x/\t/\o in {0/Introduction/{O + C}, 3.9/{Materials and methods}/{A},
+                      7.8/{Results \& Discussion}/{R}, 11.7/Conclusions/{R, closed}}
+  {\node[shell, anchor=north west] at (\x,0.9) {\textbf{\t}\\[-1pt]{\tiny\itshape OCAR: \o}};}
+
+% --- Introduction: the chain ---
+\node[band, anchor=north] (P) at (7.6,-0.5)
+  {\textbf{Opening.} The inventory's soil term is \emph{modelled, never measured} --- Tier~3 Yasso07,
+   $4.8$~Mt~CO$_2$ in 2022 at $31.5\%$ uncertainty, beside a forest sink down $84\%$ since 1990.
+   \ \ \textbf{Challenge.} It is started at \emph{equilibrium} --- ``ten years of simulation cancels
+   the spin-up level''. \textbf{[corrected 2026-09-16]} An equilibrium soil \emph{can} rise and level
+   off --- in response to litter changes after the start; what it cannot carry is the deficit already
+   there on the start date, so it attributes the whole trajectory to the window.};
+\node[band, anchor=north, fill=blue!5] (Q) at (7.6,-2.35)
+  {\textbf{The antecedent.} Liski et al.~(2006) ran the transient simulation and \emph{assumed} the
+   state. \ \textbf{We keep the run and calibrate the state} --- one assumption apart, and the one
+   three repeated campaigns can inform. \ \ \emph{Theory:} equilibrium fixes only $J\times\tau$, so
+   the ridge exists before any sampler runs; a transient start narrows it, it does not remove it.};
+\node[band, anchor=north, draw=orange!80!black, fill=orange!8] (A) at (7.6,-4.3)
+  {\textbf{Action.} Six models on one footing --- \emph{Yasso07/15/20 as the operational object,
+   SP1/TP2/TP3 as a transparent benchmark ladder, not an ensemble.} Equal external information;
+   transient init from 1917; log-normal likelihood with region, plot and campaign offsets
+   marginalised.};
+
+% --- the three strands ---
+\node[st, s1, anchor=north] (S1) at (\ca,-5.85)
+  {\textbf{STRAND 1 --- national trend \ ($\sim$55\%)}\\[2pt]
+   All six reach the levels and \emph{bracket} the rate; the shape splits them three ways ---
+   the dynamic an equilibrium start forecloses.\\[2pt]
+   \textbf{The turn:} fitting it needs \emph{more input and faster turnover} than published.
+   $3.19$--$4.34$ vs a supplied $2.511$~tC\,ha$^{-1}$\,yr$^{-1}$.\\[2pt]
+   \emph{So what is the litter product missing?} --- rhizodeposition, understorey,
+   mycorrhizal necromass \textbf{(the biology section)}.};
+\node[st, s2, anchor=north] (S2) at (\cb,-5.85)
+  {\textbf{STRAND 2 --- does it matter? \ ($\sim$25\%)}\\[2pt]
+   Both ends of the ridge fit the observed window, so the data cannot choose. Run them forward.\\[2pt]
+   \textbf{Yasso07: yes} --- one climate modifier ties turnover to temperature sensitivity
+   ($-2.08$~tC\,ha$^{-1}$ at SSP2-4.5).\\
+   \textbf{Yasso15 / 20: no} --- pool-specific modifiers, the pools holding the carbon barely move.\\[2pt]
+   \emph{Not that they are right --- that they are \textbf{resilient} to an assumption the data
+   cannot settle.}};
+\node[st, s3, anchor=north] (S3) at (\cc,-5.85)
+  {\textbf{STRAND 3 --- what none can see \ ($\sim$20\%)}\\[2pt]
+   Plot by plot there is no gradient to fit --- the models turn the litter-input gradient into a
+   carbon gradient the soil does not show (span $6.3$ against an observed $1.19$).\\[2pt]
+   Yet $44$--$65\%$ of the residual is recoverable from covariates in hand, against an observation
+   reliability of $0.49$.\\[2pt]
+   \emph{A question raised, not a gap filled.}};
+
+\node[land, anchor=north] (L) at (7.6,-11.7)
+  {\textbf{Conclusions.} A transient, calibrated start reproduces a dynamic the conventional one
+   forecloses --- and reproducing it demands an input the litter product does not contain. Where the
+   calibration lands on that trade-off reaches the forecast \emph{for some structures and not
+   others}, which is a usable statement for an inventory. \ \emph{Bonus product, not conclusion:
+   the maps.}};
+\node[open, anchor=north] (O) at (7.6,-13.45)
+  {\textbf{Not yet closed.} \ \nd~the $\sinput$ anchor ($1.08 \to \sim\!1.21$; arms A and B were
+   never a sensitivity pair) \ \ $\bullet$ \ \nd~\textbf{the equilibrium-init counterfactual has never
+   been run} --- the Introduction's central claim is still theory \ \ $\bullet$ \ \nd~the 1917 stock
+   floor \ \ $\bullet$ \ \nd~blocking reviews (Peltoniemi 2006; Bolinder's turnover/exudation split).};
+
+\draw[a] (P) -- (Q); \draw[a] (Q) -- (A);
+\foreach \n in {S1,S2,S3} \draw[ar] (A.south) -- (\n.north);
+\foreach \n in {S1,S2,S3} \draw[a] (\n.south) -- (\n.south |- L.north);
+\draw[a, violet!60!black] (L) -- (O);
+\end{tikzpicture}
+\end{center}
+
 \tableofcontents
 \bigskip
 
@@ -146,11 +260,28 @@ input result demands is now \S\ref{sec:missingflux} rather than four lines in a 
 \subsection{A sink that appears to be levelling off}
 \paragraph{What the inventory measures.} On the balanced plot set the mean stock runs
 $64.5 \to 71.5 \to 73.6$~tC\,ha$^{-1}$ across the three campaigns: $+7.0$, then $+2.1$.
-Accumulation, bending over. \FIG{F3_mean_soc}
+Accumulation, bending over. \FIG{F3_mean_SOCalt}
+\begin{note}
+\textbf{Opening figure, deliberately model-free (2026-09-04).} v3 opened on
+\textsf{F3\_mean\_soc}, which draws six model trajectories through the campaign means --- a Results
+answer shown before the question. \textsf{F3\_mean\_SOCalt} is the same data on the same basis with
+the models removed: three campaign means, the two segments between them, and their slopes. The model
+version now appears where it belongs, at the first Results claim.
+\end{note}
 
 \paragraph{The rate, and what it is a rate of.} $+0.259 \pm 0.040$~tC\,ha$^{-1}$\,yr$^{-1}$ over
 1985--2024 on the balanced set, whole profile, true observation years. Over the last interval alone
 it is $+0.117 \pm 0.066$ --- a confidence interval that includes zero.
+\begin{warn}
+\textbf{Which of these two numbers carries which claim --- state it, and never let them swap.} The
+\textbf{full span} ($+0.259$) is what the models are judged against, and it is the robust one: it
+survives a shared campaign-level offset of up to $\sim$9\%. The \textbf{last interval} ($+0.117$) is
+fragile --- it dissolves at $\tau_C\approx2\%$, and no field replication exists to measure that
+offset. \ \raisebox{0pt}{$\bigstar$}~\textbf{The uncomfortable part:} the levelling-off, which is the
+paper's opening hook, is the \emph{contrast} between the two intervals --- so the hook rests partly on
+the fragile number even though the model comparison rests on the robust one. Say so where the hook is
+introduced, not only in the limitations. Memory \texttt{campaign-comparability-limits-the-trend}.
+\end{warn}
 \begin{ann}
 \textbf{Annotation (p3): ``Which rate? And which report?''} \textbf{Fixed here:} the basis is now
 stated wherever a rate appears (balanced set $n=310$, unweighted, whole profile, true years), because
@@ -171,53 +302,199 @@ and observations as consistency rather than as validation.
 \end{warn}
 
 \subsection{Why it matters for the national greenhouse gas balance}
-\paragraph{The soil term is the uncertain one.} Finland's forest soil carbon flux enters the
-national inventory, and whether it is a growing sink or a saturating one changes the reported
-balance and the policy conclusions drawn from it. \LIT{the GHG inventory chain: how the soil term is
-produced, reported and used; where our models sit in it}
+\paragraph{The soil term is produced by a model, not measured.} Finland reports forest mineral-soil
+carbon with a Tier~3 method: inventory data and biomass models supply a litter input, Yasso07 converts
+it to an annual stock change for dead organic matter and soil organic matter combined, to one metre,
+in two regions. No soil flux is measured anywhere in the chain.
+\refs{\vd~Statistics Finland NID 2024 \S6.4 (method in force; \emph{``builds on the research by Liski
+et al.~(2006)''}); \vd~Liski et al.~2006 (the method's founding paper)}
+
+\paragraph{And it is large enough to decide the sign.} In 2022 mineral forest soils were reported as a
+sink of $4.8$~Mt~CO$_2$ beside a living-biomass sink of $12.6$, while the forest land sink had fallen
+$84\%$ since 1990 and the LULUCF sector had become a net source of $4.4$~Mt~CO$_2$\,eq. The soil term
+carries $31.5\%$ uncertainty against $16.3\%$ for tree biomass, and Forest Land's combined figure is
+$83.9\%$.
+\refs{\vd~NID 2024 \S6.1, \S6.4.3 (all figures); \vd~Lehtonen \& Heikkinen 2015 (source of the
+$31.5\%$ --- and of our $\sinput$ prior centre, which is worth saying once)}
+
+\paragraph{\raisebox{0pt}{$\bigstar$} The chain states its own initialisation assumption, and that is
+the proposition this paper tests.} The inventory fixes the initial soil state by a spin-up to steady
+state --- on NFI6 (1971--76) litter and 1960--90 mean weather --- justified in one sentence:
+\emph{``approximately ten years of simulation since spin-up is enough to cancel out the effect of the
+spin-up level''}. We test that over a $35$-year observed window with the initial state calibrated
+rather than assumed.
+\refs{\vd~NID 2024 \S6.4 (verbatim); \nd~Peltoniemi et al.~2006, For.~Ecol.~Manage.~232:75--85 --- the
+paper it cites, \textbf{read before quoting}}
+\begin{warn}
+\textbf{Tone.} Quote the \emph{inventory} citing Peltoniemi et al., not Peltoniemi et al.\ directly:
+the 2006 claim is probably narrower than the use made of it, and Mikko is a close collaborator. The
+sentence is a foil for a \emph{convention}, never for a colleague.
+\end{warn}
 
 \paragraph{What the inventory asks a model to do.} Not to rank plots, but to reproduce a national
 trajectory over decades and project it forward. That is the quantity this paper evaluates, and
 saying so early prevents a later result (near-zero plot-level skill) from reading as failure.
 
 \subsection{The convention: soils initialised at steady state}
-\paragraph{It is near-universal, and rarely examined.} The dominant practice across inventory
-applications is to start the soil at the equilibrium implied by contemporary litter input.
-\LIT{steady-state initialisation across model lineages --- Yasso, RothC, Century/DayCent, ICBM,
-CBM-CFS3; how each initialises, and how often the assumption is tested}
-\begin{ann}
-\textbf{Annotation (p3, twice): ``This will need literature review across multiple model
-lineages.''} \textbf{Acknowledged, not yet done} --- flagged here as a blocking dependency: the
-claim of near-universality cannot be made without it.
-\end{ann}
+\paragraph{It is the standard across the lineages used for forest soil reporting.} Yasso in the
+Finnish inventory (10\,000-year run to steady state), RothC --- where the equilibrium run additionally
+back-solves the annual carbon input from the measured stock --- and the spin-ups of global land
+models. The instructive exception is Canada's CBM-CFS3, which initialises through repeated rotations
+of growth and disturbance and so reports a deliberately non-equilibrium state.
+\refs{\vd~Lehtonen et al.~2016 (\emph{``running \dots\ into a steady state''}, and its premise:
+\emph{``if we assume that this average level of inputs and climate has remained steady over
+centuries''}); \vd~NID 2024 \S6.4; \vd~Contreras et al.~2026 (RothC practice); \nd~Kurz et al.~2009
+(CBM-CFS3, secondary so far); \nd~Parton et al.~1987 (Century)}
 
-\paragraph{What steady state assumes.} \LIT{the theory paragraph (annotation, p5): what an
-equilibrium state is for a linear donor-controlled system, what it assumes about the constancy of
-inputs and climate, what properties follow --- $C=J/k$, the loss of all timing information, and the
-fact that the assumption is about the \emph{history}, not about the soil}
+\paragraph{\raisebox{0pt}{$\bigstar$} And Liski et al.~(2006) is the antecedent: they ran the
+transient simulation and \emph{assumed} the state.} Same country, same model family, same
+inventory-derived litter, the same idea of following the management history forward ---
+\emph{``the soil and litter carbon pools at the beginning of the study period were calculated by
+assuming a steady state \dots\ starting from this steady state in 1922, the model was run using
+annually varying values of litter input and temperature.''} This paper keeps the run and
+\textbf{calibrates the state}. One assumption apart, and it is the one repeated campaigns can inform.
+\refs{\vd~Liski et al.~2006, Ann.~For.~Sci.~63:687--697 (verbatim, \S2)}
+\begin{note}
+\textbf{Lineage, not correction} (Lorenzo, 2026-09-04: \emph{``that's the most important
+reference''}). Aleksi and Mikko are coauthors on it. The paper evolves the group's own method; frame
+it collegially throughout, and give Liski the position in the Introduction that this draft previously
+gave to a passing $\sinput$ comparison.
+\end{note}
+
+\paragraph{The convention has been criticised before --- what has been missing is the test.} The
+equilibrium assumption is known to bias the calibration, not only the initial state: fitting to
+current stocks under it overestimates the decay rate of the slowest pool, and spin-up overestimates
+recently disturbed sites. Where it has been relaxed, the replacement state has been \emph{imposed} ---
+from an assumed disturbance history, a thermal proxy, or a prescribed correction --- rather than
+inferred from observed change in the stock.
+\refs{\vd~Wutzler \& Reichstein 2007, Biogeosciences 4:125--136 (with Yasso; small accumulation makes
+implied equilibrium stocks \emph{``virtually approach infinity''}); \vd~Carvalhais et al.~2008
+(relaxing it: model efficiency $+21\%$, biased parameters removed); \vd~Kanari et al.~2022;
+\vd~Lee \& Viscarra Rossel 2020 ($-2.0$ to $-4.5$~Mg\,C\,ha$^{-1}$ from initialisation alone);
+\vd~Le No\"e et al.~2023 (\raisebox{0pt}{$\sim$}250 models, little independent time-series validation)}
+\begin{warn}
+\textbf{``Near-universal and rarely examined'' has been cut, and must not come back.} It is
+checkable and wrong: Wutzler \& Reichstein made essentially this argument in 2007, using Yasso. The
+defensible novelty is narrower and still a first --- \textbf{the initial state calibrated against
+repeated national soil inventories}, which is what the campaigns now allow.
+\end{warn}
+
+\paragraph{What steady state assumes.} In all of these models a pool loses carbon in proportion to
+how much it holds, and nothing else. Under a constant input and a constant climate such a system
+drifts to one stock and stays there: input multiplied by mean residence time, the familiar
+$C^{*}=J/k$. Starting a simulation at that stock is not an assumption about the soil. It is an
+assumption about its \emph{history} --- that input and climate have been effectively unchanged for
+long enough that even the slowest pool has caught up, and that nothing has disturbed it in between.
+\begin{ann}
+\textbf{Annotation (p6): ``\emph{`donor-controlled' sounds jargon in this context, be simpler.''}}
+\textbf{Done} --- the property is now stated in words (``a pool loses carbon in proportion to how much
+it holds''). The term itself belongs in the Methods, once, if at all.
+\end{ann}
+\refs{\vd~Olson 1963, Ecology 44:322--331 ($X=L/k$); \nd~\AA gren \& Bosatta 1998 \emph{or}
+Manzoni \& Porporato 2009 (general form --- pick one); \nd~Sierra et al.~2017 (age/turnover/transit
+vocabulary, to keep our terms exact)}
+
+\paragraph{Two properties follow, and the paper turns on both.} The equilibrium condition fixes only
+the \emph{product} $J\times\tau$, so a level alone can never separate a fast soil fed much litter from
+a slow soil fed little --- \textbf{the ridge is derivable from the model definition, before any
+sampler runs}. And the stationary state is a function of the parameters alone, so an equilibrium start
+has no distance left to travel: it can track a moving target, but it cannot express a soil still
+catching up.
+\refs{\vd~derivation, ours (\texttt{literature/03\_equilibrium\_theory}); \nd~Luo et al.~2017,
+Biogeosciences 14:145--161 (storage \emph{capacity} vs \emph{potential} --- adopt the vocabulary only
+after checking their definitions)}
 
 \paragraph{And what follows from it.} An equilibrium start is already at the end of the accumulation.
 It cannot produce a rise, so it cannot show a rise levelling off; the very dynamic the inventory
 needs is the one the convention defines away.
 
 \subsection{Finnish forests are a managed landscape, not an equilibrium one}
-\paragraph{The history is the argument.} Exploitation, then a century of managed regrowth: growing
-stock rose from roughly 1400 to 1775~million~m$^3$ between 1917 and 1985 and has risen further since.
-A soil integrating a century of that is not at equilibrium with today's litter.
+\paragraph{The history is the argument.} Slash-and-burn across most of the productive forest land of
+the east, woodland grazing suppressing regeneration, tar burning and high-grading: by the first
+inventory, old trees were effectively absent from southern Finland outside the least accessible
+areas and forest volume was at its historical low. Then a century of managed regrowth --- growing
+stock from roughly $1.4$ to $2.6$ billion~m$^3$, $+84\%$, most of it after the late 1960s.
 \FIG{F10b_forest_history}
+\refs{\vd~Aakala, Kulha \& Kuuluvainen 2023, Landscape Ecol.~38:2417--2431 (\emph{``in eastern Finland
+almost all productive forest land was used in slash-and-burn cultivation''}; population density the
+strongest predictor of depletion); \vd~Korhonen et al.~2024 (the growing-stock series)}
+
+\paragraph{The managed landscape still sits below its own unmanaged counterparts.} Old unmanaged
+stands hold about $40\%$ more carbon in the mineral soil than managed stands of comparable site types
+--- and their own stocks do not change over a twenty-year resampling.
+\refs{\vd~Kumpu, Peltoniemi, Forsius \& M\"akel\"a 2025, Silva Fennica 59:24072 (0--10~cm $2.44$ vs
+$1.78$, 10--20~cm $1.62$ vs $1.14$~kg\,C\,m$^{-2}$, both $p<0.001$; resampled change $-692$~kg\,C\,ha$^{-1}$,
+$p=0.75$); \nd~comparability of their depth basis with our whole-profile target}
+
+\paragraph{\raisebox{0pt}{$\bigstar$} And the lag is long enough to matter --- stated by the
+antecedent itself.} Even with litter held at its 2004 level, Liski et al.\ found carbon would keep
+accumulating and the stocks would settle \emph{``centuries later \dots\ at a $38\%$ higher level than
+in 1922''}. Peltoniemi et al.\ had already attributed part of the soil carbon of Finnish plots to a
+slash-and-burn history ending in the early twentieth century, and concluded that the long-term trend
+\emph{``cannot be distinguished from the measured data unless the measurements cover at least two
+rotations''}. Three campaigns over four decades is what makes the state estimable.
+\refs{\vd~Liski et al.~2006 \S4 (verbatim); \vd~Peltoniemi et al.~2004, GCB 10:2078--2091 (verbatim);
+\vd~Wutzler \& Reichstein 2007 (soils disturbed \emph{centuries} ago remain transient)}
+
+\dparagraph{\raisebox{0pt}{$\bigstar$} And our own posteriors say the same thing, which is the
+reconciliation this section needs.} Holding litter at its present level and letting each calibrated
+model run to its own equilibrium leaves a headroom of $+28$ to $+49\%$ above the modelled 1985 stock
+in five of the six --- Yasso07 $+44$, Yasso15 $+47$, Yasso20 $+28$, TP2 $+49$, TP3 $+82$, with SP1 the
+outlier at $+5$. Liski et al.\ put it at $+38\%$. \textbf{Two independent routes --- their
+equilibrium-started forward run, our calibrated transient posterior --- land on the same
+disequilibrium.}
+\refs{ours, \texttt{doublechecks/equilibrium\_headroom.R} (arm B, 4 draws/model)}
 \begin{ann}
-\textbf{Annotation (p5): ``This is load bearing and will also need proper literature revision.''}
-\textbf{Agreed --- and it is the load-bearing claim of the whole paper.} \LIT{Finnish forest
-management history and its soil-carbon consequences; the non-equilibrium initialisation problem
-(Peltoniemi 2004 as the direct antecedent); evidence on how long soils lag a change in input}
+\textbf{Annotation (p7): ``\emph{This need to be reconciled with our results with a discussion.}''}
+\textbf{Done, and it corroborates rather than conflicts.} \textbf{Note the bases differ} --- Liski's
+$38\%$ is relative to 1922, ours to the modelled 1985 state --- so the agreement is in magnitude and
+direction, not decimal for decimal. SP1's $+5\%$ is the informative exception: a single slow pool is
+already close to its own equilibrium, which is why it is the model that cannot produce the observed
+accumulation.
 \end{ann}
+\begin{warn}
+\textbf{Consistency check with Strand 2.} Liski et al.\ describe continued accumulation under litter
+frozen at 2004. Our forward arm freezes inputs at 2024 and finds the same thing --- so \textbf{cite
+them there}, and do not present it as new. See memory \texttt{forecast-sink-robustness}.
+\end{warn}
+\begin{test}
+\textbf{\nd~The check that would make this section decisive.} Liski et al.\ report soil carbon going
+$6.1\to6.3$~kg\,C\,m$^{-2}$ over 1922--2004: about $+0.024$~tC\,ha$^{-1}$\,yr$^{-1}$, an order of
+magnitude below the $+0.259$ our campaigns show for 1985--2024. A model started full has little room
+to accumulate --- the thesis of this paper, in the antecedent's own numbers. \textbf{Verify first}:
+their figure is a national mean over a \emph{changing} forest area (the denominator implies
+$\sim$14~Mha), on a ``soil and litter'' basis, over a different period.
+\end{test}
 
 \subsection{Objectives}
+\paragraph{Why the method and the result are the same thing here.} The convention is the reason the
+national trajectory has never been tested: a soil started at equilibrium reproduces a stock but has no
+trajectory to be wrong about, so the question of whether these models can follow four decades of
+change has not been asked of them. Replacing the assumption is therefore not a methodological preface
+to the results --- it is what makes the results exist. This is stated once, here, so that a reader
+does not arrive at the Results expecting a methods paper.
+\begin{note}
+\textbf{Why this paragraph is here.} The Introduction builds on the initialisation convention, which
+promises a \emph{methods} contribution; the weight budget puts $\sim$55\% on the \emph{national
+trend}, an empirical one. Without the joint stated explicitly, the paper reads as changing its mind
+at the section break.
+\end{note}
+
 \paragraph{Three questions, in the order the paper weights them.}
-(i) Does a transient, calibrated initialisation reproduce the observed national trajectory, and what
-does reproducing it require of the models? (ii) Does it matter, for extrapolation, where the
-calibration lands on the input/turnover trade-off? (iii) What is left that none of the models can
-see, and what would it take to see it?
+(i) Once the starting state is estimated from the measured trajectory, where does that trajectory
+place the models on the input/turnover exchange, relative to their published parameterisations, and
+how far does it narrow that exchange? (Reaching the stocks and the rate is a precondition, reported as
+such.) (ii) Does the position on the exchange reach the extrapolation: do two calibrations that
+reproduce the same window from different positions project differently, and for which structures?
+(iii) What is left that none of the models can see, and what would it take to see it?
+\begin{note}
+\textbf{Reworded 2026-09-16.} (i) used to lead with ``does a transient start reproduce the
+trajectory?'' --- a yes/no the Results then discount as consistency, not validation. The title says
+\emph{displaces}; the question now asks \emph{where}. Behind it sit the two advancements as Lorenzo
+put them: the state is \emph{estimated} (the trajectory informs it) and its date is \emph{pushed back}
+to 1917 (the error in assuming balance decays through 68 years of pre-run; what does not decay, the
+estimate takes up). (ii) stays on extrapolation in the Introduction; warming is named only in Strand 2.
+\end{note}
 
 % =====================================================================
 % MATERIALS AND METHODS. OCAR's Action. Kept deliberately short here -- the real
@@ -236,8 +513,20 @@ modelled deep tail, reproducing the official national stocks exactly. \FIG{F2_ba
 mortality, excluding understorey. \FIG{F1_inputs}
 
 \subsection{The model ladder}
-\paragraph{Six models, one to five pools.} SP1, TP2, TP3, Yasso07, Yasso15, Yasso20 --- the simple
-models as an interpretable benchmark, the Yasso family as the operational standard.
+\paragraph{One operational model, and three benchmarks to check it against.} The object of study is
+Yasso --- it is what the inventory runs, in three published versions. SP1, TP2 and TP3 are added as a
+one-, two- and three-pool benchmark ladder whose behaviour is transparent, so that any result can be
+read against a structure simple enough to reason about by hand. \textbf{They are a control, not
+competitors}: the question they answer is whether a finding is a property of the data and the
+transient design, or an artefact of a particular five-pool implementation.
+\begin{warn}
+\textbf{The word ``ensemble'' has to be handled carefully, and this draft was not handling it.} Six
+models run together is not an ensemble in the sense the phrase carries in this literature --- a set
+sampled to span structural uncertainty, whose spread is a product. Ours is one operational model plus
+a benchmark ladder, and the spread between them is a \emph{diagnostic}, not an uncertainty estimate.
+Say ``all six models'' where the meaning is ``all of them''; keep ``ensemble'' for the gridded maps,
+where averaging the six genuinely is what is being delivered.
+\end{warn}
 \begin{ann}
 \textbf{Annotation (p9):} ``\emph{we are not really doing any structural uncertainty work \dots\ We
 have the simpler structures as a benchmark, mainly, with Yasso as the proven standard.}''
@@ -270,10 +559,17 @@ residual analysis against site covariates.
 \ifcombined
   \section{Results and discussion}
   \begin{note}
-  \textbf{Combined, deliberately.} Every result here needs its interpretation immediately: the level
-  agreement means nothing without the ridge, and the ridge means nothing without what it costs. A
-  split version is one toggle away (\texttt{\textbackslash combinedfalse}) if a target journal
-  requires it.
+  \textbf{Combined, deliberately --- and nested at the SUBSECTION level.} Every result here needs its
+  interpretation immediately: the level agreement means nothing without the ridge, and the ridge means
+  nothing without what it costs. \textbf{The rhythm inside each subsection is fixed:} one paragraph
+  states what was measured and stops; the next, marked \textcolor{noterule}{$\rightsquigarrow$},
+  interprets it and opens with an explicit signal (\emph{``This implies''}, \emph{``Two readings''},
+  \emph{``So''}). A result paragraph never takes an inference in its stress position.
+  \textbf{Why not nest at paragraph level:} the reader loses track of which sentences are observation
+  and which are inference, and the split stops being mechanical --- \texttt{\textbackslash
+  combinedfalse} would then mean unpicking every block by hand instead of moving whole paragraphs.
+  Cross-cutting argument that no single result owns (the ridge's meaning, the limitations) stays in a
+  short closing Discussion.
   \end{note}
 \else
   \section{Results}
@@ -285,7 +581,22 @@ residual analysis against site covariates.
 
 \subsubsection{The models reach the observed levels}
 \paragraph{No model sits more than $3.5$~tC\,ha$^{-1}$ from any campaign mean.} On the current
-calibration the ensemble reproduces all three campaign levels.
+calibration all six models reproduce all three campaign levels. \FIG{F3_mean_soc}
+
+\dparagraph{Reaching those levels is not the free parameter it would be in a conventional
+calibration.} The equilibrium stock is $J\times\tau$, and if both factors were free, hitting a level
+would be arithmetic rather than a result. Neither is free here. The decomposition rates are
+externally anchored and not fitted --- Yasso's $a$-vector is a fixed constant, the simple models'
+fast rate likewise and their slow rate pinned at the ICBM value --- and the input multiplier is held
+to a prior of log-SD $0.25$ around an independently derived centre. What the six models are asked to
+do is reach \emph{three} campaign levels, decades apart, on anchored kinetics and a constrained
+input, from a start that is itself inferred. That they all do is the evidence that the fair frame
+works.
+
+\dparagraph{What it cannot do is discriminate.} Every point on the input/turnover ridge reaches the
+same level by construction, so agreement here separates neither the six structures from one another
+nor our calibration from the published one. It is the precondition for the two claims that follow ---
+the rate and the shape --- and it is read as such, not as support for them.
 \begin{ann}
 \textbf{Annotation (p7): ``I don't get what this refers to.''} The v2 text pointed at a
 ``$26$~tC\,ha$^{-1}$ too high at 1985'' caveat that no reader could know about --- it was an internal
@@ -293,16 +604,21 @@ memory of an earlier run. \textbf{Deleted}; the sentence now states the present 
 \end{ann}
 
 \subsubsection{And they reproduce the rate, within the limits of the data}
-\paragraph{The ensemble brackets the observed rate, and two members land on it.} Yasso07 $+0.258$ and
+\paragraph{The six models bracket the observed rate, and two land on it.} Yasso07 $+0.258$ and
 Yasso15 $+0.250$ against an observed $+0.259$; TP2 and TP3 run stronger, SP1 and Yasso20 weaker.
 \FIG{F5_stock_change}
+\dparagraph{The bracket is the result; the two that land on it are not.} That the six span the
+observed rate says the transient design produces the right order of magnitude of accumulation, which
+an equilibrium start cannot. Which members happen to fall closest is not interpretable: they were not
+selected for it, the observed rate carries its own comparability error, and the spread between models
+is a diagnostic rather than an uncertainty.
 \begin{warn}
 \textbf{Stated as consistency, not as validation} (annotation, p7). The observed rate carries its own
 comparability error, so ``two models land on it'' is reported as what was seen, with the campaign
 caveats attached, and no model is preferred on this basis.
 \end{warn}
 
-\subsubsection{The trajectory shape splits the ensemble three ways}
+\subsubsection{The trajectory shape splits the six models three ways}
 \paragraph{Three behaviours, and they are legible.} Yasso07 and Yasso15 rise and flatten; TP2 and TP3
 rise and keep rising; SP1 and Yasso20 peak in the late 2000s and decline. The same split is visible
 in the per-plot deliverable. \NEW{F3b --- trajectory shape, three groups, explicitly grouped}
@@ -322,20 +638,108 @@ is precisely what an equilibrium initialisation discards. Reproducing it is the 
 $R^2 \le 0.0012$; holdout RMSE spans $3.6\%$, and the best and worst belong to a five-pool and a
 three-pool model. \FIG{T1_model_summary} \FIG{F6b_skill_vs_complexity}
 
-\paragraph{So fit cannot arbitrate between these structures.} Whatever separates them, it is not the
-calibration data.
+\dparagraph{So fit cannot arbitrate between these structures.} Whatever separates them, it is not
+the calibration data --- which is why the benchmark ladder is read as a control on the operational
+model rather than as a competition, and why Strand 2 has to ask the question somewhere else: in
+extrapolation, where the structures do separate.
+
+\subsubsection{And plot by plot there is no gradient to fit}
+\paragraph{The models impose an ordering across plots; the observations do not have one.} Holdout
+$R^2$ is zero to three decimals in all six, and the fitted line through predicted-against-observed is
+flat. But the informative part of the figure is not the flatness --- it is that the \emph{predicted}
+spread is the wider of the two ($0$--$270$ against an observed $30$--$220$), and that it is cleanly
+ordered by stand basal area, the models' only real between-plot driver, while the observations show no
+such ordering. \FIG{F6_obs_vs_pred_holdout}
+
+\dparagraph{So the problem is not that the models are uninformative about plots --- it is that they
+are confidently wrong about them.} Litter input varies across plots and the models translate that
+faithfully into carbon; observed SOC is ordered by something else. Between-plot variation in this
+landscape is dominated by local factors --- edaphic, hydrological, historical --- for which no model
+here has a term, and against which a litter-driven gradient is not merely weak but misdirected.
+
+\dparagraph{An ordering the models do not carry is a question, and it is the last strand's.} If the
+observations are ordered by something absent from every model here, the question is what --- and that question is answerable with
+data already in hand (Strand 3).
+\paragraph{\raisebox{0pt}{$\bigstar$} Measured: the models express a between-plot gradient an order
+of magnitude steeper than the soil's.} Regressing $\log$~SOC on stand basal area gives a model
+response of
+$+0.044$ to $+0.049$ per m$^2$\,ha$^{-1}$ ($r=0.62$--$0.73$) against an observed $+0.0044$
+($r=0.11$). The residual therefore falls with basal area in \textbf{all six models}, at
+$-0.032$ to $-0.044$, with $p$ from $10^{-16}$ to $10^{-111}$ and on holdout, calibration and pooled
+data alike. Across the observed range of $40$~m$^2$\,ha$^{-1}$ the models make soil carbon span a
+factor of $\mathbf{6.3}$; the observations span $\mathbf{1.19}$.
+\refs{ours, \texttt{doublechecks/basal\_area\_sign.R} (arm B run; residual basis
+$\log\mathrm{obs}-\log\mathrm{pred}$, identical to the RF target)}
+
+\dparagraph{And the little that the data do show is mostly geography.} Controlling for region and soil
+type, the observed slope falls from $0.00438$ to $0.00184$ and stops being significant ($p=0.12$),
+while the model slope is unmoved at $0.0444$. On that adjusted basis the mismatch is a factor of
+$\mathbf{24}$, and the observed span across the whole basal-area range is $1.08$ --- statistically
+indistinguishable from no dependence at all.
+\paragraph{Where the gradient comes from: the litter product, transmitted faithfully.} The models
+carry no basal-area term. They carry litter input, and matched in time to the same 1985 basal area
+that gradient is $d\log J/d\mathrm{BA} = +0.072$ --- a span of $\times 18$ across the observed range.
+The modelled stock's own slope is $+0.073$ to $+0.076$. \textbf{The models pass the input gradient
+through essentially one-for-one}, and the forward run then damps it (the predictive slope is
+$+0.044$ to $+0.049$). There is no amplification to explain and no defect to find.
+\refs{ours, \texttt{doublechecks/basal\_area\_sign.R} and \texttt{woody\_compartment\_test.R}}
+
+\begin{test}
+\textbf{\vd~Tested and refuted 2026-09-04: it is not a compartment mismatch.} The hypothesis was that
+Yasso's stock includes woody debris a soil core cannot contain, so the mismatch would grow with
+standing biomass. Zeroing the woody litter inputs moves the gradient by $6\%$ (Yasso15
+$0.0755 \to 0.0710$) against a $15\times$ gap to the observations. \textbf{And the decisive control is
+free:} SP1, TP2 and TP3 carry a single scalar litter flux with \emph{no} composition information at
+all, and they produce the \emph{same} slope ($0.073$). A mechanism absent from three of the six
+cannot explain a gradient present in all six.
+\end{test}
+
+\dparagraph{So the finding belongs to the input product and to the soil, not to the models.} The
+litter product says a plot's carbon input varies eighteen-fold across the basal-area range; the soil
+says its carbon varies by a factor of $1.2$. Two things follow, and the second is the more useful.
+\textbf{(i)} Plot-level soil carbon is not set by current litter input --- each plot sits at a
+different point on its own disturbance trajectory, and one global initial state cannot express that.
+\textbf{(ii)} \textbf{An eighteen-fold input gradient is not credible on its face.} A stand-keyed
+product gives a freshly cut plot almost no litter, and a freshly cut plot does not stop receiving
+carbon: ground vegetation, dying roots and residues continue. The plot-scale failure is therefore
+evidence for the \emph{same} missing flux as \S\ref{sec:missingflux}, reached from the opposite end
+--- and it points at the two components that section is weakest on, understorey and early-succession
+vegetation, because those are exactly where a low-basal-area plot's input has gone.
 
 \subsubsection{The data pin a level, and little else}
 \paragraph{Convergence is not identifiability.} R-hat $\le 1.008$ everywhere, yet the transfer
 fractions are prior-pinned, ridge-correlated and carry under a nat.
-\FIG{F8b_fraction_ridges} \FIG{F6_obs_vs_pred_holdout}
+\FIG{F8b_fraction_ridges}
+
+\dparagraph{Clean convergence on a non-identified posterior is the expected result of fixing the
+mixing, not a failure to notice a problem.} Clean R-hat with prior-pinned marginals, near-perfect anti-correlation between
+fractions leaving the same pool, and sub-nat information gain are three independent signatures of the
+same thing: the data constrain the net flux out of a pool, never the split. It also sets the limit of
+what follows --- what the campaigns identify is a level and a rate, which is what the inventory needs
+and is all the paper claims.
 
 \subsubsection{What fitting the trajectory requires: more input, and faster turnover}
 \paragraph{The calibration lands away from the published parameterisations.} Effective litter flux
 $3.19$--$4.34$~tC\,ha$^{-1}$\,yr$^{-1}$, and intrinsic MRT $24.6$ / $27.1$ / $22.6$~yr for
-Yasso07/15/20 against published $33.5$ / $30.5$ / $22.1$. \FIG{F12_mrt_yasso}
+Yasso07/15/20 against published $33.5$ / $30.5$ / $22.1$. \FIG{F9_auxiliary_sigmas}
+\FIG{F12_mrt_yasso}
 
-\paragraph{These are one displacement, not two.} The level constrains
+\paragraph{The input displacement is the visual hook, and it is a biological statement.} Every model
+settles above the tree-only litter product it was given ($\bar{J} \approx 2.5$) and inside the
+region-matched NPP envelope --- so what the calibration asks for is not physically impossible, it is
+a flux the inventory product does not contain. That plate carries the paired auxiliary result: the
+same posteriors start 1917 well below equilibrium. It is the figure this subsection opens on; F12 and
+F14 then say what the input displacement costs in turnover.
+\begin{note}
+\textbf{Restored 2026-09-04.} F9 was built and current but referenced nowhere in v3 --- the envelope
+plate is the one picture that makes ``more input than the product supplies'' visible, so it belongs
+here rather than only implicitly behind the ridge.
+\textbf{Direction check:} relative to \emph{published} our turnover is \textbf{faster}, not
+slower ($24.6$/$27.1$ vs $33.5$/$30.5$); it is relative to \emph{earlier runs of ours} that MRT has
+lengthened. The ridge makes more input pair with faster turnover, and the paragraph title says so.
+\end{note}
+
+\dparagraph{These are one displacement, not two.} The level constrains
 $\mathrm{MRT} \times \sinput$, so faster-with-more and slower-with-less fit alike; the posterior
 rides that ridge. \FIG{F14_mrt_ridge} \FIG{S13_mrt_ridge_benchmark}
 
@@ -373,35 +777,111 @@ a calibration free to adjust rates can absorb a missing flux without visible mis
 calibration on a fixed rate anchor removes that compensation, and what is missing then has to appear
 somewhere.
 
-\paragraph{Belowground turnover.} Fine root lifespan is the largest single lever on belowground
-litter and is poorly constrained. \LIT{fine root MRT in boreal conifers: isotopic vs minirhizotron
-estimates, and the factor-of-several disagreement between methods}
+\paragraph{The size of what has to be explained.} Effective flux $3.19$--$4.34$ against a supplied
+$\bar J=2.511$~tC\,ha$^{-1}$\,yr$^{-1}$: a gap of $\mathbf{0.68}$--$\mathbf{1.83}$. The candidates
+below are ordered by how well the literature prices them, \emph{not} by how well they help.
+\refs{ours, arm B run \texttt{20260831\_1624*}; \vd~Liski et al.~2006 implies $\sinput\approx1.27$
+independently --- the floor of our range}
 
-\paragraph{Rhizodeposition.} Exudates bypass the litter pathway entirely and are absent from
-inventory litter models by construction. \LIT{exudate fluxes as a fraction of NPP in boreal forest}
+\paragraph{Rhizodeposition --- the one with an accounting precedent.} Cropland carbon accounting has
+carried this term for two decades: the standard approach adds an ``extra-root material'' pool at
+$65\%$ of standing root biomass. Forest inventory chains add nothing analogous. And root-derived
+carbon is not a low-efficiency input --- at Ultuna its optimised humification coefficient is about
+$2.3\times$ that of the same mass of aboveground residues.
+\refs{\vd~Bolinder et al.~2007, Agric.~Ecosyst.~Environ.~118:29--42 (the $\times1.65$; RD coefficients
+in the literature span $0.5$--$2.0$); \vd~K\"atterer, Bolinder, Andr\'en, Kirchmann \& Menichetti 2011,
+AEE 141:184--192 (the $2.3\times$); \nd~a boreal-forest rhizodeposition estimate}
+\begin{warn}
+\textbf{The cropland factor cannot be carried over at face value.} In cropland, root biomass is a
+harvest-time \emph{snapshot}, so the $65\%$ compensates for within-season turnover \emph{and} root
+hairs \emph{and} exudates. A forest chain already counts fine-root turnover explicitly (at
+$0.85$~yr$^{-1}$), so the forest analogue covers only what is left and \textbf{must be smaller}. The
+claim is therefore: cropland accounting recognises a belowground input beyond root biomass and prices
+it; forest accounting recognises none; the truth is in between.
+\ \vd~\textbf{Answered 2026-09-04, and it weakens this objection.} Bolinder et al.\ derive the $0.65$
+as $33/50$ --- the share of belowground C \emph{released by living roots and remaining in soil} over
+the share \emph{remaining in roots} --- and state that the extra-root pool is
+\emph{``exudates, as well as root hairs and fine roots sloughed off during the growing season which,
+because of sampling difficulties, are not included in the `root' fraction.''} That is not the
+within-season turnover a forest chain already counts; and forest fine-root biomass is estimated from
+cores and root:leaf allometry, which has the \emph{same} sampling problem. \ \nd~a boreal tracer
+estimate of the same ratio; \nd~whether our chain's fine-root biomass misses sloughed material.
+\end{warn}
 
-\paragraph{Mycorrhizal necromass.} Increasingly implicated as a dominant precursor of stable soil
-carbon in boreal systems, and entirely outside the litter product. \LIT{mycorrhizal contribution to
-boreal SOC formation --- the Clemmensen line of evidence and what has followed it}
+\paragraph{Understorey --- outside the litter product by construction, though not outside the
+inventory.} The national inventory carries a ground-vegetation litter term; the litter product used
+here is a tree-litter product and does not, by design. The understorey share also rises strongly
+northward, so a single national multiplier is wrong in opposite directions at the two ends of the
+country. \FIG{SX_input_vs_literature}
+\begin{ann}
+\textbf{Annotation (p19): ``\emph{Of course this formulation cannot be in the manuscript\dots}''}
+\textbf{Agreed and rewritten.} ``The product we were given'' reads as a complaint about a
+collaborator. The product excludes understorey \emph{by design}, which is a statement about scope,
+not a shortcoming --- and Boris is a coauthor. Phrase it as scope everywhere.
+\end{ann}
+\refs{\vd~NID 2024 Table 6.4-3 via Muukkonen et al.~2006 ($50.6$~S / $66.6$~N gC\,m$^{-2}$\,yr$^{-1}$
+aboveground); \vd~Lehtonen et al.~2016 (\emph{``the role of understorey litter input was
+underestimated \dots\ especially in northern Finland''}); \vd~Lehtonen \& Heikkinen 2015 (our anchor)}
+\begin{note}
+\textbf{DECIDED (Lorenzo, annotation p20): stay on arm B for now.} \emph{``For the moment I would
+stick just to Arm B, and go with it, we see later and eventually when referee revise it.''} No re-run
+on the anchor. The arithmetic below is recorded because it must be \emph{stated} in the Methods, not
+because it changes the run.
+\end{note}
+\begin{test}
+\textbf{\raisebox{0pt}{$\bigstar$} Resolved 2026-09-04 --- the sources agree; our derivation did not.}
+Lehtonen \& Heikkinen carry the \emph{same} understorey litter as the inventory, in their own Table A5
+($506$~S / $666$~N kg\,C\,ha$^{-1}$\,yr$^{-1}$, from Muukkonen \& M\"akip\"a\"a 2006), and Liski's
+implied $0.61$ sits inside that range. The $1.08$ we ran came from dividing L\&H's \emph{absolute
+total} ($2.70$) by \emph{our} $\bar J$ ($2.511$) --- two different litter products, so it measures the
+understorey gap \emph{minus} the offset between their tree-litter levels. Adding an understorey
+estimate to our own $\bar J$, on our own plot distribution, gives $\mathbf{1.21}$; Liski gives
+$\mathbf{1.27}$. \textbf{Arm A and arm B were never a sensitivity pair.}
+\ \nd~provenance of the $2.70$; \nd~region coding. Owner: Aleksi Lehtonen.
+\end{test}
 
-\paragraph{Understorey.} Excluded from the product by construction, and its share rises strongly
-toward the north --- so a single national multiplier must be wrong in opposite directions at the two
-ends of the country. \FIG{SX_input_vs_literature}
+\paragraph{Mycorrhizal necromass.} Root-associated fungi are implicated as a dominant precursor of
+stable boreal soil carbon, and mycelium is not a tree biomass compartment, so no turnover coefficient
+can produce it.
+\refs{\vd~Clemmensen et al.~2013, Science 339:1615--1618 ($50$--$70\%$ of stored carbon from roots and
+root-associated organisms); \nd~Ekblad et al.~2013 and Hagenbo et al.~2017 (production, in carbon);
+\nd~the necromass fraction of production}
+\begin{warn}
+\textbf{Do not quote the $50$--$70\%$ as the size of a missing flux.} It describes the \emph{origin of
+stored carbon}, and some of that root-derived carbon is already in our input as fine-root litter. The
+defensible sentence: the dominant precursor is root-derived and partly fungal, and \emph{the fungal
+component} is outside inventory litter models.
+\end{warn}
 
-\paragraph{Early-succession vegetation.} Pioneer species after disturbance contribute litter that
-inventory-based models, keyed to standing merchantable biomass, do not represent.
-\LIT{pioneer/early-succession litter contributions after clear-cut and after fire}
+\paragraph{Fine-root turnover --- and here the evidence points the other way.} Minirhizotrons put
+Norway spruce fine-root lifespan below $2.5$~yr; radiocarbon returns apparent ages up to $14$. A
+reconciled mean residence time of $\sim$$3.8$~yr would imply a turnover near $0.26$~yr$^{-1}$ against
+the $0.85$ in use --- which would make fine-root litter \emph{smaller} and \textbf{widen} the gap.
+\refs{\vd~Strand et al.~2008, Science (the disagreement); \nd~Hansson et al., New Phytol.\ (60\% within
+$0.75$~yr, remainder within $8.4$~yr --- \textbf{blocking}: a flux is carried by the fast members, so
+check whether $0.85$ is a defensible flux-weighted value); \nd~provenance of the $0.85$ in our own
+chain --- one email to Boris or Aleksi}
+
+\paragraph{Early-succession vegetation.} Litter models keyed to standing tree biomass are least
+informative exactly where that key is smallest: the years after a stand-replacing harvest.
+\refs{\nd~Palviainen et al.\ (ground vegetation after clear-cutting; biomass falls $46$--$65\%$ first,
+the pioneer flush comes later --- \textbf{the sign over a rotation is not established});
+\nd~\textbf{our own residuals against time since disturbance} --- stronger than any citation here, and
+a few hours of work}
 
 \begin{warn}
-\textbf{This section must not become an argument that we are right.} Each mechanism is a hypothesis
-for where an apparently missing flux could come from, and several are not separable with our data.
-The honest form is: the calibration says the input is larger than the product; here are physically
-plausible sources; testing them is not this paper's job.
+\textbf{This section must not become an argument that we are right.} Two disciplines enforce it.
+\textbf{(i)} One candidate points the wrong way (fine roots) and it stays in. \textbf{(ii)} The
+priced candidates now \emph{overshoot}: understorey $+$ mycorrhizal $+$ rhizodeposition at full
+cropland weight is $1.4$--$2.1$ against a gap of $0.68$--$1.83$. Present them as a set that
+\textbf{brackets} the gap, never as a sum that matches it --- a budget adding up exactly would be the
+more suspicious result. The honest form remains: the calibration says the input is larger than the
+product; here are physically plausible sources; testing them is not this paper's job.
 \end{warn}
 
 % ---------------------------------------------------------------- STRAND 2
-\subsection*{\textsc{Strand 2 --- does ridge position matter?} \normalfont(\emph{$\sim$25\%})}
-\addcontentsline{toc}{subsection}{Strand 2 --- does ridge position matter? (~25\%)}
+\subsection*{\textsc{Strand 2 --- does the starting-state assumption reach the warming response?} \normalfont(\emph{$\sim$25\%})}
+\addcontentsline{toc}{subsection}{Strand 2 --- does the starting-state assumption reach the warming response? (~25\%)}
 
 \begin{ann}
 \textbf{Annotation (p17): ``For what? Do you mean if it has consequences for extrapolation, for
@@ -409,6 +889,20 @@ example?''} \textbf{Yes --- and the section is now titled that way.} v2's ``does
 matter?'' left the reader to guess the predicate. It matters \emph{for extrapolation}: two
 calibrations that fit the observed window identically can project differently.
 \end{ann}
+
+\begin{note}
+\textbf{The link that was missing (2026-09-16).} The strand used to ask whether ridge position
+matters, without saying \emph{why we are at this position}. We are here because the start was
+estimated: all six models put the product $J\times\tau$ $28$--$49\%$ above the observed stock (the
+headroom), whereas a balanced start sets that product \emph{equal} to the stock. A balanced start with
+free rates therefore lands at a smaller product --- faster turnover, or less input --- and stores the
+missing history in the rates (Wutzler \& Reichstein 2007). In a single-modifier structure the rates
+\emph{are} the temperature sensitivity, so the initialisation assumption reaches the warming response
+through them. Inductively, the direction for Yasso07 is a \emph{steeper} response than ours, and ours
+($\xi$ $\times 2.13$, $\beta_1$ $0.099 \to 0.158$) is already steeper than published. \textbf{Tested:}
+two positions on the ridge, F15. \textbf{Not tested:} the balanced-start arm itself
+(\texttt{NEXT\_RUN\_equilibrium\_init.md}) --- the initialisation $\to$ position step is deductive.
+\end{note}
 
 \subsubsection{The question the ridge forces}
 \paragraph{The data cannot choose a point on the ridge, so the choice must be judged by its
@@ -424,12 +918,12 @@ any divergence afterwards is extrapolation. \FIG{F15_forward_arms}
 \paragraph{Only Yasso07 separates.} $-2.08$ $[-3.57, -0.79]$~tC\,ha$^{-1}$ at SSP2-4.5; Yasso15 and
 Yasso20 do not separate at all.
 
-\paragraph{And the mechanism is structural.} Yasso07 applies a single climate modifier to every pool,
+\dparagraph{And the mechanism is structural.} Yasso07 applies a single climate modifier to every pool,
 so turnover and temperature sensitivity are tied to the same parameter and moving along the ridge
 moves both. Yasso15 and Yasso20 carry pool-specific modifiers, and the pools that \emph{hold} the
 carbon respond almost identically in both arms. \FIG{A1_forward_appendix}
 
-\paragraph{The framing that survives.} Yasso15 and Yasso20 are not shown to be right; they are shown
+\dparagraph{The framing that survives.} Yasso15 and Yasso20 are not shown to be right; they are shown
 to be \textbf{resilient} to an input assumption the data cannot settle. That is a usable statement
 for an inventory, and a narrower one than ``our calibration changes the forecast''.
 
@@ -454,8 +948,8 @@ own strand, last, at $\sim$20\%, and it is framed as a question raised rather th
 \end{ann}
 
 \subsubsection{The models order the national trajectory but not the plots}
-\paragraph{Two statements that read as a contradiction only if separated.} The ensemble reproduces
-the national mean trajectory and explains almost none of the between-plot variance. Both are true,
+\paragraph{Two statements that read as a contradiction only if separated.} All six models reproduce
+the national mean trajectory and explain almost none of the between-plot variance. Both are true,
 and the second is a statement about spatial resolution, not about the trajectory.
 
 \subsubsection{What is left behind is recoverable, not irreducible}
@@ -467,9 +961,9 @@ observation reliability around $0.49$ --- so this is not a noise ceiling. \FIG{F
 class and coarse-fragment content; the importance is diffuse rather than concentrated in one term.
 
 \subsubsection{What that suggests, briefly}
-\paragraph{Two of the leaders are productivity proxies and one is soil-physical.} A productivity
+\dparagraph{Two of the leaders are productivity proxies and one is soil-physical.} A productivity
 proxy leading everywhere is what a spatially varying input level would look like; a soil-physical
-variable leading is something no model in the ensemble has a term for. \textbf{We name the
+variable leading is something none of the six has a term for. \textbf{We name the
 observation and stop there} --- the method that would exploit it is not this paper's to choose.
 
 % =====================================================================
@@ -481,19 +975,37 @@ bonus product. The conclusions \dots\ are more about the opening stories, their 
 order of the weight budget, and the deliverable is demoted to a closing paragraph.
 \end{ann}
 
-\paragraph{A transient, calibrated start reproduces a dynamic the conventional one cannot.} The
-observed accumulation and its levelling-off are recovered by all six models at the level and by the
-ensemble in rate, which an equilibrium initialisation forecloses by construction.
+\paragraph{A transient, calibrated start reproduces the observed dynamic with a starting deficit
+that the conventional start cannot carry.} The observed accumulation and its levelling-off are
+recovered by all six models at the level, and bracketed by them in rate. \textbf{[corrected
+2026-09-16]} A balanced start can also rise and level off, but only by attributing the whole of it to
+litter changes inside the window; the two starts differ in the product $J\times\tau$ they imply, and
+that difference is the headroom of the fourth conclusion.
 
 \paragraph{Reproducing it requires more litter input, and faster turnover, than the published
 parameterisations carry.} These are one displacement along a trade-off the data cannot resolve, and
 the most plausible reading is not that the models are wrong but that the input flux is incomplete ---
 with belowground and non-tree sources the candidates.
 
-\paragraph{Where the calibration lands on that trade-off reaches the projection, but only for some
-structures.} A single climate modifier ties turnover to temperature sensitivity; pool-specific
-modifiers do not. Models of the second kind are more robust to an assumption that cannot currently be
+\paragraph{Where the calibration lands on that trade-off reaches the temperature sensitivity, and
+through it the projection, but only for some structures.} A single climate modifier ties turnover to
+temperature sensitivity, so the starting-state assumption that sets the position on the trade-off sets
+the warming response with it; pool-specific modifiers do not. Models of the second kind are more robust to an assumption that cannot currently be
 tested.
+
+\paragraph{There is headroom, and taking it would cost something.} Five of the six models put
+today's soil $28$--$49\%$ below the stock its present litter input would eventually support, which is
+where Liski et al.\ (2006) also put it. That is space for further accumulation --- but realising it
+means holding or raising the carbon actually returned to the soil, over decades, with the management
+and economic consequences that implies. \textbf{And it postpones saturation rather than removing it:}
+the same models that say there is room also say the room is finite.
+\begin{ann}
+\textbf{Annotation (p7):} ``\emph{there would be space for some more accumulation? But we need to
+manage forests in a way that more C is returned to the soil, with all its economic consequences \dots\
+(and it would be just postponing it, it will never go on indefinitely).}'' \textbf{Adopted as a
+conclusion, with the number attached.} This is also the honest limit of the policy reading: a finite
+ceiling is not a permanent sink.
+\end{ann}
 
 \paragraph{And a large, recoverable part of the plot-scale variance is invisible to every model
 here.} It is a well-posed question for the next study rather than a limitation of this one.
@@ -509,9 +1021,35 @@ than as the paper's finding. \FIG{ENSEMBLE_SOC_mean}
 \paragraph{Structural.} Whether Results and Discussion stay combined (currently yes). Whether F3b is
 built or the NextGenC panel suffices. Whether the arc diagram's thread vocabulary is retired.
 
-\paragraph{Blocking literature reviews.} Steady-state initialisation across model lineages; the
-theory of equilibrium initialisation; Finnish management history; and the whole of
-\S\ref{sec:missingflux} --- fine root MRT, exudates, mycorrhizal necromass, pioneer vegetation.
+\paragraph{The $\sinput$ prior anchor --- \textbf{settled, and it does not threaten the finding}.}
+Arm B's $1.08$ mixes two litter products; the defensible centre is $\sim$$1.21$, and Liski gives
+$1.27$. \textbf{Decision: stay on arm B}, state the arithmetic in the Methods, revisit only if a
+referee asks.
+\begin{ann}
+\textbf{Annotation (p24): ``\emph{Here I am not sure at all \dots\ we saw that with Arm A results do
+not change much, our sigmas are still ways higher than the data would justify, right? So there would
+still be something missing.}''} \textbf{Correct, and I was wrong --- measured on the two runs we
+already have.} Moving the prior centre $1.08 \to 1.27$ (arm A, \texttt{20260820\_1554*}) moves the
+posterior only about a third as far: Yasso15 $1.54 \to 1.62$, TP2 $1.73 \to 1.87$, SP1 $1.27 \to
+1.35$. The posterior sits \textbf{$1.28$ to $1.50\times$ above the prior centre in arm A}, as it sits
+$1.17$--$1.60\times$ above it in arm B. \textbf{The likelihood, not the prior, is setting $\sinput$};
+the displacement survives either anchor, and my claim that a higher centre would shrink the finding
+was false.
+\refs{ours, both production runs; posterior sensitivity to the prior centre $\approx 0.3$--$0.5$}
+\end{ann}
+
+\paragraph{Literature reviews --- now drafted, with what remains.} All eight topics are written up in
+\texttt{literature/NN\_topic/README.md} (evidence table, draft text, gaps) with a cross-cutting
+\texttt{MISSING\_FLUX\_BUDGET.md}. Still blocking: \nd~Peltoniemi et al.~2006 (before the spin-up quote
+is used as a foil); \nd~the turnover/exudation split inside Bolinder's $65\%$; \nd~Hansson et al.\ on
+fine-root flux weighting; \nd~Clemmensen et al.~2013 read in full; \nd~primary sources for CBM-CFS3 and
+Century.
+
+\paragraph{Three checks before their numbers can be quoted.} \nd~The area and depth basis of Liski et
+al.'s $6.1\to6.3$~kg\,C\,m$^{-2}$, and of their $6.1$~kg\,C\,m$^{-2}$ in 1922 as a candidate anchor for
+the still-unsourced 1917 stock floor. \nd~The component key of our own litter product (the belowground
+share, on which the rhizodeposition estimate rests) --- Boris Tupek. \nd~Kumpu et al.'s depth basis
+against our whole-profile target.
 
 \paragraph{Still not started.} Citations and a \texttt{.bib}; title and abstract; the coauthor block;
 figure placement in the manuscript.

@@ -1,15 +1,55 @@
 # NEXT SESSION — start here
 
-## ⭐ 0-NOW. LORENZO REVISES v3, THEN WE START THE MANUSCRIPT (2026-09-03)
+## ⭐ 0-NOW. LORENZO REVIEWS THE MANUSCRIPT DRAFT (2026-09-04)
 
-> **The live storyline is `manuscript/HIKET_storyline_v3.tex` (17 pp).** Read it first; v2 is
-> superseded and the old note is deleted. v3 answers Lorenzo's 19 annotations on v2 — IMRaD shell,
-> OCAR inside, Results+Discussion combined, real Conclusions, and a drawn weight budget
-> (**~55% national trend / ~25% ridge position / ~20% local variance**).
+> **`manuscript/HIKET_draft_v1.tex` → 32 pp, builds clean, 0 undefined citations.** The first
+> continuous-prose draft, written from storyline v3, with 12 figures and Table 1 placed inline and
+> real captions. **Next session starts with his review of that PDF.**
 >
-> **Tomorrow:** he revises v3, we iterate, and then drafting the actual manuscript begins.
+> Working title: *Relaxing the steady-state assumption: what four decades of Finnish soil
+> measurements require of six forest carbon models.* Four alternatives sit in a comment block above
+> `\title`; swapping is one edit.
 >
-> ### Do not revert these three
+> **Deliberately unfinished, marked in red in the PDF:** the abstract (last, once the two-claims
+> structure is settled), the whole **Limitations** section (list settled, material exists), author
+> block, acknowledgements, data availability, and ~6 inline gaps needing a source we do not have
+> (weather product name; campaign medians on the final basis; Boris on the litter first-year artefact).
+>
+> ### Style rules, binding, stated in the draft's own header
+> No jargon; no sentence-initial bare "This/It/These"; redundant rather than compact; boring.
+> Checked after writing: zero bare pronoun openings, watchlist clean in prose ("ridge" survives only
+> inside figure filenames), mean sentence 26.5 words.
+>
+> ### The four things this session established that must not be re-litigated
+> 1. **σ_input is set by the LIKELIHOOD, not the prior.** Arm A vs arm B: an +18% move in the prior
+>    centre moves the posterior ~a third as far, and the posterior stays 1.28–1.50× ABOVE the centre
+>    even in arm A. ⚠ My claim that a corrected anchor would shrink the input finding was FALSE.
+>    **DECIDED (Lorenzo): stay on arm B**, state the mixed-basis arithmetic in the Methods.
+> 2. **The understorey anchor sources AGREE** (0.51–0.67, all from Muukkonen & Mäkipää 2006, including
+>    L&H's own Table A5). The 1.08 came from dividing L&H's *absolute total* by *our* J̄ — two
+>    different products. Correct centre ≈1.21; Liski 1.27. `literature/UNDERSTOREY_ANCHOR.md`.
+> 3. **The plot-scale gradient is the litter product's, not the models'.** d log J/dBA = +0.072
+>    (×18 span) vs models +0.073–0.076: pass-through, no amplification. ⚠⚠ The compartment
+>    (woody/DOM) hypothesis was TESTED AND REFUTED — zeroing woody inputs moves the slope 6%, and
+>    SP1/TP2/TP3 have no composition information at all yet give the same slope. ⚠ Never write
+>    "the models over-apply basal area".
+> 4. **Equilibrium headroom +28…49%** reproduces Liski's +38% independently. SP1's +5% is the
+>    informative exception. Doubles as the Conclusions point about finite headroom.
+>
+> ### Still open, in priority order
+> ⬜ **The equilibrium-init counterfactual has never been run** — the Introduction's central claim is
+> still theory. Design in `NEXT_RUN_equilibrium_init.md`: one factor, init only, σ_init DROPPED not
+> fixed, after the Fortran recompile. Its figure would be the strongest in the paper.
+> ⬜ **Peltoniemi et al. 2006** (FEM 232:75–85) — needed only to be fair to Mikko before the NID
+> spin-up quote is used as a foil. Paywalled; Aleksi or Lorenzo can supply it.
+> ⬜ The **1917 stock floor** — recommendation is now to REPORT it rather than constrain it, since
+> every candidate benchmark is equilibrium-derived and re-imports the convention the paper attacks.
+> ⬜ Figure budget: 12 in the main text is at the upper end. Weakest three are F12 (largely a subset
+> of F14), F4 (method, no result) and F10b (background). Cut F12 first.
+> ⬜ Three verification items for Aleksi and Boris: provenance of L&H's 2.70; region coding
+> (confirmed 1 = South here, worth one line); the 0.85 fine-root turnover rate.
+
+## Do not revert these three
 > 1. The ridge exists under **either** initialisation — a transient start only **narrows** it, partly.
 > 2. **Liski is the FLOOR** of our range (1.27 vs our 1.27–1.73), not a comparable correction.
 > 3. **"Structural uncertainty" is not a product claim** — benchmark design, Yasso the standard.
