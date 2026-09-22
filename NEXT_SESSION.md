@@ -1,74 +1,91 @@
 # NEXT SESSION — start here
 
-## ⭐ 0-NOW. LORENZO REVIEWS THE MANUSCRIPT DRAFT (2026-09-04)
+## ⭐⭐ 0-NOW. LORENZO'S FULL REVIEW IS IN THE DRAFT — 72 `%LORENZO` NOTES (2026-09-21)
 
-> **`manuscript/HIKET_draft_v1.tex` → 32 pp, builds clean, 0 undefined citations.** The first
-> continuous-prose draft, written from storyline v3, with 12 figures and Table 1 placed inline and
-> real captions. **Next session starts with his review of that PDF.**
+> **Tomorrow's work is the revision: answer the 72 notes.** He reviewed in parallel while the
+> 2026-09-16 notes were being closed, and his pass reaches the END of the paper — M&M from
+> §"The six models" onward, all of Results and Discussion, and the Conclusions. He also rewrote
+> prose himself in §"The six models", §"Transient initialisation" and §Climate. **Re-read the
+> `.tex` from disk before touching it; never revert his text** ([[lorenzo-edits-in-parallel]]).
 >
-> Working title: *Relaxing the steady-state assumption: what four decades of Finnish soil
-> measurements require of six forest carbon models.* Four alternatives sit in a comment block above
-> `\title`; swapping is one edit.
+> Find them with `grep -n "^%LORENZO" manuscript/HIKET_draft_v1.tex`. Distribution:
 >
-> **Deliberately unfinished, marked in red in the PDF:** the abstract (last, once the two-claims
-> structure is settled), the whole **Limitations** section (list settled, material exists), author
-> block, acknowledgements, data availability, and ~6 inline gaps needing a source we do not have
-> (weather product name; campaign medians on the final basis; Boris on the litter first-year artefact).
+> | notes | section |
+> |---|---|
+> | **14** | The error model ⭐ the heaviest, and the most conceptual |
+> | 7 | Equal external information across models |
+> | 6 | Numerical integration · The models bracket the observed rate · **Conclusions** |
+> | 5 | Transient initialisation · The models reach the observed stocks |
+> | 4 | Model structure is nearly invisible in the fit |
+> | 3 | The six models · The shape of the trajectory separates the six models |
+> | 2 | The data fix a stock and little else · Mean transit time · Litter input |
+> | 1 each | Study plots · SOC basis · Sampling · Reproducing the trajectory · Between individual plots · Other national inventories · Data availability |
 >
-> ### Style rules, binding, stated in the draft's own header
-> No jargon; no sentence-initial bare "This/It/These"; redundant rather than compact; boring.
-> Checked after writing: zero bare pronoun openings, watchlist clean in prose ("ridge" survives only
-> inside figure filenames), mean sentence 26.5 words.
+> ### ⚠ FOURTEEN notes say "Discuss" — they are NOT edit instructions
+> Lines 1368, 1373, 1377, 1447, 1457, 1461, 1480, 1484, 1501, 1516, 1530, 1588, 1647, 1696. He is
+> asking to be talked through the maths before anything is rewritten: the matrix exponential
+> ("is the algorithm really called a twenty-term Taylor series?"), what "integrated out",
+> "combine in quadrature", "a triangular solve" and "factorise" mean in practice, and whether the
+> offsets are estimated or prescribed. **Answer in the reply, propose wording, let him choose.**
 >
-> ### The four things this session established that must not be re-litigated
-> 1. **σ_input is set by the LIKELIHOOD, not the prior.** Arm A vs arm B: an +18% move in the prior
->    centre moves the posterior ~a third as far, and the posterior stays 1.28–1.50× ABOVE the centre
->    even in arm A. ⚠ My claim that a corrected anchor would shrink the input finding was FALSE.
->    **DECIDED (Lorenzo): stay on arm B**, state the mixed-basis arithmetic in the Methods.
-> 2. **The understorey anchor sources AGREE** (0.51–0.67, all from Muukkonen & Mäkipää 2006, including
->    L&H's own Table A5). The 1.08 came from dividing L&H's *absolute total* by *our* J̄ — two
->    different products. Correct centre ≈1.21; Liski 1.27. `literature/UNDERSTOREY_ANCHOR.md`.
-> 3. **The plot-scale gradient is the litter product's, not the models'.** d log J/dBA = +0.072
->    (×18 span) vs models +0.073–0.076: pass-through, no amplification. ⚠⚠ The compartment
->    (woody/DOM) hypothesis was TESTED AND REFUTED — zeroing woody inputs moves the slope 6%, and
->    SP1/TP2/TP3 have no composition information at all yet give the same slope. ⚠ Never write
->    "the models over-apply basal area".
-> 4. **Equilibrium headroom +28…49%** reproduces Liski's +38% independently. SP1's +5% is the
->    informative exception. Doubles as the Conclusions point about finite headroom.
+> ### Three notes that challenge a CLAIM, not the prose — settle these first
+> 1. **σ_total = 0.800 is circular** (line ~1457): *"Those residuals are estimated after a
+>    calibration? If so, it is circular."* He is right that the plug-in route looks circular; the
+>    defence is that 0.800 is a DELIBERATE step above the measured 0.71–0.74 and that
+>    self-consistency was checked afterwards, not assumed. Needs a straight answer and probably a
+>    rewritten justification.
+> 2. **"Equal external information" is self-serving** (§Equal external information): *"we cannot
+>    give it the same amount of information, and we are not doing so"*, and the "same weakly
+>    informative prior" phrasing *"seems a self righteous statement"*. The homogenisation argument
+>    has to be restated as what it is — a design choice, not a guarantee of fairness.
+> 3. **"The spread between models is a diagnostic rather than an estimate of uncertainty"** —
+>    *"a bit self reliant … this is not how science should work"*. ⚠ This is the SAME claim that
+>    was walked back on 2026-09-03; his note says the current wording still overreaches.
 >
-> ### Still open, in priority order
-> ⬜ **The equilibrium-init counterfactual has never been run** — the Introduction's central claim is
-> still theory. Design in `NEXT_RUN_equilibrium_init.md`: one factor, init only, σ_init DROPPED not
-> fixed, after the Fortran recompile. Its figure would be the strongest in the paper.
-> ⬜ **Peltoniemi et al. 2006** (FEM 232:75–85) — needed only to be fair to Mikko before the NID
-> spin-up quote is used as a foil. Paywalled; Aleksi or Lorenzo can supply it.
-> ⬜ The **1917 stock floor** — recommendation is now to REPORT it rather than constrain it, since
-> every candidate benchmark is equilibrium-derived and re-imports the convention the paper attacks.
-> ⬜ Figure budget: 12 in the main text is at the upper end. Weakest three are F12 (largely a subset
-> of F14), F4 (method, no result) and F10b (background). Cut F12 first.
-> ⬜ Three verification items for Aleksi and Boris: provenance of L&H's 2.70; region coding
-> (confirmed 1 = South here, worth one line); the 0.85 fine-root turnover rate.
+> ### What he wants structurally
+> - **Stocks and rates should stop being two subsections** — *"two sides of the same coin"*, the
+>   rate discussion mirrors the stock discussion and repeats it.
+> - **Reaching the data is not a result** — *"It says that they match the rate because they were
+>   calibrated on measurements that match the rate. Uninformative."* Compress, do not defend.
+> - **The extrapolation IS the interesting part** — *"when we extrapolate we might have surprises.
+>   This is leading to important thing for us."* Give it the weight the fit paragraphs lose.
+> - **Conclusions**: say openly that this is a **baseline for further model development**; move the
+>   "what it means for other inventories" material out of the Conclusions to just before Limitations.
+> - ⚠ **"the models describe a gradient the soil does not have"** reads as "the models do not work";
+>   retitle. And **Yasso's chemically-defined pools** (§The six models) is *"controversial"* — he
+>   wants a short hook to Bosatta & Ågren's continuous-quality theory instead.
+> - ⚠ **"Are the rates exact values or tight priors?"** — must be stated precisely; the ICBM anchor
+>   pins the slow rate with a very-informative prior and FIXES the fast one, and the text blurs it.
 
-## Do not revert these three
-> 1. The ridge exists under **either** initialisation — a transient start only **narrows** it, partly.
-> 2. **Liski is the FLOOR** of our range (1.27 vs our 1.27–1.73), not a comparable correction.
-> 3. **"Structural uncertainty" is not a product claim** — benchmark design, Yasso the standard.
+## ✅ CLOSED 2026-09-21 — the four notes of 2026-09-16, plus the climate source
+
+> All four answered and committed (`27016c4`, `fe098ce`, `f405a71`, `e19b5f8`); dispositions are
+> dated source comments. Full record: [[lorenzo-notes-round4-20260921]].
+> - **War reparations** → written on the NFI's own record (**Korhonen et al. 2021** §3.5.2: stock
+>   fell in the 1950s–60s; logging surge before NFI4). ⚠ Korhonen **2024** does NOT carry those
+>   sentences. Mitrunen 2024 (4% of GDP, metal goods) ⇒ **"financed by the forest export economy",
+>   never "paid in timber"**. Kochetkova 2020 for ceded Karelia.
+> - **"How much time"** → pool-specific timescale on Wutzler & Reichstein 2007; **no own e-folding
+>   computation** (decided). ⭐ **Sierra, Hoyt, He & Trumbore 2018** now cited in the Introduction to
+>   separate the soil's ADJUSTMENT timescale (slow pool, centuries) from the MEAN TRANSIT TIME
+>   (outflow, 20–30 yr) — line 623 had wrongly made the transit time the soil's memory.
+> - ⭐ **Peltoniemi et al. 2007** (*Silva Fennica* 41(3):575–602, seven-model review, Mikko first
+>   author with Liski, Palosuo, Mäkipää, Wutzler) now cited in §"Steady state as a starting
+>   condition": the group itself wrote in 2007 that steady state *"is likely to be violated in most
+>   applications"* and that matching an equilibrium to a measured stock needs *"a further correction
+>   of the parameters and the pools"*. Frame as lineage.
+> - **M&M**: "plot-count-weighted mean sampling year" → the plain average with per-year counts;
+>   "balanced plot set" → "the plots measured in all three campaigns (310 plots)".
+> - ✅ **CLIMATE SOURCE CONFIRMED** (LUKE Data Support, 2026-09-14): FMI daily gridded observations,
+>   **10 km grid** (verified on the NetCDF — YKJ cell centres, uniform 10 000 m spacing), mirrored
+>   into the LUKE weather database; the only "modification" is the nearest-cell extraction. Cite
+>   **Aalto, Pirinen & Jylhä 2016** (FMI's own guidance). That `\gap` is closed; **16 remain**.
+> - **Acknowledgements**: LUKE Data Support goes there; **O.-P. Tikkasalo is a coauthor**, not
+>   acknowledged. FMI gridded observations are open data.
 >
-> ### Blocking before those sections can be written (all flagged \LIT in v3)
-> Steady-state initialisation across model lineages · the equilibrium-init theory paragraph · Finnish
-> management history · and all of §"What might be missing from the input flux" — fine root MRT,
-> exudates, mycorrhizal necromass, understorey, pioneer vegetation.
->
-> ### Still open from before
-> ⬜ The **1917 stock floor** is an unsourced placeholder (45 in `init_state_plausibility.R`, 40 in
-> memory) — take the MINIMUM from the boreal literature, whole profile to `z_cap`.
-> ⬜ The **calibration relaunch** after the Fortran guard change. **⚠ THE POINT OF THE RUN IS THE
-> RECOMPILE** — the `.so` is gitignored; on Roihu `git pull`, `rm -f yasso*.so yasso*.o
-> yasso*_mod.mod`, then **one `R CMD SHLIB` call per `.f90`**. Submit with
-> `ssh roihu 'bash -ic "module load r-env && cd … && sbatch …"'`.
-> ⬜ Citations, `.bib`, title/abstract, coauthor block, figure placement.
-> ⬜ Decide: is **F3b** built, or does the NextGenC trajectory panel already show the three groups?
-> ⬜ Decide: retire the arc diagram's "THREAD A/B/C" vocabulary, or keep it as working shorthand?
+> ⚠ **Bib housekeeping**: duplicate `Sierra2017` and `BayesianTools` removed; `Menichetti2024`
+> (ICBM/3, *Carbon Management* 15) was lost in that edit and **rebuilt from Crossref — worth a
+> glance**. `library.bib` now 68 entries, bibtex warning-free.
 
 ---
 

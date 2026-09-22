@@ -713,6 +713,55 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **⭐⭐ NEXT ACTION (2026-09-22) — THE REVISION: 72 `%LORENZO` notes in `manuscript/HIKET_draft_v1.tex`.**
+  Lorenzo's review now reaches the **end of the paper** — the first pass over the Results, Discussion
+  and Conclusions. Heaviest: **the error model (14)**, equal external information (7), numerical
+  integration / the observed-rate subsection / **Conclusions** (6 each), transient initialisation and
+  the stocks subsection (5 each). ⚠ **14 notes say "Discuss"** (lines 1368, 1373, 1377, 1447, 1457,
+  1461, 1480, 1484, 1501, 1516, 1530, 1588, 1647, 1696) — he wants the maths explained in the reply
+  before anything is rewritten (the matrix exponential's "twenty-term Taylor series", "integrated out",
+  "combine in quadrature", "a triangular solve", whether the correlated-likelihood offsets are
+  estimated or prescribed). ⚠ **Three notes challenge a CLAIM, not the prose:** σ_total = 0.800 looks
+  **circular** ("residuals estimated after a calibration"); **"equal external information" reads as
+  self-serving** ("we cannot give it the same amount of information, and we are not doing so");
+  and **"the spread between models is a diagnostic rather than an estimate of uncertainty"** ("this is
+  not how science should work" — the claim already walked back on 2026-09-03). Structural asks: merge
+  the stocks and rates subsections; stop presenting agreement with the calibration data as a result;
+  give the weight to the **extrapolation**; Conclusions = a **baseline for further model development**,
+  with the national-inventory material moved out of them. ⚠ Retitle "the models describe a gradient the
+  soil does not have"; Yasso's chemically-defined pools is "controversial" → hook to **Bosatta & Ågren**
+  continuous quality; state precisely whether the anchored rates are **fixed or tightly pinned**.
+  ⚠ **He edits the `.tex` in parallel — re-read from disk, never revert his prose.**
+  Memory: [[lorenzo-review-72-notes-20260921]]; agenda in `NEXT_SESSION.md` §0-NOW.
+
+- **✅ CLOSED 2026-09-21 — the four notes of 2026-09-16, and the climate source.** Commits `27016c4`
+  (also the first commit of the draft, the bib and the ten `literature/` folders), `fe098ce`, `f405a71`,
+  `e19b5f8`; all local, **not pushed**. (1) **War reparations** written on the NFI's own record —
+  **Korhonen et al. 2021** §3.5.2, *"in the 1950's and 1960's, the use of wood and construction reduced
+  the volume of growing stock"* and the logging surge before NFI4; ⚠ **Korhonen 2024 does NOT carry
+  those sentences**. Mitrunen 2024 (4% of GDP, mostly metal goods) ⇒ **"financed by the forest export
+  economy", never "paid in timber"**; Kochetkova 2020 for ceded Karelia (12% of forests, 20% of pulp
+  capacity). Henttonen 2020 checked and dropped — it skips the war decades. (2) **"How much time"**
+  answered with the pool-specific timescale (Wutzler & Reichstein 2007, t95 of the slowest pool ≈
+  millennia); **no own e-folding computation** (decided). ⭐ **Sierra, Hoyt, He & Trumbore 2018** cited
+  in the Introduction to separate the soil's **adjustment** timescale (slow pool, centuries) from the
+  **mean transit time** (outflow, 20–30 yr) — the old line 623 wrongly made the transit time the soil's
+  memory, which would have read against the Results. (3) ⭐ **Peltoniemi et al. 2007** (*Silva Fennica*
+  41(3):575–602; seven-model review, Mikko first author with Liski, Palosuo, Mäkipää, Wutzler) cited in
+  §"Steady state as a starting condition" — the group's own 2007 statement that steady state *"is
+  likely to be violated in most applications"* and that matching an equilibrium to a measured stock
+  needs *"a further correction of the parameters and the pools"*. Lineage, not correction.
+  (4) **M&M**: "plot-count-weighted mean sampling year" → the plain average over the plots with the
+  per-year counts (69/76/103/54/72); **"balanced plot set" → "the plots measured in all three campaigns
+  (310 plots)"**, the word "balanced" out of the prose. (5) ✅ **CLIMATE SOURCE CONFIRMED** (LUKE Data
+  Support, 2026-09-14): FMI daily gridded observations on the **10 km grid** (verified on the NetCDF —
+  YKJ cell centres, uniform 10 000 m spacing), mirrored daily into the LUKE weather database; the only
+  "modification" is the nearest-cell extraction. **Cite Aalto, Pirinen & Jylhä 2016** (FMI's own
+  guidance). Gap closed, **16 `\gap`s remain**. LUKE Data Support goes in the acknowledgements;
+  **O.-P. Tikkasalo is a coauthor**, not acknowledged. ⚠ Bib: duplicate `Sierra2017` and
+  `BayesianTools` removed, `Menichetti2024` rebuilt from Crossref (**worth a glance**).
+  Memory: [[lorenzo-notes-round4-20260921]].
+
 - **✅ SESSION 2026-09-11 — INTRODUCTION ROUND 2, THE WHOLE M&M, THE TRANSIT-TIME RENAME, AND THE
   TITLE.** `manuscript/HIKET_draft_v1.tex` builds clean, **36 pp**, 0 undefined citations. Two
   rounds of Lorenzo's marginal notes answered in full (16 on the Introduction, 18 on the M&M); the
