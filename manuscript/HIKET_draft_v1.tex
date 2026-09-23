@@ -151,8 +151,36 @@ between litter input and turnover}
 \maketitle
 
 \begin{abstract}
-\gap{The abstract is written last, once the two claims and their two supports each
-are settled in the text.}
+% ROUND 5, 2026-09-23: first draft of the abstract (~290 words). Numbers: effective
+% flux 3.19-4.34 / J_bar 2.511 = 1.27-1.73; MTT ratios 0.73 / 0.89 / 1.03; headroom and
+% sinks from manuscript/figures/forward_scenarios.rds.
+Soil carbon models used in national greenhouse gas inventories are commonly started
+from a soil in balance with its litter input, although the soils of managed forests are
+rarely in balance. We calibrated six soil carbon models, the three versions of Yasso,
+the model used in the Finnish inventory, and three simpler benchmark models with one to
+three pools, against soil carbon measured in three campaigns between 1986 and 2024 on
+$456$ permanent plots of the Finnish National Forest Inventory. Each model started from a
+soil in balance in 1917 and was run forward along a reconstructed history of litter
+input. The litter input and the input of 1917 were estimated together with the model
+parameters in a Bayesian calibration, with an error model in which observations share
+part of their error by plot, by region and by campaign. All six models represented the
+national trajectory of soil carbon, and none could be distinguished from the others by
+its fit. The calibration placed the models at a litter input $1.3$ to $1.7$ times the
+input supplied by a tree-litter product and, in Yasso07 and Yasso15, at mean transit
+times $27$ and $11$ per cent shorter than published, whereas Yasso20 was not displaced.
+Litter input and transit time trade off against each other, and returning to the
+published transit times cost little in fit, so the observations suggest a direction
+rather than impose a value. The position on this trade-off changed the projection of
+Yasso07 only. Under a constant litter input the models placed the soil $26$ to $42$ per
+cent below its state of balance, consistent with an earlier reconstruction, while the
+projected sink fell by a third to a half within $60$ years; the size of that sink depended
+on how depleted the soil was estimated to be at the start. None of the models
+represented the differences between individual plots, and about half of what the models
+left unexplained could be recovered from site variables that already exist. The study
+provides a baseline for further development of the models used in forest soil carbon
+accounting.
+\gap{Check the length against the journal's limit, and revisit once the Limitations and
+the discussion of the starting state are settled.}
 \end{abstract}
 
 % =============================================================================
@@ -1315,8 +1343,8 @@ input of 1917 to the litter input of 1985. The prior of $\sigma_{\mathrm{init}}$
 log-normal with a centre of $0.90$, the ratio of the growing stock of Finnish forests
 in 1917 to that in 1985 \citep{Korhonen2024} converted to a ratio of litter input with
 the relation between litter input and growing stock observed in the product, and the
-same width of $0.25$; the reconstruction of \citet{Liski2006}, based on the same forest
-record, implies a similar ratio, about $0.86$. Both parameters are estimated together
+same width of $0.25$; the reconstruction of \citet{Liski2006}, based on the same
+growing-stock record, implies a similar ratio, about $0.86$. Both parameters are estimated together
 with the model parameters, so that the uncertainty of the input and of the starting
 state propagates into the initial state, into the simulated trajectory and into the
 predictive intervals of every model.
@@ -1870,13 +1898,7 @@ prior. The preference survives either anchor, and choosing between
 the two anchors is therefore a question about how the prior should be documented and
 not a question about whether the result holds.
 
-\gap{Discuss the starting state (option a, 2026-09-23): the posterior of
-$\sigma_{\mathrm{init}}$ is $0.49$--$0.59$ in five models ($0.84$ in SP1), well below the
-prior centre $0.90$ and the $0.86$ implied by \citet{Liski2006}. The calibration places
-the 1917 input at about half the 1985 input. $\sigma_{\mathrm{init}}$ is the only
-parameter that can lower the 1917 stock, so it also lowers the 1917 input; one
-parameter cannot express a high input on a soil that was itself out of balance after
-the exploitation described in the Introduction.}
+% sigma_init posterior discussed in Section sec:headroom (ROUND 5, 2026-09-23).
 
 \subsection{What might be missing from the litter input}
 
@@ -2079,6 +2101,35 @@ remaining distance lies in the slowest pool, which approaches balance over centu
 \citep{Sierra2018}. Under a constant litter input, the sink therefore saturates long
 before the stock does.
 
+% ROUND 5, 2026-09-23: sigma_init as an effective starting deficit. Within-model
+% correlations over the 100 draws (sigma_init vs headroom -0.79..-0.97; vs sink 2025-44
+% -0.89..-0.95); 1917 input / product 1985 = median of sigma_init*sigma_input over the
+% full posterior, 0.83-0.97 in five models (SP1 1.07); rise 1/sigma_init x1.70-2.05.
+The remaining sink is inherited from the estimated starting state. Within each model,
+the parameter $\sigma_{\mathrm{init}}$ correlates with the distance from balance at
+$-0.79$ to $-0.97$ and with the projected sink of the first $20$ years at $-0.89$ to
+$-0.95$ across the posterior draws: the lower the litter input of 1917 relative to that
+of 1985, the more the soil still has to gain. The calibration places
+$\sigma_{\mathrm{init}}$ at $0.49$ to $0.60$ in five of the six models, with upper $90$ per
+cent limits of $0.64$ to $0.76$, whereas the growing-stock record of the national forest
+inventory implies about $0.90$ and the reconstruction of \citet{Liski2006} about $0.86$;
+only SP1, at $0.83$, is compatible with that record. In absolute terms the calibrated
+litter input of 1917 is not low, between $0.83$ and $0.97$ times the input the product
+supplies for 1985 in the five models, because $\sigma_{\mathrm{input}}$ raises it; what
+departs from the record is the rise of the input between 1917 and 1985, a factor of $1.7$
+to $2.1$ in the calibration against about $1.1$ in the growing stock. Of the two halves
+of the starting state, the ratio of inputs rests on a growing stock that the forest
+inventory has measured since the 1920s, whereas the balance of the soil of 1917 with its
+own input rests on no measurement at all, and the centuries of slash-and-burn
+cultivation, tar burning and forest grazing described in the Introduction argue against
+it. A soil depleted by that history would lie below balance with its own
+input, and a single parameter can express such a deficit only as a lower input. We
+therefore read $\sigma_{\mathrm{init}}$ as an effective starting deficit of the soil
+rather than as a ratio of litter inputs. On that reading, the soil of 1917 was more
+depleted than its litter input alone would imply, the remaining sink is conditional on
+that depletion, and a soil assumed to start in balance with its present input would have
+almost nothing left to gain under a constant input, as SP1 illustrates.
+
 Increasing the litter input by $20$ per cent from 2025 raises the stock by $6$ to $10$
 tonnes of carbon per hectare by 2050 and by $9$ to $13$ tonnes by 2084, relative to the
 projection with a constant input, which corresponds to an additional sink of $0.2$ to
@@ -2208,22 +2259,76 @@ national mean and skill between individual plots.}
 
 \subsection{A national map of soil carbon change as a by-product}
 % ROUND 5, 2026-09-23 (note 2162): moved here from the Conclusions.
-\gap{The gridded soil carbon maps and their uncertainty. One short paragraph, framed
-as a deliverable and not as a finding.}
+% ROUND 5, 2026-09-23: from Reporting/NextgenC_report/ZENODO_description.md (maps rebuilt
+% on run 20260831, 2026-09-03). Nugget 85-90% of the variogram; 2015-2024 ensemble delta
+% ~87% of cells gaining, mean +0.18 tC/ha/yr.
+The calibrated models also yield a gridded product. For each model and for the ensemble
+of the six, weighted equally, the posterior mean and standard deviation of the soil
+carbon stock of each plot and year were interpolated by ordinary kriging on the
+logarithmic scale onto a $2$ km grid of the mineral-soil forest land of Finland for
+1985--2024, with cells dominated by peatland or water masked. The standard deviation of
+each map combines the uncertainty of the interpolation with the posterior uncertainty of
+the model and, for the ensemble, the spread between the six models. Over 2015--2024 the
+ensemble gains carbon in about $87$ per cent of the cells, at a mean rate of $0.18$ tonnes
+of carbon per hectare per year. The maps are a deliverable and not a finding: the plots
+are on average about $27$ km apart, and at that distance the stock of neighbouring plots
+is almost unrelated, so the maps reproduce the national field with local deviations
+anchored on the plots, and the detail between plots is interpolation rather than
+measurement. The maps are published as an open dataset \gap{Zenodo DOI of the map
+deposit, once deposited}.
+\gap{Before publication, check the region of carbon loss in the far south of the delta
+map (about $-0.5$ tonnes per hectare per year): a real feature of the plots, or an
+artefact of kriging near the edge of the grid?}
 
 % =============================================================================
 \section{Limitations}
 
-\gap{To be written. The list is settled and the material exists: the comparability
-of the three campaigns and what it costs the short interval; the coarse shape of the
-pre-observation litter ramp, including, in one short sentence, that the tree-derived
-terms of the reconstruction cover all forest land while the area used to divide them
-covers upland soils only, so the rise of the pre-observation input is, if anything,
-overstated; the single national initial state where the depletion
-history was regional; the 1917 carbon stock implied by the models, which is reported
-rather than constrained; and the fact that the main projection contains no climate
-change. (2026-09-23: the passage about our own earlier level offset is DROPPED, since the
-paper does not refer to its own development history.)}
+% ROUND 5, 2026-09-23: first draft. No reference to our own development history.
+The observed trend rests on three campaigns that were not carried out in the same way.
+The first campaign spread its fieldwork over a decade, recorded the organic layer
+without its litter and moss, and predicted the carbon content of most of its mineral
+layers from the loss of mass on ignition. We standardised what the measurements allow,
+but a shared offset between campaign levels cannot be separated from a change of the
+stock: the rate over the full observed window survives an offset of about $9$ per cent,
+whereas the rate over the last interval, on which the apparent slowing of the
+accumulation rests, is removed by an offset of about $2$ per cent.
+
+The history of the soil before the first observation is represented coarsely. The path
+of the litter input from 1917 to 1985 is one national shape, taken from a reconstruction
+whose tree-derived terms cover all forest land while the area used to divide them covers
+upland soils only, so that the rise of the input before 1985 is, if anything, overstated.
+The starting state is set by one national parameter, whereas the history of exploitation
+that left the soil out of balance differed between regions and between plots; the models
+therefore cannot represent why individual plots differ, which is part of the reason for
+their lack of skill between plots. The starting state also has a single degree of freedom: the soil of 1917
+is assumed to be in balance with the litter input of 1917, so that a soil depleted below
+that balance can be expressed only as a lower input, and the projected sink depends
+strongly on how that deficit is estimated (Section~\ref{sec:headroom}). The stock of 1917 implied by each calibration is a
+consequence of the calibration and is not constrained by any observation
+\gap{report the implied 1917 stocks on the current run, from
+doublechecks/init\_state\_plausibility.R, and compare them with what is known of boreal
+forest soils; the floor for that comparison still has to be sourced}.
+
+The error model rests on design values. The total spread of the error, $0.800$ on the
+logarithmic scale, is declared rather than estimated, and the spreads of the campaign
+offsets are prescribed rather than measured.
+\gap{Decide whether to test the sensitivity of the main results to the total spread of
+the error (one additional set of calibrations), or to state here that it was not tested.}
+
+The effect of estimating the starting state has not been isolated. The comparison with the
+published parameterisations mixes the starting state with every other difference between
+this calibration and the published ones, from the data to the error model, and a
+calibration started from a soil in balance with the present input, which would isolate
+the effect, was not carried out.
+\gap{This paragraph limits what the title and the Conclusions may claim. Settle together
+with the title: run the balanced-start calibration, or phrase every causal statement
+about the starting state as a hypothesis.}
+
+The projections are orders of magnitude and not forecasts. The litter input is held at
+its value in 2024 and the climate of the last $20$ observed years is repeated, so the
+projections contain neither a change of climate nor a change of forest growth or
+management, and the projected sink is the relaxation of the soil towards balance under
+present conditions.
 
 % =============================================================================
 \section{Conclusions}
@@ -2261,8 +2366,12 @@ choice that the present data cannot settle.
 Under a constant litter input, the soil carbon sink of Finnish upland forests is
 saturating. The models place the soil $26$ to $42$ per cent below its state of balance,
 in agreement with the $38$ per cent estimated by \citet{Liski2006}, yet the sink they
-project falls to about half within $60$ years, because most of the remaining distance
-lies in the slowest pool and is realised only over centuries. A larger litter input
+project falls by a third to a half within $60$ years, because most of the remaining distance
+lies in the slowest pool and is realised only over centuries. How much sink remains
+depends on how far below balance the soil was at the start, which the calibration infers
+only indirectly: the soil of 1917 appears more depleted than its litter input alone would
+imply, and a soil assumed to start in balance with its present input would have almost
+nothing left to gain. A larger litter input
 buys additional storage, $6$ to $10$ tonnes of carbon per hectare by 2050 for an
 increase of $20$ per cent, but the gain is finite, largest in the first decades, and
 lasts only as long as the larger input is maintained. Both statements come from
