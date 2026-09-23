@@ -130,6 +130,21 @@ to reach R inside the r-env container):
   remaining `runs/`/`diagnostics/`/`Data/` from before it goes offline.
 - `ssh menichet@puhti.csc.fi` (no certificate needed, unlike Roihu).
 
+### ⚠ Branch, Overleaf and Roihu — changed 2026-09-23
+- **Work on `main` from now on.** `main` was fast-forwarded to `manuscript-figures-storyboard`
+  (identical at `832bc3c`); Overleaf's GitHub sync reads only `main`.
+- **Overleaf** is linked to this whole repo (one repo, by choice). Main document:
+  `manuscript/HIKET_draft_v1.tex`. Lorenzo pushes/pulls with Overleaf's GitHub buttons; I
+  `git pull` before editing the manuscript and `git push` after. Keep the tracked tree small
+  (~106 MB now; Overleaf recommends < 100 MB): big outputs stay gitignored.
+- **`dev/` and the diagnostics PNG/txt/csv are no longer tracked** (kept on disk + OneDrive).
+- ⬜ **ROIHU — NOT DONE YET, do it at the next Roihu login (if ever):** the scratch clone is on
+  the old branch. Lorenzo runs:
+  `cd /scratch/project_2019134/HIKET && git fetch && git checkout main && git pull`
+  ⚠ The pull stops tracking `dev/` and the diagnostics; on Roihu git will DELETE the tracked
+  copies of those files from scratch (only old prototypes/diagnostics — nothing a run needs).
+  Then recompile the Yasso `.so` as usual if any `.f90` changed.
+
 ### Sync workflow
 ```bash
 # Code → Roihu
