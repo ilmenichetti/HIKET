@@ -58,8 +58,12 @@ TP3_FREE_DEFAULTS <- c(
   # SENSITIVITY ARM B (2026-08-31): Lehtonen & Heikkinen anchor, 2.70/2.511 = 1.08.
   # Arm A (Liski, 1.27) is run 20260820_1554*. The two anchors disagree by 18% on the
   # understorey share and the disagreement is UNRESOLVED (see above) -- we report both
-  # rather than choose. Revert to 1.27 to reproduce arm A.
-  sigma_input = 1.08
+  # rather than choose. Set HIKET_SIGMA_INPUT_CENTRE=1.27 to reproduce arm A.
+  # HIKET_SIGMA_INPUT_CENTRE (2026-09-23): unset => 1.08 (production, arm B, unchanged);
+  # 1.27 reproduces arm A (Liski et al. 2006). On Roihu prefix with SINGULARITYENV_.
+  sigma_input = local({ v <- suppressWarnings(as.numeric(Sys.getenv("HIKET_SIGMA_INPUT_CENTRE", "1.08")))
+                        if (!is.finite(v) || v <= 0) stop("HIKET_SIGMA_INPUT_CENTRE must be a positive number")
+                        v })
 )
 
 # sigma_ppm: prior SDs in unconstrained (transformed) space.

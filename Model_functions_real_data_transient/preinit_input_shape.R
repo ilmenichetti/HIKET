@@ -65,7 +65,8 @@ growing_stock_preinit_shape <- function(preinit_year = 1917L, t0_year = 1985L,
 #
 # COMPOSITION (decision 2026-08-20). Uses total_input_tree_basis = tree litter +
 # harvest residues + natural mortality, matching the post-1985 Tupek product
-# exactly (understorey EXCLUDED). Ground vegetation is deliberately left out: it
+# closely (understorey EXCLUDED). CORRECTED 2026-09-23: Tupek has no explicit
+# mortality term; the 2-4% mismatch moves the mean shape 0.450 -> 0.448. Ground vegetation is deliberately left out: it
 # is absorbed by sigma_input, as it is after 1985. Including it would make
 # sigma_input mean one thing before the join and another after -- a discontinuity
 # in a fitted parameter that no diagnostic here would reveal.

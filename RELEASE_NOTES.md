@@ -50,3 +50,16 @@ is not a memory exercise at the end.
   `CRS: YKJ-KKJ` and the extraction method. ⬜ Confirm the product and describe the
   modification before submission, and settle whether the extracted file can be
   redistributed.
+
+## Reproducing the sensitivity analysis on the input prior (added 2026-09-23)
+
+- The σ_input prior centre is set by `HIKET_SIGMA_INPUT_CENTRE` in all six
+  `Prior_specs/*_priors.R` (unset = **1.08**, the production value, Lehtonen & Heikkinen
+  2015). Setting it to **1.27** (Liski et al. 2006) reproduces the sensitivity calibration
+  reported in the paper; nothing else differs between the two. On the CSC cluster the
+  variable must be passed as `SINGULARITYENV_HIKET_SIGMA_INPUT_CENTRE` to reach R inside the
+  container. Before this switch the value was edited by hand, which the released code could
+  not reproduce.
+- The Yasso matrix exponential (`matrixexp` in the Fortran) is FMI's Yasso15 core code
+  (Järvenpää) with two changes of ours: 20 instead of 10 Taylor terms, and a cap on the
+  number of scaling steps. The method is standard scaling and squaring (Moler & Van Loan 2003).

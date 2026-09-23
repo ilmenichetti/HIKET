@@ -12,6 +12,7 @@
 # =============================================================================
 
 source("./Calibration_real_data_transient/calibration_engine_transient.R")
+source("./Calibration_real_data_transient/forward_scenarios.R")   # side analyses (2026-09-23)
 source("./Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper_transient.R")
 # No dyn.load: only the pure-R xi functions are used (compute_xi_yasso07,
 # compute_xi_mean_yasso07), not yasso07_run which requires the Fortran .so
@@ -296,11 +297,26 @@ t_proj <- system.time({
         error = function(e) NULL)
       if (is.null(run_proj)) return(NULL)
 
+      # -- Side analyses (2026-09-23; forward_scenarios.R): input scenario and
+      #    equilibrium stock, on the same draw, plot and forcing as above --------
+      inputs_up <- scale_litter(inputs_proj, INPUT_SCEN_MULT)
+      run_up    <- tryCatch(tp2_run_engine(inputs_up, model_params, C_proj_init, xi_proj),
+                            error = function(e) NULL)
+      mp_eq     <- model_params; mp_eq["sigma_init"] <- 1
+      xi_eq     <- tryCatch(compute_xi_mean_tp2_engine(clim_recycle, model_params),
+                            error = function(e) NULL)
+      C_eq      <- if (is.null(xi_eq)) NA_real_ else
+        tryCatch(sum(steady_state_tp2_engine(mp_eq, equilibrium_lm(lm, inputs, RECYCLE_YEARS), xi_eq)),
+                 error = function(e) NA_real_)
+
       data.frame(
-        plot_id   = pid,
-        year      = run_proj$year,
-        draw      = d,
-        total_soc = run_proj$total_soc
+        plot_id      = pid,
+        year         = run_proj$year,
+        draw         = d,
+        total_soc    = run_proj$total_soc,
+        total_soc_up = if (is.null(run_up)) NA_real_ else run_up$total_soc,
+        C_last       = run_hist$total_soc[nrow(run_hist)],
+        C_eq         = C_eq
       )
     }, mc.cores = CORES_PER_CHAIN))
   }))

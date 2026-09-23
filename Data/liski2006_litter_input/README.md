@@ -129,8 +129,8 @@ NFI-volume-plus-elasticity route. Our posteriors infer **+66 to +97%** (all but 
 
 **Not because it is small, but for CONSISTENCY ACROSS 1985.** The post-1985 driver is the Tupek
 product: tree litter covering foliage, branches, stem+bark, stumps, coarse and fine roots,
-**including** harvest residues and natural mortality, **excluding** understorey. The tree basis here
-has exactly that composition. So `sigma_input` applies the *same* understorey correction on both
+**including** harvest residues, **excluding** understorey. The tree basis here has nearly that
+composition. ⚠ CORRECTED 2026-09-23: the Tupek product has NO natural-mortality term (turnover + harvest residue only; a death registers only via a basal-area drop, treated as a harvest with the stem removed — Tupek et al. 2026 manuscript §2.7, Zenodo). Keeping mortality in the shape is a stated ~2–4% mismatch: removing it moves the mean shape 0.450 → 0.448, no year by more than 0.037. So `sigma_input` applies the *same* understorey correction on both
 sides of the join.
 
 Including ground vegetation would make `sigma_input` mean one thing before 1985 and another after —

@@ -1,15 +1,33 @@
-setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
+# =============================================================================
+# tp3_subannual_forcing_test.R -- does the ANNUAL time step matter?
+# -----------------------------------------------------------------------------
+# Re-runs the CURRENT TP3 posterior median with 12 exact monthly sub-steps per
+# year (seasonal temperature reconstructed from temp_mean + temp_amplitude,
+# litter flux constant within the year) and compares with the production annual
+# scheme. TP3 is the test case because its fast pool turns over > once a year.
+#
+# 2026-09-23: repointed to the current run via manuscript/figures/run_ids.R
+# (was hard-wired to 20260630_090644, pre-ICBM, not reproducible) and updated to
+# the current parameterisation: alpha_A fixed (TP3_ALPHA_A_FIXED), xi on all
+# three pools (C2). Quoted in the manuscript, sect. "Numerical integration".
+#
+# Run from repo root:  Rscript doublechecks/tp3_subannual_forcing_test.R
+# =============================================================================
+
 suppressMessages({
   source("Calibration_real_data_transient/calibration_engine_transient.R")
   source("Model_functions_real_data_transient/Decomposition_functions/Yasso/yasso07_wrapper_transient.R")
   source("Model_functions_real_data_transient/Decomposition_functions/SimpleModels/tp3_wrapper_transient.R")
+  source("Prior_specs/TP3_priors.R")
+  source("manuscript/figures/run_ids.R")
 })
-RUN_ID <- "20260630_090644"
+RUN_ID <- RID[["TP3"]]
+cat("TP3 RUN_ID:", RUN_ID, "\n")
 post <- readRDS(sprintf("Calibration_real_data_transient/runs/TP3_posterior_%s.rds", RUN_ID))
 inp  <- readRDS(sprintf("Data/model_inputs/TP3_inputs_%s.rds", RUN_ID))
-med  <- apply(BayesianTools::getSample(post), 2, median)
+mp   <- c(apply(post, 2, median), alpha_A = TP3_ALPHA_A_FIXED)   # posterior is PHYSICAL
 
-# exact cascade step over arbitrary sub-step length h (h=1 == .tp3_step)
+# === exact cascade step over a sub-step of length h (h = 1 == .tp3_step) ===
 step_h <- function(cA,cS,cH,kA,kS,kH,pS,pH,J,h){
   if(abs(kA-kS)<1e-6)kS<-kS+1e-6; if(abs(kA-kH)<1e-6)kH<-kH+1e-6; if(abs(kS-kH)<1e-6)kH<-kH+2e-6
   Ass<-J/kA; Sss<-pS*J/kS; Hss<-pH*pS*J/kH
@@ -19,36 +37,40 @@ step_h <- function(cA,cS,cH,kA,kS,kH,pS,pH,J,h){
   a<-pS*kA; cc<-pH*kS; dA<-cA-Ass;dS<-cS-Sss;dH<-cH-Hss
   c(Ass+e1*dA, Sss+a*d21*dA+e2*dS, Hss+a*cc*dd31*dA+cc*d32*dS+e3*dH)
 }
-# temperature-only modifier at temperature T (matches compute_xi_yasso07 structure)
-tmod <- function(T,b1,b2) exp(b1*T + b2*T^2)
-seas <- cos(2*pi*((1:12)-7)/12)   # +1 in July, -1 in Jan; peak dev = temp_amp
+seas <- cos(2*pi*((1:12)-7)/12)                 # +1 July, -1 January
 
-# monthly sub-annual run: 12 exact sub-steps/yr, seasonal T reconstructed, litter flux constant
+# === monthly run: 12 exact sub-steps a year, xi on all three pools (C2) ===
 run_monthly <- function(ins, clim, mp, C0){
-  n<-nrow(ins); tot<-numeric(n); cA<-C0["A"];cS<-C0["S"];cH<-C0["H"]
-  pm <- 1 - exp(mp["gamma"]*clim$precip/1000)      # annual precip modifier (same as annual scheme)
-  for(t in seq_len(n)){
-    J<-ins$J_total[t]*mp["sigma_input"]
-    Tm <- clim$temp_mean[t] + clim$temp_amplitude[t]*seas
-    xim <- tmod(Tm, mp["beta1"], mp["beta2"]) * pm[t]   # 12 monthly xi
-    for(m in 1:12){
-      kA<-mp["alpha_A"]*xim[m]; kS<-mp["alpha_S"]*xim[m]; kH<-mp["alpha_H"]
-      C<-step_h(cA,cS,cH,kA,kS,kH,mp["p_S"],mp["p_H"],J,1/12)
-      cA<-C[1];cS<-C[2];cH<-C[3]
+  n <- nrow(ins); tot <- numeric(n); cA <- C0[["A"]]; cS <- C0[["S"]]; cH <- C0[["H"]]
+  pm <- 1 - exp(mp[["gamma"]]*clim$precip/1000)
+  for (t in seq_len(n)) {
+    J   <- ins$J_total[t]*mp[["sigma_input"]]
+    Tm  <- clim$temp_mean[t] + clim$temp_amplitude[t]*seas
+    xim <- exp(mp[["beta1"]]*Tm + mp[["beta2"]]*Tm^2) * pm[t]
+    for (m in 1:12) {
+      C <- step_h(cA,cS,cH, mp[["alpha_A"]]*xim[m], mp[["alpha_S"]]*xim[m], mp[["alpha_H"]]*xim[m],
+                  mp[["p_S"]], mp[["p_H"]], J, 1/12)
+      cA <- C[1]; cS <- C[2]; cH <- C[3]
     }
-    tot[t]<-cA+cS+cH
+    tot[t] <- cA+cS+cH
   }
   tot
 }
-compute_xi_tp3 <- function(clim, mp) compute_xi_yasso07(clim$temp_mean, clim$temp_amplitude, clim$precip, mp["beta1"], mp["beta2"], mp["gamma"])
-rough <- function(x){x<-x[is.finite(x)]; mean(abs(diff(diff(x))))}
 
-set.seed(1); ids<-sample(inp$plots,12)
-cat(sprintf("%-8s %8s %8s %8s %8s %8s\n","plot","mean_ann","mean_mon","rgh_ann","rgh_mon","dMeanSOC"))
-for(id in ids){
-  clim<-inp$climate_by_plot[[id]]; lm<-inp$litter_means[[id]]; ins<-inp$inputs_by_plot[[id]]
-  xi<-compute_xi_tp3(clim,med); C0<-tp3_transient_init(med,lm,mean(xi))
-  ann<-tp3_run(ins,med,C0,xi)$total_soc
-  mon<-run_monthly(ins,clim,med,C0)
-  cat(sprintf("%-8s %8.1f %8.1f %8.3f %8.3f %8.2f\n",id,mean(ann),mean(mon),rough(ann),rough(mon),mean(mon)-mean(ann)))
-}
+# === compare on all calibration plots, national mean trajectory ===
+ids <- inp$plots_real
+res <- lapply(ids, function(id){
+  clim <- inp$climate_by_plot[[id]]; lm <- inp$litter_means[[id]]; ins <- inp$inputs_by_plot[[id]]
+  xi   <- compute_xi_yasso07(clim$temp_mean, clim$temp_amplitude, clim$precip, mp["beta1"], mp["beta2"], mp["gamma"])
+  n_ss <- min(inp$STEADY_STATE_YEARS, nrow(clim))
+  xs   <- compute_xi_mean_yasso07(clim[seq_len(n_ss), , drop=FALSE], mp["beta1"], mp["beta2"], mp["gamma"])
+  C0   <- tp3_transient_init(mp, lm, xs)
+  data.frame(year = ins$year, ann = tp3_run(ins, mp, C0, xi)$total_soc, mon = run_monthly(ins, clim, mp, C0))
+})
+d  <- do.call(rbind, res)
+nm <- aggregate(cbind(ann, mon) ~ year, d, mean)
+cat(sprintf("plots %d | national mean, max |monthly - annual| over years: %.2f tC/ha (mean stock %.1f)\n",
+            length(ids), max(abs(nm$mon - nm$ann)), mean(nm$ann)))
+cat(sprintf("per plot, mean over years of (monthly - annual): median %.2f, 95th pct of |.| %.2f tC/ha\n",
+            median(tapply(d$mon - d$ann, rep(seq_along(res), sapply(res, nrow)), mean)),
+            quantile(abs(tapply(d$mon - d$ann, rep(seq_along(res), sapply(res, nrow)), mean)), .95)))

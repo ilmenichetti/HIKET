@@ -16,7 +16,7 @@ drops in without touching the calibration scripts.
    or use `liski2006_upland_soil_area.csv` (13.90 → 15.10 M ha over 1917–1985, growth placed in
    1965–1980). ⚠ Skipping this imports the forest-area expansion, which is the defect this whole
    exercise exists to remove.
-3. Keep the composition matching the post-1985 driver — tree litter incl. residues and mortality,
+3. Keep the composition matching the post-1985 driver — tree litter incl. residues (mortality: see README Decision 1 correction),
    understorey excluded. A pre/post mismatch silently changes what `sigma_input` means at the join.
 3. Interpolate to 1917–1985 annual and normalise to [0,1].
 
@@ -32,9 +32,8 @@ drops in without touching the calibration scripts.
 
 - ✅ data extracted, validated, documented (`README.md`)
 - ✅ area basis recorded (`liski2006_upland_soil_area.csv`)
-- ⬜ **NOT WIRED** — `preinit_input_shape.R` still derives the shape from growing stock alone, and
-  nothing reads these files. Wiring means adding a second shape function plus a switch
-  (`HIKET_PREINIT_LINEAR=1` already exists as the precedent for such a switch).
+- ✅ **WIRED** (2026-08-20) — `liski_preinit_shape()` in `preinit_input_shape.R`, the DEFAULT of
+  `HIKET_PREINIT_SHAPE` (`liski` | `growing_stock` | `linear`). Mean shape 0.450.
 - ⬜ the area *timing* (1965–1980) is an assumption from Korhonen et al. 2024, not data.
 
 ## If the real series arrives from A. Lehtonen

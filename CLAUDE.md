@@ -83,6 +83,8 @@ to reach R inside the r-env container):
 | `HIKET_SIGMA_TOTAL` | overrides the likelihood error scale (total **SD**) | `sigma_obs_fixed` (0.442) |
 | `HIKET_LIK_DF` | Student-t degrees of freedom on the log scale; unset/`Inf` = Gaussian | Gaussian |
 | `HIKET_PRIOR_TIGHTEN` | multiplies Tier-2 **fraction** SDs only | 1 (0.4 unchanged) |
+| `HIKET_INPUT_SCEN_MULT` | input multiplier of the projection scenario (predictive stage) | 1.2 |
+| `HIKET_SIGMA_INPUT_CENTRE` | prior centre of `sigma_input` in all six models; `1.27` reproduces arm A (Liski 2006) | 1.08 (arm B, production) |
 | `HIKET_N_CHAINS` / `_N_ITER` / `_N_BURNIN` | short test runs | 5 / 50000 / 5000 |
 
 ---
@@ -713,6 +715,23 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-09-23 — ALL 72 `%LORENZO` NOTES ADDRESSED (round 5).** Each change carries a
+  `% ROUND 5` comment in the .tex; draft 41 pp, builds clean. ⭐ Outcomes that SUPERSEDE statements
+  elsewhere in this file: (1) the central claim now "suggests a direction rather than a value"
+  (published-MTT fit cost ≤9.7/≤3.0/0 ll); (2) σ_total 0.800 is a DECLARED design value, defended
+  without residuals (≈2× the observed log-spread 0.39); n_eff = 221, not 260; (3) the Tupek litter
+  product has NO natural-mortality term; (4) headroom is **+26…+42%** on the 2024 basis (the old
+  "+28…49%" used 4 draws, the 1985 basis, and TP3 was 82%); (5) **no model's projection turns into a
+  source** — the "Yasso20 source in the 2070s" was the phase of the recycled 20-yr climate; rates
+  must be computed over whole cycles. New code: `Calibration_real_data_transient/forward_scenarios.R`
+  (sourced by all six predictive scripts; +20% input scenario and equilibrium stock; existing
+  outputs verified byte-identical), `manuscript/figures/build_forward_scenarios.R`,
+  `doublechecks/yasso20_late_source_check.R`; switch `HIKET_SIGMA_INPUT_CENTRE` (arm A = 1.27).
+  ⚠ **The paper never refers to our own development history** (Lorenzo, repeatability).
+  ⬜ Remaining: the `\gap`s — abstract, Limitations, prior-criteria table, maps paragraph, data
+  statement, the σ_init posterior discussion, the general-implications subsection, Yasso15 climate
+  source, and 2024-campaign stoniness/bulk-density confirmation.
+
 - **⭐⭐ NEXT ACTION (2026-09-22) — THE REVISION: 72 `%LORENZO` notes in `manuscript/HIKET_draft_v1.tex`.**
   Lorenzo's review now reaches the **end of the paper** — the first pass over the Results, Discussion
   and Conclusions. Heaviest: **the error model (14)**, equal external information (7), numerical
@@ -1097,8 +1116,9 @@ guards key on those filenames.
   **2.81**, not 5.63 tC/ha/yr. ⚠ Narrowing also **tightens the prior** (scaled logit onto the
   window). ⚠ Three claims died and must not be revived — "physically impossible", "LUKE is biased
   high", "Finnish forests are 2× Gower's" (that last compared *current annual increment* with
-  Gower's *MAI*). **Also corrected: `J̄` INCLUDES harvest residues and natural mortality** (both
-  previously assumed missing) and excludes understorey; Zenodo DOI 10.5281/zenodo.19736499 is now
+  Gower's *MAI*). **Also corrected: `J̄` INCLUDES harvest residues** (previously assumed missing;
+  ⚠ **but NOT natural mortality** — corrected 2026-09-23 from the Tupek manuscript §2.7: turnover +
+  harvest residue only, a death registers only via a basal-area drop, stem treated as removed) and excludes understorey; Zenodo DOI 10.5281/zenodo.19736499 is now
   **live**. Write-up: M&M §"Prior specification: the litter-input flux window", `NEXT_SESSION.md`
   §0-quater. Memory: [[sigma-input-physical-bounds]].
 
