@@ -89,54 +89,6 @@
 \newcommand{\suppfig}[1]{\textcolor{blue!55!black}{\small[Supplementary figure: \textsf{#1}]}}
 \newcommand{\figref}[1]{\textcolor{blue!55!black}{\small[Figure: \textsf{#1}]}}
 
-% ---------------------------------------------------------------------------
-% TITLE. Chosen 2026-09-11 with Lorenzo, after two rounds. The alternatives are
-% kept below so that swapping is one edit.
-%
-% WHY THIS ONE. The previous title ("what four decades of Finnish soil measurements
-% require of six forest carbon models") had two faults. It billed the six models,
-% when three of them are benchmarks and do not deserve that share. And it PROMISED a
-% finding ("what ... require of") without stating one, which is the fault a title in
-% this literature can least afford.
-%
-% The title now states the finding and the mechanism in one declarative clause, and
-% stops. Endings that promise a consequence -- "with consequences for projection" --
-% were tried and rejected: a clause any paper could append. The consequences live in
-% the abstract.
-%
-% ⚠ THE VERB IS "DISPLACES ALONG", NOT "REVEALS". Relaxing the steady-state
-% assumption does NOT reveal the trade-off: the trade-off exists under either
-% initialisation, and a transient start only NARROWS it, partially (transit time and
-% the input multiplier still correlate -0.64 to -0.73). That correction was made on
-% 2026-09-03 and must not be reverted through the title. "One displacement along a
-% trade-off" is the Conclusions' own wording.
-%
-% ⚠ "TURNOVER", not "transit time" -- deliberate. Sierra et al. 2017 explicitly adopt
-% turnover time as stock over flux, so the plain word is not the discouraged term, and
-% it reads to a wider audience. The Methods do the precise naming.
-%
-% ⚠ TURNOVER IS NOT IN THE TITLE AS A DIRECTION, and must not be. The input
-% displacement is universal (effective flux 3.19-4.34 against 2.511, all six models);
-% the turnover displacement is GRADED -- ratios 0.73 / 0.89 / 1.03, and Yasso20 is not
-% displaced at all. Yasso20 is the negative control. A title claiming "faster turnover"
-% would contradict it.
-%
-% ⚠ FINLAND IS NOT IN THE TITLE, by the rule that Finland is the case and not the
-% claim. The abstract and the first lines of the Introduction say where the
-% measurements come from.
-%
-% ALTERNATIVES, in the order they were considered:
-%  (b) ... along a trade-off that the measurements narrow but do not resolve
-%      [same stem, with the contribution AND its limit in the tail]
-%  (c) ... displaces them towards a larger litter input, along a trade-off the
-%      measurements narrow but do not resolve   [adds the direction; 23 words]
-%  (d) What a transient initial state can and cannot settle: litter input, turnover,
-%      and projection in forest soil carbon models
-%  (e) Soils that are still catching up: relaxing the steady-state assumption in
-%      forest soil carbon models
-%  (f) Forest soils are not where models start them: consequences of estimating
-%      the initial state of soil carbon in Finland
-% ---------------------------------------------------------------------------
 \title{\vspace{-1.2cm}Relaxing the steady-state assumption displaces\\
 forest soil carbon models along the trade-off\\
 between litter input and turnover}
@@ -152,9 +104,6 @@ between litter input and turnover}
 \maketitle
 
 \begin{abstract}
-% ROUND 5, 2026-09-23: first draft of the abstract (~290 words). Numbers: effective
-% flux 3.19-4.34 / J_bar 2.511 = 1.27-1.73; MTT ratios 0.73 / 0.89 / 1.03; headroom and
-% sinks from manuscript/figures/forward_scenarios.rds.
 Soil carbon models used in national greenhouse gas inventories are commonly started
 from a soil in balance with its litter input, although the soils of managed forests are
 rarely in balance. We calibrated six soil carbon models, the three versions of Yasso,
@@ -2250,8 +2199,6 @@ a term at all. We record the observation and stop there, because choosing the me
 that would exploit it is not the task of this paper.
 
 \subsection{What the result may mean for soil carbon modelling and its applications}
-% ROUND 5, 2026-09-23 (note 2077): general framing; no survey of other countries'
-% inventory systems (too prescriptive). CBM-CFS3/Century/RothC primary reading dropped.
 \gap{To be written, in general terms and without naming other national inventories.
 Content: what follows for any application that starts a soil carbon model at steady
 state; reading a calibrated input multiplier as a physical quantity that can be
@@ -2259,10 +2206,6 @@ compared with independent budgets; and the difference between skill at the scale
 national mean and skill between individual plots.}
 
 \subsection{A national map of soil carbon change as a by-product}
-% ROUND 5, 2026-09-23 (note 2162): moved here from the Conclusions.
-% ROUND 5, 2026-09-23: from Reporting/NextgenC_report/ZENODO_description.md (maps rebuilt
-% on run 20260831, 2026-09-03). Nugget 85-90% of the variogram; 2015-2024 ensemble delta
-% ~87% of cells gaining, mean +0.18 tC/ha/yr.
 The calibrated models also yield a gridded product. For each model and for the ensemble
 of the six, weighted equally, the posterior mean and standard deviation of the soil
 carbon stock of each plot and year were interpolated by ordinary kriging on the
