@@ -95,8 +95,9 @@ between litter input and turnover}
 % Author list as of 2026-09-15 (Lorenzo). Order not yet decided; affiliations pending.
 % Boris Tupek (litter product) and Olli-Pekka Tikkasalo added 2026-09-15.
 % Mikko Peltoniemi REMOVED for now -- Lorenzo has not yet asked him; may return.
+% Juha Heikkinen (LUKE) added 2026-09-30 (Lorenzo).
 \author{Lorenzo Menichetti, Aleksi Lehtonen, Samuli Launiainen, Boris {\v T}upek,
-        Olli-Pekka Tikkasalo, \gap{possibly others; order and affiliations to be decided;
+        Olli-Pekka Tikkasalo, Juha Heikkinen, \gap{possibly others; order and affiliations to be decided;
         Mikko Peltoniemi to be asked}}
 \date{Draft of \today}
 
@@ -526,9 +527,19 @@ to 1995, the European BioSoil programme in 2006, and a third campaign in 2024.  
 plots measured in all three campaigns, the mean soil organic carbon (SOC) stock rose
 from $64.5$ tonnes of C per hectare to $71.5$ and then to $73.6$, a gain of $7.0$ tonnes
 over the first interval and a gain of $2.1$ tonnes over the second.
+% 2026-09-30 (Aleksi's question on Fig 1): area-weighted series added beside the
+% unweighted one; design weight 3 North, 1 South (build_F3_mean_SOCalt.R).
+Each plot counts equally in these means, so the means describe the average sampled
+plot. The inventory samples the north of the country at a third of the density used in
+the south, and each northern plot therefore stands for three times as much forest land.
+Weighted by the area of forest that each plot represents, the mean stock rose from
+$63.7$ to $68.8$ and then to $69.9$ tonnes of C per hectare. The gain is smaller when the
+plots are weighted by area, because the southern plots gained more carbon than the
+northern ones, but in both cases the gain over the second interval was much smaller than
+the gain over the first.
 Three points give already a trajectory, that can be used to constrain a SOC model.
 
-\hfig{F3_mean_SOCalt}{0.86}{observed}{\textbf{The measured soil carbon stock of Finnish forest plots in three campaigns.} Each point is the mean stock across the plots measured in all three campaigns ($n=310$), and the bars show the $95\%$ confidence interval of that mean. The first campaign is drawn at the mean year in which its plots were actually sampled, and the bar low in the panel shows that the sampling of the first campaign ran from 1986 to 1995. Each segment is labelled with the rate of change over that interval and with the $95\%$ confidence interval of the rate, calculated from the paired difference between campaigns on the same plots. The stock rose over both intervals, and the rise over the second interval was smaller than the rise over the first.}
+\hfig{F3_mean_SOCalt}{0.86}{observed}{\textbf{The measured soil carbon stock of Finnish forest plots in three campaigns.} Each point is the mean stock across the plots measured in all three campaigns ($n=310$), and the bars show the $95\%$ confidence interval of that mean. The first campaign is drawn at the mean year in which its plots were actually sampled, and the bar low in the panel shows that the sampling of the first campaign ran from 1986 to 1995. Each segment is labelled with the rate of change over that interval and with the $95\%$ confidence interval of the rate, calculated from the paired difference between campaigns on the same plots. The filled points and the solid line are the unweighted means, in which every plot counts equally; the unweighted means are the ones compared with the models, whose trajectories are also averaged over plots with equal weight. The open points and the dashed line are the means weighted by the area of forest that each plot represents, with a weight of three for the plots in the north, which are sampled at a third of the southern density; the weighted means describe the average hectare of forest on mineral soil. The stock is the whole soil profile: the organic layer and the mineral soil, measured to $40$ cm and extrapolated below, down to one metre or to the depth at which the auger stopped. The stock rose over both intervals, and the rise over the second interval was smaller than the rise over the first.}
 
 The measured soil has been gaining C, as the inventory reports, and the gain has been recently
 slowing down.
@@ -2252,6 +2263,41 @@ consequence of the calibration and is not constrained by any observation
 \gap{report the implied 1917 stocks on the current run, from
 doublechecks/init\_state\_plausibility.R, and compare them with what is known of boreal
 forest soils; the floor for that comparison still has to be sourced}.
+
+% 2026-09-30 (Aleksi): unweighted calibration, written as a mini-arc (Lorenzo):
+% the North/South difference a LUKE reader will look for -> it is the basal-area
+% gradient of sec:plotscale -> no sign that the parameters differ between regions.
+% Evidence (run 20260831_16*, plot-mean log residuals, doublechecks/residuals_by_latitude.R
+% + inline checks 2026-09-30): N-S +0.13...+0.28 (p 0.002 Yasso15, 0.03 Yasso20, 0.08-0.22
+% others); no linear slope on latitude (p >= 0.30); drift per decade N-S p >= 0.15.
+% Mean basal area 1985: North 10.8, South 17.0 m2/ha. Residual slope on basal area
+% within the South alone -0.033...-0.044 per m2/ha (p < 1e-30), within the North
+% -0.047...-0.057; South slope x 6.2 m2/ha predicts +0.21...+0.27. N-S with basal area
+% held fixed: -0.15...+0.03, none significant. The 191 southern plots within the
+% northern basal-area range: residual +0.30...+0.44 vs North +0.18...+0.31.
+% Holding mean temperature fixed does NOT remove it (+0.25...+0.33).
+The calibration gives every plot the same weight, although the plots in the north of the
+country stand for three times as much forest land as the plots in the south, because the
+inventory samples the north at a third of the southern density. The weights of the
+inventory describe how much land a plot represents, and not how much information a
+measurement of that plot contains. Weighting the northern plots by three would count each
+of them as three independent measurements, and the calibration would then claim a greater
+certainty about the northern soils than the $50$ northern plots can support. Treating each
+plot as one measurement is correct when the same parameter values hold in the north and in
+the south, so that the differences between the two regions are carried entirely by the
+climate and by the litter input. When the parameter values differ between the regions, a
+single calibration settles on the values suited to the south, where $88$ per cent of the
+plots lie, and the northern plots are then fitted systematically worse.
+
+At first sight the northern plots are indeed fitted worse: all six models predict their
+stocks $10$ to $30$ per cent too low relative to the southern plots, clearly so for
+Yasso15 and Yasso20. The difference, however, follows the density of the stands and not
+the latitude. The northern stands are sparser ($10.8$ against $17.0$ square metres of
+basal area per hectare), sparse stands are underpredicted everywhere
+(Sections~\ref{sec:plotscale} and~\ref{sec:residuals}), and once basal area is taken
+into account the difference between north and south vanishes in all six models. The
+residuals therefore give no indication that the parameter values differ between the two
+regions.
 
 The error model rests on design values. The total spread of the error, $0.800$ on the
 logarithmic scale, is declared rather than estimated, and the spreads of the campaign
