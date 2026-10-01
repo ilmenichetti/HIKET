@@ -730,6 +730,27 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-09-30/10-01 — Aleksi's Fig 1 questions answered** (commits `548cc67`, `ab48b85`).
+  (1) **Fig 1 now shows BOTH series** on the 310 balanced plots: unweighted (average sampled plot,
+  the one compared with the models) 64.5→71.5→73.6, rates +0.41/+0.12; **area-weighted** (North ×3,
+  average hectare) 63.7→68.8→69.9, rates +0.30/+0.06 — the slowdown holds on both. Footer states the
+  depth: organic + mineral to 1 m or auger refusal, measured to 40 cm, exponential tail below (λ per GTK
+  soil class). (2) **Calibration stays unweighted by design** (Lorenzo: one plot = one measurement;
+  weighting the likelihood would count northern plots ×3 → overconfidence). New Limitations paragraph:
+  the North is underpredicted 10–30% (clear only Yasso15/20), but **the offset vanishes in all six once
+  basal area is held fixed** (North 10.8 vs South 17.0 m²/ha; not temperature) ⇒ it is the plot-scale
+  basal-area gradient (sec:plotscale, sec:residuals), not regional parameters.
+  `doublechecks/residuals_by_latitude.R`. (3) **Juha Heikkinen (LUKE) added as coauthor.**
+  (4) Intro §"What the Finnish estimates have reported" reordered chronologically.
+  ⬜ **NOT YET APPLIED (proposed, awaiting Lorenzo):** (a) "The reason given for the turn … is the
+  litter input" overstates the NID — NID 2025 says **"one of the reasons"**; Luke2025news adds **global
+  warming**; (b) the foliage drop comes from **recalculated BCEFs** (NFI13, smaller, esp. N-Finland spruce)
+  + biomass model 3 no longer usable — the NID gives no biological reason (`FI_NID_2025.txt` 16978–17047);
+  (c) the Intro means (64.5…73.6) are **OURS** (whole profile, 310 plots), not LUKE's official 59.06/61.05
+  (0–40 cm, weighted) — a short pointer to the Methods SOC subsection was proposed and **rejected as
+  worded**; revisit. ⬜ Offered, not done: joint climate-block permutation importance + residual
+  semivariogram; LSHk soil class has λ≈0.0001 (flat tail, 4 plots, up to 47 tC/ha) → use global λ.
+
 - **✅ SESSION 2026-09-23 — ALL 72 `%LORENZO` NOTES ADDRESSED (round 5).** Each change carries a
   `% ROUND 5` comment in the .tex; draft 41 pp, builds clean. ⭐ Outcomes that SUPERSEDE statements
   elsewhere in this file: (1) the central claim now "suggests a direction rather than a value"
