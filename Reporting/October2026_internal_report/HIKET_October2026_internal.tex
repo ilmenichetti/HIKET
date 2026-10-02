@@ -2,7 +2,9 @@
 % HIKET -- INTERNAL PROGRESS TALK, October 2026.
 %
 % WHAT THIS IS. A ~20-minute talk that walks the storyline of the manuscript
-% draft (manuscript/HIKET_draft_v1.tex, 2026-09-11 state) in the order the paper
+% draft (manuscript/HIKET_draft_v1.tex; updated 2026-10-02 to the post-round-5
+% state: Objectives, headroom, sigma_init reading, retitled plot-scale result,
+% Conclusions as a baseline for model development) in the order the paper
 % tells it: the soil that is still catching up -> the steady-state convention and
 % what it cannot do -> the design (six models, transient start, equal information)
 % -> the three results -> conclusions. Backup slides after \appendix for questions.
@@ -53,7 +55,7 @@
 
 \title{Relaxing the steady-state assumption displaces forest soil carbon models along the trade-off between litter input and turnover}
 \subtitle{HIKET --- internal progress talk: where the manuscript stands}
-\author{Lorenzo Menichetti \\ \small with Aleksi Lehtonen, Samuli Launiainen, Boris Tupek, Olli-Pekka Tikkasalo}
+\author{Lorenzo Menichetti \\ \small with Aleksi Lehtonen, Samuli Launiainen, Boris {\v T}upek, Olli-Pekka Tikkasalo, Juha Heikkinen}
 \date{October 2026}
 
 \begin{document}
@@ -66,31 +68,10 @@
 \section{The question}
 
 \begin{frame}{Finnish forest soils have been measured three times}
-  \figslide{F3_mean_SOCalt}{0.72}{The stock rose by $+0.259 \pm 0.040$ tC\,ha$^{-1}$\,yr$^{-1}$ over the whole window, but only $+0.117 \pm 0.066$ over the last interval. The accumulation is slowing down.}
-  \note{Balanced set, n = 310, plots measured in all three campaigns. 64.5 -> 71.5 -> 73.6 tC/ha. First campaign drawn at its mean sampling year (~1989), because its fieldwork ran 1986-1995. The full-window rate is the robust one (survives a 9\% shared campaign offset); the last-interval rate is the fragile one (2\% removes it). The paper's opening claim rests partly on the fragile one; the model comparison rests on the robust one.}
+  \figslide{F3_mean_SOCalt}{0.72}{Every plot equal (solid, compared with the models): $64.5 \to 71.5 \to 73.6$ tC/ha. Weighted by forest area (dashed): $63.7 \to 68.8 \to 69.9$. Either way the second interval gained much less than the first: the accumulation is slowing down.}
+  \note{310 plots measured in all three campaigns. Unweighted = average sampled plot; area-weighted (North x3, sampled at a third of the southern density) = average hectare. Rates unweighted +0.41 / +0.12, weighted +0.30 / +0.06. Calibration is unweighted by design: one plot = one measurement; weighting the likelihood would count each northern plot three times. Whole profile: organic + mineral, measured to 40 cm, extrapolated to 1 m or auger refusal. First campaign drawn at its mean sampling year (~1989), because its fieldwork ran 1986-1995. The full-window rate is the robust one (survives a 9\% shared campaign offset); the last-interval rate is the fragile one (2\% removes it). The paper's opening claim rests partly on the fragile one; the model comparison rests on the robust one.}
 \end{frame}
 
-\begin{frame}{Why the trajectory, and not the stock, is the quantity that matters}
-  \small
-  \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
-      \begin{itemize}
-        \item A national inventory reports the \alert{annual change} of the soil stock, not the stock.
-        \item In Finland the soil term is \alert{modelled}: NFI $\to$ litter $\to$ Yasso07 $\to$ $\Delta$SOC. No soil measurement enters the chain.
-        \item Forest-land mineral soils, 2022: sink of \alert{4.8 Mt CO$_2$} against a biomass sink of 12.6 Mt; reported uncertainty \alert{31.5\%} vs 16.3\%.
-        \item The land-use sector is already a net source ($+4.4$ Mt CO$_2$e). A term of that size and uncertainty decides the sign.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.46\textwidth}
-      \begin{block}{The awkward step}
-        A model has to be told how much C the soil holds on day one, and how it is split between pools --- for a soil whose history was never observed.
-      \end{block}
-      \vspace{0.5em}
-      \small Sweden measures its soil term by resampling its NFI plots (NID 2026). Most countries cannot afford that, and model it instead.
-    \end{column}
-  \end{columns}
-  \note{Careful: ROMULv is NOT in the inventory -- Yasso07 alone. Lehtonen et al. 2016 is an evaluation. "Often modelled rather than measured" -- Sweden is the counterexample.}
-\end{frame}
 
 \begin{frame}{The convention: start the soil in balance with its litter input}
   \small
@@ -102,7 +83,7 @@
     \end{column}
     \begin{column}{0.5\textwidth}
       \begin{itemize}
-        \item Shared across lineages: Yasso, RothC, Century, global land-model spin-ups; CBM-CFS3 cycles to a repeating average.
+        \item Shared across models: Yasso, RothC, Century, global land-model spin-ups; CBM-CFS3 cycles to a repeating average.
         \item The Finnish inventory spins up on NFI6 litter (1971--76) and 1960--90 climate; its defence is Peltoniemi et al.\ 2006 --- a \alert{precision} study around an assumed level (``precision, not accuracy'').
         \item Liski et al.\ 2006 is our direct antecedent: same country, model family and NFI litter --- and they \emph{assumed} the 1922 state, having no repeated soil measurement.
       \end{itemize}
@@ -117,16 +98,28 @@
   \note{Early 20th century: slash-and-burn, forest grazing, tar burning, selective removal -- historical low of standing volume. Peltoniemi 2004: trend cannot be distinguished unless measurements cover two rotations. Now we have three campaigns over ~4 decades.}
 \end{frame}
 
-\begin{frame}{Three questions, weighted in this order}
-  \begin{enumerate}
-    \item[\textbf{Q1}] Does a \alert{transient, calibrated initial state} reproduce the observed national SOC trajectory --- and what does reproducing it \emph{require} of the models? {\small (weight $\sim$55\%)}
-    \item[\textbf{Q2}] Does it matter, for projection, \alert{where a calibration lands} on the exchange between litter input and transit time? {\small (weight $\sim$25\%)}
-    \item[\textbf{Q3}] What part of the variation between \alert{individual plots} can none of the models see? {\small (weight $\sim$20\%)}
-  \end{enumerate}
-  \vspace{1em}
-  \begin{block}{Two quantities govern a stock}
-    litter input $J$ and mean transit time $\tau$: at balance $C^{*} = J\,\tau$. A stock fixes the product only. A trajectory can do more.
-  \end{block}
+\begin{frame}{Two changes to the starting state, three questions}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \begin{block}{What we change}
+        \begin{enumerate}
+          \item The starting state is \alert{estimated}, not assumed: the input the soil is in balance with is a free parameter, informed by the measured trajectory.
+          \item The date of that balance is \alert{pushed back to 1917}: 68 years of simulated history before the first measurement for any error in it to fade.
+        \end{enumerate}
+      \end{block}
+      \vspace{0.3em}
+      \footnotesize Two quantities govern a stock: litter input $J$ and mean transit time $\tau$, $C^{*} = J\,\tau$ at balance. A stock fixes the product only; a trajectory can do more.
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \begin{enumerate}
+        \item[\textbf{I}] Where does the measured trajectory place the models on the \alert{trade-off between litter input and transit time}, relative to their published parameterisations --- and how far does it narrow it?
+        \item[\textbf{II}] Does that position matter \alert{beyond the observed window}: do two calibrations that fit equally well extrapolate differently, and for which structures?
+        \item[\textbf{III}] What part of the variation between \alert{individual plots} is left unexplained, and what information would a model need to explain it?
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+  \note{Weight of the talk mirrors the paper: national trajectory and the trade-off first, projection second, plot scale last. A real steady state is reached only in unmanaged primary forest -- something WILL be wrong with balance in 1917; the point is that it has 68 years to dissipate.}
 \end{frame}
 
 % =============================================================================
@@ -157,12 +150,13 @@
       \footnotesize The simple models are a transparent ladder: any Yasso result is checked against a structure one can follow by hand.
     \end{column}
     \begin{column}{0.5\textwidth}
-      \begin{block}{Equal \emph{external information}, not equal DoF}
+      \begin{block}{As comparable as the models allow}
         \begin{itemize}
-          \item Yasso: rates \textbf{fixed} at published values; the 12 transfer fractions, climate, woody size are free.
-          \item SP1/TP2/TP3: rates \textbf{anchored on ICBM} (fast fixed, slow pinned by a tight prior); humification fractions free.
-          \item Priors homogenised in \emph{construction}, not in value: same rule per parameter class, centre from each model's own publication.
-          \item All six integrate the linear system exactly; no explicit Euler step.
+          \item Same information content is impossible; we reduce the asymmetry with compromises.
+          \item Yasso: rates \textbf{fixed} at published values as part of the model definition; 12 fractions, climate, woody size free.
+          \item SP1/TP2/TP3: ICBM rates --- fast \textbf{fixed}, slow \textbf{tightly pinned} (arable $\to$ forest); humification fractions free.
+          \item Roughly same prior rule per class (centres from each model's own publication).
+          \item All six solve the linear system exactly.
         \end{itemize}
       \end{block}
     \end{column}
@@ -170,20 +164,20 @@
   \note{Why rates fixed: a rate defines the pool -- changing it redefines the pool. Fractions are what the published Yasso calibrations themselves estimate. Why the simple models are pinned rather than fixed: ICBM rates come from an arable experiment; the slow-rate posterior width is a transferability diagnostic.}
 \end{frame}
 
-\begin{frame}{The move: estimate the starting state instead of assuming it}
+\begin{frame}{The main point: estimate the starting state instead of assuming it}
   \figslide{F4_initialization}{0.66}{Start in 1917 in balance with the 1917 litter; raise the input along the Liski et al.\ 2006 reconstructed shape to 1985; then drive with the annual record. Two auxiliary parameters: $\sigma_{\mathrm{init}} = J_{1917}/J_{1985}$ and $\sigma_{\mathrm{input}}$, a multiplier on the whole litter series.}
   \note{The shape is taken from a reconstructed INPUT, not the growing stock: standing volume is a stock and misses harvest residues; the reconstructed input peaks around 1960. Only the shape is used, rescaled 0->1; the endpoints are the estimated quantities. Uncertainty of both sigmas propagates into the initial state AND the forward trajectory.}
 \end{frame}
 
-\begin{frame}{Data and error model, in one slide}
-  \footnotesize
+\begin{frame}{Data}
+  \small
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \textbf{Observations}
       \begin{itemize}
         \item 456 NFI plots, 1205 plot-years; 365 fitted / 91 held out (by plot).
         \item Three campaigns rebuilt on \alert{one basis}: bulk density, coarse fragments (median 43\%, a $1.6\times$ effect), per-plot depth, modelled deep tail (validated on held-out 40--80 cm).
-                \item Official 2006/2024 national stocks reproduced to 0.01 t/ha. First campaign: 2006 litter+moss layer added; \alert{true sampling year} used.
+        \item Official 2006/2024 national stocks reproduced to 0.01 t/ha. First campaign: 2006 litter+moss layer added; \alert{true sampling year} used.
       \end{itemize}
     \end{column}
     \begin{column}{0.5\textwidth}
@@ -192,14 +186,10 @@
         \item Tupek et al.\ tree-litter product, AWEN $\times$ size class; $\bar J = 2.511$ tC\,ha$^{-1}$\,yr$^{-1}$; understorey \emph{not} included by design.
         \item FMI 10 km daily grid; climate modifier computed per year, then averaged (Jensen).
       \end{itemize}
-      \textbf{Likelihood}
-      \[
-        \log y_{ij} = \log f_{ij}(\theta) + u^{R}_{r(i)} + u^{P}_{i} + u^{C}_{j} + e_{ij}
-      \]
-      \small Total SD fixed at 0.800, split (never added): region 0.117, plot 0.396, campaign 0.06/0.03, residual 0.685. Offsets marginalised; $\Sigma$ constant $\Rightarrow$ one triangular solve per evaluation.
+      \vspace{0.5em}
+      \textbf{Error model}: observations sharing a plot, a region or a campaign share part of their error (backup).
     \end{column}
   \end{columns}
-  \note{Why 0.800 above the measured 0.71-0.74: treating plot-years as independent understates what observations share (ICC 0.57-0.71; regional SE x2.3). DEzs, 5 runs x 50000, 15 chains. All R-hat <= 1.008, ESS >= 1450.}
 \end{frame}
 
 % =============================================================================
@@ -214,10 +204,10 @@
 
 \begin{frame}{\ldots and bracket the observed rate of change}
   \figslide{F5_stock_change}{0.66}{Observed $+0.259$; Yasso07 $+0.258$, Yasso15 $+0.250$; TP2/TP3 stronger, SP1/Yasso20 weaker. The bracketing is the result. Which model lands closest is \emph{not} interpretable --- reported as consistency, never validation.}
-  \note{Three reasons the ranking is not interpretable: models not selected for it; observed rate has its own campaign-comparability uncertainty; between-model spread is a diagnostic, not an uncertainty estimate. The shape (accumulation that slows) is what a steady-state start discards -- reproducing it is the first result.}
+  \note{Two reasons the ranking is not interpretable: these are the calibration data (consistency, not predictive ability -- Le Noe 2023); and the observed rate has its own campaign-comparability uncertainty (full window survives a 9\% shared offset, last interval dissolves at 2\%). The shape (accumulation that slows) is what a steady-state start discards -- reproducing it is the first result.}
 \end{frame}
 
-\begin{frame}{Model structure is nearly invisible in the fit}
+\begin{frame}{Model structure is diluted by local variability}
   \footnotesize
   \begin{columns}[T]
     \begin{column}{0.58\textwidth}
@@ -253,8 +243,8 @@
 \end{frame}
 
 \begin{frame}{What reproducing the trajectory requires: more litter input\ldots}
-  \figslide{F9_auxiliary_sigmas}{0.66}{Left: effective flux $3.2$--$4.3$ tC\,ha$^{-1}$\,yr$^{-1}$ in all six, against the $2.5$ the product supplies --- inside the NPP envelope. Right: every model starts 1917 below its 1985 balance, the direction the history requires.}
-  \note{The input displacement is UNIVERSAL: all six. Gap to explain 0.68-1.83 tC/ha/yr. sigma_init 0.49-0.84.}
+  \figslide{F9_auxiliary_sigmas}{0.66}{Left: effective flux $3.2$--$4.3$ tC\,ha$^{-1}$\,yr$^{-1}$ in all six, against the $2.5$ the product supplies --- inside the NPP envelope. Right: $\sigma_{\mathrm{init}}$ $0.49$--$0.60$ (SP1 $0.83$) against $\sim$0.90 from the growing-stock record --- read as an \alert{effective starting deficit} of the 1917 soil.}
+  \note{The input displacement is UNIVERSAL: all six. Gap to explain 0.68-1.83 tC/ha/yr. sigma_init: the 1917 input itself is not low (0.83-0.97 x the product's 1985 input, because sigma_input raises it); what departs from the record is the RISE 1917->1985, x1.7-2.1 vs ~x1.1 in growing stock. The ratio of inputs rests on a measured growing stock; the balance of the 1917 soil with its own input rests on nothing, and slash-and-burn, tar burning and grazing argue against it. One parameter can express a depleted soil only as a lower input.}
 \end{frame}
 
 \begin{frame}{\ldots and, for two of three Yassos, faster turnover}
@@ -262,39 +252,11 @@
   \note{MTT = Sierra et al. 2017; the code still says MRT (deliberate). Published POINT comparator (33.5 / 30.4 / 21.9), never the posterior median. Yasso07's whole gap is its SINGLE climate modifier (MTT = MTT_ref / xi exactly); Yasso15/20 have pool-specific modifiers. Graded, so "faster turnover" is NOT a direction in the title.}
 \end{frame}
 
-\begin{frame}{One displacement, not two: the trade-off}
-  \figslide{F14_mrt_ridge}{0.68}{Colours = fit to the data alone; white contours = posterior (data + priors); dashed = published MTT. The trade-off exists under \emph{either} start; the transient start narrows it, partially ($r = -0.64$ to $-0.73$).}
-  \note{Verb is DISPLACES ALONG, never REVEALS. Bottom row: what makes MTT vary -- climate for Yasso07, fractions for Yasso15/20. CAVEAT for this slide: the Yasso20 dashed line on the file on disk is at 19.0, the old (chimera) published point; the corrected point is 21.9 -- rebuild F14 before this leaves the building. The benchmark trio rides an even stronger ridge (S13, backup).}
+\begin{frame}{The ridge we are moving on}
+  \figslide{F14_mrt_ridge}{0.68}{Colours = fit to the data alone; white contours = posterior (data + priors); dashed = published MTT. Going back to the published MTT costs little: $\le 9.7$ / $\le 3.0$ / $0$ log-likelihood units. The data \alert{suggest a direction rather than impose a value}.}
+  \note{Verb is DISPLACES ALONG, never REVEALS. The trade-off follows from the balance condition, so it exists under EITHER start; the transient start narrows it, partially -- on this run MTT vs sigma_input still correlate at r = -0.59 / -0.53 / -0.56 (the draft's "-0.64 to -0.73" is from the 20260817 run). 6.5\% of Yasso15's posterior lies at or beyond its published value. Bottom row: what makes MTT vary -- climate for Yasso07, fractions for Yasso15/20. The benchmark trio rides the same ridge (S13, backup).}
 \end{frame}
 
-\begin{frame}{The input displacement is set by the data, not by the prior}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Two production runs, one factor}
-        prior centre of $\sigma_{\mathrm{input}}$: $1.08 \to 1.27$ ($+18\%$)
-      \end{block}
-      \small
-      \begin{tabular}{lcc}
-        \toprule
-        posterior median & arm B (1.08) & arm A (1.27) \\
-        \midrule
-        SP1     & 1.27 & 1.35 \\
-        TP2     & 1.73 & 1.87 \\
-        Yasso15 & 1.54 & 1.62 \\
-        \bottomrule
-      \end{tabular}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{itemize}
-        \item The posterior moves only $\sim\frac{1}{3}$ as far as the centre.
-        \item Under either anchor the posterior sits $1.2$--$1.6\times$ \emph{above} its prior centre.
-        \item So the requirement for more litter survives the choice of anchor; the anchor is a documentation question.
-      \end{itemize}
-      \vspace{0.5em}
-      \small Decided: the paper stays on arm B (Lehtonen \& Heikkinen understorey anchor); arm A is a sensitivity.
-    \end{column}
-  \end{columns}
-\end{frame}
 
 \begin{frame}{What might be missing from the litter input}
   \footnotesize
@@ -332,7 +294,7 @@
 % =============================================================================
 \section{Result 3 --- the plot scale}
 
-\begin{frame}{Between plots, the models describe a gradient the soil does not have}
+\begin{frame}{The models reproduce the national mean, not the differences between plots}
   \footnotesize
   \begin{columns}[T]
     \begin{column}{0.42\textwidth}
@@ -343,12 +305,12 @@
         \item Held-out $R^2 = 0$ in all six. What matters is what the models \emph{predict}: stocks ordered by basal area, spread wider than observed.
         \item Slope of $\log$ stock on basal area: models $+0.044$--$0.049$, observed $+0.0044$ (n.s.\ after region and soil).
         \item No model has a basal-area term: the \alert{litter product} rises at $+0.072$ ($\times 18$ across the range) and the models pass it through.
-        \item Woody-compartment mismatch tested and \textbf{refuted} (zeroing woody inputs: 6\%; SP1/TP2/TP3 give the same slope with no composition at all).
+        \item Woody-compartment mismatch \textbf{refuted}: zeroing woody inputs moves it 6\%; SP1/TP2/TP3 have no composition yet give the same slope.
         \item Plots cut in 1985--95 hold $\sim 40\%$ more C than predicted: the same missing flux, from the other end.
       \end{itemize}
     \end{column}
   \end{columns}
-  \note{NEVER say "the models over-apply basal area" -- it reads as a bug and it is not one. Two non-exclusive readings: (1) a plot's stock is not set by its current input -- the paper's argument one level down; (2) an 18-fold input gradient is not credible -- a freshly cut plot does not stop receiving carbon.}
+  \note{Not a contradiction with the national result: plot errors (history, soil, local litter) cancel in a mean over hundreds of plots and stay in full on each plot. NEVER say "the models over-apply basal area" -- it reads as a bug and it is not one. Two non-exclusive readings: (1) a plot's stock is not set by its current input -- the paper's argument one level down; (2) an 18-fold input gradient is not credible -- a freshly cut plot does not stop receiving carbon. If asked about North vs South: northern plots are underpredicted 10-30\% (clearly only Yasso15/20), but northern stands are sparser (10.8 vs 17.0 m2/ha) and the offset vanishes in all six once basal area is held fixed -- the same basal-area gradient, not regional parameters.}
 \end{frame}
 
 \begin{frame}{About half of what the models leave behind is recoverable}
@@ -364,11 +326,16 @@
 \begin{frame}{Conclusions}
   \footnotesize
   \begin{enumerate}
-    \item A transient, calibrated initial state reproduces a soil C dynamic a steady-state start \alert{cannot} produce: the stocks, the rate, and an accumulation that slows down.
-    \item Reproducing it requires \alert{more litter input} (all six) and, graded across the Yassos, faster turnover --- \emph{one} displacement along a trade-off the measurements narrow but do not resolve. It is set by the data, not the prior; the likeliest reading is an incomplete litter input.
-    \item The position on the trade-off reaches the \alert{projection} for a model with one climate modifier (Yasso07) and not for models with pool-specific modifiers --- a usable robustness statement for an inventory.
-    \item Headroom is real and finite: $+28$ to $+49\%$ to balance at present input (Liski 2006: $+38\%$). Realising it costs decades of sustained input.
-    \item Half the plot-scale residual is recoverable from site variables that already exist --- a well-posed next study.
+    \item An \alert{estimated} transient starting state lets all six models represent the three campaigns and bracket the observed rate. The fit cannot separate the structures.
+    
+    \item Reproducing the trajectory places the models at a \alert{larger litter input} and, in two of three Yassos, faster turnover, an equifinality trade-off the soil data cannot resolve. My most probable reading: the litter input is \alert{incomplete} (root exudation, understorey, mycorrhizal residues, early succession).
+    
+    \item The position on the trade-off \alert{changes the projection of Yasso07 only}: one climate modifier ties turnover to temperature sensitivity; pool-specific modifiers are robust to the choice.
+    
+    \item Under constant input the \alert{sink is saturating}: soil $26$--$42\%$ below balance, sink falls by a third to a half in 60 yr. How much remains depends on the estimate of 1917 state. $+20\%$ input buys $6$--$10$ tC/ha by 2050 --- finite.
+    
+    \item A \alert{baseline for model development}: half the plot-scale residual is recoverable from existing site variables --- stand productivity and soil physical properties.
+    
   \end{enumerate}
 \end{frame}
 
@@ -378,20 +345,22 @@
     \begin{column}{0.5\textwidth}
       \textbf{Done}
       \begin{itemize}
-        \item Draft v1, 36 pp, builds clean; Intro and M\&M through two rounds of comments.
+        \item Full draft, Introduction to Conclusions; first full review (72 notes) addressed.
+        \item Abstract, Limitations and the maps paragraph drafted.
         \item Title chosen; mean \emph{transit} time adopted (Sierra et al.\ 2017).
-        \item Literature review, 8 topics; missing-flux budget.
+        \item Literature review, 8 topics; missing-flux budget; climate source confirmed (FMI 10 km grid).
+        \item Forward scenarios (constant and $+20\%$ input, equilibrium stock) for all six.
         \item NextGenC deliverable rebuilt on the production run (maps, matrices).
       \end{itemize}
     \end{column}
     \begin{column}{0.5\textwidth}
       \textbf{Open}
       \begin{itemize}
-        \item \alert{The equilibrium-init counterfactual has never been run} --- the Introduction's central claim is still theory (design in \texttt{NEXT\_RUN\_equilibrium\_init.md}).
-        \item Abstract, Limitations, ``other inventories'' subsection, author block.
-        \item Climate citation provisional; prior-criteria table unported.
-        \item Data availability: the SOC compilation is not a citable source --- settle with its holders.
-        \item F14's Yasso20 dashed line still at the old 19.0 (corrected point 21.9): rebuild.
+        \item \alert{The effect of the starting state is not isolated}: the run started in balance with present input has never been done (design ready).
+        \item Sensitivity to the declared error total (0.800): test, or state untested.
+        \item The 1917 stock each model implies: report it, and source a comparison floor.
+        \item Prior-criteria table; the ``implications for modelling'' subsection; data statement.
+        \item Author order and affiliations.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -403,8 +372,8 @@
 \appendix
 \section{Backup}
 
-\begin{frame}{Backup --- the benchmark trio rides the same ridge, more strongly}
-  \figslide{S13_mrt_ridge_benchmark}{0.68}{SP1 / TP2 / TP3, same construction as F14. With the climate modifier included the trio correlates $-0.90$ / $-0.81$ / $-0.81$ --- stronger than any Yasso. The trade-off is a property of the data, not of the five-pool structure.}
+\begin{frame}{Backup --- the benchmark trio rides the same ridge}
+  \figslide{S13_mrt_ridge_benchmark}{0.68}{SP1 / TP2 / TP3, same construction as F14. With the climate modifier included: $r = -0.76$ / $-0.47$ / $-0.45$ (Yassos $-0.59$ / $-0.53$ / $-0.56$). The trade-off is a property of the data, not of the five-pool structure.}
 \end{frame}
 
 \begin{frame}{Backup --- why the fractions are not identified (and why that is fine)}
@@ -417,6 +386,42 @@
 
 \begin{frame}{Backup --- why only Yasso07 separates in projection}
   \figslide{A1_forward_appendix}{0.57}{Yasso07 applies one $\xi$ to every pool: $\mathrm{MTT} = \mathrm{MTT}_{\mathrm{ref}}/\xi$ exactly, so turnover and temperature sensitivity are the same lever. Yasso15/20 carry $\xi_{AWE}$, $\xi_N$, $\xi_H$; the humus pool that holds the carbon barely moves ($\times 1.04$--$1.06$).}
+\end{frame}
+
+\begin{frame}{Backup --- the likelihood}
+  \begin{columns}[T]
+    \begin{column}{0.6\textwidth}
+      \footnotesize
+      \textbf{Likelihood} (plot $i$, campaign $j$, log scale)
+      \[
+        \log y_{ij} = \log f_{ij}(\theta) + u^{R}_{r(i)} + u^{P}_{i} + u^{C}_{j} + e_{ij}
+      \]
+      \vspace{-0.6em}
+      \scriptsize
+      \begin{tabular}{@{}l p{0.62\linewidth} r@{}}
+        \toprule
+        term & what it represents & SD \\
+        \midrule
+        $y_{ij}$ & measured SOC stock & \\
+        $f_{ij}(\theta)$ & model prediction for parameters $\theta$ & \\
+        $u^{R}_{r(i)}$ & \textbf{region}: shared by all plots in a latitude band & 0.117 \\
+        $u^{P}_{i}$ & \textbf{plot}: shared by all campaigns on a plot (soil, history) & 0.396 \\
+        $u^{C}_{j}$ & \textbf{campaign}: shared by all plots of a campaign (protocol) & 0.06 / 0.03 \\
+        $e_{ij}$ & \textbf{residual}: independent, per measurement & 0.685 \\
+        \midrule
+        total & declared, \alert{split} among the four & \textbf{0.800} \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item The offsets are \alert{integrated out}, not estimated: observations that share a plot, a region or a campaign count as less independent information.
+        \item The total is a design value, about twice the spread of the observed stocks around each campaign mean ($0.39$); chosen high on purpose, so that claims are conservative.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \note{Offsets are not estimated but integrated out: observations sharing a plot, region or campaign count as less independent information. Campaign SD 0.06 for the first campaign, 0.03 for the others. 0.800 is a DESIGN value, not estimated from residuals (Lorenzo's circularity point): about twice the spread of observed stocks around each campaign mean (0.39), which is the error of an idealised model that only follows the national mean. A process model adds information (litter, climate, decomposition) and must be allowed to depart from erroneous measurements; plus plot-level litter error (0.41 between plots -> 0.57 alone), heavy tails, excluded outliers, shared measurement error. Upper end chosen on purpose: weaker pull of the data = conservative claims. Sensitivity to 0.800 NOT yet tested (open). DEzs, 5 runs x 50000, 15 chains. All R-hat <= 1.008, ESS >= 1450.}
 \end{frame}
 
 \begin{frame}{Backup --- the observed rate: what it rests on}
@@ -436,64 +441,6 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Backup --- the error model, and why the total is above the measured spread}
-  \footnotesize
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \small
-      \scriptsize
-      \begin{tabular}{lcc}
-        \toprule
-        term & SD & measured on \\
-        \midrule
-        region $u^R$ & 0.117 & 8 latitude bands \\
-        plot $u^P$ & 0.396 & same-plot pair covariance \\
-        campaign $u^C$ & 0.060 / 0.030 & prescribed \\
-        residual $e$ & 0.685 & remainder \\
-        \midrule
-        total & \textbf{0.800} & fixed \\
-        \bottomrule
-      \end{tabular}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \small
-      \begin{itemize}
-        \item 1205 plot-years are not independent: plot ICC $0.57$--$0.71$ ($n_{\mathrm{eff}} \approx 630$); latitude-band means vary $5$--$6\times$ more than iid allows.
-        \item Uniform $\sigma$ inflation broadens every direction by $\sqrt{k}$; only correlated structure broadens the \emph{level} direction at fixed total variance.
-        \item Design rule: residuals may \emph{check} a design value, never set one.
-        \item $\tau = 0$ reproduces the independent log-normal likelihood exactly (unit-tested).
-      \end{itemize}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Backup --- the 1917 state the models imply}
-  \scriptsize
-  \begin{tabular}{lcccccc}
-    \toprule
-    & $\sigma_{\mathrm{init}}$ & $J_{1917}$ & $J_{1985}$ & $C_{1917}$ & $C_{1985}$ & pre-run rate \\
-    \midrule
-    SP1     & 0.63 & 2.32 & 3.68 & 39.5 & 49.1 & $+0.148$ \\
-    TP2     & 0.45 & 1.90 & 4.36 & 32.8 & 44.8 & $+0.181$ \\
-    TP3     & 0.43 & 1.73 & 4.14 & 32.6 & 44.6 & $+0.177$ \\
-    Yasso07 & 0.32 & 1.50 & 4.67 & 30.8 & 45.2 & $+0.217$ \\
-    Yasso15 & 0.29 & 1.27 & 4.22 & 30.1 & 47.0 & $+0.242$ \\
-    Yasso20 & 0.33 & 1.47 & 4.56 & 31.3 & 47.9 & $+0.235$ \\
-    \bottomrule
-  \end{tabular}
-  \vspace{0.6em}
-
-  Run 20260817 (the previous run; the current one moved $\sigma_{\mathrm{init}}$ up to 0.49--0.84). Fluxes in tC\,ha$^{-1}$\,yr$^{-1}$, stocks in tC/ha. The pre-run rate is \emph{below} the observed $+0.259$ in all six. The 1917 stock (30--40 tC/ha) is \textbf{reported, not constrained}; the growing-stock bound on $\sigma_{\mathrm{init}}$ was retired because judging our start by an equilibrium benchmark re-imports the convention the paper argues against.
-\end{frame}
-
-\begin{frame}{Backup --- equilibrium headroom}
-  \begin{itemize}
-    \item Hold litter at its present level and let each calibrated model run to its own balance: the soil sits \alert{$28$--$49\%$ below} that balance in five of six models (SP1: $+5\%$).
-    \item Liski et al.\ 2006, from an assumed 1922 steady state and the same forward simulation: $+38\%$ ``centuries later''.
-    \item Two routes, one answer on \emph{how far} the soil is from balance --- and both say the room is finite.
-    \item The main projection has \textbf{no climate change}: 2005--2024 climate recycled, litter frozen at 2024. The projected gain is relaxation towards balance, not a warming response.
-  \end{itemize}
-\end{frame}
 
 \begin{frame}{Backup --- the deliverable: gridded SOC and its uncertainty}
   \begin{columns}[T]

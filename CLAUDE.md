@@ -730,6 +730,16 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-10-02 — internal talk deck brought up to the post-round-5 draft** (for the
+  Monday talk; `Reporting/October2026_internal_report/`). Lorenzo then cut it to title + 19 main +
+  8 backup; the likelihood is explained term by term in a backup slide. **F14 rebuilt** with
+  Yasso20's published point **21.86** (was the chimera 19.03) and S13 re-run (unchanged).
+  ⬜ **STALE NUMBER IN THE DRAFT (line ~1817):** "transit time and litter multiplier correlate
+  between −0.64 and −0.73" comes from run 20260817. On the current run 20260831 it is **Yasso
+  −0.59 / −0.53 / −0.56**, and the benchmark trio is **SP1 −0.76, TP2 −0.47, TP3 −0.45**, so
+  "the simple models ride a stronger ridge than any Yasso" now holds for SP1 only. Not edited;
+  Lorenzo's call. Memory: [[october2026-internal-talk]].
+
 - **✅ SESSION 2026-09-30/10-01 — Aleksi's Fig 1 questions answered** (commits `548cc67`, `ab48b85`).
   (1) **Fig 1 now shows BOTH series** on the 310 balanced plots: unweighted (average sampled plot,
   the one compared with the models) 64.5→71.5→73.6, rates +0.41/+0.12; **area-weighted** (North ×3,

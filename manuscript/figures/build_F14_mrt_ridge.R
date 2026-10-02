@@ -42,7 +42,7 @@ source("manuscript/figures/model_palette.R")
 
 source("manuscript/figures/run_ids.R")          # auto-selects current RUN_IDs
 RID <- RID[c("Yasso07", "Yasso15", "Yasso20")]  # this figure is the Yasso family only
-PUB <- c(Yasso07 = 33.47, Yasso15 = 30.38, Yasso20 = 19.03)   # published POINT MRT
+PUB <- c(Yasso07 = 33.47, Yasso15 = 30.38, Yasso20 = 21.86)   # published POINT MRT (Yasso20 from ParY20.dat; 19.03 was the Yasso15-hybrid chimera, see intrinsic_mrt.rds pub_pt)
 NS  <- Inf                                                     # use EVERY draw (see note)
 NB  <- 60L                                                     # ESTIMATION grid cells per axis
 NFINE <- 420L                                                  # DISPLAY grid (bilinear interpolation)
