@@ -1290,7 +1290,7 @@ with the model parameters, so that the uncertainty of the input and of the start
 state propagates into the initial state, into the simulated trajectory and into the
 predictive intervals of every model.
 
-\subsection{Transient initialisation}
+\subsection{Transient initialisation}\label{sec:init}
 
 Rather than starting each plot from a soil in balance with its present litter input,
 each draw of the parameter vector starts the soil in 1917 and runs it forward to the
@@ -1648,13 +1648,45 @@ monitored throughout.
 
 \subsection{Predictive evaluation and residual analysis}
 
+% ROUND 6, 2026-10-07: residual analysis rewritten for the two residual figures
+% (stand and soil; time since cut). Scripts: doublechecks/residuals_stand_and_soil.R,
+% residuals_time_since_cut.R, residuals_rf_everything.R. Residual correlation between
+% any two models >= 0.99 (plot means, run 20260831).
 Predictions were generated for both the calibration plots and the held-out plots by
 drawing from the posterior and running each draw forward. Model skill is reported
 as the coefficient of determination and the root mean squared error, separately for
-the calibration plots and for the held-out plots. Residuals, defined as the
-logarithm of the observed stock minus the logarithm of the predicted stock, were
-then regressed against site variables, and the importance of each site variable was
-assessed with a random forest evaluated out of bag.
+the calibration plots and for the held-out plots. Residuals were defined as the
+logarithm of the observed stock minus the logarithm of the predicted stock, so that a
+positive residual means that the soil holds more carbon than the model predicts. The
+residuals of the six models are nearly identical from plot to plot, with a correlation
+of $0.99$ or higher between any two models, and the detailed analyses of the residuals
+therefore use a single value for each observation, the mean of the residuals of Yasso07
+and Yasso15.
+
+Three analyses were made. First, a random forest was fitted to the residuals of each
+model and evaluated out of bag, with about sixty site variables describing the climate,
+the texture and chemistry of the soil, the composition of the litter input and the
+stand in 1985, to measure how much of the residual can be predicted at all and which
+variables lead. The ranking was checked with a wider set of several hundred variables:
+the stand records and tree tallies of the four inventories, the chemistry of the soil,
+topographic wetness, nitrogen deposition, the record of management, and the cover of
+the understorey vegetation measured in 2023; variables that measure the soil carbon
+itself were left out. The leading variables of the forest then guided two detailed
+analyses, made on the mean residual of Yasso07 and Yasso15. Second, the mean residual of each
+plot was regressed on the basal area of the stand in 1985, fitted as a smooth curve,
+together with three properties of the site: the fertility of the site, expressed by
+the forest site type recorded by the inventory; the texture of the mineral soil,
+recorded in the field in 1985; and the volume share of stones in the soil. Third, the
+residual of each soil observation was related to the time elapsed since the last
+regeneration cut before the soil was sampled, a regeneration cut being a felling that
+removes the stand so that a new one can be established. The year of the cut was taken
+from the stand records of the inventories of 1985, 1990, 1995 and 2021--2023 and from
+the forest use declarations filed with the Finnish Forest Centre from 1997 onwards.
+Where no cut was recorded before the sampling, the time since the stand was
+established was used instead, taken as the age of the stand in 1985, measured on the
+tally trees, plus the years elapsed since 1985. Because each plot contributes up to
+three observations, the comparison between the basal area of 1985 and the time since
+the cut used a regression with a separate intercept for each plot.
 
 \subsection{Forward simulations}\label{sec:forward}
 
@@ -2155,39 +2187,158 @@ history of disturbance, and one initial state estimated for the country as a who
 cannot express what makes individual plots differ from one another. The first
 reading is the argument of this paper applied one level down.
 
+% ROUND 6, 2026-10-07: the "cut 1985-95 = +40%" evidence moved to sec:residuals, where
+% it is now part of the stand-history result; understorey dropped as a candidate (the
+% 2023 cover gives (J+u)/J = 1.13 and no relation to the residual).
 The second reading is that an eighteen-fold gradient in litter input between plots
 is not credible. A litter product keyed to standing tree biomass gives a freshly cut
-plot almost no input, and a freshly cut plot does not stop receiving carbon: ground
-vegetation, dying roots and harvest residues continue to supply it. The residuals
-support the second reading directly. Plots that were cut between 1985 and 1995 hold
-about $40$ per cent more carbon than the models predict for them, relative to plots
-that were not cut, and the residual falls with stand age. The failure at plot scale
-is therefore evidence for the same missing flux as the national-scale result,
-reached from the opposite direction, and it points at the two components of the
-input argument that are otherwise weakest: understorey vegetation and
-early-succession vegetation.
+plot almost no input, and a freshly cut plot does not stop receiving carbon: dying
+roots, harvest residues, the ground vegetation and the pioneer trees of the next stand
+continue to supply it. Section~\ref{sec:residuals} shows that the two readings meet in
+the same plots, and that the history of each stand carries most of what the models
+miss between plots.
 
-\subsection{Most of what the models leave behind can be recovered from site
-variables}\label{sec:residuals}
+\subsection{What the models leave behind follows the history of each stand}\label{sec:residuals}
+% ROUND 6, 2026-10-07 (Lorenzo): rebuilt around two figures, stand and soil first, time
+% since cut second, with the reconciliation between them; pioneer vegetation named as the
+% pointer, site ecology as the minor part. F11_rf_heatmap (per-model RF) OPENS the section
+% (Lorenzo): basal area emerges from it; the rest was developed from its leads. Numbers: run 20260831; doublechecks/residuals_stand_and_soil.R (n 419 plots),
+% residuals_time_since_cut.R (1172 observations; models on 1089), residuals_rf_everything.R
+% (OOB R2 0.56). Same-plot decay: the 88 sparse and 112 dense plots measured in all three
+% campaigns.
 
-About half of the residual variance is predictable from site variables that are
-already available. A random forest fitted to the residuals explains between $44$ and
-$65$ per cent of what the models leave, evaluated out of bag, against a repeatability
-of the observations of about $0.49$. 
+About half of what the models leave behind can be predicted from site variables that
+are already available. A random forest fitted to the residuals of each model explains
+between $44$ and $65$ per cent of the residual variance, evaluated out of bag, against a
+repeatability of the observations of about $0.49$ (Figure~\ref{fig:rf}). Because the
+recoverable share is larger than the noise of the observations, what the models leave
+behind is not a ceiling set by measurement error.
 
-\hfig{F11_rf_heatmap}{0.86}{residuals}{\textbf{Site variables that predict what the models leave behind.} Relative importance of each site variable in a random forest fitted to the model residuals, scaled within each model so that the most important variable equals one. The same variables lead in all six models.}
+\hfig{F11_rf_heatmap}{0.86}{rf}{\textbf{Site variables that predict what the models leave behind.} Relative importance of each site variable in a random forest fitted to the residuals of each model, scaled within each model so that the most important variable equals one; the out-of-bag coefficient of determination of each forest is given above its column. The same variables lead in all six models: the basal area of the stand in 1985 first, then the development class of the stand in 1985 and the content of coarse fragments in the soil.}
 
+The same variables lead in all six models, and one variable dominates: the basal area
+of the stand in 1985. The development class of the stand in 1985 follows, and so does
+the content of coarse fragments, a physical property of the soil; the importance of
+every other variable is small. The detailed analysis below therefore starts from basal
+area and follows the two leads that the forest gives: the properties of the soil, and
+the stage of development of the stand. A wider set of several hundred variables, drawn
+from the stand records and tree tallies of all four inventories, the chemistry of the
+soil, the terrain and the record of management, predicts the residual no better ($56$ per
+cent out of bag) and confirms the ranking. Almost all of the recoverable share is
+carried by four variables: the basal area of the stand in 1985 and three properties of
+the site, which together explain $53$ per cent of the residual variance
+(Figure~\ref{fig:residuals}).
 
-Because the recoverable share is larger than the noise of the observations, what the
-models leave behind is not a ceiling set by measurement error. The same site
-variables lead in all six models: stand basal area first, then development class and
-coarse-fragment content, with the importance spread across many variables rather
-than concentrated in one. Two of the leading variables are proxies for productivity
-and one is a physical property of the soil. A productivity proxy leading in every
-model is what a spatially varying litter input would look like. A physical property
-of the soil leading in every model is something for which none of the six models has
-a term at all. We record the observation and stop there, because choosing the method
-that would exploit it is not the task of this paper.
+\hfig{F11_stand_and_soil}{0.98}{residuals}{\textbf{What the models leave behind, in two parts: the stand of 1985 and the soil.} The residual is the logarithm of the measured over the predicted soil carbon, as the mean of Yasso07 and Yasso15 over the observations of each plot ($419$ plots); a positive residual means that the soil holds more carbon than the models predict. One regression on the basal area of the stand in 1985 (a smooth curve) and on the fertility, texture and stone content of the site divides the predicted residual of each plot into parts, each measured from the average plot. Left: the part due to basal area, with its $95\%$ confidence band; the points are the plots. Right: the part due to each property of the site, with $95\%$ confidence intervals, at the same basal area; the labels translate each part into soil carbon relative to the average plot. Basal area alone explains $42$ per cent of the residual variance, and the three properties of the site raise the share to $53$ per cent.}
+
+The basal area of the stand in 1985 is the dominant part. The residual falls steeply
+with basal area: in the sparsest stands the soil holds about two and a half times the
+carbon that the models predict, and in the densest stands about half of it, measured
+from the average plot. Basal area alone explains $42$ per cent of the residual
+variance. Section~\ref{sec:plotscale} showed where the gradient comes from: the
+litter product passes the basal area of each stand into its litter input, and the
+soil does not follow.
+
+The properties of the site add a smaller part, and each part points in an ecologically
+sensible direction. At the same basal area, fertile sites hold about $14$ per cent more
+carbon than the average plot and the poorest, xeric sites about $25$ per cent less;
+fine-textured soils hold about $13$ per cent more; and soils with little stone hold
+about $29$ per cent more, while very stony soils hold about $17$ per cent less. Together
+the three properties raise the explained share from $42$ to $53$ per cent. None of the
+six models has a term for any of them. The many other variables offered to the random
+forest, among them defoliation, damage to the trees, epiphytic lichens, past management,
+climate, topographic wetness and nitrogen deposition, add nothing measurable once the
+stand and the soil are accounted for. The cover of the understorey vegetation measured
+in 2023 adds nothing either: converted to litter with the cover-to-biomass relations of
+\citet{Muukkonen2006cover} and the turnover rates of \citet{Liski2006}, the understorey
+would raise the tree litter input of the plots by about $13$ per cent on average, and
+neither the total nor the mosses and dwarf shrubs that make up most of it are related
+to the residual; only the cover of herbs and grasses shows a weak positive association.
+% CHECK: the stoniness effect may partly reflect the stone correction applied to the
+% observed stocks (open item, CLAUDE.md 2026-10-05); confirm before submission.
+
+The second lead of the random forest, the development class of the stand, is a measure
+of how far the stand has grown since it was established. The second figure makes that
+lead explicit and decomposes the basal-area part further, by asking how long before the
+sampling the stand was last regenerated (Figure~\ref{fig:sincecut}). Over all
+observations the residual follows a clear course: the soil holds about $20$ per cent
+less carbon than predicted in the first five years after a regeneration cut, about
+$55$ per cent more at $20$ to $30$ years, and about as much as predicted, or somewhat
+less, in old stands. The deficit in the first years agrees with the loss of carbon from
+the organic layer that follows harvesting in many studies \citep{JamesHarrison2016}.
+The time since the cut adds to the basal area of 1985 beyond
+doubt ($p = 4\times10^{-11}$; $p = 9\times10^{-4}$ when only dated cuts are used), but
+by itself the time since the cut explains little of the variance, because few of the
+observations fall in the window where the effect is large. Divided by the basal area of
+1985, the course appears in one group only. In stands with less than $10$ square
+metres of basal area per hectare in 1985, the soil holds about $50$ per cent more carbon
+than predicted in the first ten years and about $150$ per cent more at $10$ to $30$
+years; in the two denser groups the residual hardly changes with time.
+
+\hfig{F11b_time_since_cut}{0.90}{sincecut}{\textbf{What the models leave behind, against the time since the last regeneration cut.} The residual is defined as in Figure~\ref{fig:residuals}, here for each soil observation ($1172$ observations), with binned means and $95\%$ confidence intervals. The time since the cut is taken from the dated cuts in the stand records and the forest use declarations where a cut precedes the sampling, and otherwise as the age of the stand in 1985 plus the years elapsed since. The solid line is all observations; the dashed lines divide them by the basal area of the stand in 1985, with wider bins. The right axis translates the residual into soil carbon relative to the prediction. The shaded band marks $20$ to $30$ years after the cut.}
+
+The two figures describe the same plots seen from two sides. The stands that were
+sparse in 1985 were young: their median age in 1985 was $19$ years, and two thirds of
+them were between $10$ and $30$ years old, which is exactly the window in which the
+second figure peaks. The basal-area effect and the course after the cut are therefore
+one finding, and the plots measured in all three campaigns show what the finding is.
+In the sparse stands of 1985, the soil held about $150$ per cent more carbon than
+predicted at the first sampling, about $70$ per cent more in 2006 and about $30$ per
+cent more in 2024. In the dense stands of 1985, the soil held about a third less carbon
+than predicted at the first sampling and about a quarter less in 2024. A discrepancy
+that is largest at the start and shrinks over the following decades, at about the
+pace at which the models turn their carbon over, is the signature of a starting state
+that is wrong for those plots, and not of an input that is missing throughout the
+simulation: an input missing throughout would keep the discrepancy constant or let it
+grow.
+
+The reason the starting state is wrong for those plots lies in how the starting state
+is built. The path of the litter input from 1917 to 1985 has the same shape for every
+plot and is scaled to the litter input of each plot in 1985
+(Section~\ref{sec:init}), so the starting state carries no information
+about the history of the plot. A stand regenerated in the 1960s therefore starts close
+to balance with the small litter input of a young stand, while the soil under it still
+holds much of the carbon of the stand before it and of the vegetation that followed
+the cut. A mature stand starts the other way round. The failure at the scale of the
+plot is thus the argument of this paper one level down: the starting state matters,
+and a starting state that does not know the history of each plot cannot reproduce the
+differences between plots.
+
+Two sources can supply the carbon that the young stands of 1985 hold in excess, and
+the two are not exclusive. The first is the carbon left by the previous stand, which
+decays over decades. The second is the vegetation of early succession. After a
+regeneration cut, the open site is colonised first by a productive field layer and by
+pioneer broadleaves such as birch, rowan, aspen and willow. In Finnish Scots pine
+forests the photosynthesis of the ground vegetation is about eight times higher in
+stands $6$ to $12$ years old than in a stand $120$ years old \citep{Kulmala2011}, and
+dense ground vegetation reduces the loss of carbon from a cleared site within a few
+years \citep{Zehetgruber2017}. Across a managed boreal landscape in northern Sweden,
+the carbon sink of a stand recovers within the first decade after harvest because a
+productive understorey establishes quickly \citep{Peichl2022}; young stands in
+southern Sweden turn from carbon sources into sinks $8$ to $13$ years after the cut
+\citep{Grelle2023}; and in a Finnish chronosequence the respiration of the whole
+ecosystem was highest in the $12$-year-old stand \citep{Kolari2004}. The pioneer trees
+are numerous: in the young forests of Sweden the number of stems has risen since 1983,
+and birch accounts for most of the rise \citep{DahlgrenLidman2024}. Most pioneer trees
+are nevertheless too small to be recorded by the inventory, which measures the diameter
+of a tree only once the tree is taller than $1.35$ m and measures small trees on a
+small sub-plot only, and most are removed in cleaning ten to twenty years after the
+cut. Biomass models for naturally regenerated birch, aspen and rowan growing in young
+stands have been published only recently, those for aspen and rowan for the first time
+\citep{Repola2024}, and the composition and density of seedling stands are still
+predicted imprecisely from inventory data \citep{Rana2023}. The litter of the pioneer
+trees is therefore absent from any litter product built from recorded trees, and the
+debris left by cleaning is not counted as harvest residue. Early-succession vegetation
+is a known gap in the modelling of forest carbon, and representing it with models
+fitted to national inventory data is the subject of ongoing work
+\citep[e.g.][]{Mehtatalo2025}\gap{Lauri Mehtätalo (LUKE): confirm which of his
+publications or functions on pioneer vegetation to cite; Swedish work to extend; to
+discuss}. The plots cut after 1985 offer a first test,
+because the models simulate those cuts within the record: few of those plots are yet
+$20$ to $30$ years past the cut, and the plots that are show no comparable excess, so
+the data at hand cannot yet separate the two sources. A starting state that knows the
+history of each plot, with the cut dated from the age of the stand in 1985, is the
+natural next step, and the stand records needed to build it exist.
 
 \subsection{What the result may mean for soil carbon modelling and its applications}
 \gap{To be written, in general terms and without naming other national inventories.

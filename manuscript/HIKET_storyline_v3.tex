@@ -952,19 +952,54 @@ own strand, last, at $\sim$20\%, and it is framed as a question raised rather th
 the national mean trajectory and explain almost none of the between-plot variance. Both are true,
 and the second is a statement about spatial resolution, not about the trajectory.
 
-\subsubsection{What is left behind is recoverable, not irreducible}
-\paragraph{Roughly half of the residual variance is predictable from covariates already in hand.} A
-random forest on site variables explains $44$--$65\%$ of what the models leave (out-of-bag), with
-observation reliability around $0.49$ --- so this is not a noise ceiling. \FIG{F11_rf_heatmap}
+\subsubsection{What is left behind follows the history of each stand \normalfont\textbf{[rebuilt 2026-10-07]}}
+\begin{ann}
+\textbf{Lorenzo, 2026-10-07:} two key figures, in this order, with the reconciliation between them ---
+``two sides of the same story''. The basal-area effect first, then its decomposition by time since the
+cut, the connection, and a pointer to \textbf{pioneer vegetation} (a known gap, much ongoing modelling
+work: Mehtätalo at LUKE, Swedish groups); the site-ecology parts are minor but interesting. How far to
+develop the pioneer point is to be discussed. \textbf{F11 (the RF heatmap) opens the strand}: basal
+area emerges from it, and the rest was developed from its leads.
+\end{ann}
 
-\paragraph{The same covariates lead in all six models.} Stand basal area first, then development
-class and coarse-fragment content; the importance is diffuse rather than concentrated in one term.
+\paragraph{The entry point --- what the random forest finds.} About half of the residual is
+recoverable: $44$--$65\%$ out of bag per model (observation repeatability $\approx0.49$). The same
+leads in all six: \textbf{basal area 1985} by far, then development class 1985 and coarse fragments.
+\FIG{F11_rf_heatmap} The detailed analysis follows those leads; a wider set of several hundred
+variables predicts no better ($56\%$) and confirms the ranking.
 
-\subsubsection{What that suggests, briefly}
-\dparagraph{Two of the leaders are productivity proxies and one is soil-physical.} A productivity
-proxy leading everywhere is what a spatially varying input level would look like; a soil-physical
-variable leading is something none of the six has a term for. \textbf{We name the
-observation and stop there} --- the method that would exploit it is not this paper's to choose.
+\paragraph{Four variables carry almost all of it.} A regression on 1985 basal area plus fertility,
+texture and stoniness explains $53\%$. Residuals of the six models correlate $\ge0.99$, so the mean
+of Yasso07 and Yasso15 stands for all. \FIG{F11_stand_and_soil}
+
+\paragraph{Side 1 --- the 1985 stand.} Sparse 1985 stands hold $\sim2.5\times$ the predicted carbon,
+dense ones $\sim0.5\times$; basal area alone $R^2=0.42$. The site parts are minor and ecologically
+sensible: fertile $+14\%$, xeric $-25\%$, fine-textured $+13\%$, stone-poor $+29\%$, very stony
+$-17\%$ ($R^2$ $0.42\to0.53$). Nothing else adds (defoliation, damage, lichens, management, climate,
+wetness, N deposition, 2023 understorey cover --- the latter converted to litter adds only $13\%$ to
+the tree input and is unrelated to the residual).
+
+\paragraph{Side 2 --- time since the last regeneration cut (the development-class lead made explicit).} $-20\%$ in the first 5 years, $+55\%$ at
+20--30 years, about zero or below in old stands; significant beyond basal area ($p=4\times10^{-11}$;
+dated cuts only $p=9\times10^{-4}$) but small in variance. Split by 1985 basal area, the hump lives
+\textbf{only} in stands $<10$\,m$^2$\,ha$^{-1}$ in 1985 ($+50\%\to+150\%$). \FIG{F11b_time_since_cut}
+
+\paragraph{The connection --- one finding, a wrong starting state.} Sparse 1985 stands were young
+(median 19 yr; two thirds aged 10--30 = the hump window). In the same plots the excess \textbf{shrinks}:
+$+150\%$ (first sampling) $\to+70\%$ (2006) $\to+30\%$ (2024); dense stands $-36\%\to-25\%$. Largest at
+the start and fading at about the models' turnover pace = an initial-state error, not an input missing
+throughout. Cause: the 1917--1985 input path has one national shape scaled to each plot's 1985 input,
+so the start knows nothing of the plot's history. \textbf{The thesis one level down.}
+
+\dparagraph{The pointer --- pioneer vegetation.} The excess carbon of the 1985-young stands was built
+before 1985, during early stand development: inherited from the previous stand, and/or supplied by
+early-succession vegetation (pioneer birch, rowan, aspen, willow below the tally threshold and removed
+in cleaning; a productive field layer) that no tree-based litter product records. Evidence that the
+early-succession input is large: Kulmala et al.\ 2011, Peichl et al.\ 2022, Grelle et al.\ 2023,
+Kolari et al.\ 2004; that it escapes the inventory and standard biomass models: Repola et al.\ 2024,
+Rana et al.\ 2023 (Mehtätalo), Dahlgren Lidman et al.\ 2024. \textbf{Caveat to keep:} post-1985 dated
+cuts do not (yet) show a comparable excess, so inheritance and pioneer input are not separated by our
+data. Next step, briefly: a plot-specific start, the cut dated by the 1985 stand age.
 
 % =====================================================================
 \section{Conclusions}

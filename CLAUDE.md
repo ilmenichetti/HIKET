@@ -730,6 +730,22 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-10-07 — residual story rebuilt in the MS (`% ROUND 6` comments).** sec:residuals is now
+  *"What the models leave behind follows the history of each stand"*: Fig `F11_stand_and_soil` (from
+  `doublechecks/residuals_stand_and_soil.R`) → Fig `F11b_time_since_cut` (from `residuals_time_since_cut.R`
+  summary) → the reconciliation (one initial-state error) → pointer to **pioneer vegetation** + minor
+  site ecology, all OPENED by **F11 (RF heatmap, unchanged)**: basal area emerges from it, development
+  class → time since cut, coarse fragments → stoniness (Lorenzo: "it starts from there"). Methods §residual analysis rewritten
+  (F11's per-model RF first; detailed analyses on the Yasso07+15 mean, justified: residuals of any two models correlate ≥ 0.99); sec:plotscale's
+  "+40% cut plots / understorey" paragraph trimmed; `\label{sec:init}` added. Storyline v3 Strand 3
+  rewritten to match. 10 refs added from doi.org (Repola2024, Rana2023, Mehtatalo2025, Kulmala2011,
+  Kolari2004, Peichl2022, Grelle2023, DahlgrenLidman2024, Zehetgruber2017, JamesHarrison2016).
+  ⬜ **Lauri Mehtätalo (LUKE) must be cited** for pioneer-vegetation modelling (Lorenzo); no dedicated
+  published paper found — Rana et al. 2023 + Mehtätalo et al. 2025 used for now, `\gap` asks Lorenzo
+  which work/functions to cite; Swedish work to extend. ⚠ The two PNGs in `manuscript/figures/` are
+  COPIES of the doublechecks outputs — re-copy after re-running those scripts. To discuss with Lorenzo:
+  how far to develop the pioneer point.
+
 - **⬜ SESSION 2026-10-05 — local-variance story (asked for at the results meeting).** All in
   `doublechecks/`, NOT in the manuscript (Lorenzo: discuss first). ⬜ **F11 (RF heatmap) stays
   as is — update it only once we agree what the extended analysis should be.** Decided: the
