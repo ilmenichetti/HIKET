@@ -730,6 +730,12 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **⭐⭐ NEXT (2026-10-07): Lorenzo reviews the manuscript TEXT extensively.** Next session: `git pull`,
+  re-read `manuscript/HIKET_draft_v1.tex` from disk, collect his `%LORENZO` notes, answer "Discuss" notes
+  in the reply, mark edits `% ROUND 7`. Open items from 2026-10-07 (Mehtätalo citation, pioneer point,
+  plot-specific init, figure copies, stoniness check, Aleksi/Boris questions) are listed in
+  `NEXT_SESSION.md` §0-NOW.
+
 - **✅ SESSION 2026-10-07 — residual story rebuilt in the MS (`% ROUND 6` comments).** sec:residuals is now
   *"What the models leave behind follows the history of each stand"*: Fig `F11_stand_and_soil` (from
   `doublechecks/residuals_stand_and_soil.R`) → Fig `F11b_time_since_cut` (from `residuals_time_since_cut.R`

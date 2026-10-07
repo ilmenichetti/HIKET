@@ -1,6 +1,44 @@
 # NEXT SESSION — start here
 
-## ⭐⭐ 0-NOW. LORENZO'S FULL REVIEW IS IN THE DRAFT — 72 `%LORENZO` NOTES (2026-09-21)
+## ⭐⭐ 0-NOW (2026-10-07). LORENZO REVIEWS THE MANUSCRIPT TEXT EXTENSIVELY — then we answer it
+
+> **Lorenzo is doing a full text review of `manuscript/HIKET_draft_v1.tex`.** Next session starts
+> from his notes. Before anything: `git pull` (he may push from Overleaf), **re-read the `.tex` from
+> disk, never revert his prose** ([[lorenzo-edits-in-parallel]]), then
+> `grep -n "%LORENZO" manuscript/HIKET_draft_v1.tex` and group the notes by section.
+> Notes that say **"Discuss"** are questions to answer in the reply (propose wording, let him choose),
+> not edit instructions. Each change gets a `% ROUND 7` comment. Rebuild (`latexmk -pdf` inside
+> `manuscript/`), check 0 undefined refs/citations, commit + push when he says so.
+>
+> ### What changed in the draft on 2026-10-07 (round 6, `% ROUND 6` comments) — he will review it
+> - **sec:residuals rebuilt** — *"What the models leave behind follows the history of each stand"*:
+>   **F11 RF heatmap (unchanged) opens it** → basal area emerges → `F11_stand_and_soil` (basal area +
+>   fertility/texture/stoniness) → `F11b_time_since_cut` (the development-class lead made explicit) →
+>   **reconciliation: one starting-state error** (small 1985 stands median 19 yr old; residual
+>   +0.91 → +0.53 → +0.28 in the same plots) → **pointer to pioneer vegetation** + minor site ecology.
+> - Methods §residual analysis rewritten; sec:plotscale "+40% cut plots / understorey" trimmed;
+>   `\label{sec:init}`; 10 new refs (doi.org-verified). Storyline v3 Strand 3 rewritten to match.
+>
+> ### Open items from 2026-10-07 (not for the review itself, but keep in view)
+> 1. ⬜ **Lauri Mehtätalo (LUKE) must be cited** for pioneer-vegetation modelling — no dedicated
+>    published paper found (Rana et al. 2023 + Mehtätalo et al. 2025 as placeholders; `\gap` asks
+>    Lorenzo which work/functions). Swedish work to extend (Peichl 2022, Grelle 2023, Dahlgren Lidman
+>    2024 in; Fahlvik & Nyström 2006 / Heureka young-stand models verified, not cited).
+> 2. ⬜ **How far to develop the pioneer point** — to discuss with Lorenzo. Honest caveat in the text:
+>    post-1985 dated cuts show no comparable excess, so inheritance vs pioneer input is not separated.
+> 3. ⬜ **Plot-specific initialisation** (cut dated from the 1985 stand age) = natural next model step.
+> 4. ⬜ The two residual PNGs in `manuscript/figures/` are COPIES of `doublechecks/figures/` outputs —
+>    re-copy after re-running `residuals_stand_and_soil.R` / `residuals_time_since_cut.R`.
+> 5. ⬜ Stoniness effect may partly be the stone correction of the observed stocks (CHECK comment in .tex).
+> 6. ⬜ Ask **Aleksi**: is NID ground-vegetation litter 50.6/66.6 gC/m²/yr above-ground only? (Our plots,
+>    2023 cover → 33 above-ground, (J+u)/J = 1.13.) Ask **Boris**: does the Tupek product see sub-tally
+>    trees and cleaning residues?
+> 7. ⏸ Samuli's flux-tower Rh comparison parked (`doublechecks/rh_vs_stand_age.R`): proper version needs
+>    the tower Rh normalised to a reference temperature first.
+
+---
+
+## ✅ (DONE 2026-09-23) LORENZO'S 72 `%LORENZO` NOTES OF 2026-09-21 — kept for reference
 
 > **Tomorrow's work is the revision: answer the 72 notes.** He reviewed in parallel while the
 > 2026-09-16 notes were being closed, and his pass reaches the END of the paper — M&M from
