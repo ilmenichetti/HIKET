@@ -730,6 +730,89 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **⬜ SESSION 2026-10-05 — local-variance story (asked for at the results meeting).** All in
+  `doublechecks/`, NOT in the manuscript (Lorenzo: discuss first). ⬜ **F11 (RF heatmap) stays
+  as is — update it only once we agree what the extended analysis should be.** Decided: the
+  residual study targets the **mean of the Yasso07 + Yasso15 residuals** (defensible as the most
+  reliable pair), one value per plot. Scripts: `residuals_rf_everything.R` (~340 predictors from all four
+  inventories — defoliation `harsuunt`, damage, epiphytic lichens `*jakalat`, management,
+  workbook basal area/volume/biomass; soil-carbon variables held out as circular; target set by
+  `HIKET_RF_MODELS`), `residuals_rf_top_scatter.R`, `residuals_basal_area_by_year.R`,
+  `build_F11_alt_rf_heatmap.R` (alternative F11, extended predictors; shared code in
+  `residuals_rf_common.R`). **Current outputs in `doublechecks/figures/` are all on the
+  Yasso07+15 target** (six-model first-pass outputs deleted 2026-10-05).
+  Findings on the six-model mean: residual vs basal area R² **0.34 (1985) → 0.25 → 0.17 → 0.00
+  (2021-23)**; in the full RF (OOB R² 0.57) the **1985 stand size** group carries the signal
+  (drop ΔR² 0.041), later years add nothing, stoniness is the independent second signal (0.024);
+  defoliation, damage, lichens, management, climate ≈ noise. Reading: the residual follows the
+  stand at **initialisation**. Hint: 45 plots open in 2021-23 are OVER-predicted ~25% (p<1e-4).
+  **Tree tallies added** (`residuals_tally_predictors.R` → `tally_predictors.csv`; 1990 tally
+  uses the 1985 numeric dead classes 7/8, verified by following trees): after 1985 basal area,
+  **site index explains nothing** (p 0.61 — the residual follows the 1985 STAND, not the site),
+  stand age 1985 a little (older → over-predicted), mortality 1985-95 weak but in the expected
+  sign, dead wood present ≈ noise; RF OOB R² unchanged (0.568). Forest site type (field
+  Cajander class, already in) adds ΔR² 0.04 after basal area; online fertility maps (MS-NFI)
+  judged redundant. ⬜ Ask LUKE for the 1985/1995 understorey vegetation survey of these plots.
+  **Chemistry + trends wired (2026-10-05, later):** `chem.` (BioSoil 2006 organic-layer OFH
+  chemistry, MUSTIKKA 2021-23 C:N, N, fine roots; level + 2006→2021-23 log change) and `trend.`
+  (basal area mean, slope, interval changes). RF unchanged (OOB R² 0.569); chemistry group drop
+  ≈ 0. After 1985 basal area, organic-layer C:N (wider → over-predicted, p 8e-5), exch. Al (+)
+  and K (−) are significant but small; C:N CHANGE is nothing. ⚠ Bug fixed: the circularity
+  filter matched any `ofh_`/`TotalNitrogen` name and silently dropped the new chemistry —
+  now anchored to `^cov.` soil-carbon variables only.
+  **GIS built 2026-10-05** (Lorenzo's go-ahead): raw data on the external drive
+  `/Volumes/NextGenC_SS/HIKET_GIS` (~73 GB; `$HIKET_GIS_DIR`), scripts in `GIS/` (README
+  there), per-plot extractions in `Data/GIS_points/` → `gis_point_predictors.csv` (2695
+  plots × 62): TWI 16 m, DTW 2 m (5 thresholds, point + 10 m disc), EMEP forest N deposition
+  2010-22 mean + trend, Metsäkeskus harvest declarations 1997-2026, KEMERA completed works
+  2003-26, slash-and-burn/population/railways/state forests 1925. Plot coordinates = 2021-23
+  GPS (median 3.2 m). ⚠ 6 plot_ids in `site_attributes.csv` sit at two locations (dropped;
+  none calibrated). ⬜ EMEP 1990-2019 on request. First direct test vs the Yasso07+15
+  residual: nothing survives multiple testing; N deposition = latitude. **Added to the RF
+  (`gis.` source) the same day: OOB R² 0.569 → 0.561, every GIS group drop ≤ 0.002 (wetness
+  −0.006, i.e. better without); best GIS variable ranks 77th of 423 (N deposition); none
+  reaches the heatmap. The ranking is unchanged: 1985 stand, litter input, stoniness.**
+  ⚠ The `jakalat` columns are epiphytic lichens, NOT defoliation (that is `harsuunt`).
+  **Understorey cover 2023 arrived 2026-10-07** (`Data/Understorey/`, % cover by group, 438/456
+  calibrated plots; codes = `koealatunnus_VANHA`, map via `soil_litter_site_key.csv`; RF source
+  `und.`): RF adds nothing (OOB R² 0.559); linearly, after 1985 basal area, graminoid/field-layer
+  cover is positive (+0.06–0.10 per SD, p ≤ 0.011 with site type, 2021-23 BA, stoniness, litter
+  controlled) but worth ~ΔR² 0.01. Mosses/dwarf shrubs n.s. Only 2023, not 1985/1995.
+  **Plot-level understorey litter** (`doublechecks/understorey_litter.R`, NID chain: Muukkonen et al.
+  2006 cover→biomass × Liski 2006 turnover): above-ground **33 gC/m²/yr** vs NID 50.6/66.6 ⇒
+  (J+u)/J = **1.13** (vs arm B 1.08, corrected anchor 1.21, posteriors 1.27–1.73). ⬜ Ask Aleksi whether
+  NID 50.6/66.6 is above-ground only (its national biomass × the same turnover gives ≈50, so likely).
+  **Time since last regeneration cut** (`doublechecks/residuals_time_since_cut.R`, figure kept SEPARATE
+  from stand-and-soil; dated cuts from NFI 85/90/95 + MUSTIKKA + declarations, else stand age 1985 +
+  elapsed): residual −0.23 (0–5 yr) → +0.43 (20–30 yr) → −0.2 (>90 yr); 2023 field-layer cover peaks
+  5–30 yr, i.e. BEFORE the residual peak. After 1985 basal area the shape survives but shrinks
+  (+0.14 at 20–30); T adds p 4e-11 (dated-only p 0.001) but only marginal R² 0.374 → 0.378. Basal area
+  is NOT T in disguise: T alone R² 0.02. Reading: a disturbance/pioneer signal exists, is small.
+  ⚠ Split by 1985 basal area (summary figure): the hump lives ONLY in stands < 10 m²/ha in 1985 and is
+  63–84% stand-age-inferred; dated post-1985 cuts show NO hump ⇒ tied to the 1985 start, not to cutting.
+  **Samuli's question (harvest dynamics, `doublechecks/harvest_dynamics.R`, 63 plots cut 1989–2004):**
+  input +15% bump peaking the year BEFORE the cut (Tupek product is smooth, derived from inventory
+  increments — no sharp residue pulse), then −35…−45%; modelled SOC +3–4% for 2 yr then −7…−13% (Yasso),
+  −16% (SP1), −1% (TP2/TP3) at +20 yr, still falling; Rh pulse at the cut then −20…−35% (TP2/TP3 sharpest,
+  SP1 flat). Observed residual on these plots ≈ −0.36 before AND after the cut ⇒ data cannot
+  discriminate the post-cut dynamics. No model sees the post-cut microclimate (soil warming).
+  **Modelled Rh vs stand age** (`doublechecks/rh_vs_stand_age.R`, laid out like Samuli's flux-site figure,
+  Rh = input × σ_input − ΔC): U-shape in all six — median ~460–520 g C/m²/yr at 0–5 yr, minimum ~260–320
+  at 20–30 yr, ~400–440 at 50–80, slow decline after; first-20-yr slope −11…−16 vs Samuli's −37
+  (eddy covariance, CUE 0.5 partitioning). Cold plots lowest, as in his data. Not yet overlaid on his.
+  ⏸ Parked (Lorenzo): towers respond to site-year microclimate, our Rh is a long-term-average model balance
+  ⇒ compare age TRAJECTORIES only. The proper comparison would normalise the flux Rh to a reference
+  temperature (Arrhenius/Q10 on the complete series or annual means) first. For now: "they roughly match".
+  ⭐⭐ **RECONCILED (2026-10-07): basal area and time since cut are ONE finding — an initial-state error.**
+  Plots < 10 m²/ha in 1985 were median 19 yr old (64% aged 10–30 = the hump window). Within the SAME 88
+  balanced plots the residual DECAYS: +0.91 (1985) → +0.53 (2006) → +0.28 (2024); > 20 m²/ha: −0.44 → −0.41
+  → −0.29. Error largest at t0 and shrinking ⇒ initialisation signature, not a missing input (which would
+  persist or grow). Decay e-folding ≈ 30 yr, close to the models' transit time. Mechanism: the transient
+  init uses a plot-agnostic (national) pre-run shape scaled to the plot's own 1985 litter, so a stand
+  regenerated in the 1960s starts equilibrated to its LOW young-stand litter while its soil still holds
+  the previous stand's carbon (mature stands: the reverse). ⬜ Check whether stoniness is partly
+  the stone correction of the observed stocks.
+
 - **✅ SESSION 2026-10-02 — internal talk deck brought up to the post-round-5 draft** (for the
   Monday talk; `Reporting/October2026_internal_report/`). Lorenzo then cut it to title + 19 main +
   8 backup; the likelihood is explained term by term in a backup slide. **F14 rebuilt** with
