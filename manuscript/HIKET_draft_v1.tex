@@ -469,28 +469,23 @@ Finland, specifically, reports to the United Nations Framework Convention on Cli
 to the soil, and the decomposition model Yasso07 converts that litter estimate into an annual change in the soil C stock, for dead organic matter and soil organic matter combined to a depth of one metre \citep{StatFin2024NID}, following the method of \citet{Liski2006}. No measurement of soil C enters the Finnish chain at any point.
 
 \subsection{What the Finnish estimates have reported, and why}
-% 2026-09-30 (Lorenzo): reordered chronologically -- early 2000s, 2024 submission,
-% 2025 submission, then the present sector balance; "now close to zero" dropped because
-% it contradicted "has become a net source" in the same sentence.
 The quantity produced in that way has been, for most of the reporting period, a sink, and a large one. The combined pool of dead organic matter and soil organic matter on mineral forest land was reported as a sink of about $10$ million tonnes of carbon dioxide equivalent per year at the beginning of the 2000s \citep{Luke2025news}. In the 2024 submission the same pool was still a sink of $4.8$ million tonnes in 2022, against a
 living biomass sink of $12.6$ million tonnes \citep{StatFin2024NID}, although the soil term carries a reported uncertainty of $31.5$\% against $16.3$\% for the biomass term \citep{LehtonenHeikkinen2015}.
-In the 2025 submission, which recalculated the litter input from the thirteenth National Forest
-Inventory, the mineral soils of forest land turned ``from a net sink to a net source
+In the 2025 submission, which recalculated the litter input from the thirteenth National Forest Inventory, the mineral soils of forest land turned ``from a net sink to a net source
 from 2021 onwards'', emitting $0.4$ million tonnes of carbon dioxide in 2023
 \citep{StatFin2025NID}. The same submission reports that the C sink of Finnish forest land has fallen by more than $80$ per cent since 1990, and that the land-use (LULUCF) sector as a whole has become a net source \citep{StatFin2025NID}.
 A term of the size and uncertainty of SOC can decide the sign of such a balance.
 
-The reason given for the turn of the soil term to a source is the litter input: the model is started from
-a soil in balance with the litter input of the sixth National Forest Inventory
+The 2025 submission names the decrease of the litter input as one of the reasons for the turn of the soil term to a source, and traces that decrease mainly to a lower estimate of foliage biomass \citep{StatFin2025NID}; the Luke release on the same figures adds global warming \citep{Luke2025news}. The model used for those estimates is started from a soil in balance with the litter input of the sixth National Forest Inventory
 (1971--1976); such input rose for decades with the growth of the standing biomass
 and with the residues of an increasing volume of fellings, and the modelled soil
-accumulated C in response; the recalculated litter input then fell, mainly through a
+accumulated C in response. The estimated litter input then fell, mainly through a
 lower estimate of foliage biomass, and the modelled soil began to lose C
 \citep{StatFin2025NID}. The reported soil term is therefore, in both directions, the
 response of a modelled soil to a litter input that departs from the level the soil was
 started in balance with. Whether the real soil was in balance with its litter input in
-the 1970s, and how far it has come since, is not something the chain can tell, also because there are
-no soil measurement to inform the model and everything follows from the modelling assumptions.
+the 1970s, and how far it has come since, is not something this modeling framework can tell, also because there are
+no soil measurement to inform the model and everything follows from model assumptions.
 % Per-hectare reading (literature/10_national_soil_terms/README.md sec.3): mineral forest
 % land 15.9-16.0 Mha (NID 2025 Table 6.4-1) => ~10 Mt CO2 eq ~ +0.17 tC/ha/yr (early
 % 2000s), 4.8 Mt ~ +0.08 (2022, 2024 submission), 0.4 Mt source ~ -0.007 (2023). Against
@@ -506,11 +501,8 @@ Inventory have been sampled now three times: a first campaign whose fieldwork ra
 to 1995, the European BioSoil programme in 2006, and a third campaign in 2024.  On the
 plots measured in all three campaigns, the mean soil organic carbon (SOC) stock rose
 from $64.5$ tonnes of C per hectare to $71.5$ and then to $73.6$, a gain of $7.0$ tonnes
-over the first interval and a gain of $2.1$ tonnes over the second.
-% 2026-09-30 (Aleksi's question on Fig 1): area-weighted series added beside the
-% unweighted one; design weight 3 North, 1 South (build_F3_mean_SOCalt.R).
-Each plot counts equally in these means, so the means describe the average sampled
-plot. The inventory samples the north of the country at a third of the density used in
+over the first interval and a gain of $2.1$ tonnes over the second (each plot counts equally in the above means, so the means describe the average sampled
+plot). The inventory samples the north of the country at a third of the density used in
 the south, and each northern plot therefore stands for three times as much forest land.
 Weighted by the area of forest that each plot represents, the mean stock rose from
 $63.7$ to $68.8$ and then to $69.9$ tonnes of C per hectare. The gain is smaller when the
@@ -521,10 +513,10 @@ Three points give already a trajectory, that can be used to constrain a SOC mode
 
 \hfig{F3_mean_SOCalt}{0.86}{observed}{\textbf{The measured soil carbon stock of Finnish forest plots in three campaigns.} Each point is the mean stock across the plots measured in all three campaigns ($n=310$), and the bars show the $95\%$ confidence interval of that mean. The first campaign is drawn at the mean year in which its plots were actually sampled, and the bar low in the panel shows that the sampling of the first campaign ran from 1986 to 1995. Each segment is labelled with the rate of change over that interval and with the $95\%$ confidence interval of the rate, calculated from the paired difference between campaigns on the same plots. The filled points and the solid line are the unweighted means, in which every plot counts equally; the unweighted means are the ones compared with the models, whose trajectories are also averaged over plots with equal weight. The open points and the dashed line are the means weighted by the area of forest that each plot represents, with a weight of three for the plots in the north, which are sampled at a third of the southern density; the weighted means describe the average hectare of forest on mineral soil. The stock is the whole soil profile: the organic layer and the mineral soil, measured to $40$ cm and extrapolated below, down to one metre or to the depth at which the auger stopped. The stock rose over both intervals, and the rise over the second interval was smaller than the rise over the first.}
 
-The measured soil has been gaining C, as the inventory reports, and the gain has been recently
-slowing down.
+The measured soil has been gaining C, as the inventory reports, but it seems that the gain has been recently slowing down.
 
 
+%LORENZO: revised until here
 
 \subsection{Steady state as a starting condition}
 
