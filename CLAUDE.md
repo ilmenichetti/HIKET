@@ -732,7 +732,8 @@ guards key on those filenames.
 
 - **⭐⭐ NEXT (2026-10-07): Lorenzo reviews the manuscript TEXT extensively.** Next session: `git pull`,
   re-read `manuscript/HIKET_draft_v1.tex` from disk, collect his `%LORENZO` notes, answer "Discuss" notes
-  in the reply, mark edits `% ROUND 7`. Open items from 2026-10-07 (Mehtätalo citation, pioneer point,
+  in the reply, mark edits `% ROUND 7`. ⚠ Already begun: Intro revised up to §Three campaigns
+  (`%LORENZO: revised until here`). Open items from 2026-10-07 (Mehtätalo citation, pioneer point,
   plot-specific init, figure copies, stoniness check, Aleksi/Boris questions) are listed in
   `NEXT_SESSION.md` §0-NOW.
 
@@ -857,7 +858,7 @@ guards key on those filenames.
   basal-area gradient (sec:plotscale, sec:residuals), not regional parameters.
   `doublechecks/residuals_by_latitude.R`. (3) **Juha Heikkinen (LUKE) added as coauthor.**
   (4) Intro §"What the Finnish estimates have reported" reordered chronologically.
-  ⬜ **NOT YET APPLIED (proposed, awaiting Lorenzo):** (a) "The reason given for the turn … is the
+  ✅ (a)+(b) **APPLIED by Lorenzo on Overleaf 2026-10-07** (merge `893c6da`). Earlier proposal text: (a) "The reason given for the turn … is the
   litter input" overstates the NID — NID 2025 says **"one of the reasons"**; Luke2025news adds **global
   warming**; (b) the foliage drop comes from **recalculated BCEFs** (NFI13, smaller, esp. N-Finland spruce)
   + biomass model 3 no longer usable — the NID gives no biological reason (`FI_NID_2025.txt` 16978–17047);

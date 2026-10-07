@@ -6,7 +6,10 @@
 > from his notes. Before anything: `git pull` (he may push from Overleaf), **re-read the `.tex` from
 > disk, never revert his prose** ([[lorenzo-edits-in-parallel]]), then
 > `grep -n "%LORENZO" manuscript/HIKET_draft_v1.tex` and group the notes by section.
-> Notes that say **"Discuss"** are questions to answer in the reply (propose wording, let him choose),
+> ⚠ **The review had already started on 2026-10-07** (Overleaf merge `893c6da`): Introduction revised
+> up to §"Three campaigns on the same plots", marked `%LORENZO: revised until here`. He applied the NID
+> wording fixes of 2026-09-30 himself ("one of the reasons", foliage biomass, Luke adds global warming).
+> Notes that say **"Discuss" are questions to answer in the reply (propose wording, let him choose),
 > not edit instructions. Each change gets a `% ROUND 7` comment. Rebuild (`latexmk -pdf` inside
 > `manuscript/`), check 0 undefined refs/citations, commit + push when he says so.
 >
