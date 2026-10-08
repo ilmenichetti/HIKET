@@ -1,6 +1,49 @@
 # NEXT SESSION — start here
 
-## ⭐⭐ 0-NOW (2026-10-07). LORENZO REVIEWS THE MANUSCRIPT TEXT EXTENSIVELY — then we answer it
+## 🚀 0-NOW (2026-10-08). EQUILIBRIUM-INIT ARM IN FLIGHT, THEN TWO NEW STORY ANALYSES
+
+**Order (Lorenzo): finish the equilibrium-init part FIRST, then the rest.**
+1. **Equilibrium-init counterfactual** (Samuli's point) — jobs 2075931–36 on Roihu, launched
+   2026-10-08 ~13:45, ~18.5 h. When they land: rsync (CLAUDE.md §Sync), check convergence, then
+   `bash manuscript/figures/run_eqinit_figures.sh` → F16/F17/F18/F19/T_eqinit. Design and
+   pre-registration: `NEXT_RUN_equilibrium_init.md`. ⬜ Then design the appendix posterior comparison.
+   ⚠ No story/manuscript rewrite until the results are discussed.
+2. **⬜ ATTRIBUTION ANALYSIS — noted only, NOT designed (Lorenzo will explain).** Determine which
+   components of the models — **inputs, previous C (the initial/inherited state), climate** —
+   drive the results **over time**. To discuss before any code. Will feed the story update together
+   with item 1.
+   Approach (Samuli's note, `Calibration_real_data_transient/documentation/Launiainen_20261008_National_soil_C_sink_dynamics_attribution.pdf`): single pool `F = dC/dt = L(Vol) + I(H,U) − k(T,P)·C`; the total
+   differential splits the sink change into growing stock (∂L/∂Vol·dVol), harvest intensity (αU·dH), residue
+   management (αH·dU), temperature (−C·∂k/∂T·dT), precipitation (−C·∂k/∂P·dP) and stock feedback (−k·dC).
+   Climate term ∝ existing stock. Extends to N pools when ∂k_n/∂T, ∂k_n/∂P are equal across pools; add
+   natural mortality as its own term. ⚠ For discussion, not objections: equal climate response is needed only to
+   COLLAPSE to the single-pool form; in vector form (dF/dt = b·du/dt + (∂A/∂ξ)(dξ/dt)·C + A·dC/dt) the climate
+   term is exact for ANY linear model — Yasso15/20 just get THREE climate terms (AWE, N, H), each weighted by
+   its own pools' carbon. Integrated along the actual path it gives an exact additive split of the stock
+   change (no interaction term; small 2nd-order remainder with annual steps). Counterfactual runs WOULD
+   leave an interaction term — prefer the path integral; our litter product folds
+   harvest residues into J (no separate I) and has no natural-mortality term.
+   **Intent (Lorenzo, 2026-10-08):** decompose each MODEL to isolate, over time, the effect of the THREE
+   components — inputs, historical C (inherited state), climate. Samuli's note is the template; the
+   decomposition will need adapting per model.
+   ✅ **REVISED 2026-10-08 (Lorenzo: 'historical C' must tell the INITIALISATION story; extend to the pre-run;
+   S naming).** Now splits the SINK ITSELF 1917–2084: historical C = pre-run sink (1917–84) + from 1985 the sink
+   owed to the deficit (production start − equilibrium start, same forcing; exact by linearity); inputs/climate =
+   2-factor Shapley on the equilibrium-start sink vs references 1985–89 litter / 1985–2004 climate. 5 runs per
+   plot×draw, 50 draws, checks exact. Figures S15 (6 panels) / S16 (average, annual) / S17 (cumulative, HELD BACK: its projection climate band reads as future warming), each
+   `_smooth10` (pre-run and post-1985 smoothed separately). ⭐ Six-model average: pre-run +11.8 tC/ha; 1985–2024
+   history +9.3, inputs +8.2, climate −7.0 (total +10.5) ⇒ the 1985–2024 sink is mostly INHERITED; inputs and
+   warming nearly cancel. Builder `manuscript/figures/build_S15S17_attribution.R`.
+   Methodology for review: `manuscript/appendices/appendix_attribution.tex` (subfile, NOT in the draft).
+
+3. **⬜ TOMORROW (Lorenzo, 2026-10-08): think about re-running with a HISTORICAL CLIMATE SERIES in the pre-run.**
+   The pre-run applies the 1985–2004 mean climate to 1917–1984 (warmer than those decades) ⇒ the attributed climate
+   effect is CONDITIONAL on it (a colder pre-run → more carbon in 1985, bigger post-1985 climate effect). Needs a
+   series back to 1917 if possible to find (our FMI 10 km grid starts 1961 — candidates to CHECK, not verified:
+   longer FMI/station or gridded reconstructions). Changes the initialisation ⇒ recalibration. Caveat now in
+   `appendix_attribution.tex`. Running means: kept, to discuss (Lorenzo unsure they help).
+
+## ⭐⭐ (2026-10-07) LORENZO REVIEWS THE MANUSCRIPT TEXT EXTENSIVELY — then we answer it
 
 > **Lorenzo is doing a full text review of `manuscript/HIKET_draft_v1.tex`.** Next session starts
 > from his notes. Before anything: `git pull` (he may push from Overleaf), **re-read the `.tex` from

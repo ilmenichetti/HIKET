@@ -138,7 +138,7 @@ to reach R inside the r-env container):
   `git pull` before editing the manuscript and `git push` after. Keep the tracked tree small
   (~106 MB now; Overleaf recommends < 100 MB): big outputs stay gitignored.
 - **`dev/` and the diagnostics PNG/txt/csv are no longer tracked** (kept on disk + OneDrive).
-- ⬜ **ROIHU — NOT DONE YET, do it at the next Roihu login (if ever):** the scratch clone is on
+- ✅ **ROIHU — DONE 2026-10-08** (clone on `main`, .so recompiled). Old note: the scratch clone was on
   the old branch. Lorenzo runs:
   `cd /scratch/project_2019134/HIKET && git fetch && git checkout main && git pull`
   ⚠ The pull stops tracking `dev/` and the diagnostics; on Roihu git will DELETE the tracked
@@ -730,6 +730,18 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **⬜ ATTRIBUTION ANALYSIS (noted 2026-10-08, NOT designed — Lorenzo will explain):** which model
+  components — inputs, previous C (inherited state), climate — drive the results over time. Comes
+  AFTER the equilibrium-init part is finished; both feed the story update. `NEXT_SESSION.md` 0-NOW.
+  Samuli's approach note: `Calibration_real_data_transient/documentation/Launiainen_20261008_National_soil_C_sink_dynamics_attribution.pdf` (total-differential decomposition of a single-pool balance).
+  ✅ BUILT 2026-10-08 on production, target REVISED same day: the sink itself 1917–2084 = historical C (pre-run +
+  deficit relaxation = production minus equilibrium start) + inputs + climate (Shapley vs 1985–89 litter /
+  1985–2004 climate). RELABELLED: history = 'litter rise before 1985 (initialisation)' (dark green — it IS an
+  input effect, split from 'litter change since 1985' by date); climate = 0 pre-1985 by construction (constant).
+  `doublechecks/attribution_decomposition.R`, `manuscript/figures/build_S15S17_attribution.R`
+  (S15/S16); methodology for review `manuscript/appendices/appendix_attribution.tex`. Average 1985–2024:
+  history +9.3, inputs +8.2, climate −7.0 tC/ha.
+
 - **⭐⭐ NEXT (2026-10-07): Lorenzo reviews the manuscript TEXT extensively.** Next session: `git pull`,
   re-read `manuscript/HIKET_draft_v1.tex` from disk, collect his `%LORENZO` notes, answer "Discuss" notes
   in the reply, mark edits `% ROUND 7`. ⚠ Already begun: Intro revised up to §Three campaigns
@@ -1074,7 +1086,12 @@ guards key on those filenames.
   point; arm = production with `σ_init ≡ 1`, figures F16–F18; ⚠ σ_input Jacobian trap). Not launched
   (Lorenzo: design + figures first).** ✅ CODE WRITTEN + TESTED 2026-10-08: switch `HIKET_EQUILIBRIUM_INIT=1`
   (`equilibrium_init.R`, engine type `flux_now`), launcher `submit_eqinit.sh`, outputs tagged `_eqinit`;
-  nesting + prior tests PASS in all six (`doublechecks/eqinit_*`). ⬜ figure layer; ⬜ launch. The Introduction's central claim is
+  nesting + prior tests PASS in all six (`doublechecks/eqinit_*`). ✅ figure layer built + tested
+  (`manuscript/figures/run_eqinit_figures.sh` → F16/F17/F18/F19/T_eqinit; see NEXT_RUN doc).
+  🚀 **LAUNCHED 2026-10-08 ~13:45** on Roihu (`main` @ `86e1e36`, .so recompiled, data md5 = Mac): jobs
+  **2075931 SP1, 2075932 TP2, 2075933 TP3, 2075934 Yasso07, 2075935 Yasso15, 2075936 Yasso20**; logs
+  `progress_logs/eqinit_<model>_<jobid>.{out,err}`. r-env 4.6.1 = production 20260831 (metadata: R 4.6.1); data md5, likelihood (959 obs) and switch verified in the logs.
+  Roihu clone is now on `main` (the branch-switch TODO above is DONE). The Introduction's central claim is
   still theoretical. Design in **`NEXT_RUN_equilibrium_init.md`**: one factor (init only); σ_init
   fixed at 1 and removed from the free set (= steady state at 1985–89 litter, 1985–2004 climate — the
   NID's convention applied at OUR start date, not its procedure). ⚠ The equilibrium arm will NOT be

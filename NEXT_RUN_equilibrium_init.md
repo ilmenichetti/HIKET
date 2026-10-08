@@ -180,6 +180,31 @@ reference ticks. Uses `doublechecks/intrinsic_mrt.R` (⚠ check the echoed RUN_I
 (production posterior forward with forcing held at 1985) and the forcing part. This is cheap and
 needs no new calibration.
 
+## Figure layer — BUILT 2026-10-08, tested on production-as-both-arms
+
+All in `manuscript/figures/`; one command after the rsync:
+`bash manuscript/figures/run_eqinit_figures.sh` (equilibrium-arm predictive stage for all six,
+then everything below; `SKIP_PREDICTIVE=1` for figures only).
+
+| file | what |
+|---|---|
+| `run_ids_eqinit.R` | `RID` (production, via run_ids.R) + `RID_EQ` (newest `_eqinit`); partial landing allowed (`EQ_MODELS`) |
+| `eqinit_common.R` | extraction + cache `eqinit_comparison.rds` (stamped with both arms' RUN_IDs) |
+| `eqinit_draws.R` | per-draw DATA ll (Jacobian removed — it differs between arms) + transit time → `eqinit_draws.rds` |
+| `build_F16_eqinit_trajectories.R` | F16 ensemble panel 1985–2084 + litter strip; `_six.png` fallback |
+| `build_F17_eqinit_rates.R` | F17 rates, three intervals, posterior 90% |
+| `build_F19_eqinit_forecast.R` | **F19 (new) forecast**: change since 2024, sink 2025–44, headroom |
+| `build_F18_eqinit_tradeoff.R` | F18 supplement: input vs transit time, arrow per model |
+| `build_T_eqinit.R` | `T_eqinit.csv`: ll max/median, ΔLL, RMSE, σ's, MTT, rates, sink, headroom |
+
+Test (production linked as both arms) reproduced the recorded numbers: observed rates
++0.399/+0.117/+0.259; Yasso07/15 1985→2024 +0.260/+0.245 (F5: +0.258/+0.250); headroom 26–42%,
+SP1 ≈ 0; Yasso20 MTT 22.1. ⚠ On the production arm itself, 2006→2024 is already negative for
+SP1/Yasso15/Yasso20 — so that interval discriminates less than pre-registration item 2 assumed;
+read it as a CHANGE between arms, not against the observation alone.
+⬜ Posterior comparison (appendix: parameters the equilibrium arm pushes to unreasonable values) —
+to design once the calibrations land (Lorenzo).
+
 ## Decisions and sequencing (2026-10-08)
 
 - F16 ensemble panel; F17 built, use undecided; F18 supplement.
