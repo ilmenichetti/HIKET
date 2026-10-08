@@ -43,7 +43,7 @@ library(dplyr)
 # 0.  Configuration
 # =============================================================================
 
-MODEL_NAME <- "TP3"
+MODEL_NAME <- hiket_eq_tag("TP3")   # "_eqinit" in the equilibrium arm
 RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # Read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
@@ -113,6 +113,7 @@ param_spec <- list(
        window = TP3_INPUT_FLUX_WINDOW, J_bar = 1.0)
 )
 
+param_spec       <- hiket_eq_param_spec(param_spec)   # equilibrium arm: drop sigma_init
 transforms       <- build_transforms(param_spec)
 to_original      <- transforms$to_original
 to_unconstrained <- transforms$to_unconstrained
@@ -144,6 +145,9 @@ message("Transform round-trip: OK")
 
 assemble_model_params <- function(p_free) c(p_free, alpha_A = TP3_ALPHA_A_FIXED)
 
+
+# Equilibrium arm: sigma_init fixed at 1 (no-op in production).
+assemble_model_params <- hiket_eq_assemble(assemble_model_params)
 
 # =============================================================================
 # 3.  Data preparation
@@ -273,7 +277,7 @@ litter_means  <- lapply(litter_means, function(x) { x$preinit_shape <- PREINIT_S
 # J_bar = cross-plot mean litter: the units bridge between the physical flux
 # window and the dimensionless sigma_input multiplier. Fixed for the whole run.
 J_bar  <- mean(vapply(litter_means[plots_real], `[[`, numeric(1), "J_total_mean"))
-fp_idx <- which(vapply(param_spec, function(g) identical(g$type, "flux_pair"), logical(1)))
+fp_idx <- which(vapply(param_spec, function(g) g$type %in% c("flux_pair", "flux_now"), logical(1)))
 param_spec[[fp_idx]]$J_bar <- J_bar
 transforms       <- build_transforms(param_spec)
 to_original      <- transforms$to_original
@@ -568,6 +572,10 @@ message(sprintf("\nAll chains complete. Wallclock: %.1f min\n", t_run / 60))
 HIGHLIGHT <- FREE_NAMES
 GROUP1    <- c("alpha_S", "alpha_H", "p_S", "p_H")   # alpha_A now FIXED (C1) — not sampled
 GROUP2    <- c("beta1", "beta2", "gamma", "sigma_init", "sigma_input")
+
+# Equilibrium arm: sigma_init is not sampled -- drop it from the plot lists.
+for (.g in c("HIGHLIGHT", "GROUP1", "GROUP2"))
+  if (exists(.g)) assign(.g, hiket_eq_names(get(.g)))
 
 diag_out <- run_diagnostics(
   chain_results    = chain_results,

@@ -46,6 +46,9 @@ source("./Calibration_real_data/calibration_engine.R")
 # The correlated-error likelihood (2026-08-19). Default OFF; see the file header.
 source("./Calibration_real_data_transient/correlated_likelihood.R")
 
+# Equilibrium-init counterfactual arm (2026-10-08). Inert unless HIKET_EQUILIBRIUM_INIT=1.
+source("./Calibration_real_data_transient/equilibrium_init.R")
+
 
 # Override make_likelihood() with transient_init support.
 # Only the sd_vec line and function signature differ from the original.

@@ -1070,11 +1070,15 @@ guards key on those filenames.
   ⚠ Bolinder 2007's ×1.65 is derived as 33/50 and covers **exudates plus fine roots and root hairs
   that soil sampling misses** — so the cropland-to-forest objection is weaker than first written.
 
-- **⬜ THE EQUILIBRIUM-INIT COUNTERFACTUAL HAS NEVER BEEN RUN.** The Introduction's central claim is
-  still theoretical. Design in **`NEXT_RUN_equilibrium_init.md`**: one factor (init only), σ_init
-  **dropped** not fixed, equilibrium defined on the NID's own convention, after the Fortran recompile,
-  and **not** bundled with any anchor change. Pre-registered: both arms reach the level, only the
-  transient bends, and the number to watch is the equilibrium arm's rate against Liski's +0.024.
+- **⬜ THE EQUILIBRIUM-INIT COUNTERFACTUAL HAS NEVER BEEN RUN — DESIGN SETTLED 2026-10-08 (Samuli's
+  point; arm = production with `σ_init ≡ 1`, figures F16–F18; ⚠ σ_input Jacobian trap). Not launched
+  (Lorenzo: design + figures first).** ✅ CODE WRITTEN + TESTED 2026-10-08: switch `HIKET_EQUILIBRIUM_INIT=1`
+  (`equilibrium_init.R`, engine type `flux_now`), launcher `submit_eqinit.sh`, outputs tagged `_eqinit`;
+  nesting + prior tests PASS in all six (`doublechecks/eqinit_*`). ⬜ figure layer; ⬜ launch. The Introduction's central claim is
+  still theoretical. Design in **`NEXT_RUN_equilibrium_init.md`**: one factor (init only); σ_init
+  fixed at 1 and removed from the free set (= steady state at 1985–89 litter, 1985–2004 climate — the
+  NID's convention applied at OUR start date, not its procedure). ⚠ The equilibrium arm will NOT be
+  flat (litter +52% 1986–2006): the test is the SIZE of the rise, not the bend.
 
 - **✅ SESSION 2026-09-03 — the storyline moved onto the shape of the paper.**
   **`manuscript/HIKET_storyline_v3.tex` (17 pp) is now the LIVE storyline**; v2 is superseded (kept

@@ -70,7 +70,7 @@ library(dplyr)
 # 0.  Configuration
 # =============================================================================
 
-MODEL_NAME <- "Yasso15"
+MODEL_NAME <- hiket_eq_tag("Yasso15")   # "_eqinit" in the equilibrium arm
 RUN_ID     <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # read the calibration configuration (N_PLOTS_TEST, N_CHAINS, N_ITER, N_BURNIN, N_LOG)
@@ -179,6 +179,7 @@ param_spec <- list(
        window = YASSO15_INPUT_FLUX_WINDOW, J_bar = 1.0)
 )
 
+param_spec       <- hiket_eq_param_spec(param_spec)   # equilibrium arm: drop sigma_init
 transforms       <- build_transforms(param_spec)
 to_original      <- transforms$to_original
 to_unconstrained <- transforms$to_unconstrained
@@ -218,6 +219,9 @@ assemble_model_params <- function(p_free) {
     sigma_init  = unname(p_free["sigma_init"]))   # NEW: needed by transient_init
 }
 
+
+# Equilibrium arm: sigma_init fixed at 1 (no-op in production).
+assemble_model_params <- hiket_eq_assemble(assemble_model_params)
 
 # =============================================================================
 # 3.  Data preparation
@@ -392,7 +396,7 @@ litter_means  <- lapply(litter_means, function(x) { x$preinit_shape <- PREINIT_S
 J_bar  <- mean(vapply(litter_means[plots_real],
                       function(lm) sum(lm$nwl_mean, lm$fwl_mean, lm$cwl_mean),
                       numeric(1)))
-fp_idx <- which(vapply(param_spec, function(g) identical(g$type, "flux_pair"), logical(1)))
+fp_idx <- which(vapply(param_spec, function(g) g$type %in% c("flux_pair", "flux_now"), logical(1)))
 param_spec[[fp_idx]]$J_bar <- J_bar
 transforms       <- build_transforms(param_spec)
 to_original      <- transforms$to_original
@@ -535,7 +539,9 @@ yasso15_run_engine <- function(inputs, model_params, C_init, xi_arrays) {
 # [1-exp(gammaH*0.6)] ~ 1 for any gammaH < -5; large SD is an artefact.
 # Transfer fractions remain at 1.0 (Finnish data informs pool structure).
 sigma_ppm <- setNames(rep(1.0, N_FREE), FREE_NAMES)
-sigma_ppm[names(YASSO15_SIGMA_PPM)] <- YASSO15_SIGMA_PPM
+# Only the FREE names: the equilibrium arm drops sigma_init (no-op in production).
+.sp_nm <- intersect(names(YASSO15_SIGMA_PPM), FREE_NAMES)
+sigma_ppm[.sp_nm] <- YASSO15_SIGMA_PPM[.sp_nm]
 
 stopifnot(length(sigma_ppm) == N_FREE)
 stopifnot(all(sigma_ppm > 0))
@@ -770,6 +776,10 @@ GROUP1 <- c("p_AW","p_AE","p_AN",
             "p_EA","p_EW","p_EN",
             "p_NA","p_NW","p_NE")
 GROUP2 <- HIGHLIGHT
+
+# Equilibrium arm: sigma_init is not sampled -- drop it from the plot lists.
+for (.g in c("HIGHLIGHT", "GROUP1", "GROUP2"))
+  if (exists(.g)) assign(.g, hiket_eq_names(get(.g)))
 
 diag_out <- run_diagnostics(
   chain_results    = chain_results,

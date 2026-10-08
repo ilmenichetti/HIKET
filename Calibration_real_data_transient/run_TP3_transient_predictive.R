@@ -35,16 +35,16 @@ if (length(args) >= 1) {
 } else {
   rns <- list.files(
     "./Calibration_real_data_transient/runs/",
-    pattern = "^TP3_posterior_[0-9]{8}_[0-9]{6}\\.rds$"
+    pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", hiket_eq_tag("TP3"))
   )
   if (length(rns) == 0)
     stop("No TP3 transient posterior found in Calibration_real_data_transient/runs/")
   rns    <- sort(rns, decreasing = TRUE)
-  RUN_ID <- sub("^TP3_posterior_(.+)\\.rds$", "\\1", rns[1])
+  RUN_ID <- sub(sprintf("^%s_posterior_(.+)\\.rds$", hiket_eq_tag("TP3")), "\\1", rns[1])
   message(sprintf("Auto-detected RUN_ID: %s", RUN_ID))
 }
 
-MODEL_NAME      <- "TP3"
+MODEL_NAME      <- hiket_eq_tag("TP3")   # "_eqinit" in the equilibrium arm
 N_PP_DRAWS      <- 100L
 CORES_PER_CHAIN <- parallel::detectCores() - 1L
 
@@ -71,9 +71,9 @@ message("=============================================================\n")
 # =============================================================================
 
 posterior_phys <- readRDS(file.path(DIR_RUNS,
-                                    sprintf("TP3_posterior_%s.rds", RUN_ID)))
+                                    sprintf("%s_posterior_%s.rds", MODEL_NAME, RUN_ID)))
 inputs_pkg     <- readRDS(file.path(DIR_INPUTS,
-                                    sprintf("TP3_inputs_%s.rds",    RUN_ID)))
+                                    sprintf("%s_inputs_%s.rds",    MODEL_NAME, RUN_ID)))
 
 climate_by_plot    <- inputs_pkg$climate_by_plot
 inputs_by_plot     <- inputs_pkg$inputs_by_plot
@@ -170,6 +170,9 @@ tp3_run_engine <- function(inputs, model_params, C_init, xi_array) {
 # =============================================================================
 
 set.seed(2025)
+# Equilibrium arm: sigma_init fixed at 1 (no-op in production).
+assemble_model_params <- hiket_eq_assemble(assemble_model_params)
+
 draw_idx <- sample(nrow(posterior_phys), N_PP_DRAWS)
 draws    <- posterior_phys[draw_idx, ]
 

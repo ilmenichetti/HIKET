@@ -210,6 +210,20 @@ log_jac_bounded <- function(p, a, b) log(p - a) + log(b - p) - log(b - a)
 #                         (sigma_input); names[2] the ratio (sigma_init).
 #                         See documentation/sigma_input_physical_bounds_note.
 #
+#       "flux_now"      : list(names = "sigma_input", type = "flux_now",
+#                              window = c(a, b), J_bar = Jb)
+#                         flux_pair WITHOUT sigma_init: the equilibrium-init arm
+#                         (HIKET_EQUILIBRIUM_INIT=1, equilibrium_init.R), where
+#                         sigma_init is fixed at 1. Same map for sigma_input as
+#                         flux_pair's first coordinate. Its Jacobian KEEPS the
+#                         -log(F_now) term of the flux_pair determinant: that term
+#                         comes from sigma_init = F_1917/F_now but survives
+#                         integrating x2 out, so dropping it would tilt the
+#                         sigma_input prior towards LARGER inputs relative to the
+#                         transient arm. With it, the two arms carry the same
+#                         effective sigma_input prior (verified numerically by
+#                         doublechecks/eqinit_prior_check.R).
+#
 #     EXTENSIBILITY:
 #       Adding a new parameter type requires adding one case to the three
 #       switch() statements below and one entry to the Jacobian switch.
@@ -246,6 +260,9 @@ build_transforms <- function(param_spec) {
                F_1917 <- bounded_fwd(x[nms[2]], a, b)              # 1917 flux
                p[nms[1]] <- F_now / Jb                            # sigma_input
                p[nms[2]] <- F_1917 / F_now                        # sigma_init = ratio
+             },
+             flux_now      = {                                     # equilibrium arm: see header
+               p[nms] <- bounded_fwd(x[nms], grp$window[1], grp$window[2]) / grp$J_bar
              }
       )
     }
@@ -273,6 +290,9 @@ build_transforms <- function(param_spec) {
                F_1917 <- p[nms[2]] * F_now                        # sigma_init  -> F_1917
                x[nms[1]] <- bounded_inv(F_now,  a, b)
                x[nms[2]] <- bounded_inv(F_1917, a, b)
+             },
+             flux_now      = {
+               x[nms] <- bounded_inv(p[nms] * grp$J_bar, grp$window[1], grp$window[2])
              }
       )
     }
@@ -310,6 +330,11 @@ build_transforms <- function(param_spec) {
                jac <- jac + log_jac_bounded(F_now,  a, b) +
                             log_jac_bounded(F_1917, a, b) -
                             log(Jb) - log(F_now)
+             },
+             flux_now      = {                                   # keeps -log(F_now): see header
+               a <- grp$window[1]; b <- grp$window[2]; Jb <- grp$J_bar
+               F_now <- p[nms] * Jb
+               jac <- jac + log_jac_bounded(F_now, a, b) - log(Jb) - log(F_now)
              }
       )
     }
