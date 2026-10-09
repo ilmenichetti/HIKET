@@ -1,6 +1,6 @@
 # The equilibrium-init counterfactual — run design
 
-**Status (2026-10-08): DESIGN SETTLED, CODE WRITTEN + LOCALLY TESTED, NOT RUN.** Rewritten from the 2026-09-04
+**Status (2026-10-09): LANDED AND ANALYSED (RUN_ID `20261008_134019`) — see §Results at the end.** Rewritten from the 2026-09-04
 draft after Samuli's storyline comment and the 2026-10-08 discussion. Lorenzo: design and figures
 first; launch later.
 
@@ -212,3 +212,31 @@ to design once the calibrations land (Lorenzo).
   analysis → look at the results → discuss the story → only then touch the text. The comparison will
   probably enter the story, but how is decided after the results.
 - Projection comparison: main text or supplement, decided with the story.
+
+
+## Results (landed 2026-10-09, RUN_ID `20261008_134019`)
+
+Jobs 2075931–36, all COMPLETED (14–21 h). R-hat ≤ 1.007, ESS ≥ 2011, free parameters −1, posterior-predictive
+coverage 0.955–0.965. Figures F16–F19 and `T_eqinit.csv` built with `run_eqinit_figures.sh`.
+
+| | 1985→2006 | 2006→2024 | 1985→2024 |
+|---|---|---|---|
+| observed (310 plots) | +0.40 | +0.12 | +0.26 |
+| transient start | +0.41 … +0.56 | −0.24 … +0.19 | +0.10 … +0.35 |
+| **equilibrium start** | +0.18 … +0.26 (SP1 +0.38) | −0.32 … −0.16 | **−0.05 … +0.04** |
+
+- The equilibrium start sits at ~72 tC/ha in 1985 (observed 64.5): it cannot reach the low early level and fits a
+  compromise level; rise with the litter to ~2006, fall after, net ≈ 0.
+- ΔLL ≈ 0 for SP1/TP2/TP3, −2.4 / −5.8 / ≈ −3 for Yasso07/15/20; RMSE worse in all six. Judge on rates.
+- Forecast 2025–44 sink ≈ 0 (−0.06 … +0.02) vs +0.07 … +0.22; headroom −3 … +11 % vs +26 … +42 %.
+- Compensation goes through the kinetics: σ_input relaxes in all six; slow rate up (TP2 alpha_H 2.6 → 3.4 prior SD,
+  ≈1.7× ICBM), temperature sensitivity up (beta1 TP2/TP3/Yasso07 +1 … +1.6 SD), MTT 22–27 → 18–25 yr. Simple models
+  and Yasso07 more strained; Yasso15/20 no worse than production; SP1 unchanged.
+
+**Pre-registration scorecard:** (1) both arms fit the levels ✗ (equilibrium overshoots 1985); (2) equilibrium
+under-produces the rates ✓ all six; (3) σ_input up ✗ (down) / transit time shorter ✓; (4) Yasso07 closes the gap ✗
+(none does); falsifier not triggered; near-zero projected sink ✓.
+
+**Status for the story:** strong rationale for the transient initialisation (memory
+`transient-init-rationale-20261009`); not yet in the story — Lorenzo will re-discuss the story first; figures
+probably supplement.

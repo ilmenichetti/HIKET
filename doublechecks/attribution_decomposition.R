@@ -15,17 +15,21 @@
 #                   of litter from the 1917 to the 1985 level.
 #                 1985-2084: the sink the soil owes to the deficit it carries into
 #                   1985 = sink of the production start MINUS sink of an equilibrium
-#                   start (sigma_init = 1, the eqinit counterfactual) under the SAME
+#                   start (sigma_init = 1, same parameters; a reference state) under the SAME
 #                   litter and climate. Exact because the models are linear in
 #                   carbon: the difference is the free relaxation of the deficit.
-#   litter inputs and climate  split the EQUILIBRIUM-start sink, which is zero when
-#                 litter stays at its 1985-89 level and climate at its 1985-2004
-#                 mean (both are what the equilibrium is built on), by a two-factor
-#                 Shapley split:
-#                   inputs  = 1/2 [F(u, x_ref) - 0] + 1/2 [F(u, x) - F(u_ref, x)]
-#                   climate = 1/2 [F(u_ref, x) - 0] + 1/2 [F(u, x) - F(u, x_ref)]
-#                 i.e. the effect of litter departing from its 1985-89 level and of
-#                 each year's climate departing from the 1985-2004 mean.
+#   litter and climate  SEQUENTIAL split (Lorenzo, 2026-10-09; replaces the Shapley
+#                 average). Three runs carry the partition:
+#                   run 1  calibrated start, observed litter, observed climate (the model)
+#                   run 2  balanced start,   observed litter, observed climate
+#                   run 3  balanced start,   observed litter, REFERENCE climate
+#                 history = 1 - 2 ; climate = 2 - 3 ; litter = 3 (- run 5, which is 0)
+#                 Order: litter first, then climate, so the litter x climate joint effect
+#                 (the extra litter decomposing faster in warmer years) goes to CLIMATE --
+#                 climate acting on the litter that actually arrived.
+#                 Run 5 (balanced, both references) is kept as the check that the balanced
+#                 state is balanced; run 4 (reference litter, observed climate) is kept ONLY
+#                 to report the size of the joint effect (column 'interaction').
 # Climate = all of a model's climate modifiers together (ONE band, Yasso15/20 too).
 #
 # Every run is the model's OWN multi-year run (calibration-script engine functions).
@@ -135,16 +139,23 @@ attribute_plot <- function(e, mp, pid) {
   F_u0x <- sinkof(run(Ur, xi, C_eq),   C_eq)                          # reference litter, actual climate
   F_00  <- sinkof(run(Ur, xr, C_eq),   C_eq)                          # both reference: must be ~0
   hist <- F_tot - F_eq
-  inpt <- 0.5 * F_ux0 + 0.5 * (F_eq - F_u0x)
-  clmt <- 0.5 * F_u0x + 0.5 * (F_eq - F_ux0)
-  out <- rbind(cbind(year = py0, F = F_pre, history = F_pre, inputs = 0, climate = 0),
-               cbind(year = U$year, F = F_tot, history = hist, inputs = inpt, climate = clmt))
+  inpt <- F_ux0 - F_00                                                # run 3 (- run 5 = 0)
+  clmt <- F_eq - F_ux0                                                # run 2 - run 3
+  inter <- F_eq - F_ux0 - F_u0x + F_00                                # litter x climate interaction
+  # inherited x climate (diagnostic only): the inherited part measured under the REFERENCE
+  # climate (run 1' = calibrated start, observed litter, reference climate, minus run 3)
+  # versus under the observed climate (1 - 2). Linear in litter, so the litter does not matter.
+  F_c0  <- sinkof(run(U, xr, C_init), C_init)                         # run 1'
+  inter_hc <- hist - (F_c0 - F_ux0)
+  out <- rbind(cbind(year = py0, F = F_pre, history = F_pre, inputs = 0, climate = 0, interaction = 0, inter_hist_clim = 0),
+               cbind(year = U$year, F = F_tot, history = hist, inputs = inpt, climate = clmt, interaction = inter,
+                     inter_hist_clim = inter_hc))
   attr(out, "chk") <- c(prerun = chk_pre, eq_drift = max(abs(F_00)),
-                        sum = max(abs(F_tot - (hist + inpt + clmt))))
+                        sum = max(abs(F_tot - F_00 - (hist + inpt + clmt))))
   out
 }
 
-out <- list(rid = RID[MODELS], n_draw = N_DRAW, proj_years = PROJ_YEARS, version = "level_v2", models = list())
+out <- list(rid = RID[MODELS], n_draw = N_DRAW, proj_years = PROJ_YEARS, version = "level_v3_sequential", models = list())
 for (M in MODELS) {
   t0 <- Sys.time()
   e  <- setup_model(M)

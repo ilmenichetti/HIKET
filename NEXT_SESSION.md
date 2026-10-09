@@ -1,14 +1,16 @@
 # NEXT SESSION — start here
 
-## 🚀 0-NOW (2026-10-08). EQUILIBRIUM-INIT ARM IN FLIGHT, THEN TWO NEW STORY ANALYSES
+## ⭐⭐ 0-NOW (2026-10-09). NEXT = A HEAVY STORY RE-DISCUSSION (Lorenzo), prepared by two new analyses
 
-**Order (Lorenzo): finish the equilibrium-init part FIRST, then the rest.**
-1. **Equilibrium-init counterfactual** (Samuli's point) — jobs 2075931–36 on Roihu, launched
-   2026-10-08 ~13:45, ~18.5 h. When they land: rsync (CLAUDE.md §Sync), check convergence, then
-   `bash manuscript/figures/run_eqinit_figures.sh` → F16/F17/F18/F19/T_eqinit. Design and
-   pre-registration: `NEXT_RUN_equilibrium_init.md`. ⬜ Then design the appendix posterior comparison.
-   ⚠ No story/manuscript rewrite until the results are discussed.
-2. **⬜ ATTRIBUTION ANALYSIS — noted only, NOT designed (Lorenzo will explain).** Determine which
+**Read first: memory `transient-init-rationale-20261009`** — five findings that justify the transient
+initialisation. Do NOT rewrite storyline/manuscript before the discussion; some figures will go to the supplement.
+
+1. **✅ Equilibrium-start counterfactual LANDED (2026-10-09, RUN_ID `20261008_134019`).** All six models, recalibrated
+   with an equilibrium start, go FLAT over 1985–2024 (−0.05…+0.04 vs observed +0.26 tC/ha/yr); they overshoot the 1985
+   stock, compensate through faster and more temperature-sensitive kinetics (σ_input relaxes), and project a sink ≈ 0.
+   Results + pre-registration scorecard: `NEXT_RUN_equilibrium_init.md` §Results; figures F16–F19, `T_eqinit.csv`.
+   ⬜ Appendix posterior comparison (parameter strain) still to design.
+2. **✅ ATTRIBUTION ANALYSIS — BUILT (2026-10-08/09), final method = 3-run SEQUENTIAL split (see below).** Determine which
    components of the models — **inputs, previous C (the initial/inherited state), climate** —
    drive the results **over time**. To discuss before any code. Will feed the story update together
    with item 1.
@@ -36,12 +38,30 @@
    warming nearly cancel. Builder `manuscript/figures/build_S15S17_attribution.R`.
    Methodology for review: `manuscript/appendices/appendix_attribution.tex` (subfile, NOT in the draft).
 
-3. **⬜ TOMORROW (Lorenzo, 2026-10-08): think about re-running with a HISTORICAL CLIMATE SERIES in the pre-run.**
-   The pre-run applies the 1985–2004 mean climate to 1917–1984 (warmer than those decades) ⇒ the attributed climate
-   effect is CONDITIONAL on it (a colder pre-run → more carbon in 1985, bigger post-1985 climate effect). Needs a
-   series back to 1917 if possible to find (our FMI 10 km grid starts 1961 — candidates to CHECK, not verified:
-   longer FMI/station or gridded reconstructions). Changes the initialisation ⇒ recalibration. Caveat now in
-   `appendix_attribution.tex`. Running means: kept, to discuss (Lorenzo unsure they help).
+3. **⬜ DECIDED DIRECTION (Lorenzo, 2026-10-09): pre-run climate = a CONSTANT LONG-TERM PRE-1985 MEAN (not a
+   transient series), and attribution figures restricted to 1985–2024.**
+   - Why: the pre-run now applies the 1985–2004 mean to 1917–1984 (inherited from `STEADY_STATE_YEARS`: the first
+     20 years of the model climate). Plot means: 1961–84 2.13 °C, 1985–2004 2.67, 2005–24 3.83. The attribution's
+     climate band is then measured against years the pre-run never saw → it sums to ~0 until ~2004 (artefact).
+   - Fix: ONE long pre-1985 mean climate used BOTH for the pre-run and as the attribution's reference/balanced
+     state. Then the 1985 soil differs from the balanced one only through the litter history (3 bands, as now),
+     and the climate band shows the full warming since 1985. Cost: no weather variability / early-century path in
+     the pre-run (modest: the pre-run mostly shapes slow pools, which respond to the mean). A TRANSIENT pre-run
+     climate was considered and set aside: it adds a climate legacy to the initialisation (4 components, two
+     anchors) and is harder to read.
+   - Window options: **1961–1984** = FMI, ALREADY extracted per plot (`Data/model_inputs/climate_monthly.csv`,
+     1961–2025, 555 plots; dropped by the merge onto the litter rows in `Data/Data_work.R`) → only wiring, no new
+     data. **1917–1984** = FMI 1961–84 + CRU TS 4.09 anomalies on the FMI 1961–1990 climatology for 1917–1960
+     (CRU TS 4.09: CEDA, 0.5°, monthly T+P, 1901–2024; Harris et al. 2020 *Sci. Data* 7:109). FMI ClimGrid starts
+     1961 (Aalto et al. 2016). ⬜ Tietäväinen, Tuomenvirta & Venäläinen 2010 *Int. J. Climatol.* unverified.
+   - Runs: production recalibrates (initial states change) + the equilibrium arm re-run with the SAME mean climate
+     (Lorenzo) → ONE PAIR. Current eqinit jobs 2075931–36 stay valid for the current production.
+   - Attribution figures S15–S17 now show 1985–2024 only (pre-run gain only as a CSV column).
+   - ✅ Documentation REWRITTEN IN WORDS (2026-10-09): `manuscript/appendices/appendix_attribution.tex`, 5 pp, for
+     Lorenzo's review. FINAL METHOD: three runs (1 model; 2 balanced start; 3 balanced start + reference climate):
+     inherited = 1−2, climate = 2−3, litter = 3. Joint effects assigned by order: litter×climate −0.9 tC/ha in the
+     climate part, inheritance×climate +0.7 in the inherited part (~7–10 %). 1985–2024 average: inherited +9.3,
+     litter +8.6, climate −7.5, total +10.5 tC/ha. Figures S15/S16 (+_smooth10), S17 held back; window 1985–2024.
 
 ## ⭐⭐ (2026-10-07) LORENZO REVIEWS THE MANUSCRIPT TEXT EXTENSIVELY — then we answer it
 

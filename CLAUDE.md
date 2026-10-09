@@ -734,13 +734,13 @@ guards key on those filenames.
   components — inputs, previous C (inherited state), climate — drive the results over time. Comes
   AFTER the equilibrium-init part is finished; both feed the story update. `NEXT_SESSION.md` 0-NOW.
   Samuli's approach note: `Calibration_real_data_transient/documentation/Launiainen_20261008_National_soil_C_sink_dynamics_attribution.pdf` (total-differential decomposition of a single-pool balance).
-  ✅ BUILT 2026-10-08 on production, target REVISED same day: the sink itself 1917–2084 = historical C (pre-run +
-  deficit relaxation = production minus equilibrium start) + inputs + climate (Shapley vs 1985–89 litter /
-  1985–2004 climate). RELABELLED: history = 'litter rise before 1985 (initialisation)' (dark green — it IS an
+  ✅ BUILT 2026-10-08/09 on production. FINAL = 3-run SEQUENTIAL split of the 1985–2024 sink: inherited = run 1 −
+  run 2 (calibrated vs balanced start), climate = run 2 − run 3 (observed vs reference climate), litter = run 3;
+  joint effects assigned by order (~10 %). Doc rewritten in words (5 pp). RELABELLED: history = 'litter rise before 1985 (initialisation)' (dark green — it IS an
   input effect, split from 'litter change since 1985' by date); climate = 0 pre-1985 by construction (constant).
   `doublechecks/attribution_decomposition.R`, `manuscript/figures/build_S15S17_attribution.R`
   (S15/S16); methodology for review `manuscript/appendices/appendix_attribution.tex`. Average 1985–2024:
-  history +9.3, inputs +8.2, climate −7.0 tC/ha.
+  inherited +9.3, litter +8.6, climate −7.5 tC/ha.
 
 - **⭐⭐ NEXT (2026-10-07): Lorenzo reviews the manuscript TEXT extensively.** Next session: `git pull`,
   re-read `manuscript/HIKET_draft_v1.tex` from disk, collect his `%LORENZO` notes, answer "Discuss" notes
@@ -1091,7 +1091,13 @@ guards key on those filenames.
   🚀 **LAUNCHED 2026-10-08 ~13:45** on Roihu (`main` @ `86e1e36`, .so recompiled, data md5 = Mac): jobs
   **2075931 SP1, 2075932 TP2, 2075933 TP3, 2075934 Yasso07, 2075935 Yasso15, 2075936 Yasso20**; logs
   `progress_logs/eqinit_<model>_<jobid>.{out,err}`. r-env 4.6.1 = production 20260831 (metadata: R 4.6.1); data md5, likelihood (959 obs) and switch verified in the logs.
-  Roihu clone is now on `main` (the branch-switch TODO above is DONE). The Introduction's central claim is
+  Roihu clone is now on `main` (the branch-switch TODO above is DONE).
+  ✅ **LANDED 2026-10-09** (RUN_ID `20261008_134019`, all six COMPLETED, 14–21 h): R-hat ≤ 1.007, ESS ≥ 2011,
+  free params −1. ⚠ **PRE-REGISTRATION MISS: σ_input went DOWN in all six** (Y15 1.54→1.32, TP2 1.72→1.60,
+  SP1 ≈ same) — an equilibrium start already holds the full balanced stock, so the level needs LESS input.
+  ⭐⭐ RESULT: equilibrium start → 1985–2024 rate −0.05…+0.04 in ALL SIX (obs +0.26; transient +0.10…+0.35),
+  overshoots the 1985 stock, compensates via faster/more T-sensitive kinetics, forecast sink ≈ 0. Scorecard in
+  `NEXT_RUN_equilibrium_init.md` §Results; story rationale in memory `transient-init-rationale-20261009`. The Introduction's central claim is
   still theoretical. Design in **`NEXT_RUN_equilibrium_init.md`**: one factor (init only); σ_init
   fixed at 1 and removed from the free set (= steady state at 1985–89 litter, 1985–2004 climate — the
   NID's convention applied at OUR start date, not its procedure). ⚠ The equilibrium arm will NOT be

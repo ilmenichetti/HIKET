@@ -4,13 +4,13 @@
 # ATTRIBUTION FIGURES (methodology: manuscript/appendices/appendix_attribution.tex;
 # numbers: doublechecks/attribution_decomposition.R -> doublechecks/attribution.rds).
 #
-#   S15_attribution_by_model.png   six panels, one per model: the annual sink, 1917-2084,
+#   S15_attribution_by_model.png   six panels, one per model: the annual sink, 1985-2024,
 #                                  split into historical carbon, litter inputs and climate
 #                                  (stacked bars; positive up, negative down; the line is
 #                                  the sink). Common y axis so the models compare.
 #   S16_attribution_ensemble.png   the six-model average: the annual sink as above.
 #   S17_attribution_cumulative.png the six-model average, cumulative: carbon gained since
-#                                  1917 by each component (tC/ha); the line is the stock
+#                                  1985 by each component (tC/ha); the line is the stock
 #                                  change. HELD BACK for now (see the S17 section).
 #   *_smooth10.png                 the same with a 10-yr centred running mean of the annual
 #                                  values, pre-run and 1985 onwards smoothed SEPARATELY
@@ -26,6 +26,7 @@
 #   litter change since 1985   litter departing from its 1985-89 level.
 #   climate        each year's climate departing from the 1985-2004 mean (one band, all
 #                  of a model's modifiers together).
+# Split: SEQUENTIAL, three runs (history = 1-2, climate = 2-3, litter = 3); see the appendix.
 # Per model: POSTERIOR MEAN over the draws (means add up). Average: unweighted over models.
 #
 # Usage:  Rscript manuscript/figures/build_S15S17_attribution.R
@@ -34,7 +35,7 @@
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 source("manuscript/figures/model_palette.R")
 Z <- readRDS("doublechecks/attribution.rds")
-if (!identical(Z$version, "level_v2")) stop("attribution.rds is the old (change-in-sink) version -- rerun the decomposition")
+if (!identical(Z$version, "level_v3_sequential")) stop("attribution.rds is not the sequential (3-run) version -- rerun the decomposition")
 MS <- intersect(MODEL_ORDER, names(Z$models))
 COMP     <- c("history", "inputs", "climate")
 # Labels (Lorenzo, 2026-10-08): "historical C" IS an input effect -- the litter rise before
@@ -44,7 +45,14 @@ COMP_LAB <- c(history = "Litter rise before 1985 (initialisation)", inputs = "Li
 COMP_COL <- c(history = "#2F6B3B", inputs = "#9CCB86", climate = "#C44E52")   # climate: red (Lorenzo)
 Y0 <- 1985; Y_PROJ <- 2024
 
-mean_arr <- function(m) apply(Z$models[[m]]$arr, c(1, 2), mean)      # year x var
+# Projection CUT (Lorenzo, 2026-10-08): the figures stop at 2024. The decomposition
+# still computes 2025-2084 (attribution.rds); only the display is restricted.
+# Display window CUT to the simulation window 1985-2024 (Lorenzo, 2026-10-09): every part is
+# anchored at 1985, so the pre-run adds nothing the reading needs; its total is reported in
+# the table only. The decomposition still holds 1917-2084 (attribution.rds).
+Y_START <- Y0; Y_END <- Y_PROJ
+mean_arr_full <- function(m) apply(Z$models[[m]]$arr, c(1, 2), mean)
+mean_arr <- function(m) { a <- mean_arr_full(m); a[a[, "year"] >= Y_START & a[, "year"] <= Y_END, , drop = FALSE] }   # year x var
 yr <- mean_arr(MS[1])[, "year"]
 P_all <- lapply(MS, function(m) mean_arr(m)[, COMP, drop = FALSE]); names(P_all) <- MS
 F_all <- lapply(MS, function(m) mean_arr(m)[, "F"]);               names(F_all) <- MS
@@ -57,7 +65,7 @@ stopifnot(max(abs(rowSums(Pm) - Fm)) < 1e-9)
 sm <- function(P, W) {
   if (W == 1L) return(P)
   P <- as.matrix(P); out <- P
-  for (k in list(yr < Y0, yr >= Y0))
+  for (k in list(yr < Y0, yr >= Y0)) if (any(k))
     out[k, ] <- apply(P[k, , drop = FALSE], 2, rmean, W = W)
   out
 }
@@ -82,16 +90,8 @@ stack_area <- function(x, P) {
   }
   lines(x, rowSums(P), col = "grey10", lwd = 2.2)
 }
-periods <- function(yl) {
-  rect(min(yr) - 1, yl[1] - 1e3, Y0 - 0.5, yl[2] + 1e3, col = "#F3EEE6", border = NA)     # pre-run
-  rect(Y_PROJ + 0.5, yl[1] - 1e3, max(yr) + 1, yl[2] + 1e3, col = "grey93", border = NA)    # projection
-  abline(v = c(Y0 - 0.5, Y_PROJ + 0.5), col = "grey55", lty = 3); abline(h = 0, col = "grey40")
-}
-period_labels <- function(yl, cex = 0.72) {
-  text(c((min(yr) + Y0) / 2, (Y0 + Y_PROJ) / 2, (Y_PROJ + max(yr)) / 2), yl[2],
-       c("pre-run: climate held constant", "observed forcing", "projection"),
-       adj = c(0.5, 1), cex = cex, col = "grey35", font = 3)
-}
+periods <- function(yl) abline(h = 0, col = "grey40")
+period_labels <- function(yl, cex = 0.72) invisible(NULL)        # one period only (1985-2024)
 legend_top <- function(ncol = 4) {                                # ncol = 2 on single-panel figures
   op <- par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE); on.exit(par(op))
   plot.new()
@@ -144,10 +144,10 @@ Cm <- apply(Pm, 2, cumsum)
 png("manuscript/figures/S17_attribution_cumulative.png", width = 9, height = 5.6, units = "in", res = 200)
 par(mar = c(4, 4.6, 2.4, 1), oma = c(1.6, 0, 5, 0), mgp = c(2.5, 0.6, 0), las = 1)
 yl2 <- range(c(rowSums(pmax(Cm, 0)), rowSums(pmin(Cm, 0)))); yl2 <- yl2 + c(0, 0.1) * diff(yl2)
-plot(NA, xlim = range(yr), ylim = yl2, xlab = "Year", main = "Carbon gained since 1917",
-     ylab = expression("Stock change since 1917  (tC ha"^-1*")"))
+plot(NA, xlim = range(yr), ylim = yl2, xlab = "Year", main = "Carbon gained since 1985",
+     ylab = expression("Stock change since 1985  (tC ha"^-1*")"))
 periods(yl2); stack_area(yr, Cm); period_labels(yl2)
-text(Y_PROJ + 2, yl2[2] - 0.065 * diff(yl2), "climate: response to warming already\nobserved, no further warming assumed",
+if (FALSE) text(Y_PROJ + 2, yl2[2] - 0.065 * diff(yl2), "climate: response to warming already\nobserved, no further warming assumed",
      adj = c(0, 1), cex = 0.66, col = "#8E2F33", font = 3)
 mtext(sprintf("%d-model average (%s)", length(MS), paste(MS, collapse = ", ")), outer = TRUE, line = 3.4, cex = 1.05, font = 2)
 mtext(note, side = 1, outer = TRUE, line = 0.4, cex = 0.55, col = "grey35", adj = 0.01)
@@ -155,13 +155,12 @@ legend_top(2); dev.off()
 cat("Wrote S17_attribution_cumulative.png\n")
 
 # --- numbers: carbon gained by component over each period (tC/ha) ------------------------
-per <- list("1917-1984" = c(1917, 1984), "1985-2024" = c(1985, 2024), "2025-2084" = c(2025, 2084))
+# 1985-2024 by component, plus the pre-run gain 1917-1984 (not shown in the figures)
+pre <- sapply(MS, function(m) { a <- mean_arr_full(m); sum(a[a[, "year"] < Y0, "F"]) })
 tab <- do.call(rbind, lapply(c(MS, "average"), function(m) {
   P <- if (m == "average") Pm else P_all[[m]]
-  do.call(rbind, lapply(names(per), function(pn) {
-    k <- yr >= per[[pn]][1] & yr <= per[[pn]][2]
-    data.frame(model = m, period = pn, t(round(colSums(P[k, , drop = FALSE]), 2)), total = round(sum(P[k, ]), 2))
-  }))
+  data.frame(model = m, period = "1985-2024", t(round(colSums(P), 2)), total = round(sum(P), 2),
+             prerun_gain_1917_1984 = round(if (m == "average") mean(pre) else pre[[m]], 2))
 }))
 cat("\nCarbon gained by component (tC/ha):\n"); print(tab, row.names = FALSE)
 write.csv(tab, "manuscript/figures/S17_attribution_by_period.csv", row.names = FALSE)

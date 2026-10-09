@@ -1,203 +1,248 @@
 % =====================================================================
-%  Appendix module: Attribution of the modelled sink to historical
-%  carbon, litter inputs and climate
+%  Appendix module: Where the modelled sink comes from -- the inherited
+%  state, the litter change and the climate
 %  Modular subfile -- see main file header.
 %
-%  STATUS (2026-10-08): DRAFT FOR LORENZO'S REVIEW. Not included in the
-%  draft yet. Code: doublechecks/attribution_decomposition.R (numbers),
-%  manuscript/figures/build_S15S17_attribution.R (figures S15-S17).
+%  STATUS (2026-10-09): REWRITTEN IN WORDS (Lorenzo: "just what's needed"),
+%  three-run sequential partition, FOR LORENZO'S REVIEW. Not in the draft yet.
+%  Code: doublechecks/attribution_decomposition.R (numbers, 50 draws x 310
+%  plots x 6 models; checks; diagnostic columns 'interaction' = litter x climate
+%  and 'inter_hist_clim' = inheritance x climate),
+%  manuscript/figures/build_S15S17_attribution.R (S15 per model, S16 average,
+%  S17 cumulative -- held back), all shown 1985-2024.
 %  Origin: S. Launiainen's total-differential note (Calibration_real_data_
-%  transient/documentation/Launiainen_20261008_...pdf). The target was
-%  revised on 2026-10-08 (Lorenzo): "historical carbon" must tell the
-%  INITIALISATION story, so the sink itself is split, with the initial
-%  state as one of the three parts, instead of the year-to-year change in
-%  the sink with a stock-feedback term. Open choices are listed at the end.
+%  transient/documentation/Launiainen_20261008_...pdf). The other calibration
+%  (equilibrium-start arm) is deliberately NOT referred to.
+%  Planned change (NEXT_SESSION.md 0-NOW item 3): pre-run climate = one constant
+%  long pre-1985 mean, also used as the climate reference.
+%  The matrix formulation (exact annual step, superposition) was removed on
+%  purpose (never committed); the two properties it proved are stated in words.
 % =====================================================================
 \documentclass[../HIKET_draft_v1.tex]{subfiles}
 
 \begin{document}
 
-\section{Where the modelled sink comes from: the litter rise before 1985, the litter change since, and climate}
+\section{Where the modelled sink comes from: the inherited state, the litter change and the climate}
 \label{app:attribution}
 
-The calibrated models reproduce a soil carbon sink that rises and then slows between
-1985 and 2024, and the projection carries the sink forward to 2084. The present
-appendix asks how much of that sink, in each year, comes from each of three sources:
-the state in which the soil entered the observed period, the litter entering the soil,
-and the climate that sets the rate of decomposition. The question is answered for
-each of the six models separately, with the same procedure for every model whatever
-its number of pools or its form of climate response, and the six answers are then
-averaged.
+\subsection{The question and the answer in brief}
 
-\subsection{The quantity divided and the three parts}
-
-Each model advances the soil carbon stock one year at a time, and the annual sink is
-the change in stock over the year,
-\begin{equation}
-  F_t \;=\; C_t - C_{t-1}.
-  \label{eq:attr_sink}
-\end{equation}
-The sink of every year from 1917 to 2084 is divided into three parts that add up to
-it exactly:
+Each calibrated model produces a soil carbon sink that rises after 1985 and then slows.
+The present appendix asks, for each year of 1985--2024 and for each model, how much of
+that sink comes from three sources:
 \begin{description}
-  \item[Litter rise before 1985 (the initialisation)] the part of the sink that the
-    soil owes to the state in which it entered 1985. Under the transient
-    initialisation (Section~\ref{sec:init}) the soil starts in 1917 in balance with the
-    litter of that year, and the litter rises to its 1985 level over the following 68
-    years while the climate is held at its 1985--2004 mean. The soil lags behind the
-    rising litter, so it enters 1985 below the stock it would hold in balance with the
-    litter of 1985, and it keeps gaining carbon afterwards to close that deficit. The
-    part is the whole sink of the 1917--1984 period, which by construction comes only
-    from the rise of litter, and from 1985 onwards the part of the sink that comes from
-    the deficit carried into 1985. The inherited state is therefore itself an input
-    effect: the delayed effect of the litter having risen before 1985, separated from
-    the next part only by the date of the change.
-  \item[Litter change since 1985] the part of the sink that comes from the litter
-    input departing, after 1985, from its 1985--1989 level.
-  \item[Climate] the part of the sink that comes from the climate of each year
-    departing from the 1985--2004 mean. All of a model's climate modifiers are moved
-    together, so Yasso15 and Yasso20, which carry three modifiers (for the fast pools,
-    the N pool and humus), give a single climate part, comparable with the single
-    modifier of the other four models.
+  \item[The inherited state] the soil enters 1985 carrying a deficit: in the transient
+    initialisation (Section~\ref{sec:init}) the litter rose before 1985, the soil lagged
+    behind it, and in 1985 it holds less carbon than the litter of 1985 could sustain.
+    Part of the sink after 1985 is the soil still catching up. The part is shown in dark
+    green and labelled \emph{litter rise before 1985 (initialisation)}, because the deficit
+    is itself the delayed effect of the litter history.
+  \item[The litter change since 1985] the litter entering the soil departs, after 1985,
+    from its 1985--1989 level (it rose by about half until 2006 and fell somewhat after).
+    The 1985--1989 level is the one at which the transient initialisation ends its
+    pre-run: the mean of the first five years of the litter series, used instead of 1985
+    alone to smooth the noise of a single year and because the litter of 1985 is itself
+    reconstructed from the 1986--1990 trend. The part is shown in light green.
+  \item[The climate] the climate of each year departs from the reference climate
+    (currently the 1985--2004 mean, the climate the initialisation also uses), speeding
+    decomposition in warm years and slowing it in cold ones. All of a model's climate
+    modifiers are moved together, so the three modifiers of Yasso15 and Yasso20 give one
+    part, comparable with the single modifier of the other models. The part is shown in
+    red.
 \end{description}
-The two references, the litter of 1985--1989 and the climate of 1985--2004, are the
-ones on which the initialisation itself is built: they are the litter and climate with
-which the 1985 soil would be in balance had it no deficit.
+The three parts add up to the model's sink in every year. They are obtained from three
+simulations of the same model, removing one source at a time: the inherited state is what
+disappears when the soil starts without a deficit, the climate is what disappears when, in
+addition, the climate stops changing, and the litter change is what remains.
 
-\subsection{An exact division}
+\subsection{The three runs}
+\label{app:attr_runs}
 
-All six models are linear in carbon: for a given sequence of litter and climate, the
-stock in any year is the sum of what remains of the initial stock and what the inputs
-have added since. The division uses that property directly, through the models' own
-simulations, and needs neither derivatives nor a single-pool approximation.
+For each plot and each posterior draw, the same calibrated model, with the same
+parameters, is run three times from 1985:
 
-\paragraph{The litter rise before 1985.} Each model is run from 1985 twice under the same litter
-and climate: once from its calibrated initial state and once from the equilibrium state
-it would have if the 1917 litter had already been at its 1985 level, which is the
-equilibrium start of the counterfactual calibration (Section~\gap{counterfactual
-section}). Because the models are linear, the difference between the two sinks is the
-free relaxation of the initial deficit, and it is the part due to the litter rise
-before 1985:
-\begin{equation}
-  F^{\mathrm{hist}}_t \;=\; F_t\big(\mathbf{C}_{1985}\big) \;-\; F_t\big(\mathbf{C}^{\mathrm{eq}}_{1985}\big).
-\end{equation}
-Before 1985 the part is the pre-run sink itself, obtained by replaying the
-pre-run year by year with the model's run function.
+\begin{center}
+\begin{tabular}{clll}
+\hline
+run & starting state in 1985 & litter & climate \\
+\hline
+1 & calibrated (with the inherited deficit) & observed & observed \\
+2 & balanced (no deficit) & observed & observed \\
+3 & balanced (no deficit) & observed & held at reference \\
+\hline
+\end{tabular}
+\end{center}
 
-\paragraph{The litter change since 1985, and climate.} What remains, $F_t(\mathbf{C}^{\mathrm{eq}}_{1985})$,
-is the sink of a soil that starts in balance; it is zero in every year if litter and
-climate stay at their reference values, and it departs from zero only because they do
-not. Writing $F(u, x)$ for that sink under litter $u$ and climate $x$, and the
-references as $u_0$ and $x_0$, the two parts are
-\begin{align}
-  F^{\mathrm{inp}}_t &= \tfrac12\big[F_t(u, x_0) - F_t(u_0, x_0)\big] + \tfrac12\big[F_t(u, x) - F_t(u_0, x)\big], \\
-  F^{\mathrm{clim}}_t &= \tfrac12\big[F_t(u_0, x) - F_t(u_0, x_0)\big] + \tfrac12\big[F_t(u, x) - F_t(u, x_0)\big],
-\end{align}
-with $F_t(u_0, x_0) = 0$. Each part is the effect of changing its own driver, averaged
-over the two orders in which the two drivers can be changed (the Shapley division; Shapley,
-1953\gap{add Shapley1953 to library.bib if the appendix is kept}). The averaging removes
-the need to assign the joint effect of a warmer climate acting on more litter to one
-driver or the other: half goes to each. By construction
-\begin{equation}
-  F^{\mathrm{hist}}_t + F^{\mathrm{inp}}_t + F^{\mathrm{clim}}_t \;=\; F_t
-\end{equation}
-exactly, in every year and for every model.
+\begin{description}
+  \item[Run 1, the model as calibrated] the soil as the model actually simulates it: it
+    starts from the end of the transient initialisation, carrying the deficit left by the
+    litter rise before 1985, and receives the observed litter and climate. Its sink is the
+    sink being divided, the one in every result of the paper.
+  \item[Run 2, without a history] the same litter and climate, but the soil starts in
+    balance: with the carbon the model would hold in 1985 had the litter always been at its
+    1985--1989 level, under the reference climate. Decomposition then equals the litter
+    entering, and there is no deficit to make up. The balanced start is the one the
+    conventional steady-state assumption would give the same model; nothing is refitted to
+    obtain it, and runs 2 and 3 are devices of the division only, never compared with
+    observations.
+  \item[Run 3, without a history and without climate change] as run 2, but the climate is
+    held at its reference in every year. Only the litter still changes.
+\end{description}
 
-Five simulations per plot and parameter set give all three parts: the calibrated start
-under actual forcing, the equilibrium start under actual forcing, under reference
-climate, under reference litter, and under both references. The last one must stay at
-equilibrium and is used as a check.
+Each part of the sink is what disappears from one run to the next, with each run number
+standing for that run's sink in a given year:
 
-\subsection{From plots and draws to the national picture}
+\begin{center}
+\small
+\begin{tabular}{lp{5.3cm}p{5.0cm}}
+\hline
+part & the two runs differ only in & what it measures \\
+\hline
+inherited state $= 1-2$ & the starting state (litter and climate both observed) & what the deficit inherited from before 1985 adds to the sink \\
+climate $= 2-3$ & the climate (both start balanced, both receive the observed litter) & what the observed climate adds, acting on the litter that actually arrived \\
+litter change $= 3$ & --- & the sink of a balanced soil in an unchanging climate, which exists only because the litter departs from its 1985--1989 level \\
+\hline
+\end{tabular}
+\end{center}
 
-The division is computed for every plot of the set observed in all three campaigns (310
-plots, the basis of every observed rate in the paper), from 1917 through the
-historical period 1985--2024 and the projection 2025--2084. The projection is driven
-exactly as in the main text: the climate of the last twenty years is repeated and the
-litter input is held at its 2024 value. Because the division is additive, national
-parts are plain averages of plot parts; the parts of a model are averages over
-50 posterior draws (averages rather than medians, because averages preserve the
-exact sum); and the six-model summary is the unweighted average of the six models.
-Summed over time, the parts give the carbon each source has added to the stock since
-1917.
+The three parts add up to the sink of run 1 because the runs cancel in pairs,
+$(1-2) + (2-3) + 3 = 1$. The adding-up is therefore arithmetic, not a finding; what gives
+each part its meaning is explained next.
 
-The annual sink follows the weather of each year closely, so the figures are given on
-annual values and on a ten-year centred running mean. The running mean is taken
-separately before and after 1985, so that no window mixes the pre-run, where litter
-and climate parts are zero by construction, with the observed period; at the ends of
-each period the window shrinks to the years available. The same weights are applied to
-every part, so the smoothed parts still add up exactly to the smoothed sink. The
-cumulative view needs no smoothing.
+\subsection{Why the runs isolate the three sources}
+
+All six models advance the soil one year at a time in the same way: in each year a fixed
+share of the carbon in each pool decomposes or moves to another pool, and the litter of
+the year is added; the shares are set by the model's parameters and by that year's climate.
+Two consequences of this structure carry the division.
+
+\paragraph{The starting carbon and the litter do not interact.} Because each pool loses a
+fixed share of whatever it contains, the carbon that remains from the starting state and
+the carbon added by the litter evolve independently, and the stock in any year is simply
+their sum. Runs 1 and 2 receive the same litter under the same climate, so the carbon the
+litter adds is the same in both; it disappears from their difference, which leaves only the
+difference between the two starts, the deficit, closing year by year at the soil's own
+pace. The inherited part, run 1 minus run 2, is the yearly closing of that gap. In a single
+pool with a deficit of 10\,t\,C\,ha$^{-1}$ decomposing at 4\,\% per year, about
+0.4\,t\,C\,ha$^{-1}$ of the gap closes in the first year and slightly less in each year
+after. The litter after 1985 plays no role in the inherited part at all.
+
+\paragraph{A balanced soil under unchanging conditions has no sink.} A soil in balance
+loses each year exactly what it receives: a litter input of 4\,t\,C\,ha$^{-1}$\,yr$^{-1}$
+decomposing at 6\,\% per year balances at about 67\,t\,C\,ha$^{-1}$, and stays there as long
+as the litter and the climate do not change. The balanced soil of runs 2 and 3 is built to be
+in balance with the 1985--1989 litter under the reference climate, so in run 3, where the
+climate stays at the reference, any sink can come only from the litter departing from its
+1985--1989 level. Run 3 is therefore the litter part as it stands, and run 2 minus run 3,
+where only the climate differs, is the climate part.
+
+\paragraph{The climate does not combine additively.} The climate changes the shares that
+decompose, so its effect depends on how much carbon is present: it acts on the extra litter,
+and it acts on the inherited deficit. Neither joint effect can be separated from the parts by
+the runs; each is assigned by the order in which the sources are removed:
+\begin{description}
+  \item[Climate and litter] the extra litter decomposes faster in warm years. The climate is
+    removed after the litter has been allowed to change, so the joint effect is counted in
+    the climate part, which therefore describes the climate acting on the litter that
+    actually arrived. Over 1985--2024 the joint effect amounts to $-0.9$\,t\,C\,ha$^{-1}$ in
+    the six-model average ($-0.5$ to $-1.3$ across models), against $+8.6$ for the litter
+    part and $-7.5$ for the climate part.
+  \item[Climate and the inherited state] the deficit closes faster in warm years. The
+    inherited part is measured under the observed climate, so this joint effect is counted
+    in the inherited part. Over 1985--2024 it amounts to $+0.7$\,t\,C\,ha$^{-1}$ in the
+    six-model average, against $+9.3$ for the inherited part: about 7\,\%, from 3\,\% in SP1
+    and Yasso20 to 10\,\% in TP2 and TP3, whose slow pools close the deficit over the
+    longest time and so experience more of the warming.
+\end{description}
+Both joint effects are of the order of a tenth of the parts they sit in, and assigning them
+otherwise would change no part's sign or its size relative to the others. The division is
+therefore exact in its sum and approximate in the attribution of these two joint effects;
+the approximation is stated rather than removed, because no assignment of a joint effect is
+more correct than another.
+
+\subsection{Computation and figures}
+
+The runs use each model's own code and the plot's own litter and climate series, with no
+approximation of the model. The division is computed for every plot of the set observed in
+all three campaigns (310 plots, the basis of every observed rate in the paper) and for 50
+posterior draws of each model. National values are plain averages over plots and draws, and
+the six-model summary is the plain average of the six models; averages, unlike medians,
+keep the parts adding up to the sink.
+
+The figures show 1985--2024, the period simulated with observed forcing and the one on which
+every part is anchored. Before 1985 the whole modelled sink is the soil catching up with the
+litter rise, reported only as a total; after 2024 the projection holds the forcing constant,
+and its parts would describe the soil settling, not the history the division explains. The
+annual sink follows the weather of each year closely, so the figures are given both on
+annual values and on a ten-year centred running mean; the same averaging is applied to every
+part, so the smoothed parts still add up to the smoothed sink.
 
 \subsection{Checks}
 
-Three checks are run for every model, plot and parameter set before any number is
-kept: the pre-run replayed with the run function reproduces the model's initial state
-(largest relative difference $1.4\times10^{-14}$); the equilibrium start stays at
-equilibrium under the reference litter and climate (largest drift
-$2.3\times10^{-13}$\,t\,C\,ha$^{-1}$\,yr$^{-1}$); and the three parts add up to the sink
-(within $2\times10^{-15}$).
+Three checks are run for every model, plot and posterior draw before any number is kept:
+the pre-run replayed with the model's own run function reproduces the calibrated starting
+state (largest relative difference $1.4\times10^{-14}$); the balanced soil with litter and
+climate both held at their references keeps a sink of zero (largest departure
+$2.3\times10^{-13}$\,t\,C\,ha$^{-1}$\,yr$^{-1}$); and the three parts add up to the sink of
+run 1 (within $10^{-15}$). Two further runs are made only to measure the two joint effects
+reported above.
+
+\subsection{Relation to a differential decomposition}
+
+A simpler route divides the change in the sink from one year to the next, rather than the
+sink itself, into the change in litter, the change in decomposition caused by the climate,
+and the change in decomposition caused by the change in stock (the stock feedback). Each
+term follows directly from the series of litter, climate and stock, with no further
+simulation. The route answers a different question and has no part for the inherited state.
+The stock feedback responds to the stock change of each year, which already contains
+everything that has acted on the soil since the start, so the inherited deficit cannot be
+separated from it; even when the deficit is the only driver, the term measures only how fast
+the inherited sink fades, while the inherited sink itself sits in the starting value of the
+sink, outside the terms. The division used here gives the inherited state a part of its own,
+positive and directly comparable with the litter and the climate.
 
 \subsection{What the division does and does not say}
 
-The division describes the calibrated models, not the soil: each part is the share of
-the modelled sink produced by one source, given the parameters retained by the
-calibration. The part due to the litter rise before 1985 is as large as the initial
-deficit the calibration chose, through $\sigma_{\mathrm{init}}$, and it decays at the
-pace of each model's slow pools, so its size and persistence differ between models for
-structural reasons; a model whose $\sigma_{\mathrm{init}}$ is close to one carries
-almost no inherited sink. Before 1985 the initialisation holds the climate at its
-1985--2004 mean, which is also the climate reference, so the climate part is zero there
-by construction: a climate that does not change produces no sink of its own, and its
-influence on how fast the soil follows the litter rise is included in the litter part.
-Driving the pre-run with observed climate (available from 1961) would change the
-initialisation itself and is not attempted here.
+The division describes the calibrated models, not the soil: each part is the share of the
+modelled sink produced by one source, given the parameters retained by the calibration. The
+inherited part is as large as the deficit the calibration chose, through
+$\sigma_{\mathrm{init}}$, and it fades at the pace of each model's slow pools, so its size and
+persistence differ between models for structural reasons; a model whose
+$\sigma_{\mathrm{init}}$ is close to one carries almost no inherited sink.
 
-The climate part is therefore conditional on the climate of the pre-run, at two
-levels. At the level of the division, the climate reference is the climate the model
-has assumed since 1917, so the climate part measures the climate to which the
-modelled soil has not yet adjusted; another reference, with the initialisation
-unchanged, would only add a constant term for the gap between the pre-run climate and
-the new reference. The \emph{change} in the climate part between periods is the robust
-quantity: its step from $-0.02$ (1985--2004) to $-0.33$\,t\,C\,ha$^{-1}$\,yr$^{-1}$
-(2005--2024, six-model average) follows the 1.2\,\textdegree C warming between the two
-periods, and moving the reference shifts both values while leaving most of their
-difference in place. At the deeper level of the initialisation, the pre-run applies the
-1985--2004 climate to the years 1917--1984, which were colder. Under a colder pre-run
-climate the soil would have entered 1985 with more carbon, a different deficit and more
-warming still to adjust to, so the climate part after 1985 would be larger. The climate
-effect attributed here is conditional on that assumption of the transient
-initialisation, and testing it requires driving the pre-run with a historical climate
-series and recalibrating. The climate part contains both the year-to-year
-weather and the long-term warming, measured against the 1985--2004 mean. In the
-projection the litter is held at its 2024 level, which is above the 1985--1989
-reference, so the litter part stays positive while the soil approaches its new balance.
-The litter product includes harvest residues and has no separate natural-mortality
-term, so neither can be separated from the litter part.
+The climate part depends on the reference climate. In the current runs the reference is the
+1985--2004 mean, which the initialisation also applies to the whole pre-run, 1917--1984. The
+modelled soil therefore enters 1985 already adjusted to a climate warmer than the decades
+before it (plot means 2.1\,\textdegree C in 1961--1984 against 2.7\,\textdegree C in
+1985--2004), and the climate part, measured against a mean of years that include the
+observed period, sums to nearly zero until about 2004. The \emph{change} in the climate part
+between periods is robust: its step between 1985--2004 and 2005--2024 follows the
+1.2\,\textdegree C warming between the two. The planned correction is to use one constant
+long-term mean of the climate before 1985 (from 1961, or from 1917 with a reconstruction)
+both for the pre-run and as the reference: the soil then enters 1985 adjusted to the climate
+it had lived in, and the climate part shows the whole warming since 1985. The correction
+alters every model's initial state and requires a new calibration.
+
+The litter product includes harvest residues and has no separate natural-mortality term, so
+neither can be separated from the litter parts.
 
 \subsection{Open choices for review}
 \label{app:attribution_open}
 \begin{enumerate}
-  \item \textbf{References.} The litter of 1985--1989 and the climate of 1985--2004 are
-    the references of the initialisation, which keeps the litter-rise part identical
-    to the difference between the two starts. Other references (for example the
-    1961--1990 climate normal, as in the national inventory) would move sink between
-    the climate part and the two litter parts.
-  \item \textbf{The pre-run inside the litter-rise part.} The pre-run sink is entirely
-    due to the litter rise by construction. Alternatively the period could be shown
-    separately, or left out.
-  \item \textbf{The cumulative view is held back} (carbon gained since 1917, figure S17).
-    Its climate part keeps growing through the projection, which a reader takes for
-    future warming; the projection repeats 2005--2024 and contains no further warming,
-    so that part is the delayed response to the warming already observed, fading as
-    the soils settle. The annual view (S15, S16) carries the message without the risk.
-  \item \textbf{Annual or smoothed values} in the figures that enter the paper, and the
-    width of the running mean (ten years; twenty would span one full cycle of the
-    repeated projection climate).
-  \item \textbf{The stock-feedback view} of the original proposal (dividing the
-    year-to-year \emph{change} in the sink, with a term for the feedback of the growing
-    stock on decomposition) was implemented first and replaced; it can be restored as
-    a complement if wanted.
+  \item \textbf{The window of the long-term climate mean} for the pre-run and the reference:
+    1961--1984 from the gridded observations already extracted per plot, or 1917--1984 with a
+    reconstruction of 1917--1960.
+  \item \textbf{The two joint effects with the climate}, assigned by the order of the runs
+    (litter--climate to the climate part, inheritance--climate to the inherited part). Each
+    is about a tenth of the part it sits in; reporting them separately, as two thin bands,
+    is the alternative.
+  \item \textbf{Annual or smoothed values} in the figures that enter the paper, and the width
+    of the running mean.
+  \item \textbf{The cumulative view} (carbon gained since 1985 by each part, S17) is held
+    back: summed over time, the climate part reads as a growing effect of warming, and
+    whether it adds to the annual view (S15, S16) is to be decided.
+  \item \textbf{The differential decomposition} can be added as a complement, answering what
+    changed the sink from one year to the next.
 \end{enumerate}
 
 \end{document}
