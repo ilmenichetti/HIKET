@@ -75,6 +75,11 @@ initialisation. Do NOT rewrite storyline/manuscript before the discussion; some 
      ⚠ `attribution_decomposition.R`, `build_F4_initialization.R`, `init_state_plausibility.R` were edited but only
      PARSE-checked (Lorenzo: test them on the new production runs) — run them first when the runs land and check
      each prints the pre-run climate `1961-1984`.
+     🚀 **PRODUCTION ARM LAUNCHED 2026-10-12** (`main` @ `7d09d8b`): jobs **2227219 SP1, 2227220 TP2, 2227221 TP3,
+     2227222 Yasso07, 2227223 Yasso15, 2227224 Yasso20**; logs `progress_logs/pclim_<m>_<jobid>.{out,err}`. Verified:
+     `PRERUN CLIMATE ON 1961-1984`, `456 plots x 24 yr | mean T 2.18 C`, 40 cores/chain, 5×50000 in all six.
+     Equilibrium arm (`--eq-only`) SUBMITTED ~51 min later: jobs **2234048 SP1, 2234049 TP2, 2234050 TP3, 2234051 Yasso07,
+     2234052 Yasso15, 2234053 Yasso20** (logs `pclim_<m>_eqinit_<jobid>.*`); ⬜ check `EQUILIBRIUM INIT ON` once running.
      **LAUNCH (Roihu):** `git pull` (no `.f90` changed → no recompile), then
      `bash Calibration_real_data_transient/submit_prerun_clim.sh --pair` → 12 jobs (`pclim_<m>` +
      `pclim_<m>_eq`). ⚠ Consider staggering the two arms (node co-location). Check:
