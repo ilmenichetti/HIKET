@@ -13,8 +13,14 @@
 %  Origin: S. Launiainen's total-differential note (Calibration_real_data_
 %  transient/documentation/Launiainen_20261008_...pdf). The other calibration
 %  (equilibrium-start arm) is deliberately NOT referred to.
-%  Planned change (NEXT_SESSION.md 0-NOW item 3): pre-run climate = one constant
-%  long pre-1985 mean, also used as the climate reference.
+%  Pre-run climate = one constant 1961-1984 mean, also used as the climate
+%  reference: IMPLEMENTED 2026-10-12 (HIKET_PRERUN_CLIM_YEARS, commit 57ad49c),
+%  recalibration of both arms pending; every number below is still on the
+%  1985-2004 reference.
+%  2026-10-12: joint effects now described as MEASURED (runs 1', 4, 5; two
+%  differences of differences), with the five-term version (main effects +
+%  two joint effects, HIKET_ATTR_JOINT=1 -> *_joint figures) alongside the
+%  three-part split (Lorenzo).
 %  The matrix formulation (exact annual step, superposition) was removed on
 %  purpose (never committed); the two properties it proved are stated in words.
 % =====================================================================
@@ -138,27 +144,89 @@ where only the climate differs, is the climate part.
 
 \paragraph{The climate does not combine additively.} The climate changes the shares that
 decompose, so its effect depends on how much carbon is present: it acts on the extra litter,
-and it acts on the inherited deficit. Neither joint effect can be separated from the parts by
-the runs; each is assigned by the order in which the sources are removed:
+and it acts on the inherited deficit. Each of the two therefore has a joint effect with the
+climate, an amount of sink that exists only when both are present. The starting carbon and the
+litter have no joint effect with each other, as shown above, and so there is no joint effect of
+all three either: the climate acts on the carbon of each origin separately. The two joint effects
+are measured, not estimated, with three further runs of the same model.
+
+\subsection{Measuring the two joint effects}
+\label{app:attr_joint}
+
+\begin{center}
+\begin{tabular}{clll}
+\hline
+run & starting state in 1985 & litter & climate \\
+\hline
+1$'$ & calibrated (with the inherited deficit) & observed & held at reference \\
+4 & balanced (no deficit) & held at 1985--1989 level & observed \\
+5 & balanced (no deficit) & held at 1985--1989 level & held at reference \\
+\hline
+\end{tabular}
+\end{center}
+
+Run 5 changes nothing at all and so has no sink; it serves as the check that the balanced soil is
+in balance (Section~\ref{app:attr_checks}). With runs 1$'$ and 4, each source can be removed in
+both possible orders, and a joint effect is the amount by which the two orders disagree:
 \begin{description}
-  \item[Climate and litter] the extra litter decomposes faster in warm years. The climate is
-    removed after the litter has been allowed to change, so the joint effect is counted in
-    the climate part, which therefore describes the climate acting on the litter that
-    actually arrived. Over 1985--2024 the joint effect amounts to $-0.9$\,t\,C\,ha$^{-1}$ in
-    the six-model average ($-0.5$ to $-1.3$ across models), against $+8.6$ for the litter
-    part and $-7.5$ for the climate part.
-  \item[Climate and the inherited state] the deficit closes faster in warm years. The
-    inherited part is measured under the observed climate, so this joint effect is counted
-    in the inherited part. Over 1985--2024 it amounts to $+0.7$\,t\,C\,ha$^{-1}$ in the
-    six-model average, against $+9.3$ for the inherited part: about 7\,\%, from 3\,\% in SP1
-    and Yasso20 to 10\,\% in TP2 and TP3, whose slow pools close the deficit over the
-    longest time and so experience more of the warming.
+  \item[Climate and the inherited state] the inherited part is run 1 minus run 2 when measured
+    under the observed climate, and run 1$'$ minus run 3 when measured under the reference
+    climate. The joint effect is the difference between the two,
+    $(1-2)-(1'-3)$: how much faster the deficit closes because the climate warmed. The litter
+    does not enter, because runs 1 and 2 (and runs 1$'$ and 3) receive the same litter and the
+    carbon it adds cancels in each difference.
+  \item[Climate and litter] the climate part is run 2 minus run 3 when measured on a soil that
+    receives the observed litter, and run 4 minus run 5 when measured on a soil whose litter
+    stays at its 1985--1989 level. The joint effect is the difference between the two,
+    $(2-3)-(4-5)$: how much faster the extra litter decomposes because the climate warmed.
 \end{description}
-Both joint effects are of the order of a tenth of the parts they sit in, and assigning them
-otherwise would change no part's sign or its size relative to the others. The division is
-therefore exact in its sum and approximate in the attribution of these two joint effects;
-the approximation is stated rather than removed, because no assignment of a joint effect is
-more correct than another.
+Each joint effect is thus a difference of two differences, computed for every plot, draw and
+year like the parts themselves, and exact in the same sense.
+
+\paragraph{Why a joint effect belongs to neither source alone.} A joint effect disappears
+entirely when either of its two sources is removed: without a deficit there is nothing for the
+warming to close faster, and without the warming the deficit closes at its usual pace. Asking how
+much of it is due to the climate and how much to the inheritance is like asking how much of the
+area of a rectangle is due to its width and how much to its height. The runs measure the joint
+effect exactly; only its assignment to one source or the other is a convention.
+
+\paragraph{Two ways of reporting the same sink.} The three-part division of
+Section~\ref{app:attr_runs} assigns each joint effect by the order in which the sources are
+removed: the inherited part is measured under the observed climate and so contains the joint
+effect of climate and inheritance, and the climate part is measured on the observed litter and so
+contains the joint effect of climate and litter. Alternatively, the sink can be reported in five
+terms: each source on its own, measured with the other sources at their reference (the inherited
+state as run 1$'$ minus run 3, the litter as run 3, the climate as run 4 minus run 5), plus the
+two joint effects. Both versions add up to the same sink. Over 1985--2024, in the six-model
+average:
+
+\begin{center}
+\small
+\begin{tabular}{lrr}
+\hline
+ & three parts & five terms \\
+ & (t\,C\,ha$^{-1}$) & (t\,C\,ha$^{-1}$) \\
+\hline
+inherited state & $+9.3$ & $+8.7$ \\
+\quad joint with climate & (included above) & $+0.7$ \\
+litter change since 1985 & $+8.6$ & $+8.6$ \\
+climate & $-7.5$ & $-6.6$ \\
+\quad joint with litter & (included above) & $-0.9$ \\
+\hline
+sink & $+10.5$ & $+10.5$ \\
+\hline
+\end{tabular}
+\end{center}
+
+The joint effect of climate and inheritance is about 7\,\% of the inherited part in the
+six-model average, from 3\,\% in Yasso15 and Yasso20 to 10\,\% in TP2 and TP3, whose slow pools
+close the deficit over the longest time and so experience more of the warming. The joint effect
+of climate and litter ranges from $-0.5$ (TP2, TP3) to $-1.3$\,t\,C\,ha$^{-1}$ (SP1, Yasso20). The
+litter part is the same in both versions, because the litter has no joint effect with the
+inherited state. In neither version does any part change sign or its rank relative to the
+others. In the figures of the five-term version the two joint effects are drawn as hatched bands
+in the colour of the part they are assigned to in the three-part division, so the two readings
+can be compared directly.
 
 \subsection{Computation and figures}
 
@@ -178,14 +246,15 @@ annual values and on a ten-year centred running mean; the same averaging is appl
 part, so the smoothed parts still add up to the smoothed sink.
 
 \subsection{Checks}
+\label{app:attr_checks}
 
 Three checks are run for every model, plot and posterior draw before any number is kept:
 the pre-run replayed with the model's own run function reproduces the calibrated starting
 state (largest relative difference $1.4\times10^{-14}$); the balanced soil with litter and
 climate both held at their references keeps a sink of zero (largest departure
 $2.3\times10^{-13}$\,t\,C\,ha$^{-1}$\,yr$^{-1}$); and the three parts add up to the sink of
-run 1 (within $10^{-15}$). Two further runs are made only to measure the two joint effects
-reported above.
+run 1 (within $10^{-15}$). The balanced soil of the second check is run 5; runs 1$'$ and 4
+are made only to measure the two joint effects (Section~\ref{app:attr_joint}).
 
 \subsection{Relation to a differential decomposition}
 
@@ -217,11 +286,15 @@ before it (plot means 2.1\,\textdegree C in 1961--1984 against 2.7\,\textdegree 
 1985--2004), and the climate part, measured against a mean of years that include the
 observed period, sums to nearly zero until about 2004. The \emph{change} in the climate part
 between periods is robust: its step between 1985--2004 and 2005--2024 follows the
-1.2\,\textdegree C warming between the two. The planned correction is to use one constant
-long-term mean of the climate before 1985 (from 1961, or from 1917 with a reconstruction)
-both for the pre-run and as the reference: the soil then enters 1985 adjusted to the climate
-it had lived in, and the climate part shows the whole warming since 1985. The correction
-alters every model's initial state and requires a new calibration.
+1.2\,\textdegree C warming between the two. The correction adopted uses one constant
+long-term mean of the 1961--1984 climate, from the same gridded observations, both for the
+pre-run and as the reference: the soil then enters 1985 adjusted to the climate it had lived
+in, and the climate part shows the whole warming since 1985. At the current parameters the
+colder pre-run raises the 1985 stock by about 10\,\% (5\,\% in Yasso15 and Yasso20, whose slow
+humus pool has a climate modifier of its own). The correction alters every model's initial
+state and requires a new calibration; the numbers in the present appendix will be replaced by
+those of the recalibrated models, and the joint effects are expected to grow somewhat, because
+the warming measured against the reference is larger.
 
 The litter product includes harvest residues and has no separate natural-mortality term, so
 neither can be separated from the litter parts.
@@ -229,13 +302,13 @@ neither can be separated from the litter parts.
 \subsection{Open choices for review}
 \label{app:attribution_open}
 \begin{enumerate}
-  \item \textbf{The window of the long-term climate mean} for the pre-run and the reference:
-    1961--1984 from the gridded observations already extracted per plot, or 1917--1984 with a
-    reconstruction of 1917--1960.
-  \item \textbf{The two joint effects with the climate}, assigned by the order of the runs
-    (litter--climate to the climate part, inheritance--climate to the inherited part). Each
-    is about a tenth of the part it sits in; reporting them separately, as two thin bands,
-    is the alternative.
+  \item \textbf{The window of the long-term climate mean}: DECIDED, 1961--1984 from the
+    gridded observations already extracted per plot (implemented; recalibration pending).
+    1917--1984 with a reconstruction of 1917--1960 remains possible.
+  \item \textbf{Three parts or five terms}: the joint effects assigned by the order of the runs
+    (inheritance--climate to the inherited part, litter--climate to the climate part), or
+    reported as their own two terms, drawn as hatched bands
+    (Section~\ref{app:attr_joint}).
   \item \textbf{Annual or smoothed values} in the figures that enter the paper, and the width
     of the running mean.
   \item \textbf{The cumulative view} (carbon gained since 1985 by each part, S17) is held

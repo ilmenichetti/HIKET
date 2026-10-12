@@ -72,6 +72,9 @@ initialisation. Do NOT rewrite storyline/manuscript before the discussion; some 
      `init_state_plausibility.R` (⚠ it used the WHOLE 1985–2024 climate for the pre-run ξ, not production's 20 yr —
      its recorded 1917 stocks predate the fix). Attribution figures: `HIKET_ATTR_JOINT=1` → `_joint` variant with
      the two joint effects of climate as hatched bands (main effects at the reference corner; no new runs).
+     ⚠ `attribution_decomposition.R`, `build_F4_initialization.R`, `init_state_plausibility.R` were edited but only
+     PARSE-checked (Lorenzo: test them on the new production runs) — run them first when the runs land and check
+     each prints the pre-run climate `1961-1984`.
      **LAUNCH (Roihu):** `git pull` (no `.f90` changed → no recompile), then
      `bash Calibration_real_data_transient/submit_prerun_clim.sh --pair` → 12 jobs (`pclim_<m>` +
      `pclim_<m>_eq`). ⚠ Consider staggering the two arms (node co-location). Check:
