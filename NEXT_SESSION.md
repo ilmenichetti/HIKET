@@ -1,5 +1,41 @@
 # NEXT SESSION — start here
 
+## ⭐⭐ 0-NOW (closed 2026-10-12, resume 2026-10-13)
+
+**1. Roihu runs — check first.** The pre-run-climate pair (1961–1984 mean) is in flight: production
+**2227219–24**, balanced start **2234048–53** (`progress_logs/pclim_*`). Production verified at launch
+(`PRERUN CLIMATE ON`, 456 plots × 24 yr, 2.18 °C, 40 cores, 5×50000). ⬜ The balanced-start jobs were pending
+(Priority, est. start 14:11–15:00 on 10-12) — grep `pclim_*_eqinit_22340*.err` for `EQUILIBRIUM INIT ON` +
+`PRERUN CLIMATE`. When landed: rsync `runs/`, `diagnostics/`, `Data/model_inputs/`; run stages 2–4; then FIRST
+run the three scripts edited but only parse-checked (`attribution_decomposition.R`, `build_F4_initialization.R`,
+`init_state_plausibility.R` — the latter now uses production's 20-yr pre-run window, its old 1917 stocks are
+stale); then restate every number in the storyline, the attribution appendix and the input-to-hold table.
+
+**2. The storyline was rebuilt today with Lorenzo** — `manuscript/HIKET_storyline_v4.tex` (v3 deleted; NEVER
+refer to earlier versions). Memory `storyline-trilemma-20261012` has the decisions. In short: general problem
+first (soil C carries history; a balanced start assumes it away; that decides the forecast), Finland as the
+test field; **the trilemma** (soil series / kinetics / inputs) is the Introduction's connecting object,
+**visualised in R1 by F16** and echoed at the ridge (F18); **R1 = opening** (the problem tested the hard way →
+first conclusions → justification); **R2 = the main arc, the resolution** (relaxing steady state; σ_init as
+the implementation; F3, S16, F12, F18); **the σ's = a nested side arm at the end of R1 (σ_input only) and R2
+(both)** — σ_init's need was hidden in R1, not absent; R3 forecast & GHG-balance side arm (headroom,
+input-to-hold table, F15); R4 fit (R²) then plots; Discussion "how to do better". The **applied aim is now
+declared in the objectives** (future of the Finnish GHG balance), with a scope box. Open questions are listed
+at the end of the file. ⬜ Lorenzo to review; ⬜ maybe rename the file to `HIKET_storyline.tex`.
+
+**3. New today (all committed with this note):**
+- National GHG-inventory litter received (`Data/GHG_datasets/`, gitignored, extracted). Reconciled with the
+  Tupek product: same scope (turnover + harvest residues) agrees in the South and is flat after ~2006 in both;
+  the North differs (inventory higher, rising; 50 of 456 plots); the inventory's growth = natural mortality
+  (0.03→0.16 tC/ha/yr, South), absent from the product. **S18** (`manuscript/figures/build_S18_…R`) cited in
+  the draft's Litter input subsection (new paragraph + `\gap` on region codes). Diagnostic bars:
+  `doublechecks/litter_reconciliation_ghgi.R`. ⬜ Confirm region codes with LUKE.
+- **Input to hold the sink** (`doublechecks/input_to_hold_sink.R`, exact by linearity from the +20% runs):
+  ~+10% litter input for 20 yr (Yasso) holds the 1985–2024 observed sink, half for 10 yr; recent rate needs ~0.
+  Lower bounds (no warming). ⬜ Which target; warming-corrected column; national units (area + Aleksi).
+- Attribution appendix: joint effects described as measured; three parts vs five terms. `_joint` figure
+  variant via `HIKET_ATTR_JOINT=1` (PNGs committed for review; rebuild on the new runs).
+
 ## ⭐⭐ 0-NOW (2026-10-09). NEXT = A HEAVY STORY RE-DISCUSSION (Lorenzo), prepared by two new analyses
 
 **Read first: memory `transient-init-rationale-20261009`** — five findings that justify the transient

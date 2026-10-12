@@ -1,0 +1,885 @@
+% HIKET -- the storyline (live document; the basis for the story discussion, not a draft).
+% Built on Lorenzo's decisions of 2026-10-12: general problem first, Finland as the test field;
+% the trilemma (soil series / kinetics / inputs) as the Introduction's connecting object, echoed
+% when the ridge appears; the balanced start in prose, figures in the appendix; S16 main; the
+% forecast as an important side arm; the plots after the model fit, tied to the trilemma.
+% Numbers: production 20260831_1624*, balanced start 20261008_134019 -- PROVISIONAL (both being
+% recalibrated with the 1961-1984 pre-run climate, jobs 2227219-24 and 2234048-53).
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}\usepackage{xcolor}
+\usepackage{float}\usepackage[hidelinks]{hyperref}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds}
+\usepackage{titlesec}\usepackage{placeins}
+\titlespacing*{\paragraph}{0pt}{0.9\baselineskip}{0.4em}
+\setcounter{secnumdepth}{4}\setcounter{tocdepth}{2}
+
+% --- STRUCTURAL TOGGLE ---------------------------------------------------
+% \combinedtrue  = one "Results and Discussion" section (recommended, and what
+%                  Lorenzo leaned toward). \combinedfalse = classic split.
+% Nothing else changes; the same blocks are emitted either way.
+\newif\ifcombined \combinedtrue
+
+\definecolor{notebg}{HTML}{EAF2FB}\definecolor{noterule}{HTML}{2C6FB5}
+\newtcolorbox{note}{colback=notebg, colframe=noterule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+\definecolor{testbg}{HTML}{EAF7EE}\definecolor{testrule}{HTML}{2E8B57}
+\newtcolorbox{test}{colback=testbg, colframe=testrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+\definecolor{warnbg}{HTML}{FDF3E3}\definecolor{warnrule}{HTML}{C08A2E}
+\newtcolorbox{warn}{colback=warnbg, colframe=warnrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+\definecolor{lorbg}{HTML}{F3EDF9}\definecolor{lorrule}{HTML}{6B3FA0}
+\newtcolorbox{ann}{colback=lorbg, colframe=lorrule, boxrule=0pt, leftrule=3pt,
+  arc=1pt, left=8pt, right=8pt, top=5pt, bottom=5pt, fontupper=\small,
+  before skip=7pt, after skip=7pt}
+
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+
+% --- figure embedding (same machinery as v2) -----------------------------
+\graphicspath{{figures/}{../Reporting/NextgenC_report/SOC_maps/thumbnails/}}
+\newcommand{\FIGlabel}[1]{\textcolor{noterule}{\small$\blacktriangleright$ \textsf{#1}}}
+\newcommand{\FIG}{\begingroup\catcode`\_=12\relax\FIGaux}
+\newcommand{\FIGaux}[1]{%
+  \FIGlabel{#1}\endgroup
+  \IfFileExists{figures/#1.png}{%
+    \begin{figure}[htbp]\centering
+      \includegraphics[width=0.92\linewidth,height=0.40\textheight,keepaspectratio]{figures/#1.png}
+      \caption{\textsf{#1}}\end{figure}}{%
+  \IfFileExists{figures/#1.tex}{%
+    \begin{table}[htbp]\centering\scriptsize\input{figures/#1.tex}\end{table}}{%
+  \IfFileExists{../Reporting/NextgenC_report/SOC_maps/thumbnails/#1.png}{%
+    \begin{figure}[htbp]\centering
+      \includegraphics[width=0.58\linewidth,height=0.42\textheight,keepaspectratio]{#1.png}
+      \caption{\textsf{#1} (NextGenC deliverable)}\end{figure}}{%
+  \textcolor{warnrule}{\small[\textsf{#1} --- FILE NOT FOUND]}}}}}
+% \FIGX cites a figure without embedding it. Needs the same catcode dance as \FIG,
+% or an underscore in the name is read as a subscript and the build dies.
+\newcommand{\FIGX}{\begingroup\catcode`\_=12\relax\FIGXaux}
+\newcommand{\FIGXaux}[1]{\FIGlabel{#1}\endgroup}
+\newcommand{\NEW}[1]{\textcolor{testrule}{\small$\bigstar$ \textsf{TO BUILD: #1}}}
+\newcommand{\LIT}[1]{\textcolor{lorrule}{\small$\Box$ \textsf{LIT REVIEW: #1}}}
+
+% --- REFERENCE ANNOTATION (added 2026-09-04) ------------------------------
+% Every core claim carries the sources it rests on, in one short line under the
+% paragraph. \vd = quote/number verified against the source; \nd = still to check.
+% Full evidence tables and draft text: literature/NN_topic/README.md.
+\definecolor{refrule}{HTML}{45566B}
+\newcommand{\vd}{\textcolor{testrule}{$\checkmark$}}
+\newcommand{\nd}{\textcolor{lorrule}{$\square$}}
+% --- RESULT / DISCUSSION NESTING (added 2026-09-04) ------------------------
+% Combined Results and Discussion, nested at SUBSECTION level: each subsection
+% gives its result, then its interpretation, as SEPARATE paragraphs. \dparagraph
+% marks the interpretation half so the rhythm is visible at a glance and the two
+% halves stay mechanically separable if a journal demands the classic split.
+\newcommand{\dparagraph}[1]{\paragraph{\textcolor{noterule}{$\rightsquigarrow$}\ #1}}
+\newcommand{\refs}[1]{\par\vspace{-0.25em}{\footnotesize\color{refrule}%
+  \hangindent=1.3em\hangafter=1 $\vdash$~\textsc{refs}\,\ #1\par}\vspace{0.15em}}
+
+% --- INLINE FIGURES (2026-10-12): placed where they are used ([H], no floating), caption tagged.
+%   \FIG  main text   \FIGA  appendix   \FIGQ  not in Lorenzo's list (keep?)
+\newcommand{\FIGshow}[2]{\FIGlabel{#1}\endgroup
+  \IfFileExists{figures/#1.png}{%
+    \begin{figure}[H]\centering
+      \includegraphics[width=0.86\linewidth,height=0.36\textheight,keepaspectratio]{figures/#1.png}
+      \caption{\textsf{#1}#2}\end{figure}}{\textcolor{warnrule}{\small[\textsf{#1} --- FILE NOT FOUND]}}}
+\renewcommand{\FIGaux}[1]{\FIGshow{#1}{ --- main text}}
+\newcommand{\FIGA}{\begingroup\catcode`\_=12\relax\FIGAaux}
+\newcommand{\FIGAaux}[1]{\FIGshow{#1}{ --- \textcolor{warnrule}{\textbf{appendix}}}}
+\newcommand{\FIGQ}{\begingroup\catcode`\_=12\relax\FIGQaux}
+\newcommand{\FIGQaux}[1]{\FIGshow{#1}{ --- \textcolor{lorrule}{\textbf{not in your list: keep?}}}}
+
+
+% =====================================================================
+% ARC SCHEMAS. One per section, nested: each opens with the strip of the whole paper,
+% its own section highlighted, then the section's internal arc.
+% cl = claim; key = the section's payload; cav = caveat that travels with a claim;
+% thr = a thread of the trilemma coming back; ev = evidence line under a claim.
+% =====================================================================
+\tikzset{
+  cl/.style={rectangle, rounded corners=2pt, draw=black!45, fill=white, align=left,
+             inner sep=3pt, font=\scriptsize, text width=#1},
+  cl/.default=46mm,
+  key/.style={draw=blue!55!black, fill=blue!8, thick},
+  thr/.style={draw=violet!70!black, fill=violet!6, thick},
+  cav/.style={draw=warnrule, fill=warnbg, font=\tiny},
+  arr/.style={-{Latex[length=1.8mm]}, thick, black!55},
+  arrk/.style={-{Latex[length=2.1mm]}, very thick, blue!50!black},
+  arrt/.style={-{Latex[length=2.1mm]}, very thick, violet!60!black, dashed},
+  grp/.style={rectangle, rounded corners=3pt, draw=black!25, fill=black!3, inner sep=5pt},
+  glab/.style={font=\tiny\scshape, text=black!60, anchor=south west, inner sep=1pt}
+}
+\newcommand{\ev}[1]{\\[-1pt]{\tiny\itshape\color{black!60}#1}}
+\newcommand{\gapnote}[1]{\textcolor{warnrule}{\textbf{[OPEN:} #1\textbf{]}}}
+\newcommand{\TR}{{\tiny\bfseries\color{violet!70!black}[trilemma]}}
+
+% --- the strip of the whole paper, section #1 highlighted (1..8) ---
+\newcommand{\archstrip}[1]{%
+\begin{center}
+\begin{tikzpicture}[font=\tiny,
+  sb/.style={rectangle, rounded corners=1pt, draw=black!35, fill=black!4, minimum height=5mm,
+             text width=16.5mm, align=center, inner sep=1pt},
+  hb/.style={sb, draw=noterule, fill=notebg, very thick, font=\tiny\bfseries}]
+\foreach \t [count=\k] in {Introduction, Methods, {R1\\the problem}, {R2\\the resolution},
+                           {R3 side arm\\forecast}, {R4\\fit, plots}, Discussion, Conclusions} {
+  \ifnum\k=#1 \node[hb] (s\k) at ({(\k-1)*2.02}, 0) {\t};
+  \else       \node[sb] (s\k) at ({(\k-1)*2.02}, 0) {\t}; \fi
+}
+\foreach \k [evaluate=\k as \j using int(\k+1)] in {1,...,7} \draw[-{Latex[length=1.2mm]}, black!40] (s\k) -- (s\j);
+\end{tikzpicture}
+\end{center}\vspace{-0.6em}}
+\newcommand{\arch}[2]{\par\noindent\begin{minipage}{\linewidth}\archstrip{#1}#2\end{minipage}\par\medskip}
+
+% --- OVERALL ---
+\newcommand{\archOverall}{%
+\begin{center}
+\begin{tikzpicture}[node distance=5mm]
+\node[cl=150mm] (G) {\textbf{The general problem.} Soil carbon carries a long history: its slow pools adjust
+  over centuries. A model started in balance with today's litter assumes that history away --- and a soil
+  assumed balanced has no room left, so the assumption decides the forecast.};
+\node[cl=150mm, thr, below=of G] (T) {\textbf{The trilemma} --- the object that connects the threads. Three
+  sources of information must agree: the \emph{soil series}, the \emph{kinetics}, the \emph{inputs}. A
+  balanced start can satisfy two of them at most. \textbf{Finland is the test field}, where all three are
+  measured.};
+\node[cl=34mm, below=9mm of T.south west, anchor=north west] (R1) {\textbf{R1 · the opening}\\the problem
+  tested the hard way: a balanced start cannot satisfy the three --- the trilemma visualised; nested:
+  the uncertainty with $\sigma_{\mathrm{input}}$ \ev{F16}};
+\node[cl=34mm, key, right=4mm of R1] (R2) {\textbf{R2 · the resolution (main)}\\relaxing the steady-state
+  assumption, implemented as $\sigma_{\mathrm{init}}$: the soil reconciled, the history carries the sink, the
+  models move across the ridge; nested: the uncertainty with both $\sigma$'s \ev{F3, S16, F12, F18; F9}};
+\node[cl=34mm, right=4mm of R2] (R3) {\textbf{R3 · side arm: forecast}\\headroom only with the history;
+  the input needed to hold the sink; warming \ev{table, F15}};
+\node[cl=34mm, right=4mm of R3] (R4) {\textbf{R4 · fit and plots}\\near-zero plot skill; the inputs and the
+  soil disagree between plots; each plot carries its own history \ev{F11, F11 stand and soil}};
+\node[cl=150mm, below=9mm of R1.south west, anchor=north west] (D) {\textbf{Discussion: how the models could
+  do better} --- a start per plot; the inputs the product may miss; pioneer vegetation.};
+\node[cl=150mm, key, below=of D] (C) {\textbf{Conclusions} --- the three sources reconciled only with the
+  history; what it means for the forecast; the next steps.};
+\draw[arr] (G) -- (T); \draw[arrk] (R1) -- (R2);
+\foreach \p in {R1,R2,R3,R4} { \draw[arrk] (T.south -| \p.north) -- (\p.north); \draw[arr] (\p.south) -- (\p.south |- D.north); }
+\draw[arr] (D) -- (C);
+\end{tikzpicture}
+\end{center}}
+
+% --- INTRODUCTION ---
+\newcommand{\archIntro}{%
+\begin{center}
+\begin{tikzpicture}[node distance=4mm]
+\node[cl=36mm] (n1) {\textbf{1} · Soil carbon carries a long history; inventories report its change, and
+  usually model it.};
+\node[cl=36mm, below=of n1] (n2) {\textbf{2} · The models start in balance with today's litter: the site's
+  history is assumed away.};
+\node[cl=36mm, below=of n2] (n3) {\textbf{3} · A soil assumed balanced has no room left: the assumption
+  \textbf{decides the forecast}, and the reported soil term follows the litter.};
+\node[cl=36mm, thr, right=7mm of n1] (n4) {\textbf{4} · \textbf{The trilemma}: the soil series, the
+  kinetics and the inputs must agree; a balanced start satisfies two at most. \ev{the threads: the ridge,
+  the missing input, the plot history, the forecast}};
+\node[cl=36mm, right=7mm of n4] (n5) {\textbf{5} · \textbf{Finland, the test field}: a managed landscape
+  (F10b?), three campaigns (F3\_mean\_SOCalt?), a litter record checked against the national inventory,
+  published kinetics.};
+\node[cl=36mm, key, below=of n5] (n6) {\textbf{6} · Objectives: estimate the start, date it to 1917, test
+  it against a balanced start on the same data; \textbf{and the consequences}: what it means for the future
+  of the Finnish GHG balance; questions (i)--(iv).};
+\begin{scope}[on background layer]
+  \node[grp, fit=(n1)(n2)(n3)] (g1) {}; \node[glab] at (g1.north west) {the general problem};
+  \node[grp, fit=(n4)] (g2) {}; \node[glab] at (g2.north west) {the connecting object};
+  \node[grp, fit=(n5)(n6)] (g3) {}; \node[glab] at (g3.north west) {the test};
+\end{scope}
+\draw[arr] (n1) -- (n2); \draw[arr] (n2) -- (n3); \draw[arr] (n5) -- (n6);
+\draw[arrt] (n3.east) to[out=0, in=-90] (n4.south);
+\draw[arrt] (n4) -- (n5);
+\end{tikzpicture}
+\end{center}}
+
+% --- THE TRILEMMA (Introduction 4; comes back in R2 and R4) ---
+\newcommand{\archTrilemma}{%
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize]
+\node[cl=40mm, key, align=center] (K) at (0, 4.3) {\textbf{the kinetics}\\{\tiny decomposition rates and climate
+  response from the published calibrations}};
+\node[cl=40mm, key, align=center] (S) at (-5.0, 0) {\textbf{the soil series}\\{\tiny three campaigns on the
+  same plots: gaining, then slowing}};
+\node[cl=40mm, key, align=center] (L) at (5.0, 0) {\textbf{the inputs}\\{\tiny the litter, plot by plot:
+  rising to 2006, flat after}};
+\draw[thick, black!45] (K) -- (S) -- (L) -- (K);
+\node[cl=34mm, font=\tiny, align=center, fill=black!3] at (-5.6, 2.6) {kinetics + soil series
+  $\Rightarrow$ needs inputs the record does not show: a continued rise, and a higher level \textbf{(R2)}};
+\node[cl=34mm, font=\tiny, align=center, fill=black!3] at (5.6, 2.6) {kinetics + inputs $\Rightarrow$ misses
+  the soil series \textbf{(R1: the balanced start)}};
+\node[cl=52mm, font=\tiny, align=center, fill=black!3] at (0, -0.95) {soil series + inputs $\Rightarrow$ needs
+  kinetics far from published --- partly open: the balanced start bends them and still fails};
+\node[cl=38mm, thr, align=center] at (0, 1.55) {\textbf{a balanced start: two of the three at most}\\
+  {\tiny grounded in the runs without the transient start: visualised in R1 (F16), and again as the ridge
+  (R2)}};
+\end{tikzpicture}
+\end{center}}
+
+% --- METHODS ---
+\newcommand{\archMethods}{%
+\begin{center}
+\begin{tikzpicture}[node distance=4mm and 6mm]
+\node[cl=46mm] (d) {\textbf{Data} · 456 plots, three campaigns; one homogenised SOC basis; the litter
+  product (F1), checked against the national inventory (S18, appendix); FMI climate.};
+\node[cl=46mm, right=of d] (m) {\textbf{Six models on one footing} · Yasso07/15/20 the object, SP1/TP2/TP3 a
+  benchmark ladder; kept as comparable as possible (a design choice).};
+\node[cl=46mm, key, right=of m] (t) {\textbf{Estimated start} · $\sigma_{\mathrm{init}}$, from 1917,
+  pre-run climate the 1961--1984 mean. \ev{F4}};
+\node[cl=46mm, below=7mm of d] (e) {\textbf{Error model and sampling} · log-normal, region, plot and
+  campaign offsets integrated out.};
+\node[cl=46mm, below=7mm of m] (b) {\textbf{Comparison with a balanced start} · one factor, all else
+  recalibrated; expectations written before the run. \ev{$\to$ R1, R2, R3}};
+\node[cl=46mm, below=7mm of t] (a) {\textbf{Division of the sink} · the start, the climate and the litter
+  removed in turn, plus two joint effects. \ev{$\to$ R1 (S16)}};
+\node[cl=46mm, below=of e] (f) {\textbf{Forward runs} · litter held, $+20\%$, and warming scenarios.
+  \ev{$\to$ R3}};
+\node[cl=46mm, below=of b] (mt) {\textbf{Mean transit time} · from the model equations. \ev{$\to$ R2}};
+\node[cl=46mm, below=of a] (r) {\textbf{Residual analysis} · random forest, then its leads. \ev{$\to$ R4}};
+\draw[arr] (d) -- (m); \draw[arr] (m) -- (t); \draw[arrk] (t) -- (a);
+\draw[arrk] (t.south west) to[out=-120, in=30] (b.north east); \draw[arr] (d) -- (e);
+\end{tikzpicture}
+\end{center}}
+
+% --- R1 ---
+\newcommand{\archRone}{%
+\begin{center}
+\begin{tikzpicture}[node distance=5mm and 8mm]
+\node[cl=70mm] (o) {\textbf{What the soil did} · $+0.40$ then $+0.12$~tC\,ha$^{-1}$\,yr$^{-1}$, $+0.26$ over
+  the span (310 plots); a complex trend for a balanced start.};
+\node[cl=70mm, thr, below=of o] (A) {\textbf{A balanced start cannot satisfy the three --- the trilemma
+  visualised} \TR\ · with the measured litter and near-published kinetics it gains $-0.05$ to $+0.04$,
+  overshoots 1985, bends the kinetics and still fails. \ev{F16 (main); F17 appendix}};
+\node[cl=70mm, cav, below=of A] (cv) {Judge the two starts on the rates and the early stock, never on the
+  fit: the likelihood is dominated by levels both can reach.};
+\node[cl=70mm, key, right=10mm of A] (c) {\textbf{A first round of conclusions} · the trilemma is real; the
+  failure is not a matter of tuning; what is missing is a state out of balance on the start date.};
+\node[cl=70mm, below=8mm of c] (j) {$\to$ \textbf{the justification of the central choice}: relax the
+  steady-state assumption (R2).};
+\node[cl=150mm, cav, below=6mm of cv.south west, anchor=north west] (u) {\textbf{Nested --- the uncertainty,
+  balanced start: $\sigma_{\mathrm{input}}$ only} (the input estimate; S18). $\sigma_{\mathrm{init}}$ fixed at 1
+  by the assumption, never tested. Mirrors the end of R2.};
+\draw[arr] (o) -- (A); \draw[arr] (A) -- (cv); \draw[arrk] (A) -- (c); \draw[arrk] (c) -- (j);
+\end{tikzpicture}
+\end{center}}
+
+% --- R2 ---
+\newcommand{\archRtwo}{%
+\begin{center}
+\begin{tikzpicture}[node distance=5mm and 8mm]
+\node[cl=150mm, key] (ch) {\textbf{The central choice: relax the steady-state assumption} --- from the idea
+  (the soil may enter out of balance) to its implementation ($\sigma_{\mathrm{init}}$, the deficit, estimated
+  from the measurements and dated back to 1917). Everything that follows is built on it.};
+\node[cl=70mm, below=7mm of ch.south west, anchor=north west] (B) {\textbf{The soil series reconciled} · all
+  six reach the levels and bracket the rate; informative because the balanced start fails. \ev{F3}};
+\node[cl=70mm, below=7mm of ch.south east, anchor=north east] (S) {\textbf{The history carries the sink} · of
+  $+10.5$~tC\,ha$^{-1}$, $+9.3$ inherited; litter and warming largely offset. \ev{S16 (main); S15 appendix}};
+\node[cl=70mm, below=of B] (i) {\textbf{Where the models land} · transit times against published. \ev{F12}};
+\node[cl=70mm, thr, below=of S] (r) {\textbf{Across the ridge --- the trilemma resolved as far as the data
+  allow} \TR\ · the two starts on the same trade-off; the echo. \ev{F18 (main); F14 appendix}};
+\node[cl=150mm, cav, below=7mm of i.south west, anchor=north west] (l) {What the resolution leaves: the tension
+  concentrated in the input corner $\to$ Discussion.};
+\node[cl=150mm, cav, below=4mm of l] (u) {\textbf{Nested --- the uncertainty, estimated start:
+  $\sigma_{\mathrm{input}}$ and $\sigma_{\mathrm{init}}$} · $\sigma_{\mathrm{init}}$ now needed --- its need was
+  hidden in R1, not absent; $\sigma_{\mathrm{input}}$ above the measured input; the error model and the Bayesian
+  points. Mirrors the end of R1. \ev{F9 (main); SX appendix}};
+\draw[arrk] (ch.south -| B.north) -- (B.north); \draw[arrk] (ch.south -| S.north) -- (S.north);
+\draw[arr] (B) -- (i); \draw[arr] (S) -- (r); \draw[arr] (i) -- (r);
+\draw[arr] (i.south) -- (i.south |- l.north); \draw[arr] (r.south) -- (r.south |- l.north);
+\end{tikzpicture}
+\end{center}}
+
+% --- R3 ---
+\newcommand{\archRthree}{%
+\begin{center}
+\begin{tikzpicture}[node distance=5mm and 8mm]
+\node[cl=46mm] (h) {\textbf{Headroom only with the history} · balanced start: sink $\approx 0$; estimated:
+  $+0.07$--$0.22$, headroom $+26$--$42\%$. \ev{prose; F19 appendix}};
+\node[cl=46mm, key, right=of h] (q) {\textbf{How much input would hold the sink} · about $+10\%$ for 20
+  years (Yasso), half for 10; the recent rate needs almost nothing. \ev{table}};
+\node[cl=46mm, right=of q] (w) {\textbf{Warming} · $-5$ to $-7$~tC\,ha$^{-1}$ by 2084 (SSP2-4.5); only Yasso07
+  depends on where it lands. \ev{F15 (main)}};
+\node[cl=150mm, cav, below=7mm of h.south west, anchor=north west] (c) {The held-litter projection contains
+  no climate change; the input numbers are lower bounds under warming.};
+\draw[arr] (h) -- (q); \draw[arr] (q) -- (w);
+\end{tikzpicture}
+\end{center}}
+
+% --- R4 ---
+\newcommand{\archRfour}{%
+\begin{center}
+\begin{tikzpicture}[node distance=4mm and 8mm]
+\node[cl=70mm] (f) {\textbf{The fit} · calibration $R^2$ $0.016$--$0.021$, holdout $\le 0.0012$; skill does
+  not climb the pool ladder. \ev{numbers in the text; F6 appendix}};
+\node[cl=70mm, thr, below=of f] (g) {\textbf{The inputs and the soil disagree between plots} \TR\ · the
+  litter varies $\times 18$ across basal area, the soil $\times 1.2$: a soil in balance with its litter would
+  follow it.};
+\node[cl=70mm, below=of g] (s) {\textbf{What the residual follows} · the 1985 stand, then the site.
+  \ev{F11, F11 stand and soil}};
+\node[cl=70mm, key, right=10mm of g] (e) {\textbf{Each plot carries its own history} · the excess fades in
+  the same plots ($+0.91 \to +0.53 \to +0.28$): a starting-state error per plot.};
+\node[cl=70mm, below=8mm of e] (d) {$\to$ Discussion: how the models could do better.};
+\draw[arr] (f) -- (g); \draw[arr] (g) -- (s); \draw[arrk] (s.east) to[out=0, in=-120] (e.south west);
+\draw[arrk] (e) -- (d);
+\end{tikzpicture}
+\end{center}}
+
+% --- CONCLUSIONS ---
+\newcommand{\archConcl}{%
+\begin{center}
+\begin{tikzpicture}[node distance=3mm]
+\node[cl=24mm, font=\tiny] (p1) {R1 + R2};
+\node[cl=24mm, font=\tiny, below=7mm of p1] (p2) {R2 (S16)};
+\node[cl=24mm, font=\tiny, below=7mm of p2] (p3) {R2 (ridge)};
+\node[cl=24mm, font=\tiny, below=7mm of p3] (p4) {R3};
+\node[cl=24mm, font=\tiny, below=7mm of p4] (p5) {R4 + Discussion};
+\node[cl=112mm, key, right=12mm of p1] (c1) {\textbf{1} · The three sources of information are reconciled only
+  when the soil carries a history.};
+\node[cl=112mm, key, right=12mm of p2] (c2) {\textbf{2} · That history carries most of the modelled sink.};
+\node[cl=112mm, right=12mm of p3] (c3) {\textbf{3} · Reconciling them moves the models along the trade-off between
+  input and turnover, and asks for more input than measured.};
+\node[cl=112mm, right=12mm of p4] (c4) {\textbf{4} · For the forecast: headroom only with the history; about a
+  tenth more input would hold the past sink for twenty years.};
+\node[cl=112mm, right=12mm of p5] (c5) {\textbf{5} · A baseline for model development: a start per plot, and the
+  inputs the product may miss.};
+\foreach \a/\b in {p1/c1, p2/c2, p3/c3, p4/c4, p5/c5} \draw[arr] (\a) -- (\b);
+\end{tikzpicture}
+\end{center}}
+
+\title{\vspace{-1.4cm}\textbf{HIKET --- the storyline}\\[2pt]
+\large a soil that carries its history: the trilemma of the balanced start, tested in Finland}
+\author{}
+\date{\small Version of \today. Transient numbers: production \texttt{20260831\_1624*}; balanced start:
+\texttt{20261008\_134019}. \textbf{Both provisional}: the pair is being recalibrated with the 1961--1984
+pre-run climate (jobs launched 2026-10-12), and every number below will be restated.}
+
+\begin{document}\maketitle
+
+\begin{note}
+\textbf{How to read this.} A basis for the story discussion, not a draft. Each section opens with a strip
+of the whole paper, its own place highlighted, and then its internal arc. In the diagrams: blue = the
+section's payload; violet = a thread of the trilemma; amber fill = a caveat that travels with a claim.
+Figures sit where they are used: captions say \emph{main text}, \textcolor{warnrule}{\textbf{appendix}} or
+\textcolor{lorrule}{\textbf{not in your list: keep?}}. Green boxes are the questions still open.
+\end{note}
+
+\begin{ann}
+\textbf{The decisions this storyline is built on (Lorenzo, 2026-10-12).}
+\begin{itemize}\itemsep0pt
+  \item \textbf{General first, Finland as the test.} The claim opens on the general problem --- soil carbon
+    carries a long history, a balanced start assumes it away, and that decides the forecast --- and Finland
+    is the field where the general statement is tested with measurements.
+  \item \textbf{The trilemma is the Introduction's connecting object.} Three sources of information --- the
+    soil series, the kinetics, the inputs --- must agree, and a balanced start satisfies two at most.
+    Published kinetics are a source of information like the others. The threads of the paper meet there.
+  \item \textbf{The trilemma rests on the runs without the transient start}, even though those cannot
+    appear in the Introduction: it is introduced there as a trilemma, and contextualised as soon as the
+    Results arrive --- \textbf{F16, the trilemma visualised} (R1). It comes back once more when the ridge
+    appears (F18, R2), the same triangle in parameter space. The schematic need not be a main figure.
+  \item \textbf{The balanced start}: F16 in R1 as the trilemma visualised; its rates (F17) and forecast (F19) in
+    the appendix. \textbf{S16 is a main figure}.
+  \item \textbf{R2 is the main arc: the resolution.} R1 opens and defines the problem, tested the hard way;
+    from R1 to R2 runs the justification of the central choice --- relaxing the steady-state assumption ---
+    which moves the models across the ridge. Everything after (forecast, plots) is built on that choice.
+    F3 and S16 belong to R2.
+  \item \textbf{The uncertainty is a nested side arm, replicated at the end of R1 and R2.} R1 (balanced start)
+    has $\sinput$ only, absorbing the uncertainty of the input estimate (it connects to the data discussion
+    and S18). R2 (estimated start) has $\sinput$ and $\sinit$: $\sinit$ becomes needed --- its need was hidden in
+    R1 by forcing the steady-state assumption, which fixes it at $1$ without testing it. R2 is not more
+    uncertain; it makes explicit what R1 assumed. $\sinit$ is the development of R2 from the general idea to
+    its implementation.
+  \item \textbf{The forecast is an important side arm}, close to the other parts in weight but not quite, and
+    not in the title.
+  \item \textbf{The plots are a separate topic}, after the model fit and its $R^2$, tied to the trilemma, and
+    leading into a Discussion of how the models could do better.
+\end{itemize}
+\end{ann}
+
+% =====================================================================
+\section*{The story on one page}
+\addcontentsline{toc}{section}{The story on one page}
+
+\paragraph{The general claim.} Soil carbon carries a long history. Its slowest pools adjust to a change in
+their input over centuries, much longer than the few decades a unit of carbon spends in the soil on
+average, so the soil of today still reflects the land use and the inputs of long before any model starts.
+The convention is to start soil models in balance with their present litter, which assumes that history
+away. \textbf{And the assumption decides the forecast}: a soil assumed balanced has no room left to gain, so
+its projected sink depends only on future changes in litter and climate, while a soil still catching up
+with its past keeps a sink of its own.
+
+\paragraph{The connecting object: a trilemma.} Any model of a soil's trajectory has to reconcile three
+sources of information: the measured \emph{soil series}, the \emph{kinetics} (decomposition rates and
+climate response, themselves the product of earlier calibrations against measurements), and the measured
+\emph{inputs}. A model started in balance can satisfy two of them at most. The threads of the paper meet
+there: the trade-off between input and turnover, the missing input, the history of each plot, and the
+forecast.
+
+\paragraph{The test field.} Finland is where all three are measured on the same ground: a landscape
+reshaped by a century of land use and regrowth, three soil campaigns on the same plots over four decades,
+a plot-level litter record checked against the national inventory, and published kinetics for the
+inventory's own model family. On the same models and the same data, a balanced start cannot reproduce
+the measured accumulation, a start estimated from the measurements brackets it, and most of the modelled
+sink of 1985--2024 is then the soil still catching up with its own history. Plot by plot, the same
+history is what the models miss.
+
+\paragraph{The consequences.} Relaxing the assumption changes what the models say about the future of the
+Finnish forest soil sink: with the history the soil keeps room to gain, about a tenth more litter input would
+hold the sink of the past for twenty years, and warming takes part of it back --- a direct input to the
+debate on the national greenhouse gas balance, which a soil assumed balanced cannot inform.
+
+\paragraph{The arc of the whole paper.}
+\archOverall
+
+\begin{test}
+\textbf{The weight budget.} Proposed: \textbf{R1} the opening $\sim$15\%; \textbf{R2} the resolution
+$\sim$40\% --- the main arc; \textbf{R3} the forecast side arm $\sim$20\%; \textbf{R4} fit and plots $\sim$10\%,
+leading into a \textbf{Discussion} with real space ($\sim$15\%).
+\end{test}
+
+% =====================================================================
+\section*{The figure plan}
+\addcontentsline{toc}{section}{The figure plan}
+
+\begin{center}\small
+\begin{tabular}{llp{6.6cm}l}
+\hline
+where & figure & role & status \\
+\hline
+Introduction & F10b\_forest\_history & the landscape was not in balance & \textbf{not in your list} \\
+Introduction & F3\_mean\_SOCalt & the measured soil, model-free & \textbf{not in your list} \\
+Methods & F1\_inputs & the litter series, one corner of the trilemma & main \\
+Methods & \emph{S18} & litter: plot product vs national inventory, same scope & appendix \\
+Methods & F2\_baseline & one homogenised SOC basis & main \\
+Methods & F4\_initialization & how the estimated start is built & main \\
+R1 & F16\_eqinit\_trajectories & the balanced start against the campaigns --- the trilemma visualised & main \\
+R1 & \emph{F17} & the balanced start, rates by interval & appendix \\
+R2 & F3\_mean\_soc & the estimated start against the campaigns & main \\
+R2 & S16\_attribution\_ensemble & how much of the sink is the history & main \\
+R2 & \emph{S15} & the same, per model & appendix \\
+R2 & F9\_auxiliary\_sigmas & the two auxiliary parameters (nested part, end of R2) & main \\
+R2 & \emph{SX} & $\sinput$ against independent estimates (nested part) & appendix \\
+R2 & F12\_mrt\_yasso & transit time, calibrated and published & main \\
+R2 & F18\_eqinit\_tradeoff & the ridge, the two starts on it --- the trilemma's echo & main \\
+R2 & \emph{F14} & the ridge on the likelihood surface & appendix \\
+R3 & \emph{F19} & the forecast from the two starts (prose) & appendix \\
+R3 & \emph{table} & the input that would hold the sink & main \\
+R3 & F15\_forward\_arms & the warming side arm & main \\
+R4 & \emph{F6} & predicted vs measured on held-out plots ($R^2$ in the text) & appendix \\
+R4 & F11\_rf\_heatmap & what the residual follows & main \\
+R4 & F11\_stand\_and\_soil & the stand of 1985 and the soil & main \\
+Discussion & \emph{F11b} & time since the cut, behind a start per plot & appendix \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{test}
+\textbf{Still open:} F10b and F3\_mean\_SOCalt, the two Introduction figures of the current draft. The test
+field needs the soil series on the table before the objectives, so F3\_mean\_SOCalt is probably still
+needed; F10b carries the landscape history.
+\end{test}
+
+% =====================================================================
+\section{Introduction}
+\arch{1}{\archIntro}
+
+\paragraph{1. Soil carbon carries a long history, and its change is usually modelled.} Inventories report
+the annual change in the soil carbon stock, not the stock. A few countries measure it (Sweden, Germany);
+most model it, Finland with Yasso07. The slow pools adjust over centuries, while the mean transit time is
+decades (Sierra et al.\ 2018): a soil keeps the memory of its past inputs for far longer than its
+turnover suggests.
+
+\paragraph{2. The convention assumes that history away.} Models are started in balance with a constant
+litter and climate --- the Finnish inventory, the nationwide Yasso07 evaluation, RothC, the land models ---
+and the inventory justifies it in one sentence (``approximately ten years of simulation since spin-up is
+enough to cancel out the effect of the spin-up level''). A balanced start responds to every change after
+its start date, but it cannot carry a deficit that already existed on that date: the site's history is
+replaced by an equilibrium with its present litter.
+
+\paragraph{3. The assumption decides the forecast.} A soil assumed balanced has no room left to gain: its
+projected sink comes only from future changes in litter and climate. The reported Finnish soil term shows
+what that means in practice: a sink for most of the reporting period, a source from 2021 once the litter
+input was recalculated --- in a model started in balance, the soil term follows the litter estimate.
+\begin{warn}
+\textbf{Tone.} Describe the method, never judge the inventory (Aleksi leads it and is a coauthor). The safe
+sentence: \emph{the reported soil term is, in both directions, the response of a modelled soil to a litter
+input that departs from the level the soil was started in balance with.}
+\end{warn}
+
+\paragraph{4. The trilemma --- where the threads meet.} A model of a soil's trajectory has three sources of
+information to reconcile: the \emph{soil series} (repeated measurements of the stock), the \emph{kinetics}
+(decomposition rates and climate response, calibrated against measurements in earlier work), and the
+\emph{inputs} (the litter, measured or derived plot by plot). In a soil in balance, the stock is the input
+times the transit time, so the three are tied together: given the inputs and the kinetics, the stock and
+its change follow, and a soil that is gaining carbon while its litter has stopped rising cannot be in
+balance with that litter. A balanced start can therefore satisfy two of the three at most. The paragraph
+should be short; the triangle carries the argument, and the threads it connects are named once here and
+come back later: the trade-off between input and turnover (R2), the missing input (R2, Discussion), the
+history of each plot (R4), and the forecast (R3). \textbf{The trilemma rests on the runs without the
+transient start}; they cannot appear in the Introduction, so the trilemma is stated there as an
+expectation and contextualised as soon as the Results begin (R1, F16).
+\archTrilemma
+
+\paragraph{5. Finland, the test field.} Where the general statement becomes measurable. A managed landscape
+far from balance: slash-and-burn, grazing and high-grading, the war decades, then a century of regrowth
+($+84\%$ growing stock) (Liski et al.\ 2006; Peltoniemi et al.\ 2004, 2007 said this in the group's own
+words). Three soil campaigns on the same plots: $64.5 \to 71.5 \to 73.6$~tC\,ha$^{-1}$, gaining and then
+slowing. A litter record for every plot (Tupek et al.), rising by about $45\%$ to 2006 and flat after,
+which on the scope it shares with the national inventory agrees with it where most plots lie. And published
+kinetics for the inventory's own model family. All three corners of the trilemma are measured on the same
+ground.
+\FIGQ{F10b_forest_history} \FIGQ{F3_mean_SOCalt}
+
+\paragraph{6. Objectives --- the test, and its consequences.} Two revisions of the starting state: estimated
+rather than assumed, and dated back to 1917, as far as the forest record allows. Each is tested against the
+same models started in balance at the beginning of the measurements and recalibrated on the same data.
+\textbf{And the applied aim, declared as such:} once the assumption is relaxed, what changes in the
+forecast, and what does that tell us about the future of the Finnish greenhouse gas balance --- whether the
+forest soil can stay a sink, for how long, how it responds to warming, and how much more litter input it
+would take to keep the sink of the past. Questions:
+\begin{enumerate}\itemsep0pt
+  \item[(i)] Can a model started in balance reconcile the soil series, the kinetics and the inputs, and how
+    much of the modelled sink does the history carry when the start is estimated?
+  \item[(ii)] Where does reconciling them place the models on the trade-off between litter input and
+    transit time?
+  \item[(iii)] Once the assumption is relaxed, what follows for the future of the soil sink and of the Finnish
+    greenhouse gas balance: how much room the soil has left, how the sink responds to warming, and how much
+    additional litter input would hold it?
+  \item[(iv)] What do the differences between plots say about the history each plot carries?
+\end{enumerate}
+\begin{warn}
+\textbf{Scope of the applied claim, stated where it is declared.} The projections describe the calibrated
+models on the study plots, per hectare: the national inventory's term is not re-estimated, and the baseline
+projection holds the litter at 2024 and recycles the recent climate. The applied answer is therefore a
+statement about direction and sensitivity --- room left, response to warming, input needed --- not a
+forecast of the reported numbers. National units (Mt\,CO$_2$\,yr$^{-1}$) need a sourced area and Aleksi's
+review.
+\end{warn}
+
+\begin{test}
+\textbf{For the discussion.} (a) Paragraph 3 makes the 2021 source an illustration of the general problem
+--- the strongest motivation, and the most delicate for the coauthors; keep, soften, or move after the
+trilemma? (b) Naming the balanced-start comparison already in the objectives (as above), or only in the
+Methods?
+\end{test}
+
+% =====================================================================
+\section{Materials and methods}
+\arch{2}{\archMethods}
+
+\paragraph{Data.} As written. The litter input, one corner of the trilemma, is introduced with F1; where it
+is introduced, a short paragraph compares it with the national inventory's estimate (already in the draft):
+on the shared scope (tree turnover and harvest residues) the two agree in the south, where most plots lie,
+and neither rises after about 2006; the north differs, but holds only 50 of the 456 plots; the inventory
+also carries natural mortality, which grows and which the product lacks. S18 in the appendix.
+\FIG{F1_inputs} \FIGA{S18_litter_vs_inventory} \FIG{F2_baseline}
+
+\paragraph{The estimated start.} As written, with the pre-run climate now the 1961--1984 mean, so that the
+soil enters 1985 adjusted to the climate it had lived in. \FIG{F4_initialization}
+
+\paragraph{The comparison with a balanced start.} The same six models, data, likelihood and priors, with the
+start fixed at balance in 1985 (the 1985--1989 litter and the pre-run climate) and $\sinit$ removed;
+everything else recalibrated. One factor. Stated as \emph{the steady-state assumption applied at the start
+of the measurements}, the strongest fair version because the models are free to compensate, and explicitly
+not as the inventory's procedure. The expectations were written down before the run.
+
+\paragraph{The division of the sink.} Three runs and two joint effects of climate, in the words of the
+appendix.
+
+\begin{test}
+\textbf{Say in the Methods that the expectations were written before the run, and that two failed} (the
+balanced start overshoots the 1985 stock; its litter multiplier went down, not up)?
+\end{test}
+
+% =====================================================================
+\section{Results and discussion}
+
+\subsection*{\textsc{R1 --- the opening: the problem, tested the hard way}}
+\addcontentsline{toc}{subsection}{R1 --- the opening: the problem, tested the hard way}
+\begin{ann}
+\textbf{Role (Lorenzo, 2026-10-12).} R1 is the opening, a better definition of the problem. We know the
+conceptual problem of a balanced start, and we know the data hold a complex trend that could trouble it;
+here we test it the hard way and reach a first round of conclusions. From R1 to R2 runs the justification
+of the central choice.
+\end{ann}
+\arch{3}{\archRone}
+
+\subsubsection{What the soil did}
+\paragraph{} $+0.40$~tC\,ha$^{-1}$\,yr$^{-1}$ over the first interval, $+0.12$ over the second, $+0.26$ over
+the span (310 plots, unweighted, true sampling years). The second interval is the fragile one (its interval
+includes zero); the span is robust.
+
+\subsubsection{A balanced start cannot satisfy the three --- the trilemma visualised}
+\paragraph{The first result, and the moment the trilemma of the Introduction becomes visible.} Started in
+balance in 1985 and recalibrated, all six
+models gain $-0.05$ to $+0.04$ over 1985--2024 against the observed $+0.26$. They rise with the litter to 2006
+and give the rise back after it, and they start about $7$~tC\,ha$^{-1}$ above the first campaign ($\sim$72 against
+$64.5$), because a soil in balance with the 1985 litter holds more carbon than the soil held. Over
+1985--2006 only SP1 reaches the observed interval; over 2006--2024 all six lose carbon. F16 shows it against
+the campaigns: the two starts differ mainly at the first campaign, and separate again in the projection.
+\FIG{F16_eqinit_trajectories} \FIGA{F17_eqinit_rates}
+
+\dparagraph{The trilemma, contextualised.} The text names it here: held to the measured litter and to
+kinetics near the published ones, the balanced start gives up the soil series --- the corner of the triangle
+the Introduction predicted. It is free to bend the kinetics and does
+--- less input, faster and more temperature-sensitive decomposition (transit time $22$--$27 \to 18$--$25$~yr)
+--- and still cannot produce the accumulation. How far the kinetics would have to move is the corner the
+comparison leaves partly open.
+\begin{warn}
+\textbf{Do not judge the two starts by the fit.} The likelihood is dominated by the stock levels, which both
+starts reach (log-likelihoods within $6$); the rates and the early stock discriminate. Say so in two
+sentences before a reader concludes the starts are equivalent.
+\end{warn}
+\begin{test}
+\textbf{Close the third corner?} A balanced start with the rate priors widened would show how far the
+kinetics must move to fit both series; one factor, six jobs. Or state it as a limitation.
+\end{test}
+
+\subsubsection{A first round of conclusions --- and the justification of the central choice}
+\paragraph{} Three things are settled before anything else is built. (1) The trilemma is real on these data:
+with the measured litter and near-published kinetics, a soil assumed balanced in 1985 cannot reproduce the
+measured accumulation. (2) The failure survives the freedom to compensate, so it is not a matter of tuning.
+(3) What the balanced start lacks is a state that is not in balance on the start date. \textbf{That is the
+justification for the central choice of the paper}: to relax the steady-state assumption and estimate the
+starting state from the measurements, which is what R2 does.
+
+\subsubsection{Nested: the uncertainty, as the balanced start sees it --- $\sinput$ only}
+\paragraph{The same side arm as at the end of R2, with one parameter.} The balanced start carries one auxiliary
+uncertainty parameter, $\sinput$, which absorbs the uncertainty of the input estimate --- the point where the
+data discussion (the litter product against the national inventory, S18) enters the calibration. In the
+balanced start it relaxes (Yasso15 $1.54 \to 1.32$, TP2 $1.72 \to 1.60$), while the kinetics strain.
+\textbf{$\sinit$ is not absent: it is fixed at $1$ by the steady-state assumption} --- a value never questioned
+and never tested, only assumed. Implementation details here: the same error model and priors as R2, the fit
+equivalence of the two starts (the likelihood dominated by levels) and why the comparison is made on the
+rates.
+
+
+
+% ---------------------------------------------------------------- R2
+\subsection*{\textsc{R2 --- the resolution: relaxing the steady-state assumption}}
+\addcontentsline{toc}{subsection}{R2 --- the resolution: relaxing the steady-state assumption}
+\arch{4}{\archRtwo}
+\begin{ann}
+\textbf{Role (Lorenzo, 2026-10-12).} The main arc, carrying the most load. Relaxing the steady-state
+assumption is the paper's own approach to the trilemma --- the proposed solution, and \emph{the central
+choice}. It moves the models across the ridge in parameter space, and the trade-off translates according
+to the new assumption. Everything that follows (the forecast, the plot analyses) is built on it, once it is
+justified; its ramifications are examined, but the choice is the centre.
+\end{ann}
+
+\subsubsection{The central choice}
+\paragraph{From the general idea to its implementation.} The idea: the soil may enter the observations out of
+balance. The implementation: the start is estimated from the measurements and dated back to 1917, through
+one quantity, $\sinit$, the deficit the soil carries --- the parameter the balanced start had fixed at $1$.
+The same data, priors and likelihood. What $\sinit$ means, and what it costs, is in the nested part at the
+end of R2.
+
+\subsubsection{The estimated start reconciles the soil series}
+\paragraph{} All six reach the three campaign levels. Over 1985--2024 they span $+0.10$ to $+0.35$ against
+the observed $+0.26$, four of six inside its interval (SP1 $+0.13$, Yasso20 $+0.10$ below). Over 1985--2006
+all six reach the observed rise; over 2006--2024 only TP2 and TP3 reach the observed $+0.12$, Yasso07 is near
+zero, and SP1, Yasso15 and Yasso20 lose carbon. \FIG{F3_mean_soc}
+
+\dparagraph{Bracketing is informative because it is not automatic.} Matching the rate would mean little if
+any calibration on the same data could do it. The balanced start, calibrated on the same measurements with
+one degree of freedom fewer, fails in every model.
+
+\subsubsection{And most of the modelled sink is the history}
+\paragraph{The division of the sink.} Six-model average, 1985--2024: of $+10.5$~tC\,ha$^{-1}$ gained, the
+deficit inherited from before 1985 carries $+9.3$; the litter change since 1985 adds $+8.6$; the warming
+removes $-7.5$. \FIG{S16_attribution_ensemble_smooth10} \FIGA{S15_attribution_by_model_smooth10}
+
+\dparagraph{Necessary, and dominant.} The balanced start shows that the history is \emph{necessary} --- with
+everything else free, the models cannot do without it. The division shows how much it \emph{weighs} --- most
+of the sink, while the litter rise and the warming largely offset each other. The second answers the
+objection to the first (``the inherited part is large only because the calibration chose a low $\sinit$''):
+the data demand the deficit.
+\begin{warn}
+\textbf{The numbers will move} with the 1961--1984 pre-run climate: the climate part will appear from 1985,
+the inherited part may shrink. The robust statement is the ordering --- most of the sink inherited, litter
+and warming largely offsetting each other.
+\end{warn}
+\begin{test}
+\textbf{S16 in three parts or five terms} (the two joint effects of climate as hatched bands)?
+\end{test}
+
+
+
+\subsubsection{Where the models land: shorter transit times than published}
+\paragraph{} Calibrated against published: Yasso07 and Yasso15 turn over faster, Yasso20 sits on its published
+value. \FIG{F12_mrt_yasso}
+
+\subsubsection{Across the ridge --- the trilemma resolved as far as the data allow}
+\paragraph{} The soil fixes the product of input and transit time, and the posteriors ride that trade-off.
+The two starts land at different places on it: in five of the six models the balanced start sits at less
+input and faster turnover (SP1, a single slow pool, barely moves). \FIG{F18_eqinit_tradeoff}
+\FIGA{F14_mrt_ridge}
+
+\dparagraph{The echo, in parameter space.} \textbf{The triangle comes back once more}, after F16 showed it
+in the trajectories. The
+soil series is the ridge; the measured input (the dotted line) and the published kinetics sit off it; a
+balanced start can stand on at most two of the three, and the estimated start, carrying the history,
+stands somewhere else on the same ridge. Relaxing the assumption moves the models across it, and the
+trade-off translates according to the new assumption. The text should say it in one or two sentences ---
+after all the work, the trilemma is visible --- without redrawing the figure.
+
+\dparagraph{What the resolution leaves.} The tension is not removed but concentrated in one corner: the soil
+series is met and the kinetics stay near the published values (Yasso20 on its own, Yasso07 and Yasso15
+faster), while the input the models need stays above what the product supplies. That remaining gap is the
+thread to the Discussion of the inputs the product may miss.
+
+\subsubsection{Nested: the uncertainty, as the estimated start sees it --- $\sinput$ and $\sinit$}
+\paragraph{The same side arm as at the end of R1, now with two parameters.} $\sinit$ becomes needed, and
+\textbf{that need was there before}: in R1 it was hidden by forcing the steady-state assumption, which fixes it
+at $1$. R2 may look more uncertain, but it only makes explicit a quantity R1 assumed without testing. The two
+auxiliary parameters share a width by design.
+\begin{itemize}\itemsep0pt
+  \item \textbf{$\sinput$} --- more input than measured: effective flux $3.19$--$4.34$ against $2.511$, inside the
+    envelope of boreal production, set by the likelihood rather than the prior (the posterior stays above the
+    prior centre whichever anchor is used). The national inventory's full estimate is $1.08$--$1.26\times$ the
+    product on the southern plots, bracketing the understorey-corrected anchor ($1.21$) and below the
+    posteriors ($1.27$--$1.73$); SX sets it against independent estimates.
+  \item \textbf{$\sinit$} --- the deficit the data demand: $0.49$--$0.60$ in five of six models, lower than the
+    growing-stock record implies ($\sim 0.90$), so read as an \emph{effective starting deficit of the soil}
+    (slash-and-burn, raking, heavy cutting) rather than a ratio of litter inputs. It carries the forecast:
+    headroom correlates with it at $-0.79$ to $-0.97$ (R3).
+  \item \textbf{The implementation, and its advantages}: the error model (region, plot and campaign offsets
+    integrated out, a declared total of $0.800$), what it buys (an honest number of independent observations,
+    $221$), and the Bayesian points --- priors as information, homogenised across models; the posterior
+    against the prior.
+\end{itemize}
+\FIG{F9_auxiliary_sigmas} \FIGA{SX_input_vs_literature}
+\begin{warn}
+\textbf{The direction depends on the comparator, so the title names none.} Against the published parameters
+the calibration has faster turnover (Yasso07, Yasso15); against the balanced start, slower. ``Displaces
+along'' covers both; never add a direction.
+\end{warn}
+
+% ---------------------------------------------------------------- R3
+\subsection*{\textsc{R3 --- side arm: what it means for the forecast and the GHG balance}}
+\addcontentsline{toc}{subsection}{R3 --- side arm: what it means for the forecast and the GHG balance}
+\paragraph{The applied answer to objective (iii).} Built on the central choice of R2: what the relaxed
+assumption says about the future of the soil sink --- room left, the input that would hold it, the response to
+warming --- and so about the Finnish greenhouse gas balance, within the scope declared in the objectives.
+\arch{5}{\archRthree}
+
+\subsubsection{Headroom only with the history}
+\paragraph{In prose; the figure is in the appendix.} Projected over 2025--2044 with the litter held at 2024
+and the recent climate recycled, the balanced start gives a sink of $-0.06$ to $+0.02$~tC\,ha$^{-1}$\,yr$^{-1}$
+and a headroom of $-3$ to $+11\%$; the estimated start gives $+0.07$ to $+0.22$ and $+26$ to $+42\%$ --- the
+disequilibrium Liski et al.\ (2006) found by another route ($+38\%$). The general claim of the
+Introduction, measured: the starting state decides whether the soil has room left. \FIGA{F19_eqinit_forecast}
+
+\subsubsection{How much input would hold the sink?}
+\paragraph{The question a ministry would ask.} The models are linear in their input, so the projections with
+the litter held and with $+20\%$ answer it exactly for any target sink (\texttt{doublechecks/input\_to\_hold\_sink.R}):
+\begin{center}\small
+\begin{tabular}{llccccc}
+\hline
+target sink & window & Yasso07 & Yasso15 & Yasso20 & TP2 / TP3 & SP1 \\
+\hline
+observed 1985--2024 ($+0.26$) & 10 yr & $+6\%$ & $+6\%$ & $+5\%$ & $+1$ / $+2\%$ & $+10\%$ \\
+ & 20 yr & $\mathbf{+10\%}$ & $\mathbf{+9\%}$ & $\mathbf{+11\%}$ & $+3$ / $+4\%$ & $+12\%$ \\
+each model's own 1985--2024 & 20 yr & $+11\%$ & $+10\%$ & $+3\%$ & $+11\%$ & $+6\%$ \\
+observed 2006--2024 ($+0.12$) & 20 yr & $+1\%$ & $+1\%$ & $+3\%$ & $-8$ / $-7\%$ & $+5\%$ \\
+\hline
+\end{tabular}
+\end{center}
+\dparagraph{About a tenth more input, sustained, holds the long-term sink for twenty years} ($0.3$--$0.5$~tC\,ha$^{-1}$\,yr$^{-1}$
+of effective input in Yasso; each $+10\%$ buys $0.15$--$0.24$~tC\,ha$^{-1}$\,yr$^{-1}$ of sink). The gain lasts
+only while the input does, and it postpones saturation rather than removing it.
+\begin{warn}
+\textbf{Lower bounds, and provisional:} no further warming is in these projections. The required input depends
+on both the starting state (the baseline sink) and the transit time (the gain per unit of input) --- the
+paper's two main results meet here.
+\end{warn}
+\begin{test}
+\textbf{Which target}, the observed long-term rate, the recent one, or each model's own? A
+warming-corrected column for Yasso? National units (Mt\,CO$_2$\,yr$^{-1}$) need a sourced area and Aleksi's eye.
+\end{test}
+
+\subsubsection{Warming, and whether it depends on where the calibration lands}
+\paragraph{} Under warming to SSP2-4.5 the stock falls by $5$--$7$~tC\,ha$^{-1}$ by 2084 in all three Yasso
+versions; only Yasso07 separates the published and calibrated parameters ($-2.08$~tC\,ha$^{-1}$), because its
+single climate modifier ties turnover to temperature sensitivity. For the inventory, which runs Yasso07,
+that is the applied point. \FIG{F15_forward_arms}
+
+% ---------------------------------------------------------------- R4
+\subsection*{\textsc{R4 --- the fit, and the plots}}
+\addcontentsline{toc}{subsection}{R4 --- the fit, and the plots}
+\arch{6}{\archRfour}
+
+\subsubsection{The fit}
+\paragraph{} Calibration $R^2$ $0.016$--$0.021$, holdout $R^2 \le 0.0012$; skill does not climb the pool ladder.
+The models reproduce the national mean and almost none of the differences between plots. Numbers in the text;
+F6 in the appendix. \FIGA{F6_obs_vs_pred_holdout}
+
+\subsubsection{The inputs and the soil disagree between plots}
+\paragraph{The trilemma at plot scale.} The litter product varies about $\times 18$ across the basal-area range;
+the soil about $\times 1.2$. A soil in balance with its litter would follow it, so the gap is the inputs corner
+of the trilemma seen plot by plot --- one sentence pointing back, not a second echo.
+
+\subsubsection{What the residual follows: each plot carries its own history}
+\paragraph{} The residual follows the 1985 stand, then the site (F11 $\to$ F11 stand and soil). In the same
+plots it fades over the three campaigns ($+0.91 \to +0.53 \to +0.28$ for sparse 1985 stands): the signature of
+a wrong starting state, not of a missing input. One national pre-run shape cannot carry each stand's history.
+\FIG{F11_rf_heatmap} \FIG{F11_stand_and_soil}
+
+% =====================================================================
+\section{Discussion --- how the models could do better}
+\arch{7}{\par}
+
+\paragraph{1. A starting state per plot.} The plot-level error fades at about the models' turnover pace: a
+start built from each plot's own history (the last regeneration cut dated from the 1985 stand age) is the
+natural next model step. The excess lives in stands young in 1985 (F11b). \FIGA{F11b_time_since_cut}
+
+\paragraph{2. The inputs the litter product may miss.} Natural mortality --- now quantified in the national
+inventory, $0.1$--$0.16$~tC\,ha$^{-1}$\,yr$^{-1}$ by now in the south; roots and rhizodeposition; understorey;
+mycorrhizal fungi; fine-root lifespan (pointing the other way); early-succession vegetation. A set that
+brackets the gap, never a sum that matches it.
+
+\paragraph{3. Pioneer vegetation, where the two meet.} The excess carbon of the stands young in 1985 was built
+during early stand development, either inherited or supplied by vegetation no tree-based product records;
+the data do not separate the two. Lauri Mehtätalo (LUKE) to be cited \gapnote{which work}.
+
+\paragraph{4. The site, briefly.} Fertility, texture and stones explain a further tenth of the residual
+\gapnote{check whether the stone effect is partly the stone correction of the observed stocks}.
+
+% =====================================================================
+\section{Conclusions}
+\arch{8}{\archConcl}
+
+\paragraph{1.} The soil series, the kinetics and the inputs are reconciled only when the soil carries a
+history: a balanced start cannot, an estimated start brackets the measured accumulation.
+\paragraph{2.} That history carries most of the modelled sink of 1985--2024; the litter rise and the warming
+largely offset each other.
+\paragraph{3.} Reconciling the three moves the models along the trade-off between input and turnover, and asks
+for more input than the litter product supplies.
+\paragraph{4.} For the forecast and the Finnish greenhouse gas balance: the soil keeps room to gain only with
+the history, finite and costly to realise; about a tenth more litter input would hold the past sink for twenty
+years; warming takes part of it back, and for the inventory's own model the size of that response depends on
+where the calibration lands.
+\paragraph{5.} A baseline for further model development: a start per plot, and the inputs the product may
+miss. (The national-inventory implications go just before the Limitations, not here.)
+\paragraph{Bonus product.} The maps.
+
+% =====================================================================
+\section*{Open questions collected}
+\addcontentsline{toc}{section}{Open questions collected}
+\begin{enumerate}\itemsep0pt
+  \item The weight budget (30 / 25 / 20 / 10 + Discussion 15).
+  \item F10b and F3\_mean\_SOCalt in the Introduction.
+  \item The 2021 source as the illustration in Introduction 3: keep, soften or move.
+  \item The balanced-start comparison named in the objectives, or only in the Methods.
+  \item The written expectations and the two that failed, in the Methods.
+  \item Close the third corner of the trilemma with a run, or state it as a limitation.
+  \item S16 in three parts or five terms.
+  \item The target sink in the input table; a warming-corrected column; national units.
+  \item All numbers wait for the recalibrated pair (1961--1984 pre-run climate).
+\end{enumerate}
+
+\end{document}
