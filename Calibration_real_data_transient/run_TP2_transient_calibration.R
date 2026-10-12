@@ -264,6 +264,11 @@ PREINIT_SHAPE <- preinit_shape()                # 1917->1985, 68 steps, [0,1]
 # reconstructed input to soil (per hectare, tree basis) -- see preinit_input_shape.R.
 litter_means  <- lapply(litter_means, function(x) { x$preinit_shape <- PREINIT_SHAPE; x })
 
+# Pre-run climate window (prerun_climate.R): NULL => first STEADY_STATE_YEARS, as before.
+climate_ss_by_plot <- hiket_prerun_climate(names(litter_means), map_climate_yasso07)
+hiket_set_prerun_clim(climate_ss_by_plot, names(litter_means))
+litter_means <- hiket_prerun_precip(litter_means)   # Yasso15/20 leaching term; no-op otherwise
+
 # --- Inject J_bar into the flux_pair transform (needs litter_means) ----------
 # J_bar = cross-plot mean litter: the units bridge between the physical flux
 # window and the dimensionless sigma_input multiplier. Fixed for the whole run.
@@ -411,7 +416,7 @@ sanity_results <- lapply(sanity_pids, function(pid) {
   xi_array  <- compute_xi_tp2_engine(clim, sanity_params)
   n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
   xi_for_ss <- compute_xi_mean_tp2_engine(
-    clim[seq_len(n_ss), , drop = FALSE], sanity_params)
+    hiket_ss_clim(pid, clim, n_ss), sanity_params)
   C_init    <- steady_state_tp2_engine(sanity_params, lm, xi_for_ss)
   run_out   <- tp2_run_engine(inputs, sanity_params, C_init, xi_array)
 
@@ -467,6 +472,8 @@ message(sprintf("Forward-run sanity: %s",
 save_inputs(
   inputs_list = list(
     climate_by_plot    = climate_by_plot,
+    climate_ss_by_plot = climate_ss_by_plot,   # NULL unless HIKET_PRERUN_CLIM_YEARS
+    PRERUN_CLIM        = hiket_prerun_label(),
     inputs_by_plot     = inputs_by_plot,
     litter_means       = litter_means,
     obs_meta           = obs_meta,

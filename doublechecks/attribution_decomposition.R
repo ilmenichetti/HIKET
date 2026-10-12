@@ -106,7 +106,7 @@ attribute_plot <- function(e, mp, pid) {
   ny <- nrow(inp); rpy <- nrow(clim) %/% ny
   run   <- function(U, xi, C) e$.run_model(U, mp, C, xi)
   xi_h  <- e$.compute_xi(clim, mp)
-  xi_ss <- e$.compute_xi_mean(clim[seq_len(min(e$.n_ss, nrow(clim))), , drop = FALSE], mp)
+  xi_ss <- e$.compute_xi_mean(hiket_ss_clim(pid, clim, min(e$.n_ss, nrow(clim))), mp)   # pre-run = reference climate
   sinit <- unname(mp[["sigma_init"]])
   C_init <- e$.steady_state(mp, lm, xi_ss)                            # production start (1985)
   mp_eq <- mp; mp_eq["sigma_init"] <- 1
@@ -161,6 +161,11 @@ for (M in MODELS) {
   e  <- setup_model(M)
   bal  <- as.character(balanced_plots(e$obs_meta))
   post <- readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds", M, RID[[M]]))
+  # Pre-run climate = reference climate: the RUN's own (input bundle), not this shell's.
+  bun <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", M, RID[[M]]))
+  hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
+  if (!is.null(bun$climate_ss_by_plot)) e$litter_means <- bun$litter_means   # its precip_mean too
+  cat(M, "pre-run / reference climate:", hiket_prerun_label(), "\n")
   ks   <- sort(sample(nrow(post), N_DRAW))
   A <- lapply(ks, function(k) {
     mp <- e$.assemble(setNames(as.numeric(post[k, ]), colnames(post)))

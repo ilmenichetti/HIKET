@@ -43,6 +43,22 @@ COMP     <- c("history", "inputs", "climate")
 COMP_LAB <- c(history = "Litter rise before 1985 (initialisation)", inputs = "Litter change since 1985",
               climate = "Climate")
 COMP_COL <- c(history = "#2F6B3B", inputs = "#9CCB86", climate = "#C44E52")   # climate: red (Lorenzo)
+HATCH <- c(history = FALSE, inputs = FALSE, climate = FALSE)
+# JOINT VARIANT (2026-10-12, Lorenzo): HIKET_ATTR_JOINT=1 draws the two joint effects of
+# climate as their own HATCHED bands, in the colour of the part they are assigned to in the
+# sequential split (inheritance x climate -> history, litter x climate -> climate). The main
+# effects are then measured at the reference corner: history = run 1' - 3 (reference
+# climate), climate = run 4 - 5 (reference litter). Same total; outputs carry "_joint".
+JOINT <- identical(Sys.getenv("HIKET_ATTR_JOINT"), "1")
+if (JOINT) {
+  COMP     <- c("history", "hist_x_clim", "inputs", "climate", "inputs_x_clim")
+  COMP_LAB <- c(COMP_LAB[c("history")], hist_x_clim = "Litter rise before 1985 \u00d7 climate (joint)",
+                COMP_LAB[c("inputs", "climate")], inputs_x_clim = "Litter change since 1985 \u00d7 climate (joint)")
+  COMP_COL <- c(COMP_COL[c("history")], hist_x_clim = COMP_COL[["history"]], COMP_COL[c("inputs", "climate")],
+                inputs_x_clim = COMP_COL[["climate"]])
+  HATCH    <- setNames(COMP %in% c("hist_x_clim", "inputs_x_clim"), COMP)
+}
+SFX_J <- if (JOINT) "_joint" else ""
 Y0 <- 1985; Y_PROJ <- 2024
 
 # Projection CUT (Lorenzo, 2026-10-08): the figures stop at 2024. The decomposition
@@ -52,7 +68,14 @@ Y0 <- 1985; Y_PROJ <- 2024
 # the table only. The decomposition still holds 1917-2084 (attribution.rds).
 Y_START <- Y0; Y_END <- Y_PROJ
 mean_arr_full <- function(m) apply(Z$models[[m]]$arr, c(1, 2), mean)
-mean_arr <- function(m) { a <- mean_arr_full(m); a[a[, "year"] >= Y_START & a[, "year"] <= Y_END, , drop = FALSE] }   # year x var
+mean_arr <- function(m) { a <- mean_arr_full(m); a <- a[a[, "year"] >= Y_START & a[, "year"] <= Y_END, , drop = FALSE]
+  if (JOINT) {
+    a <- cbind(a, hist_x_clim = a[, "inter_hist_clim"], inputs_x_clim = a[, "interaction"])
+    a[, "history"] <- a[, "history"] - a[, "inter_hist_clim"]   # run 1' - 3 (reference climate)
+    a[, "climate"] <- a[, "climate"] - a[, "interaction"]       # run 4 - 5 (reference litter)
+    a <- a[, c("year", "F", COMP)]
+  }
+  a }   # year x var
 yr <- mean_arr(MS[1])[, "year"]
 P_all <- lapply(MS, function(m) mean_arr(m)[, COMP, drop = FALSE]); names(P_all) <- MS
 F_all <- lapply(MS, function(m) mean_arr(m)[, "F"]);               names(F_all) <- MS
@@ -78,7 +101,12 @@ rmean <- function(v, W) {
 stack_bars <- function(x, P) {
   for (part in list(pmax(P, 0), pmin(P, 0))) {
     base <- rep(0, nrow(part))
-    for (k in COMP) { top <- base + part[, k]; rect(x - 0.45, base, x + 0.45, top, col = COMP_COL[[k]], border = NA); base <- top }
+    for (k in COMP) { top <- base + part[, k]
+      if (HATCH[[k]]) {
+        rect(x - 0.45, base, x + 0.45, top, col = adjustcolor(COMP_COL[[k]], 0.30), border = NA)
+        rect(x - 0.45, base, x + 0.45, top, density = 60, angle = 45, col = COMP_COL[[k]], border = NA, lwd = 0.6)
+      } else rect(x - 0.45, base, x + 0.45, top, col = COMP_COL[[k]], border = NA)
+      base <- top }
   }
   lines(x, rowSums(P), col = "grey10", lwd = 1.5)
 }
@@ -86,7 +114,9 @@ stack_area <- function(x, P) {
   for (part in list(pmax(P, 0), pmin(P, 0))) {
     base <- rep(0, nrow(part))
     for (k in COMP) { top <- base + part[, k]
-      polygon(c(x, rev(x)), c(base, rev(top)), col = adjustcolor(COMP_COL[[k]], 0.85), border = NA); base <- top }
+      polygon(c(x, rev(x)), c(base, rev(top)), col = adjustcolor(COMP_COL[[k]], if (HATCH[[k]]) 0.30 else 0.85), border = NA)
+      if (HATCH[[k]]) polygon(c(x, rev(x)), c(base, rev(top)), density = 25, angle = 45, col = COMP_COL[[k]], border = NA)
+      base <- top }
   }
   lines(x, rowSums(P), col = "grey10", lwd = 2.2)
 }
@@ -96,8 +126,10 @@ legend_top <- function(ncol = 4) {                                # ncol = 2 on 
   op <- par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE); on.exit(par(op))
   plot.new()
   legend("top", inset = 0.045, ncol = ncol, bty = "n", cex = 0.85, x.intersp = 0.5,
-         legend = c(COMP_LAB[COMP], "total"), fill = c(COMP_COL[COMP], NA), border = NA,
-         col = c(rep(NA, 3), "grey10"), lty = c(NA, NA, NA, 1), lwd = c(NA, NA, NA, 1.8))
+         legend = c(COMP_LAB[COMP], "total"), border = NA,
+         fill = c(COMP_COL[COMP], NA), density = c(ifelse(HATCH[COMP], 40, -1), -1), angle = 45,
+         col = c(rep(NA, length(COMP)), "grey10"), lty = c(rep(NA, length(COMP)), 1),
+         lwd = c(rep(NA, length(COMP)), 1.8))
 }
 note <- sprintf("balanced plot set (n = %d), unweighted national mean; %d posterior draws per model (mean); production runs %s",
                 Z$models[[MS[1]]]$n_plots, Z$n_draw, paste(unique(substr(Z$rid[MS], 1, 8)), collapse = "/"))
@@ -110,7 +142,7 @@ draw <- function(W) {
   PS <- lapply(P_all, sm, W = W); ok <- stats::complete.cases(PS[[1]])
   yl <- range(unlist(lapply(PS, function(P) c(rowSums(pmax(P[ok, ], 0)), rowSums(pmin(P[ok, ], 0))))))
   yl <- yl + c(0, 0.08) * diff(yl)
-  png(sprintf("manuscript/figures/S15_attribution_by_model%s.png", sfx), width = 12.5, height = 7.6, units = "in", res = 200)
+  png(sprintf("manuscript/figures/S15_attribution_by_model%s%s.png", sfx, SFX_J), width = 12.5, height = 7.6, units = "in", res = 200)
   par(mfrow = c(2, 3), mar = c(3.4, 4.4, 2.2, 0.8), oma = c(1.6, 0, 4.2, 0), mgp = c(2.4, 0.6, 0), las = 1)
   for (m in MODEL_ORDER) {
     plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = ylab_sink, main = m)
@@ -123,7 +155,7 @@ draw <- function(W) {
   legend_top(); dev.off()
   # --- S16: average, annual sink ----------------------------------------------------
   Ps <- sm(Pm, W); okm <- stats::complete.cases(Ps)
-  png(sprintf("manuscript/figures/S16_attribution_ensemble%s.png", sfx), width = 9, height = 5.6, units = "in", res = 200)
+  png(sprintf("manuscript/figures/S16_attribution_ensemble%s%s.png", sfx, SFX_J), width = 9, height = 5.6, units = "in", res = 200)
   par(mar = c(4, 4.6, 2.4, 1), oma = c(1.6, 0, 5, 0), mgp = c(2.5, 0.6, 0), las = 1)
   yl1 <- range(c(rowSums(pmax(Ps[okm, ], 0)), rowSums(pmin(Ps[okm, ], 0)))); yl1 <- yl1 + c(0, 0.1) * diff(yl1)
   plot(NA, xlim = range(yr), ylim = yl1, xlab = "Year", ylab = ylab_sink, main = sprintf("Annual sink (%s)", wtxt))
@@ -141,7 +173,7 @@ for (W in c(1L, 10L)) draw(W)
 # repeats 2005-2024): that band is the delayed response to warming already observed,
 # fading as the soils settle. Labelled as such on the figure.
 Cm <- apply(Pm, 2, cumsum)
-png("manuscript/figures/S17_attribution_cumulative.png", width = 9, height = 5.6, units = "in", res = 200)
+png(sprintf("manuscript/figures/S17_attribution_cumulative%s.png", SFX_J), width = 9, height = 5.6, units = "in", res = 200)
 par(mar = c(4, 4.6, 2.4, 1), oma = c(1.6, 0, 5, 0), mgp = c(2.5, 0.6, 0), las = 1)
 yl2 <- range(c(rowSums(pmax(Cm, 0)), rowSums(pmin(Cm, 0)))); yl2 <- yl2 + c(0, 0.1) * diff(yl2)
 plot(NA, xlim = range(yr), ylim = yl2, xlab = "Year", main = "Carbon gained since 1985",
@@ -163,4 +195,4 @@ tab <- do.call(rbind, lapply(c(MS, "average"), function(m) {
              prerun_gain_1917_1984 = round(if (m == "average") mean(pre) else pre[[m]], 2))
 }))
 cat("\nCarbon gained by component (tC/ha):\n"); print(tab, row.names = FALSE)
-write.csv(tab, "manuscript/figures/S17_attribution_by_period.csv", row.names = FALSE)
+write.csv(tab, sprintf("manuscript/figures/S17_attribution_by_period%s.csv", SFX_J), row.names = FALSE)

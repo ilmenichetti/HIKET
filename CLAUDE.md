@@ -85,6 +85,7 @@ to reach R inside the r-env container):
 | `HIKET_PRIOR_TIGHTEN` | multiplies Tier-2 **fraction** SDs only | 1 (0.4 unchanged) |
 | `HIKET_INPUT_SCEN_MULT` | input multiplier of the projection scenario (predictive stage) | 1.2 |
 | `HIKET_SIGMA_INPUT_CENTRE` | prior centre of `sigma_input` in all six models; `1.27` reproduces arm A (Liski 2006) | 1.08 (arm B, production) |
+| `HIKET_PRERUN_CLIM_YEARS` | `<y0>-<y1>`: mean climate of that window drives the 1917–1984 pre-run (and the equilibrium start, and the attribution's reference climate); stored in the input bundle, so predictive/attribution replay the run's own (`prerun_climate.R`) | unset = first 20 model years (1985–2004) |
 | `HIKET_N_CHAINS` / `_N_ITER` / `_N_BURNIN` | short test runs | 5 / 50000 / 5000 |
 
 ---

@@ -49,6 +49,9 @@ source("./Calibration_real_data_transient/correlated_likelihood.R")
 # Equilibrium-init counterfactual arm (2026-10-08). Inert unless HIKET_EQUILIBRIUM_INIT=1.
 source("./Calibration_real_data_transient/equilibrium_init.R")
 
+# Pre-run climate window (2026-10-12). Inert unless HIKET_PRERUN_CLIM_YEARS is set.
+source("./Calibration_real_data_transient/prerun_climate.R")
+
 
 # Override make_likelihood() with transient_init support.
 # Only the sd_vec line and function signature differ from the original.
@@ -204,8 +207,9 @@ make_likelihood <- function(n_cores,
       n_ss <- if (is.null(steady_state_n)) nrow(clim)
       else min(steady_state_n, nrow(clim))
       
+      clim_ss <- hiket_ss_clim(pid, clim, n_ss)   # prerun_climate.R; outside tryCatch
       xi_for_ss <- tryCatch(
-        compute_xi_mean(clim[seq_len(n_ss), , drop = FALSE], model_params),
+        compute_xi_mean(clim_ss, model_params),
         error = function(e) NULL)
       if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(-Inf)
       

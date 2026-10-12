@@ -134,7 +134,12 @@ state_for_draw <- function(e, p_free, plots, cbp, lms) {
   mp <- e$.assemble_params(p_free)
   out <- do.call(rbind, parallel::mclapply(plots, function(pid) {
     clim <- cbp[[pid]]; lm <- lms[[pid]]
-    xi <- tryCatch(e$.compute_xi_mean(clim, mp), error = function(z) NULL)
+    # Production's pre-run climate (2026-10-12): the first STEADY_STATE_YEARS (x12 for
+    # monthly Yasso20) or the bundle's pre-run window -- NOT the whole 1985-2024 record,
+    # which this script used before and which the likelihood never did.
+    n_ss <- e$STEADY_STATE_YEARS * (if ("month" %in% names(clim)) 12L else 1L)
+    xi <- tryCatch(e$.compute_xi_mean(hiket_ss_clim(pid, clim, min(n_ss, nrow(clim))), mp),
+                   error = function(z) NULL)
     if (is.null(xi)) return(NULL)
     lm0 <- lm; lm0$preinit_shape <- rep(0, N_PRE)   # hold J at J_1917 -> start state
     c17 <- tryCatch(sum(e$.steady_state(mp, lm0, xi)), error = function(z) NA_real_)
@@ -166,6 +171,9 @@ for (M in MODELS) {
                 function(z) getSample(z, parametersOnly = FALSE, start = 2)))
   free  <- names(get("best_x", e))          # order matters for to_original
   plots <- get("plots", e); cbp <- get("climate_by_plot", e); lms <- get("litter_means", e)
+  bun <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", M, rid))   # the run's own pre-run climate
+  hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
+  if (!is.null(bun$climate_ss_by_plot)) lms <- bun$litter_means
 
   idx <- sample(nrow(s_), min(N_DRAW, nrow(s_)))
   st <- lapply(idx, function(k) {

@@ -73,6 +73,9 @@ inputs_pkg     <- readRDS(file.path(DIR_INPUTS,
 climate_by_plot    <- inputs_pkg$climate_by_plot
 inputs_by_plot     <- inputs_pkg$inputs_by_plot
 litter_means       <- inputs_pkg$litter_means
+# Pre-run climate: the RUN's own (bundle), never this shell's; old bundles => NULL => as before.
+hiket_set_prerun_clim(inputs_pkg$climate_ss_by_plot, as.character(inputs_pkg$plots_real))
+message(sprintf("Pre-run climate: %s", hiket_prerun_label()))
 obs_meta           <- inputs_pkg$obs_meta
 plot_info          <- inputs_pkg$plot_info
 plots_real         <- inputs_pkg$plots_real
@@ -210,7 +213,7 @@ t_pp <- system.time({
       n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
       xi_for_ss <- tryCatch(
         compute_xi_mean_yasso07_engine(
-          clim[seq_len(n_ss), , drop = FALSE], model_params),
+          hiket_ss_clim(pid, clim, n_ss), model_params),
         error = function(e) NULL)
       if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(NULL)
 
@@ -280,7 +283,7 @@ t_proj <- system.time({
       n_ss      <- min(STEADY_STATE_YEARS, nrow(clim))
       xi_for_ss <- tryCatch(
         compute_xi_mean_yasso07_engine(
-          clim[seq_len(n_ss), , drop = FALSE], model_params),
+          hiket_ss_clim(pid, clim, n_ss), model_params),
         error = function(e) NULL)
       if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(NULL)
 

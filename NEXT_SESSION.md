@@ -57,6 +57,29 @@ initialisation. Do NOT rewrite storyline/manuscript before the discussion; some 
    - Runs: production recalibrates (initial states change) + the equilibrium arm re-run with the SAME mean climate
      (Lorenzo) → ONE PAIR. Current eqinit jobs 2075931–36 stay valid for the current production.
    - Attribution figures S15–S17 now show 1985–2024 only (pre-run gain only as a CSV column).
+   - ✅ **CODE READY 2026-10-12 — window 1961–1984 (FMI, already extracted; no new data).** Switch
+     `HIKET_PRERUN_CLIM_YEARS=1961-1984` (`Calibration_real_data_transient/prerun_climate.R`; unset =
+     production unchanged). One helper `hiket_ss_clim()` replaces the 1985–2004 slice everywhere (engine, six
+     calibration + six predictive scripts, `attribution_decomposition.R`); Yasso15/20 `precip_mean` follows.
+     The pre-run climate travels in the input bundle (`climate_ss_by_plot`, `PRERUN_CLIM`), so predictive and
+     attribution replay the RUN's own climate regardless of the shell.
+     Tests (`doublechecks/prerun_climate_test.R`): the new path on the 1985–2004 window reproduces production ll
+     EXACTLY in all six; at the production posterior median the 1961–84 window lowers the pre-run ξ ~8% and
+     raises the 1985 stock **+9–10%** (SP1/TP2/TP3/Yasso07) / **+5%** (Yasso15/20 — own humus modifier).
+     Also with the window ON: prior pre-flight 0% blow-ups in all six (K=300, full N); equilibrium nesting
+     test PASS (≤2e-13); end-to-end smoke (tiny TP2 calibration, both arms → predictive with the switch UNSET)
+     replays `1961-1984` from the bundle. Updated for post-run use: `build_F4_initialization.R`,
+     `init_state_plausibility.R` (⚠ it used the WHOLE 1985–2024 climate for the pre-run ξ, not production's 20 yr —
+     its recorded 1917 stocks predate the fix). Attribution figures: `HIKET_ATTR_JOINT=1` → `_joint` variant with
+     the two joint effects of climate as hatched bands (main effects at the reference corner; no new runs).
+     **LAUNCH (Roihu):** `git pull` (no `.f90` changed → no recompile), then
+     `bash Calibration_real_data_transient/submit_prerun_clim.sh --pair` → 12 jobs (`pclim_<m>` +
+     `pclim_<m>_eq`). ⚠ Consider staggering the two arms (node co-location). Check:
+     `grep -H "PRERUN CLIMATE" progress_logs/pclim_*.err` → `ON -- … 1961-1984` and `456 plots x 24 yr`;
+     eq jobs also `EQUILIBRIUM INIT ON`. The production arm becomes the newest untagged posterior ⇒ the figure
+     layer auto-picks it (intended). ⬜ After landing: `doublechecks/init_state_plausibility.R` and other
+     doublechecks that slice `clim[seq_len(n_ss),]` themselves still use 1985–2004 — switch them to
+     `hiket_ss_clim()` before quoting their numbers.
    - ✅ Documentation REWRITTEN IN WORDS (2026-10-09): `manuscript/appendices/appendix_attribution.tex`, 5 pp, for
      Lorenzo's review. FINAL METHOD: three runs (1 model; 2 balanced start; 3 balanced start + reference climate):
      inherited = 1−2, climate = 2−3, litter = 3. Joint effects assigned by order: litter×climate −0.9 tC/ha in the

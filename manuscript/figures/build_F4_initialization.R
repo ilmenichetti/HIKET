@@ -1,4 +1,5 @@
 source("manuscript/figures/run_ids.R")   # auto-selects current RUN_IDs
+source("Calibration_real_data_transient/prerun_climate.R")   # hiket_ss_clim(): the run's pre-run climate
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 # F4 -- THE INITIALIZATION PROBLEM (protagonist). TWO STACKED PANELS, shared x axis
 # (layout, heights 2:1; x ticks and label on the LOWER panel only).
@@ -122,6 +123,7 @@ if (!file.exists(CACHE)) {
     pkg <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", m, rid[[m]]))
     post <- readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds", m, rid[[m]]))
     pm <- apply(getSample(post), 2, median); SSY <- pkg$STEADY_STATE_YEARS; plots <- pkg$plots_real
+    hiket_set_prerun_clim(pkg$climate_ss_by_plot, as.character(plots))   # NULL (old bundle) => first SSY years
     # TP2/TP3: alpha_A is externally anchored to ICBM (C1) and held FIXED, so it is
     # NOT a posterior column and must be re-injected exactly as the calibration and
     # predictive scripts do. Without it the cascade coefficients are NA and the
@@ -132,7 +134,7 @@ if (!file.exists(CACHE)) {
     if(m %in% c("SP1","TP2","TP3")){
       step <- tolower(m); if(step=="sp1"){}
       Mtx <- sapply(plots, function(pid){ clim<-pkg$climate_by_plot[[pid]]; n<-min(SSY,nrow(clim))
-        xm<-unname(compute_xi_mean_yasso07(clim[seq_len(n),,drop=FALSE], pm["beta1"], pm["beta2"], pm["gamma"]))
+        xm<-unname(compute_xi_mean_yasso07(hiket_ss_clim(pid, clim, n), pm["beta1"], pm["beta2"], pm["gamma"]))
         spinup_simple(pm, pkg$litter_means[[pid]], xm, step) })
     } else {
       if(m=="Yasso07"){ PN<-YASSO07_PARAM_NAMES; DEF<-YASSO07_DEFAULT_PARAMS; steady<-yasso07_steady_state; runf<-yasso07_run; xil<-FALSE; xifn<-function(cl) compute_xi_mean_yasso07(cl, pm["beta1"],pm["beta2"],pm["gamma"]); SS<-min(SSY,NA) }
@@ -142,7 +144,7 @@ if (!file.exists(CACHE)) {
       fixnm <- setdiff(PN, free); pmf <- c(DEF[fixnm], pm[free])[PN]; pmf <- c(pmf, sigma_init=unname(pm["sigma_init"]), sigma_input=unname(pm["sigma_input"]))
       mo <- if(m=="Yasso07") SSY else SSY*12L
       Mtx <- sapply(plots, function(pid){ clim<-pkg$climate_by_plot[[pid]]; n<-min(mo,nrow(clim))
-        xm<-xifn(clim[seq_len(n),,drop=FALSE]); spinup_yasso(pmf, pkg$litter_means[[pid]], xm, PN, steady, runf, xil) })
+        xm<-xifn(hiket_ss_clim(pid, clim, n)); spinup_yasso(pmf, pkg$litter_means[[pid]], xm, PN, steady, runf, xil) })
     }
     spin[[m]] <- data.frame(year=1917:1984, m=rowMeans(Mtx, na.rm=TRUE))
 
