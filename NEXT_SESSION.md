@@ -1,6 +1,50 @@
 # NEXT SESSION — start here
 
-## ⭐⭐ 0-NOW (closed 2026-10-12, resume 2026-10-13)
+## ⭐⭐ 0-NOW (2026-10-13). THE PRE-RUN-CLIMATE PAIR HAS LANDED AND EVERYTHING IS RESTATED
+
+**Runs.** Production `20261012_104221` (SP1, TP2, TP3, Yasso07, Yasso20) / `_104220` (Yasso15); balanced start
+`20261012_122348` (SP1, TP2) · `_125950` (TP3) · `_130503` (Yasso07) · `_132602` (Yasso15) · `_132728` (Yasso20).
+All 12 jobs COMPLETED in 13–20 h, `PRERUN CLIMATE ON` (1961–1984, 2.18 °C) in all, `EQUILIBRIUM INIT ON` in
+the six eq jobs, 40 cores, R-hat ≤ 1.009, 0 warnings, 100% finite, no OOM. Synced; stages 2–4, the eq arm,
+every `manuscript/figures/build_*.R`, the residual chain (F11 stand-and-soil and F11b re-copied), the core
+doublechecks and the NextGenC bundle rebuilt. Old outputs kept for comparison in `/tmp/claude-501/before/`
+(scratch, not durable — the old posteriors themselves stay in `runs/`).
+
+**What moved (new vs 20260831 / 20261008):**
+
+| | before | now |
+|---|---|---|
+| calib R² / holdout R² | 0.016–0.021 / ≤0.0012 | 0.015–0.020 / ≤0.001 |
+| σ_input (flux) | 3.19–4.34 | 1.28–1.75 (3.22–4.40) |
+| σ_init (5 models; SP1) | 0.49–0.60; 0.83 | 0.45–0.56; 0.78 |
+| C_1917 | 41.9–52.3 | **46–56** (all clear the 45 placeholder) |
+| MTT Yasso07/15/20 | 24.6/27.1/22.6 | 23.7/26.8/22.3 (ratios 0.71/0.88/1.02) |
+| published-MTT fit cost | 9.7/3.0/0 | 8.4/1.3/0 |
+| ridge r (Yasso; SP1/TP2/TP3) | −0.59/−0.53/−0.56; −0.76/−0.47/−0.45 | −0.61/−0.54/−0.54; −0.77/−0.44/−0.42 |
+| rate 1985–2024 production | +0.10…+0.35 | **+0.05…+0.30** (SP1 +0.05, Yasso20 +0.10 below obs) |
+| rate 1985–2024 balanced start | −0.05…+0.04 | **−0.11…−0.02 (all lose carbon)**; 1985–2006 none reaches obs |
+| balanced start 1985 stock | ~72 | 73–76 (obs 64.5) |
+| ΔLL eq − prod | within 6 | up to −8 (production better in 5 of 6) |
+| attribution (inherited / litter / climate / total) | +9.3 / +8.6 / −7.5 / +10.5 | **+11.3 / +8.9 / −12.2 / +8.0** |
+| headroom 2024 (forward) | +26…+42% | +21…+40% (SP1 ≈ 0) |
+| equilibrium headroom 1985 (doublecheck) | +28…+49% | +39…+67% ⚠ reference = cold 1961–84 climate |
+| sink 2025–44 production / eq | +0.07…+0.22 / −0.06…+0.02 | +0.07…+0.18 / −0.12…+0.02 |
+| warming SSP2-4.5, Yasso07 arm diff | −2.08 | −2.22 [−3.74, −0.97] |
+
+⭐ **Story consequences.** (1) The balanced start now LOSES carbon in all six — R1 is sharper. (2) The
+inherited part EXCEEDS the whole modelled sink in all six; the warming (vs the colder reference) takes back
+more than the litter adds. "Most of the sink is the history" → "the sink is the history, and more". (3) The
+size of the climate part rests on the reference climate — state it. (4) The six-model mean modelled sink is
+≈0 from ~2006 (S16), against the observed +0.12 (fragile). (5) Residual decay by 1985 basal area unchanged.
+
+⬜ **Open from this update:** (a) the draft's "within 3.5 tC/ha of every campaign mean" does not reproduce
+(F3 cache: max gap 4.9 old, 5.0 new) — find its basis or restate; (b) the equilibrium-headroom doublecheck
+uses the pre-run climate for C_eq → 39–67%, inconsistent with the forward headroom (21–40%) — decide which
+reference the paper quotes (the draft quotes the forward one); (c) look at the NextGenC maps (far-south loss
+region) before any deposit; (d) arm A vs arm B paragraph in the draft still quotes the 2026-08/09 runs (a
+sensitivity on the old basis) — keep as is or rerun.
+
+## ✅ 0-NOW (closed 2026-10-12; DONE 2026-10-13, see above)
 
 **1. Roihu runs — check first.** The pre-run-climate pair (1961–1984 mean) is in flight: production
 **2227219–24**, balanced start **2234048–53** (`progress_logs/pclim_*`). Production verified at launch

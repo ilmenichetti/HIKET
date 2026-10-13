@@ -117,13 +117,13 @@ input. The litter input and the input of 1917 were estimated together with the m
 parameters in a Bayesian calibration, with an error model in which observations share
 part of their error by plot, by region and by campaign. All six models represented the
 national trajectory of soil carbon, and none could be distinguished from the others by
-its fit. The calibration placed the models at a litter input $1.3$ to $1.7$ times the
+its fit. The calibration placed the models at a litter input $1.3$ to $1.8$ times the
 input supplied by a tree-litter product and, in Yasso07 and Yasso15, at mean transit
-times $27$ and $11$ per cent shorter than published, whereas Yasso20 was not displaced.
+times $29$ and $12$ per cent shorter than published, whereas Yasso20 was not displaced.
 Litter input and transit time trade off against each other, and returning to the
 published transit times cost little in fit, so the observations suggest a direction
 rather than impose a value. The position on this trade-off changed the projection of
-Yasso07 only. Under a constant litter input the models placed the soil $26$ to $42$ per
+Yasso07 only. Under a constant litter input the models placed the soil $21$ to $40$ per
 cent below its state of balance, consistent with an earlier reconstruction, while the
 projected sink fell by a third to a half within $60$ years; the size of that sink depended
 on how depleted the soil was estimated to be at the start. None of the models
@@ -1754,10 +1754,17 @@ therefore be read as evidence that the model is better.
 
 \suppfig{F5\_stock\_change}
 
+% ROUND 7, 2026-10-13: ALL run-dependent numbers in the draft restated on the recalibrated
+% pair with the 1961-1984 pre-run climate (production 20261012_1042*). Moved: R2 0.015-0.020,
+% holdout RMSE spread 5.6% (median RMSE, multimodel holdout table; the old 3.6% did not
+% reproduce, 4.2% on this basis), flux 3.22-4.40, MTT 23.7/26.8/22.3 (0.71/0.88/1.02), fit cost
+% 8.4/1.3/0, ridge r -0.54..-0.61, headroom 21-40%, sinit 0.45-0.56 (SP1 0.78), F15 -2.22.
+% UNVERIFIED: "within 3.5 tC/ha of every campaign mean" -- the F3 cache gives a max gap of
+% 4.9 (old run) and 5.0 (new run); the 3.5 did not reproduce on either.
 The fit does not separate the model structures either. Skill does not increase with
-the number of pools: the coefficient of determination is $0.016$ to $0.021$ on the
-calibration plots and no more than $0.0012$ on the held-out plots, and the root mean
-squared error on the held-out plots differs by $3.6$ per cent between the best and the
+the number of pools: the coefficient of determination is $0.015$ to $0.020$ on the
+calibration plots and no more than $0.001$ on the held-out plots, and the root mean
+squared error on the held-out plots differs by $5.6$ per cent between the best and the
 worst model (Table~\ref{tab:models}). Skill is measured plot by plot, so the
 coefficient of determination measures how well the models separate one plot from
 another, and none of the six represents the local variation that separates them
@@ -1789,8 +1796,8 @@ that agree within the observed window can therefore disagree outside it.
 Yasso at a faster turnover, than the published parameterisations}
 % ROUND 5, 2026-09-23 (P1, note 2114): "requires" removed throughout. Fit cost of the
 % published MTT from F14_mrt_ridge.rds (run 20260831, built 2026-09-11): best ll within
-% +-5% of the published POINT vs best overall = 9.7 / 3.0 / 0.0 (upper bounds);
-% P(MTT >= published) = 0.2% / 6.5% / 61%.
+% +-5% of the published POINT vs best overall = 8.4 / 1.3 / 0.0 (upper bounds; run 20261012, was 9.7 / 3.0 / 0.0);
+% P(MTT >= published) = 0.1% / 6.1% / 56% (run 20261012; was 0.2 / 6.5 / 61).
 
 % ROUND 5, 2026-09-23 (note 1732): no section split; the collapsed opening subsection ends on the hinge sentence.
 
@@ -1798,19 +1805,19 @@ The calibrated models sit away from their published parameterisations in two
 quantities at once, and the displacement in transit time is graded across the three
 versions of Yasso rather than uniform. The effective litter input, defined as the
 multiplier $\sigma_{\mathrm{input}}$ times the litter input carried by the product,
-ranges from $3.19$ to $4.34$ tonnes of carbon per hectare per year, against the
-$2.511$ tonnes that the product supplies. The intrinsic mean transit time is $24.6$
-years for Yasso07, $27.1$ years for Yasso15 and $22.6$ years for Yasso20, against
+ranges from $3.22$ to $4.40$ tonnes of carbon per hectare per year, against the
+$2.511$ tonnes that the product supplies. The intrinsic mean transit time is $23.7$
+years for Yasso07, $26.8$ years for Yasso15 and $22.3$ years for Yasso20, against
 published values of $33.5$, $30.4$ and $21.9$ years respectively. Expressed as a
 ratio of the calibrated transit time to the published transit time, the three
-versions of Yasso give $0.73$, $0.89$ and $1.03$.
+versions of Yasso give $0.71$, $0.88$ and $1.02$.
 
 Yasso20 therefore serves as a negative control, and the negative control is worth
 stating explicitly. The calibration displaces the transit time of Yasso07 strongly,
 displaces the transit time of Yasso15 moderately, and does not displace the
-transit time of Yasso20 at all: the calibrated value for Yasso20 lies three per cent
+transit time of Yasso20 at all: the calibrated value for Yasso20 lies two per cent
 above the published value, and the $90$ per cent posterior interval of the calibrated
-value, from $19.6$ to $26.4$ years, contains the published value comfortably. A
+value, from $19.5$ to $25.9$ years, contains the published value comfortably. A
 calibration that moved every model in the same direction by a similar amount would be
 open to the objection that the movement came from the data treatment or from the
 likelihood rather than from the models. A calibration that moves two models and leaves
@@ -1836,8 +1843,8 @@ faster fits the observations as well as a soil that receives less litter and
 decomposes it more slowly. The calibration moves along that trade-off.
 Moving along the trade-off back towards the published transit time costs little in
 fit. Among the posterior draws that lie within five per cent of the published transit
-time, the best fit is at most $9.7$ log-likelihood units below the best fit overall for
-Yasso07, at most $3.0$ units for Yasso15, and no lower for Yasso20, and $6.5$ per cent
+time, the best fit is at most $8.4$ log-likelihood units below the best fit overall for
+Yasso07, at most $1.3$ units for Yasso15, and no lower for Yasso20, and $6.1$ per cent
 of the posterior of Yasso15 lies at or beyond the published value. The soil
 measurements therefore suggest a direction rather than impose a value.
 
@@ -1852,7 +1859,7 @@ a transient starting state adds is information about the rate at which the soil
 approaches its eventual stock, and the rate of approach depends on the transit
 time alone. Estimating the starting state therefore narrows the trade-off, and the
 narrowing is partial: across the three versions of Yasso the transit time and the
-litter multiplier still correlate between $-0.64$ and $-0.73$.
+litter multiplier still correlate between $-0.54$ and $-0.61$.
 
 \subsection{The displacement in litter input follows the data more than the prior}
 
@@ -1888,7 +1895,7 @@ The multiplier $\sigma_{\mathrm{input}}$ is worth reading as a physical quantity
 not as a nuisance parameter, because the multiplier is not scale-free. Multiplied by
 the litter input the product supplies, the multiplier becomes an effective flux of
 litter carbon to the soil, and an effective flux can be compared with independent
-budgets. The gap to be explained is between $0.68$ and $1.83$ tonnes of carbon per
+budgets. The gap to be explained is between $0.71$ and $1.89$ tonnes of carbon per
 hectare per year.
 
 The most likely explanation is not that the litter model is wrong but that the
@@ -2004,7 +2011,7 @@ input rather than as a quantified addition to its total.
 Two of the candidate fluxes can be given Finnish numbers. Understorey vegetation
 supplies between $0.51$ and $0.67$ tonnes of carbon per hectare per year, and
 mycorrhizal residues plausibly supply a further $0.2$ to $0.5$. The two together
-reach the lower end of the gap of $0.68$ to $1.83$. Carbon released by living roots,
+reach the lower end of the gap of $0.71$ to $1.89$. Carbon released by living roots,
 priced at the agricultural coefficient and applied to the fine-root share of our own
 litter product, would add a further $0.73$, which taken at face value would carry the
 total past the upper end of the gap.
@@ -2035,8 +2042,8 @@ after the observed window is extrapolation and not fit.
 \hfig{F15_forward_arms}{0.90}{forward}{\textbf{Projections from the published parameterisation and from the calibration, under the same scenarios.} Neither arm was recalibrated, and only the litter input multiplier was refitted, so that both arms reproduce the observed window equally well and any later divergence is extrapolation rather than fit. Only Yasso07 separates the two arms.}
 
 
-Only Yasso07 separates the two arms. In Yasso07 the two arms differ by $-2.08$
-tonnes of carbon per hectare, with an interval from $-3.57$ to $-0.79$, under the
+Only Yasso07 separates the two arms. In Yasso07 the two arms differ by $-2.22$
+tonnes of carbon per hectare, with an interval from $-3.74$ to $-0.97$, under the
 SSP2-4.5 scenario. Yasso15 and Yasso20 do not separate at all.
 
 The reason only Yasso07 separates is structural. Yasso07 applies a single climate
@@ -2060,9 +2067,9 @@ changes the projection, and a more useful one for an inventory.
 % +20%: extra 2050 6.1-10.2 (TP3..SP1), 2084 8.9-13.3; share of eventual gain by 2084
 % Y07 .55, Y15 .49, Y20 .46, TP2 .55, TP3 .54, SP1 .94.
 With the litter input held at its present value, five of the six models place the
-soil well below its state of balance: the equilibrium stock lies $26$ to $42$ per cent
-above the stock of 2024 in TP2, TP3 and the three versions of Yasso ($27$ per cent in
-Yasso07, $42$ in Yasso15, $35$ in Yasso20). SP1, whose single pool turns over slowly and
+soil well below its state of balance: the equilibrium stock lies $21$ to $40$ per cent
+above the stock of 2024 in TP2, TP3 and the three versions of Yasso ($25$ per cent in
+Yasso07, $40$ in Yasso15, $38$ in Yasso20). SP1, whose single pool turns over slowly and
 uniformly, is within one per cent of balance. \citet{Liski2006} estimated that Finnish
 upland soils would eventually settle at a level $38$ per cent above that of 1922, a
 value inside the range of the three versions of Yasso. The two estimates were obtained
@@ -2070,10 +2077,10 @@ by different routes, a reconstruction started in balance and a calibration start
 of balance, and agree in magnitude although their reference years differ.
 
 The distance from balance is realised slowly. Over the first $20$ years of the
-projection the sink is $0.07$ to $0.11$ tonnes of carbon per hectare per year in the
-three versions of Yasso and $0.21$ to $0.22$ in TP2 and TP3; over the last $20$ years it
-has fallen to about $0.05$ in the versions of Yasso and $0.13$ in TP2 and TP3, and by
-2084 the versions of Yasso have realised $14$ to $21$ per cent of their distance from
+projection the sink is $0.07$ to $0.09$ tonnes of carbon per hectare per year in the
+three versions of Yasso and $0.18$ in TP2 and TP3; over the last $20$ years it
+has fallen to about $0.05$ in the versions of Yasso and $0.10$ in TP2 and TP3, and by
+2084 the versions of Yasso have realised $13$ to $20$ per cent of their distance from
 balance. None of the six models turns into a source. The sink declines within decades
 because the pools that turn over fastest approach balance first, whereas most of the
 remaining distance lies in the slowest pool, which approaches balance over centuries
@@ -2081,22 +2088,23 @@ remaining distance lies in the slowest pool, which approaches balance over centu
 before the stock does.
 
 % ROUND 5, 2026-09-23: sigma_init as an effective starting deficit. Within-model
-% correlations over the 100 draws (sigma_init vs headroom -0.79..-0.97; vs sink 2025-44
-% -0.89..-0.95); 1917 input / product 1985 = median of sigma_init*sigma_input over the
-% full posterior, 0.83-0.97 in five models (SP1 1.07); rise 1/sigma_init x1.70-2.05.
+% correlations over the 100 draws (sigma_init vs headroom -0.76..-0.97; vs sink 2025-44
+% -0.88..-0.94); 1917 input / product 1985 = median of sigma_init*sigma_input over the
+% full posterior, 0.79-0.94 in five models (SP1 1.00); rise 1/sigma_init x1.79-2.21.
+% (restated 2026-10-13 on run 20261012, 1961-1984 pre-run climate)
 The remaining sink is inherited from the estimated starting state. Within each model,
 the parameter $\sigma_{\mathrm{init}}$ correlates with the distance from balance at
-$-0.79$ to $-0.97$ and with the projected sink of the first $20$ years at $-0.89$ to
-$-0.95$ across the posterior draws: the lower the litter input of 1917 relative to that
+$-0.76$ to $-0.97$ and with the projected sink of the first $20$ years at $-0.88$ to
+$-0.94$ across the posterior draws: the lower the litter input of 1917 relative to that
 of 1985, the more the soil still has to gain. The calibration places
-$\sigma_{\mathrm{init}}$ at $0.49$ to $0.60$ in five of the six models, with upper $90$ per
-cent limits of $0.64$ to $0.76$, whereas the growing-stock record of the national forest
+$\sigma_{\mathrm{init}}$ at $0.45$ to $0.56$ in five of the six models, with upper $90$ per
+cent limits of $0.61$ to $0.73$, whereas the growing-stock record of the national forest
 inventory implies about $0.90$ and the reconstruction of \citet{Liski2006} about $0.86$;
-only SP1, at $0.83$, is compatible with that record. In absolute terms the calibrated
-litter input of 1917 is not low, between $0.83$ and $0.97$ times the input the product
+only SP1, at $0.78$, is compatible with that record. In absolute terms the calibrated
+litter input of 1917 is not low, between $0.79$ and $0.94$ times the input the product
 supplies for 1985 in the five models, because $\sigma_{\mathrm{input}}$ raises it; what
-departs from the record is the rise of the input between 1917 and 1985, a factor of $1.7$
-to $2.1$ in the calibration against about $1.1$ in the growing stock. Of the two halves
+departs from the record is the rise of the input between 1917 and 1985, a factor of $1.8$
+to $2.2$ in the calibration against about $1.1$ in the growing stock. Of the two halves
 of the starting state, the ratio of inputs rests on a growing stock that the forest
 inventory has measured since the 1920s, whereas the balance of the soil of 1917 with its
 own input rests on no measurement at all, and the centuries of slash-and-burn
@@ -2153,10 +2161,10 @@ standing basal area of the plot, whereas the observed stocks are not.
 
 
 Measured directly, the slope of the logarithm of the stock against basal area is
-between $+0.044$ and $+0.049$ per square metre per hectare in the six models, and
+between $+0.037$ and $+0.049$ per square metre per hectare in the six models, and
 $+0.0044$ in the observations. The residual therefore falls with basal area in all
 six models, with slopes between $-0.032$ and $-0.044$ and with $p$ values from
-$10^{-16}$ to $10^{-111}$, on the calibration plots, on the held-out plots, and on
+$10^{-16}$ to $10^{-109}$, on the calibration plots, on the held-out plots, and on
 the two pooled. Adjusting the observed relation for region and for soil type reduces
 the observed slope further, to $+0.0018$, at which point the observed relation is no
 longer statistically significant.
@@ -2173,7 +2181,7 @@ We tested whether the discrepancy could instead be a mismatch between compartmen
 The stock simulated by Yasso covers dead organic matter as well as soil organic
 matter, and woody litter enters the simulated stock, whereas the observations are
 soil measurements that cannot contain a stump. Setting the woody litter inputs to
-zero moves the modelled gradient by six per cent, from $0.0755$ to $0.0710$ in
+zero moves the modelled gradient by six per cent, from $0.0757$ to $0.0711$ in
 Yasso15, against a fifteen-fold difference to the observed gradient. The three
 simple models provide the decisive control, because the three simple models carry a
 single total litter flux with no information about composition at all, and the three
@@ -2247,7 +2255,7 @@ soil does not follow.
 
 The properties of the site add a smaller part, and each part points in an ecologically
 sensible direction. At the same basal area, fertile sites hold about $14$ per cent more
-carbon than the average plot and the poorest, xeric sites about $25$ per cent less;
+carbon than the average plot and the poorest, xeric sites about $26$ per cent less;
 fine-textured soils hold about $13$ per cent more; and soils with little stone hold
 about $29$ per cent more, while very stony soils hold about $17$ per cent less. Together
 the three properties raise the explained share from $42$ to $53$ per cent. None of the
@@ -2491,7 +2499,7 @@ are insensitive to the same movement, and are therefore more robust to a calibra
 choice that the present data cannot settle.
 
 Under a constant litter input, the soil carbon sink of Finnish upland forests is
-saturating. The models place the soil $26$ to $42$ per cent below its state of balance,
+saturating. The models place the soil $21$ to $40$ per cent below its state of balance,
 in agreement with the $38$ per cent estimated by \citet{Liski2006}, yet the sink they
 project falls by a third to a half within $60$ years, because most of the remaining distance
 lies in the slowest pool and is realised only over centuries. How much sink remains

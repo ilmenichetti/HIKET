@@ -731,6 +731,15 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ CURRENT RUNS (2026-10-13): the 1961–1984 pre-run-climate pair.** Production `20261012_1042*`,
+  balanced start `20261012_12*`–`13*` (jobs 2227219–24, 2234048–53; R-hat ≤ 1.009). Everything downstream
+  rebuilt (stages 2–4, eq arm, all figure builders, residual chain, NextGenC bundle) and every number in
+  the draft, storyline v4 and attribution appendix restated. ⭐ Balanced start now LOSES carbon in all six
+  (−0.11…−0.02 over 1985–2024); attribution +11.3 inherited / +8.9 litter / −12.2 climate = +8.0 (the
+  inherited part exceeds the sink; the climate part's SIZE rests on the reference climate). Full
+  before/after table and open items: `NEXT_SESSION.md` §0-NOW (2026-10-13). Memory [[run-prerun-clim-20261012]].
+  ⚠ Every number elsewhere in this file dated before 2026-10-13 is on the superseded runs.
+
 - **⬜ ATTRIBUTION ANALYSIS (noted 2026-10-08, NOT designed — Lorenzo will explain):** which model
   components — inputs, previous C (inherited state), climate — drive the results over time. Comes
   AFTER the equilibrium-init part is finished; both feed the story update. `NEXT_SESSION.md` 0-NOW.
