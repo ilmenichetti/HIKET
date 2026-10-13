@@ -754,7 +754,7 @@ guards key on those filenames.
   (`hiket_set_prerun_clim` + `hiket_ss_clim`).** (2) **Storyline recomposed** with Lorenzo's email to Samuli and
   Aleksi (decomposition closes R2; R3 forecasts with two side arcs; R4 independent). (3) **Recalibrated
   decomposition machinery** (`scenario_switches.R`, `submit_arms.sh`, `refresh_all_local.sh`; tests
-  `doublechecks/scenario_switch_tests.R`); the `eqinit_climheld` arm launched that evening → three-part
+  `doublechecks/scenario_switch_tests.R`); the `eqinit_climheld` arm launched that evening (jobs 2265953–58, SP1…Yasso20) → three-part
   recalibrated S16 first, interactions after the inputs are frozen. (4) **New inputs expected** (Boris: understorey
   litter 1985/1995/2006/2023; Ossi: 2006 BioSoil biomass) → rerun everything with `submit_arms.sh all` +
   `refresh_all_local.sh`. Resume point: `NEXT_SESSION.md` § RESUME HERE.
