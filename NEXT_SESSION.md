@@ -44,6 +44,14 @@ enters only via the calibration: rerunning with the balanced-start posteriors (`
 sum −3.2 vs −3.5, negative in every model under both. Exceeds within-model uncertainty only for Yasso15/20. Written
 up in `appendix_attribution.tex` §"How much the parts depend on the calibration"; ⬜ manuscript section later.
 
+⬜ **EVENTUAL TO-DO (Lorenzo, 2026-10-13): a RECALIBRATED decomposition** — every run its own calibration, so
+the division becomes "a comparison between assumptions ONLY" (conceptually more robust, easier to explain,
+consistent with the rest of the methods). Runs 1 and 2 already exist (production, eqinit); needs run 3 =
+balanced start + reference climate held through 1985-2024, recalibrated (new switch + 6 Roihu jobs). Already
+known for free: the recalibrated inherited part (production − eqinit sinks) = fixed-parameter one within ±5%
+in all six (mean 11.5 vs 11.3). Pre-check first: prior→posterior shift of the climate parameters (S11/S12) —
+if prior-pinned, the recalibrated climate part will mostly test the priors. Not now: story first.
+
 ⬜ **Open from this update:** (a) the draft's "within 3.5 tC/ha of every campaign mean" does not reproduce
 (F3 cache: max gap 4.9 old, 5.0 new) — find its basis or restate; (b) the equilibrium-headroom doublecheck
 uses the pre-run climate for C_eq → 39–67%, inconsistent with the forward headroom (21–40%) — decide which
