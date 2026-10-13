@@ -26,8 +26,9 @@
 #   PRERUN_YEARS=1961-1984 bash ... (default)        DRY=1 bash ...  (print, do not submit)
 #
 # Logs:  progress_logs/<arm>_<model>_<jobid>.{out,err}
-# Check: grep -H -E "EQUILIBRIUM INIT\] ON|CLIMATE HELD\] ON|LITTER HELD\] ON|PRERUN CLIMATE\] ON|Cores per chain" \
-#          Calibration_real_data_transient/progress_logs/<arm>_*.err
+# Check (ONE line; first `squeue -u menichet` -- the logs exist only once a job runs; the
+#        trailing /dev/null stops grep from waiting on the keyboard if no file matches):
+#   grep -H -E 'EQUILIBRIUM INIT\] ON|CLIMATE HELD\] ON|LITTER HELD\] ON|PRERUN CLIMATE\] ON|Cores per chain' Calibration_real_data_transient/progress_logs/<arm>_*.err /dev/null
 #        expect the arm's switches ON, PRERUN CLIMATE ON, and "Cores per chain: 40".
 # =============================================================================
 set -euo pipefail
