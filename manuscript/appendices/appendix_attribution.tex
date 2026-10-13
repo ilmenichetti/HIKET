@@ -295,6 +295,86 @@ do not.
 The litter product includes harvest residues and has no separate natural-mortality term, so
 neither can be separated from the litter parts.
 
+\subsection{How much the parts depend on the calibration}
+\label{app:attribution_params}
+
+% 2026-10-13. Numbers: doublechecks/attribution_decomposition.R (production) and the same
+% script with HIKET_ATTR_PARAMS=eq (doublechecks/attribution_eqparams.rds); 50 draws per
+% model, 310 plots, 1985-2024. Production 20261012_1042*, balanced start 20261012_12*-13*.
+
+Within each model, all runs of the division use one and the same set of parameters, a draw
+from the posterior. The runs differ only in the starting state and in the forcing: the
+balanced start of runs 2 and 3 sets $\sigma_{\mathrm{init}}$ to one and changes nothing else, and
+$\sigma_{\mathrm{init}}$ acts on nothing after 1985. No run is recalibrated. The division is
+therefore a counterfactual on one fixed model, and the initial-state assumption cannot reach
+the litter and climate parts through the runs themselves.
+
+The assumption reaches them one level up, through the calibration. The parameters were
+estimated with the starting state free; a calibration that assumes a balanced start retains
+different parameters, less litter input and, in most models, faster and more
+temperature-sensitive decomposition (the balanced-start comparison of the main text). The litter and climate parts are
+computed on balanced runs, yet with parameters that were chosen because the soil was allowed a
+deficit. Two sources of variation in the parts are then worth separating: the uncertainty of the
+parameters within one calibration, and the change of the parameters between the two
+calibrations.
+
+\paragraph{Within one calibration.} Over the posterior draws of each model, the litter and
+climate parts are narrow (standard deviation 0.6 to 2.5\,t\,C\,ha$^{-1}$), because they follow the
+measured litter and climate. The inherited part is the uncertain one (standard deviation 2 to
+4\,t\,C\,ha$^{-1}$): it is set almost entirely by $\sigma_{\mathrm{init}}$ (correlation $-0.85$ to
+$-0.99$), the size of the deficit, and it carries most of the uncertainty of the total sink.
+The litter and climate parts move against each other (correlation $-0.75$ to $-0.93$): a draw in
+which more of the added litter stays in the soil also loses more to the warming, because both
+scale with the carbon passing through the soil. Their sum is therefore more stable than either
+part, and it is negative in every draw of every model, from $-1.2$ (Yasso15) to
+$-4.6$\,t\,C\,ha$^{-1}$ (SP1). That is why the inherited part exceeds the whole sink in every draw.
+
+\paragraph{Between the two calibrations.} The division was repeated with the parameters of the
+calibration that assumes a balanced start in 1985 (the same runs, plots and number of draws;
+$\sigma_{\mathrm{init}}$ is one, so the inherited part is zero by construction). Over 1985--2024:
+
+\begin{center}
+\small
+\begin{tabular}{lrrrrrr}
+\hline
+ & \multicolumn{2}{c}{climate} & \multicolumn{2}{c}{litter since 1985} & \multicolumn{2}{c}{climate + litter} \\
+ & free start & balanced start & free start & balanced start & free start & balanced start \\
+\hline
+SP1     & $-16.8$ & $-16.1$ & $+12.1$ & $+11.6$ & $-4.6$ & $-4.5$ \\
+TP2     & $-11.3$ & $-12.3$ & $+7.3$  & $+7.3$  & $-3.8$ & $-5.0$ \\
+TP3     & $-11.1$ & $-11.5$ & $+7.4$  & $+6.8$  & $-3.9$ & $-4.7$ \\
+Yasso07 & $-11.9$ & $-11.1$ & $+8.4$  & $+7.2$  & $-3.3$ & $-3.9$ \\
+Yasso15 & $-10.3$ & $-8.6$  & $+9.2$  & $+7.6$  & $-1.2$ & $-1.0$ \\
+Yasso20 & $-11.5$ & $-9.6$  & $+9.0$  & $+7.6$  & $-2.4$ & $-2.1$ \\
+\hline
+six-model mean & $-12.2$ & $-11.5$ & $+8.9$ & $+8.0$ & $-3.2$ & $-3.5$ \\
+\hline
+\end{tabular}
+
+{\footnotesize t\,C\,ha$^{-1}$, medians over 50 posterior draws; ``free start'' = the production
+calibration, ``balanced start'' = the calibration with $\sigma_{\mathrm{init}} \equiv 1$.}
+\end{center}
+
+The initial-state assumption of the calibration moves the climate part by $-17$ to $+9$ per cent
+and the litter part by $-18$ to $-1$ per cent; in the six-model mean, by $-6$ and $-10$ per cent.
+The largest shifts are in Yasso15 and Yasso20, where the balanced-start calibration retains 9 to
+15 per cent less litter input, which shrinks the litter part and, with less carbon passing
+through the soil, the climate part as well. In those two models the shift of the climate part,
+$1.7$ to $1.9$\,t\,C\,ha$^{-1}$, is larger than the uncertainty within one calibration; in the other
+four it is not. The sum of the two parts barely moves (six-model mean $-3.2$ against $-3.5$), and
+it is negative under both calibrations in every model.
+
+\paragraph{Reading.} The litter and climate parts are properties of each calibrated model, not of
+the processes in general, and the initial-state assumption reaches them through the parameters.
+The effect is measurable but second-order: smaller than the differences between model structures
+(the climate part ranges from $-10.3$ to $-16.8$ between models) and much smaller than the effect
+of the reference climate (the climate part grew by about 60 per cent when the reference moved to
+1961--1984). The conclusion the division supports does not depend on it: under either calibration
+the litter change since 1985 and the climate together remove a little carbon over 1985--2024, so
+the modelled sink of that period is carried by the state the soil inherited. What the balanced
+start removes is that inherited part, not the litter and climate parts; this is why it cannot
+reproduce the measured accumulation.
+
 \subsection{Open choices for review}
 \label{app:attribution_open}
 \begin{enumerate}

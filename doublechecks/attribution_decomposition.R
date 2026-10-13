@@ -43,7 +43,12 @@
 #
 # Usage:  Rscript doublechecks/attribution_decomposition.R [N_DRAW] [MODELS...]
 #         HIKET_ATTR_CORES (default 4)
-# Output: doublechecks/attribution.rds (stamped with the RUN_IDs)
+#         HIKET_ATTR_PARAMS=eq  -> PARAMETER-SOURCE TEST (2026-10-13): same runs, same
+#           definitions, but the draws come from the BALANCED-START calibration (eqinit
+#           posteriors, sigma_init = 1). Inherited part = 0 by construction; the climate and
+#           litter parts then show how much they depend on the calibration's initial-state
+#           assumption (it enters ONLY through the parameters -- no run is reparameterised).
+# Output: doublechecks/attribution.rds, or attribution_eqparams.rds with HIKET_ATTR_PARAMS=eq
 # Setup side effects (input bundle, sanity PNG) are removed at the end.
 # =============================================================================
 
@@ -60,7 +65,10 @@ snap <- function() c(list.files("Data/model_inputs", full.names = TRUE),
                      list.files("Calibration_real_data_transient/diagnostics", recursive = TRUE,
                                 full.names = TRUE, include.dirs = TRUE))
 before <- snap()
-suppressMessages({ source("manuscript/figures/run_ids.R"); source("manuscript/figures/obs_basis.R") })
+suppressMessages({ source("manuscript/figures/run_ids_eqinit.R"); source("manuscript/figures/obs_basis.R") })
+EQP <- identical(Sys.getenv("HIKET_ATTR_PARAMS", ""), "eq")
+if (EQP) { RID <- RID_EQ; cat("PARAMETER SOURCE: balanced-start calibration (eqinit posteriors, sigma_init = 1)\n") }
+PTAG <- if (EQP) "_eqinit" else ""
 cat("RUN_IDs:", paste(names(RID[MODELS]), RID[MODELS], sep = "=", collapse = " | "), "\n")
 
 # --- the real calibration script up to the MCMC launch: its own engine functions ----
@@ -155,14 +163,15 @@ attribute_plot <- function(e, mp, pid) {
   out
 }
 
-out <- list(rid = RID[MODELS], n_draw = N_DRAW, proj_years = PROJ_YEARS, version = "level_v3_sequential", models = list())
+out <- list(rid = RID[MODELS], params = if (EQP) "eqinit" else "production", n_draw = N_DRAW, proj_years = PROJ_YEARS, version = "level_v3_sequential", models = list())
 for (M in MODELS) {
   t0 <- Sys.time()
   e  <- setup_model(M)
   bal  <- as.character(balanced_plots(e$obs_meta))
-  post <- readRDS(sprintf("Calibration_real_data_transient/runs/%s_posterior_%s.rds", M, RID[[M]]))
+  post <- readRDS(sprintf("Calibration_real_data_transient/runs/%s%s_posterior_%s.rds", M, PTAG, RID[[M]]))
+  if (EQP) post <- cbind(post, sigma_init = 1)
   # Pre-run climate = reference climate: the RUN's own (input bundle), not this shell's.
-  bun <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", M, RID[[M]]))
+  bun <- readRDS(sprintf("Data/model_inputs/%s%s_inputs_%s.rds", M, PTAG, RID[[M]]))
   hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
   if (!is.null(bun$climate_ss_by_plot)) e$litter_means <- bun$litter_means   # its precip_mean too
   cat(M, "pre-run / reference climate:", hiket_prerun_label(), "\n")
@@ -186,5 +195,6 @@ for (M in MODELS) {
 new <- setdiff(snap(), before)                    # setup side effects
 unlink(new[!dir.exists(new)]); unlink(new[dir.exists(new)], recursive = TRUE)
 cat(sprintf("removed %d setup side-effect files\n", length(new)))
-saveRDS(out, "doublechecks/attribution.rds")
-cat("saved doublechecks/attribution.rds\n")
+OUTF <- if (EQP) "doublechecks/attribution_eqparams.rds" else "doublechecks/attribution.rds"
+saveRDS(out, OUTF)
+cat("saved", OUTF, "\n")

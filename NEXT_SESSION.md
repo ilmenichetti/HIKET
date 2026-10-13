@@ -37,6 +37,13 @@ more than the litter adds. "Most of the sink is the history" → "the sink is th
 size of the climate part rests on the reference climate — state it. (4) The six-model mean modelled sink is
 ≈0 from ~2006 (S16), against the observed +0.12 (fragile). (5) Residual decay by 1985 basal area unchanged.
 
+⭐ **Attribution vs the calibration's initial-state assumption (Samuli's worry, quantified 2026-10-13).** No run of
+the division is reparameterised (one draw = one parameter set; runs change only start and forcing). The assumption
+enters only via the calibration: rerunning with the balanced-start posteriors (`HIKET_ATTR_PARAMS=eq` →
+`doublechecks/attribution_eqparams.rds`) moves climate −17…+9% and litter −18…−1% (6-model mean −6 / −10%); their
+sum −3.2 vs −3.5, negative in every model under both. Exceeds within-model uncertainty only for Yasso15/20. Written
+up in `appendix_attribution.tex` §"How much the parts depend on the calibration"; ⬜ manuscript section later.
+
 ⬜ **Open from this update:** (a) the draft's "within 3.5 tC/ha of every campaign mean" does not reproduce
 (F3 cache: max gap 4.9 old, 5.0 new) — find its basis or restate; (b) the equilibrium-headroom doublecheck
 uses the pre-run climate for C_eq → 39–67%, inconsistent with the forward headroom (21–40%) — decide which
