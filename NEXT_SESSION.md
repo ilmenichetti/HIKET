@@ -62,6 +62,14 @@ missing warming through σ_input/kinetics, i.e. the climate part rests on the pr
 well as S2 (at production's best point, holding the climate RAISED the log-likelihood in 4 of 5 models tested
 — SP1 −169.6 → −158.6, Yasso20 −260.1 → −249.6: worth knowing whatever the run shows).
 
+📌 **PLAN (Lorenzo, 2026-10-13):** when `eqinit_climheld` lands → the recalibrated decomposition in THREE PARTS
+as a TEMPORARY main S16 (interactions inside the parts, assigned by order, as now). The interactions (five
+terms) wait until the input datasets are FROZEN (Boris's understorey litter, Ossi's 2006 biomass): then
+`submit_arms.sh all` (adds `eqinit_litheld`, `climheld`) + `refresh_all_local.sh`. The joint-term code path in
+the recalibrated mode and the `_recal_joint` builder path are written but UNTESTED end to end (no arms yet) --
+expect small fixes then, not a rebuild. Meanwhile the joint sizes (+1.5 / −1.3 tC/ha) come from the
+fixed-parameter version (appendix).
+
 ⬜ **EVENTUAL TO-DO (Lorenzo, 2026-10-13): a RECALIBRATED decomposition** — every run its own calibration, so
 the division becomes "a comparison between assumptions ONLY" (conceptually more robust, easier to explain,
 consistent with the rest of the methods). Runs 1 and 2 already exist (production, eqinit); needs run 3 =
