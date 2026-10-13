@@ -748,6 +748,16 @@ guards key on those filenames.
   inherited part exceeds the sink; the climate part's SIZE rests on the reference climate). Full
   before/after table and open items: `NEXT_SESSION.md` §0-NOW (2026-10-13). Memory [[run-prerun-clim-20261012]].
   ⚠ Every number elsewhere in this file dated before 2026-10-13 is on the superseded runs.
+  **Later the same day:** (1) **F15 bug fixed** — `f15_forward_experiment.R` / `published_arm_dat.R` built the 1985
+  start under the 1985–2024 climate, not the run's pre-run (Samuli's catch); Yasso07 arm difference −2.66.
+  ⚠ **RULE: any script that builds a starting state must load the run's input bundle and use its pre-run climate
+  (`hiket_set_prerun_clim` + `hiket_ss_clim`).** (2) **Storyline recomposed** with Lorenzo's email to Samuli and
+  Aleksi (decomposition closes R2; R3 forecasts with two side arcs; R4 independent). (3) **Recalibrated
+  decomposition machinery** (`scenario_switches.R`, `submit_arms.sh`, `refresh_all_local.sh`; tests
+  `doublechecks/scenario_switch_tests.R`); the `eqinit_climheld` arm launched that evening → three-part
+  recalibrated S16 first, interactions after the inputs are frozen. (4) **New inputs expected** (Boris: understorey
+  litter 1985/1995/2006/2023; Ossi: 2006 BioSoil biomass) → rerun everything with `submit_arms.sh all` +
+  `refresh_all_local.sh`. Resume point: `NEXT_SESSION.md` § RESUME HERE.
 
 - **⬜ ATTRIBUTION ANALYSIS (noted 2026-10-08, NOT designed — Lorenzo will explain):** which model
   components — inputs, previous C (inherited state), climate — drive the results over time. Comes

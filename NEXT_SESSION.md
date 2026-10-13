@@ -1,5 +1,48 @@
 # NEXT SESSION — start here
 
+## ⭐⭐⭐ RESUME HERE (closed 2026-10-13 evening)
+
+**1. First: the `eqinit_climheld` arm** (6 jobs, launched by Lorenzo the evening of 2026-10-13 with
+`submit_arms.sh eqinit_climheld` — ⬜ record the job IDs). `squeue -u menichet`; logs with the ONE-line check
+below (§ recalibrated decomposition). When landed: rsync `runs/`, `diagnostics/`, `Data/model_inputs/`, then
+`HIKET_ATTR_MODE=recalibrated Rscript doublechecks/attribution_decomposition.R` and
+`HIKET_ATTR_RECAL=1 Rscript manuscript/figures/build_S15S17_attribution.R` → a THREE-PART recalibrated S16
+(temporary main figure). Compare with the expectations written before launch (§ recalibrated decomposition).
+Then restate S16 numbers in the storyline (R2 end), the attribution appendix, and decide the appendix's
+fixed-parameter vs recalibrated presentation.
+
+**2. Where the story stands** — `manuscript/HIKET_storyline_v4.tex`, recomposed with Lorenzo's email to Samuli and
+Aleksi (`~/Downloads/The storyline I propose.eml`): general → Finnish case (saturation?) → trilemma in Finland as a
+hypothesis; R1 balanced start fails; R2 relaxed works, ridge shifts, and the SCENARIO DECOMPOSITION closes it
+(S16 five terms in the email; temporarily three parts once recalibrated); R3 forecasts, "did we get it wrong?",
+two side arcs (temperature; inputs & saturation); R4 future development, independent side arm with suggestions.
+Load-bearing figures = those in the email; all others kept in the appendix (promote: F19, saturation figure, F4, F9).
+**Coauthor feedback:** Samuli likes it ("can become complex if not extremely well written"; offers time to make it
+digestible); his F15 question exposed a bug, now fixed (below). Aleksi likes it; Boris is building understorey
+litter for 1985/1995/2006/2023 and Ossi could estimate 2006 biomass for BioSoil plots → **new inputs expected in
+~2 weeks; Lorenzo: we keep the current inputs, rerun everything once they come** (`submit_arms.sh all` +
+`refresh_all_local.sh`). Aleksi also pointed to Peltoniemi et al. 2006 Fig. 4 (below).
+
+**3. Fixed today (all pushed):** (a) **F15 started both arms from the wrong climate** (1985–2024 mean instead of the
+run's 1961–1984 pre-run): our arm 6–11 tC/ha low. Fixed in `published_arm_dat.R` + `f15_forward_experiment.R`;
+Yasso07 arm difference now −2.66 [−4.21, −1.40]; caption says the published arm is level-fitted to the campaign
+means. (b) Setup by-products (input bundles keyed to RUN_IDs without posteriors) cleaned; `refresh_all_local.sh`
+now cleans them automatically.
+
+**4. Analyses done today, not yet in the storyline/draft text** (offered, Lorenzo to decide):
+- **Parameter-source test of the decomposition** (`HIKET_ATTR_PARAMS=eq`): climate −17…+9%, litter −18…−1% when
+  the parameters come from the balanced-start calibration; sum negative in all. In the attribution appendix.
+- **Recalibrated inherited part** (production − eqinit sinks) = fixed-parameter one within ±5% (mean 11.5 vs 11.3).
+- **Persistence of the inherited sink** (answers Aleksi / Peltoniemi 2006 Fig. 4): half-time Yasso20 12, Yasso15 16,
+  SP1 25, Yasso07 30, TP2/TP3 62 yr; share of the 1985 inherited sink left in 2024: 17 / 24 / 28 / 41 / 73–76%.
+  Peltoniemi 2006 uses the ORIGINAL Yasso only (no Yasso07 — ask Aleksi for his Yasso07 source). Proposed for
+  R2 (decomposition) + the appendix; ⬜ not written yet.
+- **Within-model spread of the parts** (inherited driven by σ_init, r −0.85…−0.99; litter and climate tight and
+  anticorrelated; "inherited > sink" in every posterior draw). In the appendix.
+
+**5. Still open from the morning** (below): "within 3.5 tC/ha" in the draft does not reproduce; the
+equilibrium-headroom reference climate; NextGenC far-south loss patch; arm A/B paragraph on old runs.
+
 ## ⭐⭐ 0-NOW (2026-10-13). THE PRE-RUN-CLIMATE PAIR HAS LANDED AND EVERYTHING IS RESTATED
 
 **Runs.** Production `20261012_104221` (SP1, TP2, TP3, Yasso07, Yasso20) / `_104220` (Yasso15); balanced start
