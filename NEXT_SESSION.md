@@ -47,7 +47,8 @@ up in `appendix_attribution.tex` §"How much the parts depend on the calibration
 🚀 **THE RECALIBRATED DECOMPOSITION — MACHINERY READY 2026-10-13, launch tonight (Lorenzo):**
 On Roihu: `cd /scratch/project_2019134/HIKET && git pull`, then in a shell with `module load r-env`:
 `bash Calibration_real_data_transient/submit_arms.sh eqinit_climheld` (6 jobs; no .f90 change, no recompile).
-Check: `grep -H -E "EQUILIBRIUM INIT\] ON|CLIMATE HELD\] ON|PRERUN CLIMATE\] ON|Cores per chain" progress_logs/eqinit_climheld_*.err`.
+Check (after `squeue -u menichet` shows R; ONE line -- the `/dev/null` stops grep waiting on stdin):
+`grep -H -E 'EQUILIBRIUM INIT\] ON|CLIMATE HELD\] ON|PRERUN CLIMATE\] ON|Cores per chain' Calibration_real_data_transient/progress_logs/eqinit_climheld_*.err /dev/null`.
 Landed → rsync, then `HIKET_ATTR_MODE=recalibrated Rscript doublechecks/attribution_decomposition.R` and
 `HIKET_ATTR_RECAL=1 Rscript manuscript/figures/build_S15S17_attribution.R` (or the whole
 `refresh_all_local.sh`). **After the new litter data: `submit_arms.sh all` + `refresh_all_local.sh`.**
