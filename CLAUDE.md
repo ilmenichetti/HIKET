@@ -87,6 +87,15 @@ to reach R inside the r-env container):
 | `HIKET_SIGMA_INPUT_CENTRE` | prior centre of `sigma_input` in all six models; `1.27` reproduces arm A (Liski 2006) | 1.08 (arm B, production) |
 | `HIKET_PRERUN_CLIM_YEARS` | `<y0>-<y1>`: mean climate of that window drives the 1917–1984 pre-run (and the equilibrium start, and the attribution's reference climate); stored in the input bundle, so predictive/attribution replay the run's own (`prerun_climate.R`) | unset = first 20 model years (1985–2004) |
 | `HIKET_N_CHAINS` / `_N_ITER` / `_N_BURNIN` | short test runs | 5 / 50000 / 5000 |
+| `HIKET_CLIMATE_HELD` | `1`: forward climate modifier held at the pre-run (reference) value — scenario arms of the recalibrated decomposition (`scenario_switches.R`); outputs tagged `_climheld` | off |
+| `HIKET_LITTER_HELD` | `1`: forward litter held at its 1985–89 level; outputs tagged `_litheld` | off |
+
+**Arms** (2026-10-13): launch any set with `Calibration_real_data_transient/submit_arms.sh` (`production`,
+`eqinit`, `eqinit_climheld`, `eqinit_litheld`, `climheld`; groups `decomp3`, `decomp5`/`all`), always with the
+same pre-run climate. Rebuild everything locally with `Calibration_real_data_transient/refresh_all_local.sh`.
+The predictive stage refuses held arms; the recalibrated decomposition runs them directly
+(`HIKET_ATTR_MODE=recalibrated doublechecks/attribution_decomposition.R` → `attribution_recalibrated.rds`;
+figures with `HIKET_ATTR_RECAL=1`, suffix `_recal`). Tests: `doublechecks/scenario_switch_tests.R`.
 
 ---
 

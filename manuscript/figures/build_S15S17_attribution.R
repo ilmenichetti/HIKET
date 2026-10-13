@@ -30,12 +30,16 @@
 # Per model: POSTERIOR MEAN over the draws (means add up). Average: unweighted over models.
 #
 # Usage:  Rscript manuscript/figures/build_S15S17_attribution.R
+#         HIKET_ATTR_RECAL=1 -> the RECALIBRATED decomposition (every scenario its own
+#         calibration; doublechecks/attribution_recalibrated.rds); outputs carry "_recal".
 # =============================================================================
 
 setwd("/Users/ilmenichetti/Library/CloudStorage/OneDrive-Valtion/HIKET/SOC_modeling")
 source("manuscript/figures/model_palette.R")
-Z <- readRDS("doublechecks/attribution.rds")
-if (!identical(Z$version, "level_v3_sequential")) stop("attribution.rds is not the sequential (3-run) version -- rerun the decomposition")
+RECAL <- identical(Sys.getenv("HIKET_ATTR_RECAL"), "1")
+Z <- readRDS(if (RECAL) "doublechecks/attribution_recalibrated.rds" else "doublechecks/attribution.rds")
+if (!Z$version %in% c("level_v3_sequential", "recalibrated")) stop("unknown attribution version -- rerun the decomposition")
+if (RECAL != identical(Z$version, "recalibrated")) stop("HIKET_ATTR_RECAL does not match the file read")
 MS <- intersect(MODEL_ORDER, names(Z$models))
 COMP     <- c("history", "inputs", "climate")
 # Labels (Lorenzo, 2026-10-08): "historical C" IS an input effect -- the litter rise before
@@ -58,7 +62,7 @@ if (JOINT) {
                 inputs_x_clim = COMP_COL[["climate"]])
   HATCH    <- setNames(COMP %in% c("hist_x_clim", "inputs_x_clim"), COMP)
 }
-SFX_J <- if (JOINT) "_joint" else ""
+SFX_J <- paste0(if (JOINT) "_joint" else "", if (RECAL) "_recal" else "")
 Y0 <- 1985; Y_PROJ <- 2024
 
 # Projection CUT (Lorenzo, 2026-10-08): the figures stop at 2024. The decomposition
@@ -70,6 +74,8 @@ Y_START <- Y0; Y_END <- Y_PROJ
 mean_arr_full <- function(m) apply(Z$models[[m]]$arr, c(1, 2), mean)
 mean_arr <- function(m) { a <- mean_arr_full(m); a <- a[a[, "year"] >= Y_START & a[, "year"] <= Y_END, , drop = FALSE]
   if (JOINT) {
+    if (anyNA(a[, c("inter_hist_clim", "interaction")]))
+      stop("five-term figure: the joint effects need arms S4 (_eqinit_litheld) and S1' (_climheld)")
     a <- cbind(a, hist_x_clim = a[, "inter_hist_clim"], inputs_x_clim = a[, "interaction"])
     a[, "history"] <- a[, "history"] - a[, "inter_hist_clim"]   # run 1' - 3 (reference climate)
     a[, "climate"] <- a[, "climate"] - a[, "interaction"]       # run 4 - 5 (reference litter)
@@ -88,7 +94,7 @@ stopifnot(max(abs(rowSums(Pm) - Fm)) < 1e-9)
 sm <- function(P, W) {
   if (W == 1L) return(P)
   P <- as.matrix(P); out <- P
-  for (k in list(yr < Y0, yr >= Y0)) if (any(k))
+  for (k in list(yr < Y0, yr >= Y0)) if (any(k) && !anyNA(P[k, ]))
     out[k, ] <- apply(P[k, , drop = FALSE], 2, rmean, W = W)
   out
 }
@@ -131,7 +137,9 @@ legend_top <- function(ncol = 4) {                                # ncol = 2 on 
          col = c(rep(NA, length(COMP)), "grey10"), lty = c(rep(NA, length(COMP)), 1),
          lwd = c(rep(NA, length(COMP)), 1.8))
 }
-note <- sprintf("balanced plot set (n = %d), unweighted national mean; %d posterior draws per model (mean); production runs %s",
+note <- if (RECAL) sprintf("RECALIBRATED: every scenario its own calibration; balanced plot set (n = %d), unweighted national mean; %d draws per arm (mean); runs %s",
+                Z$models[[MS[1]]]$n_plots, Z$n_draw, paste(unique(substr(unlist(Z$rid[MS]), 1, 8)), collapse = "/")) else
+  sprintf("balanced plot set (n = %d), unweighted national mean; %d posterior draws per model (mean); production runs %s",
                 Z$models[[MS[1]]]$n_plots, Z$n_draw, paste(unique(substr(Z$rid[MS], 1, 8)), collapse = "/"))
 ylab_sink <- expression("Sink  (tC ha"^-1*" yr"^-1*")")
 

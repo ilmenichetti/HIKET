@@ -44,6 +44,23 @@ enters only via the calibration: rerunning with the balanced-start posteriors (`
 sum −3.2 vs −3.5, negative in every model under both. Exceeds within-model uncertainty only for Yasso15/20. Written
 up in `appendix_attribution.tex` §"How much the parts depend on the calibration"; ⬜ manuscript section later.
 
+🚀 **THE RECALIBRATED DECOMPOSITION — MACHINERY READY 2026-10-13, launch tonight (Lorenzo):**
+On Roihu: `cd /scratch/project_2019134/HIKET && git pull`, then in a shell with `module load r-env`:
+`bash Calibration_real_data_transient/submit_arms.sh eqinit_climheld` (6 jobs; no .f90 change, no recompile).
+Check: `grep -H -E "EQUILIBRIUM INIT\] ON|CLIMATE HELD\] ON|PRERUN CLIMATE\] ON|Cores per chain" progress_logs/eqinit_climheld_*.err`.
+Landed → rsync, then `HIKET_ATTR_MODE=recalibrated Rscript doublechecks/attribution_decomposition.R` and
+`HIKET_ATTR_RECAL=1 Rscript manuscript/figures/build_S15S17_attribution.R` (or the whole
+`refresh_all_local.sh`). **After the new litter data: `submit_arms.sh all` + `refresh_all_local.sh`.**
+Tests passed (`doublechecks/scenario_switch_tests.R`): switches off = production ll identical (5 models);
+held hooks = an independent construction of the decomposition's scenarios, exactly; a stand-in S3 reproduced
+the fixed-parameter parts; a 600-iteration SP1 smoke calibration ran end to end, tagged `_eqinit_climheld`.
+**Written before launch:** (1) inherited part unchanged (S1, S2 already exist: ~11.5); (2) S3 (balanced,
+reference climate) within ±20% of the fixed-parameter S3 under balanced-start parameters (+8.0 six-model mean),
+so the climate part ≈ −11.5 ± 2.5 — a much smaller climate part would mean the calibration compensates the
+missing warming through σ_input/kinetics, i.e. the climate part rests on the priors; (3) S3 fits at least as
+well as S2 (at production's best point, holding the climate RAISED the log-likelihood in 4 of 5 models tested
+— SP1 −169.6 → −158.6, Yasso20 −260.1 → −249.6: worth knowing whatever the run shows).
+
 ⬜ **EVENTUAL TO-DO (Lorenzo, 2026-10-13): a RECALIBRATED decomposition** — every run its own calibration, so
 the division becomes "a comparison between assumptions ONLY" (conceptually more robust, easier to explain,
 consistent with the rest of the methods). Runs 1 and 2 already exist (production, eqinit); needs run 3 =

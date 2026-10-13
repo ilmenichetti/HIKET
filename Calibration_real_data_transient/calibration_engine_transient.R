@@ -52,6 +52,11 @@ source("./Calibration_real_data_transient/equilibrium_init.R")
 # Pre-run climate window (2026-10-12). Inert unless HIKET_PRERUN_CLIM_YEARS is set.
 source("./Calibration_real_data_transient/prerun_climate.R")
 
+# Scenario arms of the recalibrated decomposition (2026-10-13). Inert unless
+# HIKET_CLIMATE_HELD=1 / HIKET_LITTER_HELD=1. Sourced AFTER equilibrium_init.R: it
+# redefines hiket_eq_tag() to compose every switch.
+source("./Calibration_real_data_transient/scenario_switches.R")
+
 
 # Override make_likelihood() with transient_init support.
 # Only the sd_vec line and function signature differ from the original.
@@ -212,6 +217,10 @@ make_likelihood <- function(n_cores,
         compute_xi_mean(clim_ss, model_params),
         error = function(e) NULL)
       if (is.null(xi_for_ss) || !is_valid_xi(xi_for_ss)) return(-Inf)
+      # Scenario switches (scenario_switches.R): inert unless HIKET_CLIMATE_HELD /
+      # HIKET_LITTER_HELD is set. Climate held = the pre-run modifier every year.
+      xi_array <- hiket_xi_held(xi_array, xi_for_ss)
+      inputs   <- hiket_litter_held(inputs, lm)
       
       C_init <- tryCatch(
         steady_state(model_params, lm, xi_for_ss),

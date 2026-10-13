@@ -44,6 +44,7 @@ if (length(args) >= 1) {
 }
 
 MODEL_NAME      <- hiket_eq_tag("TP2")   # "_eqinit" in the equilibrium arm
+hiket_arm_predictive_guard()   # held scenario arms are not a predictive stage (scenario_switches.R)
 N_PP_DRAWS      <- 100L
 CORES_PER_CHAIN <- parallel::detectCores() - 1L
 

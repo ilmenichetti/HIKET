@@ -48,7 +48,20 @@
 #           posteriors, sigma_init = 1). Inherited part = 0 by construction; the climate and
 #           litter parts then show how much they depend on the calibration's initial-state
 #           assumption (it enters ONLY through the parameters -- no run is reparameterised).
-# Output: doublechecks/attribution.rds, or attribution_eqparams.rds with HIKET_ATTR_PARAMS=eq
+#         HIKET_ATTR_MODE=recalibrated -> THE RECALIBRATED DECOMPOSITION (2026-10-13): every
+#           scenario carries its OWN calibration (Calibration_real_data_transient/
+#           scenario_switches.R), so the parts are a comparison between assumptions only:
+#             S1  production                  (estimated start, observed litter and climate)
+#             S2  <model>_eqinit              (balanced start)
+#             S3  <model>_eqinit_climheld     (balanced start, reference climate)
+#             S4  <model>_eqinit_litheld      (balanced start, litter held)     [five terms]
+#             S1' <model>_climheld            (estimated start, reference climate) [five terms]
+#           history = S1 - S2, climate = S2 - S3, litter = S3; joint effects when S4 / S1'
+#           exist (litter x climate = S2 - S3 - S4; history x climate = (S1-S2) - (S1'-S3)),
+#           NA otherwise. Each arm's sink is ITS OWN model under the conditions that define
+#           it; draws are independent between arms. Same structure as attribution.rds.
+# Output: doublechecks/attribution.rds, attribution_eqparams.rds with HIKET_ATTR_PARAMS=eq,
+#         or attribution_recalibrated.rds with HIKET_ATTR_MODE=recalibrated
 # Setup side effects (input bundle, sanity PNG) are removed at the end.
 # =============================================================================
 
@@ -163,7 +176,90 @@ attribute_plot <- function(e, mp, pid) {
   out
 }
 
+# --- RECALIBRATED MODE: one arm = one calibration, run under its own conditions ----------
+RECAL <- identical(Sys.getenv("HIKET_ATTR_MODE", ""), "recalibrated")
+ARMS <- list(S1  = list(sfx = "",                 eq = FALSE, clim = FALSE, lit = FALSE, need = TRUE),
+             S2  = list(sfx = "_eqinit",          eq = TRUE,  clim = FALSE, lit = FALSE, need = TRUE),
+             S3  = list(sfx = "_eqinit_climheld", eq = TRUE,  clim = TRUE,  lit = FALSE, need = TRUE),
+             S4  = list(sfx = "_eqinit_litheld",  eq = TRUE,  clim = FALSE, lit = TRUE,  need = FALSE),
+             S1p = list(sfx = "_climheld",        eq = FALSE, clim = TRUE,  lit = FALSE, need = FALSE))
+arm_rid <- function(M, sfx) {
+  fs <- list.files("Calibration_real_data_transient/runs",
+                   pattern = sprintf("^%s%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", M, sfx))
+  if (!length(fs)) return(NA_character_)
+  sub(sprintf("^%s%s_posterior_(.+)\\.rds$", M, sfx), "\\1", sort(fs, decreasing = TRUE)[1])
+}
+# The arm's own sink 1985-2084 on one plot: start, climate and litter as the arm defines
+# them (the same constructions as attribute_plot: xr = pre-run modifier repeated, Ur =
+# litter at the 1985-89 level). sigma_init = 1 for a balanced start.
+arm_plot <- function(e, mp, pid, A) {
+  clim <- e$climate_by_plot[[pid]]; inp <- e$inputs_by_plot[[pid]]; lm <- e$litter_means[[pid]]
+  ny <- nrow(inp); rpy <- nrow(clim) %/% ny
+  if (A$eq) mp["sigma_init"] <- 1
+  xi_h  <- e$.compute_xi(clim, mp)
+  xi_ss <- e$.compute_xi_mean(hiket_ss_clim(pid, clim, min(e$.n_ss, nrow(clim))), mp)
+  C0 <- e$.steady_state(mp, lm, xi_ss)
+  yp <- max(inp$year) + seq_len(PROJ_YEARS)
+  cr <- tail(clim, RECYCLE_YEARS * rpy)
+  cp <- cr[((seq_len(PROJ_YEARS * rpy) - 1L) %% (RECYCLE_YEARS * rpy)) + 1L, , drop = FALSE]
+  cp$year <- rep(yp, each = rpy); if (rpy == 12L && "month" %in% names(cp)) cp$month <- rep(1:12, PROJ_YEARS)
+  rownames(cp) <- NULL
+  ip <- inp[rep(ny, PROJ_YEARS), , drop = FALSE]; ip$year <- yp; rownames(ip) <- NULL
+  U  <- rbind(inp, ip); N <- nrow(U)
+  xi <- if (A$clim) xi_rep(xi_ss, N) else xi_cat(xi_h, e$.compute_xi(cp, mp))
+  if (A$lit) { Ur <- litter_rows(lm, U, rep(1, N), 1, U$year); if ("precip" %in% names(U)) Ur$precip <- U$precip; U <- Ur }
+  R <- e$.run_model(U, mp, C0, xi)
+  cbind(year = U$year, F = diff(c(sum(C0), R$total_soc)))
+}
+arm_sinks <- function(e, M, A, rid, bal) {
+  post <- readRDS(sprintf("Calibration_real_data_transient/runs/%s%s_posterior_%s.rds", M, A$sfx, rid))
+  if (!"sigma_init" %in% colnames(post)) post <- cbind(post, sigma_init = 1)
+  bun <- readRDS(sprintf("Data/model_inputs/%s%s_inputs_%s.rds", M, A$sfx, rid))
+  hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
+  if (!is.null(bun$climate_ss_by_plot)) e$litter_means <- bun$litter_means
+  ks <- sort(sample(nrow(post), N_DRAW))
+  S <- sapply(ks, function(k) {
+    mp <- e$.assemble(setNames(as.numeric(post[k, ]), colnames(post)))
+    R  <- parallel::mclapply(bal, function(p) tryCatch(arm_plot(e, mp, p, A), error = function(z) NULL),
+                             mc.cores = CORES)
+    R  <- R[!vapply(R, is.null, logical(1))]
+    Reduce(`+`, lapply(R, function(r) r[, "F"])) / length(R)
+  })
+  list(S = S, ks = ks)
+}
+
 out <- list(rid = RID[MODELS], params = if (EQP) "eqinit" else "production", n_draw = N_DRAW, proj_years = PROJ_YEARS, version = "level_v3_sequential", models = list())
+if (RECAL) {
+  out <- list(version = "recalibrated", n_draw = N_DRAW, proj_years = PROJ_YEARS, rid = list(), models = list())
+  for (M in MODELS) {
+    t0 <- Sys.time(); e <- setup_model(M); bal <- as.character(balanced_plots(e$obs_meta))
+    rids <- vapply(ARMS, function(A) arm_rid(M, A$sfx), character(1))
+    miss <- names(rids)[is.na(rids) & vapply(ARMS, `[[`, TRUE, "need")]
+    if (length(miss)) stop(M, ": recalibrated decomposition needs arms ", paste(miss, collapse = ", "),
+                           " (", paste(vapply(ARMS[miss], `[[`, "", "sfx"), collapse = ", "), ")")
+    cat(M, "arms:", paste(names(rids), ifelse(is.na(rids), "--", rids), sep = "=", collapse = " | "), "\n")
+    SS <- lapply(names(ARMS), function(a) if (is.na(rids[[a]])) NULL else arm_sinks(e, M, ARMS[[a]], rids[[a]], bal))
+    names(SS) <- names(ARMS)
+    yr <- 1984L + seq_len(nrow(SS$S1$S))                 # 1985 .. 2084
+    NAm <- matrix(NA_real_, nrow(SS$S1$S), N_DRAW)
+    S1 <- SS$S1$S; S2 <- SS$S2$S; S3 <- SS$S3$S
+    S4 <- if (is.null(SS$S4)) NAm else SS$S4$S; S1p <- if (is.null(SS$S1p)) NAm else SS$S1p$S
+    arr <- simplify2array(lapply(seq_len(N_DRAW), function(d)
+      cbind(year = yr, F = S1[, d], history = S1[, d] - S2[, d], inputs = S3[, d], climate = S2[, d] - S3[, d],
+            interaction = S2[, d] - S3[, d] - S4[, d],
+            inter_hist_clim = (S1[, d] - S2[, d]) - (S1p[, d] - S3[, d]))))
+    out$models[[M]] <- list(arr = arr, n_plots = length(bal), arms = rids,
+                            draws = lapply(SS, function(z) if (is.null(z)) NULL else z$ks))
+    out$rid[[M]] <- rids
+    cat(sprintf("%-8s %d draws per arm x %d plots in %.1f min | 1985-2024: S1 %+.1f  S2 %+.1f  S3 %+.1f tC/ha\n",
+                M, N_DRAW, length(bal), as.numeric(difftime(Sys.time(), t0, units = "mins")),
+                mean(colSums(S1[yr <= 2024, ])), mean(colSums(S2[yr <= 2024, ])), mean(colSums(S3[yr <= 2024, ]))))
+  }
+  new <- setdiff(snap(), before)
+  unlink(new[!dir.exists(new)]); unlink(new[dir.exists(new)], recursive = TRUE)
+  saveRDS(out, "doublechecks/attribution_recalibrated.rds")
+  cat("saved doublechecks/attribution_recalibrated.rds\n"); quit(save = "no")
+}
 for (M in MODELS) {
   t0 <- Sys.time()
   e  <- setup_model(M)
