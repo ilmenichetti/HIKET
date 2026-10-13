@@ -168,6 +168,92 @@
 \end{tikzpicture}
 \end{center}}
 
+% --- THE GENERAL STORYLINE SCHEMA (one page, after "The story on one page") ---
+% Four lanes: the trilemma thread | the main arc | the nested sigma side arm | the side arms.
+% Bars under each section = proposed weight (0.055 cm per %).
+\newcommand{\wbar}[3][blue!45!black]{% node, weight in %
+  \fill[#1] ($(#2.south west)+(0.05,-0.20)$) rectangle ++({0.055*#3},0.09);
+  \node[font=\tiny\bfseries, text=#1, anchor=west, inner sep=1pt] at ($(#2.south west)+({0.07+0.055*#3},-0.155)$) {#3\,\%};}
+\newcommand{\archSchema}{%
+\begin{center}
+\resizebox{!}{0.74\textheight}{%
+\begin{tikzpicture}[
+  sp/.style={cl=58mm, inner sep=4pt},
+  tm/.style={cl=30mm, thr, font=\tiny, align=center},
+  sg/.style={cl=31mm, cav, align=left},
+  sa/.style={cl=33mm, font=\tiny},
+  lh/.style={font=\scriptsize\scshape, text=black!60},
+  hook/.style={dotted, thick, violet!60!black}]
+\coordinate (xT) at (0,0); \coordinate (xS) at (10.9,0); \coordinate (xF) at (14.6,0);
+% --- lane headers ---
+\node[lh] at (0, 1.35)    {the trilemma thread};
+\node[lh] at (5.6, 1.35)  {the main arc};
+\node[lh] at (10.9, 1.35) {nested: the $\sigma$'s};
+\node[lh] at (14.6, 1.35) {side arms};
+\draw[black!20] (-1.7,1.05) -- (16.4,1.05);
+% --- the main arc (spine) ---
+\node[sp] (I) at (5.6, 0) {\textbf{Introduction} · soil carbon carries a long history; a balanced start
+  assumes it away, and \textbf{that decides the forecast} $\to$ the trilemma $\to$ Finland, the test field
+  $\to$ objectives.};
+\node[sp, below=6mm of I] (M) {\textbf{Methods} · one SOC basis, the litter product (F1; S18), six models on
+  one footing, the estimated start ($\sigma_{\mathrm{init}}$, from 1917), the balanced-start comparison with
+  written expectations.};
+\node[sp, below=6mm of M] (R1) {\textbf{R1 · the opening} · the problem tested the hard way: with the
+  measured litter and near-published kinetics a balanced start stays flat ($-0.05$ to $+0.04$ against
+  $+0.26$), overshoots 1985, bends the kinetics and still fails. \ev{F16}};
+\node[sp, key, font=\scriptsize, inner sep=2pt, below=8mm of R1] (H) {first conclusions $\Rightarrow$
+  \textbf{the justification of the central choice}};
+\node[sp, key, below=6mm of H] (R2) {\textbf{R2 · the resolution --- the main arc}\\
+  relax the steady-state assumption: from the idea to its implementation ($\sigma_{\mathrm{init}}$)\\[2pt]
+  $\cdot$ the soil series reconciled {\tiny\itshape\color{black!60}(F3)}\\
+  $\cdot$ the history carries the sink: $+9.3$ of $+10.5$ inherited {\tiny\itshape\color{black!60}(S16)}\\
+  $\cdot$ where the models land: transit times {\tiny\itshape\color{black!60}(F12)}\\
+  $\cdot$ across the ridge --- resolved as far as the data allow {\tiny\itshape\color{black!60}(F18)}};
+\node[sp, below=9mm of R2] (R4) {\textbf{R4 · the fit, then the plots} · near-zero plot skill
+  ($R^2 \le 0.021$); inputs and soil disagree between plots; each plot carries its own history.
+  \ev{F11, F11 stand and soil}};
+\node[sp, below=9mm of R4] (D) {\textbf{Discussion · how the models could do better} · a start per plot;
+  the inputs the product may miss (natural mortality, understorey, roots); pioneer vegetation.};
+\node[sp, key, below=9mm of D] (C) {\textbf{Conclusions} · the three sources reconciled only with the
+  history; the history carries the sink; the forecast; a baseline for model development.};
+\foreach \a/\b in {I/M, M/R1, R1/H, R4/D, D/C} \draw[arr] (\a) -- (\b);
+\draw[arrk] (H) -- (R2); \draw[arrk] (R2) -- (R4);
+% --- weights ---
+\wbar{R1}{15} \wbar[blue!65!black]{R2}{40} \wbar{R4}{10} \wbar{D}{15}
+% --- the trilemma thread ---
+\node[tm] (t0) at (xT |- I)  {\textbf{stated}\\as an expectation\\{\tiny soil series · kinetics · inputs}};
+\node[tm] (t1) at (xT |- R1) {\textbf{visualised}\\a balanced start: two of three at most \ev{F16}};
+\node[tm, anchor=south] (t2) at ($(xT |- R2.south)+(0,0.1)$) {\textbf{echoed}\\as the ridge: input
+  $\times$ transit time \ev{F18}};
+\node[tm] (t3) at (xT |- R4) {\textbf{at plot scale}\\inputs $\times 18$, soil $\times 1.2$};
+\node[tm] (t4) at (xT |- D)  {\textbf{what is left}\\the tension in the input corner};
+\foreach \a/\b in {t0/t1, t1/t2, t2/t3, t3/t4} \draw[arrt] (\a) -- (\b);
+\draw[hook] (t0) -- (I); \draw[hook] (t1) -- (R1); \draw[hook] (t2.east) -- (t2.east -| R2.west);
+\draw[hook] (t3) -- (R4); \draw[hook] (t4) -- (D);
+% --- nested sigma side arm ---
+\node[sg] (s1) at (xS |- R1) {\textbf{R1 end · $\sigma_{\mathrm{input}}$ only}\\the input estimate (S18);
+  $\sigma_{\mathrm{init}} \equiv 1$ by assumption, never tested};
+\node[sg, anchor=north] (s2) at ($(xS |- R2.north)+(0,-0.05)$) {\textbf{R2 end · $\sigma_{\mathrm{input}}$ and
+  $\sigma_{\mathrm{init}}$}\\ $\sigma_{\mathrm{init}}$'s need was hidden in R1, not absent; not more uncertain
+  --- explicit. Error model, Bayesian points. \ev{F9; SX appendix}};
+\draw[arr] (R1) -- (s1); \draw[arr] (s2.west -| R2.east) -- (s2.west);
+\draw[arr, dashed] (s1) -- node[right, font=\tiny, text=black!60] {mirrors} (s2);
+% --- side arms ---
+\node[sa, draw=noterule, fill=notebg] (aim) at (xF |- I) {\textbf{applied aim}, declared in the
+  objectives: the future of the Finnish GHG balance (scope box)};
+\node[sa, cav] (ft) at (xF |- M) {\textbf{Finland, the test field}: 456 plots, three campaigns, a
+  plot-level litter record checked against the national inventory};
+\draw[arr] (ft.west) -- (M.east);
+\node[cl=33mm, key, anchor=south] (R3) at ($(xF |- R2.south)+(0,0.05)$) {\textbf{R3 · side arm: forecast and
+  GHG balance}\\headroom only with the history; $\sim$+10\,\% input holds the past sink for 20~yr; warming
+  takes part back. \ev{table; F15}};
+\wbar{R3}{20}
+\draw[arr, dashed] (aim) -- (ft); \draw[arr, dashed] (ft) -- (R3);
+\draw[arrk] (R2.east |- R3.west) -- node[below, font=\tiny, text=black!60] {built on the choice} (R3.west);
+\draw[arr] ($(R3.south)+(0,-0.3)$) |- (C.east);
+\end{tikzpicture}}
+\end{center}}
+
 % --- INTRODUCTION ---
 \newcommand{\archIntro}{%
 \begin{center}
@@ -442,6 +528,21 @@ leading into a \textbf{Discussion} with real space ($\sim$15\%).
 \end{test}
 
 % =====================================================================
+\clearpage
+\section*{The storyline schema}
+\addcontentsline{toc}{section}{The storyline schema}
+The whole paper on one page, in four lanes. \textbf{The main arc} runs down the middle: the Introduction
+states the general problem, R1 tests it the hard way, and R2 resolves it by relaxing the steady-state
+assumption; R4 and the Discussion follow from it. \textbf{The trilemma thread} (left, violet) is stated in
+the Introduction and comes back at each step where it is visible: in R1 as the failure of the balanced start
+(F16), in R2 as the ridge (F18), in R4 at plot scale, and in the Discussion as what is left. \textbf{The
+nested $\sigma$ side arm} closes R1 and R2 and mirrors itself. \textbf{The forecast side arm} (R3) is built
+on the central choice and is the place where the applied aim of the objectives is answered. Bars give the
+proposed weight of each section.
+
+\archSchema
+
+\clearpage
 \section*{The figure plan}
 \addcontentsline{toc}{section}{The figure plan}
 
