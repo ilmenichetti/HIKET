@@ -3,7 +3,7 @@
 ## ⭐⭐⭐ RESUME HERE (closed 2026-10-13 evening)
 
 **1. First: the `eqinit_climheld` arm** (6 jobs, launched by Lorenzo the evening of 2026-10-13 with
-`submit_arms.sh eqinit_climheld`): jobs **2265953 SP1, 2265954 TP2, 2265955 TP3, 2265956 Yasso07, 2265957 Yasso15, 2265958 Yasso20** (submission order; four running by ~evening, Yasso15/20 pending on Priority). `squeue -u menichet`; logs with the ONE-line check
+`submit_arms.sh eqinit_climheld`): jobs **2265953 SP1, 2265954 TP2, 2265955 TP3, 2265956 Yasso07, 2265957 Yasso15, 2265958 Yasso20** (submission order). ✅ All six started; switches verified in the logs (EQUILIBRIUM INIT + CLIMATE HELD + PRERUN CLIMATE 1961–1984 ON, 40 cores). `squeue -u menichet`; logs with the ONE-line check
 below (§ recalibrated decomposition). When landed: rsync `runs/`, `diagnostics/`, `Data/model_inputs/`, then
 `HIKET_ATTR_MODE=recalibrated Rscript doublechecks/attribution_decomposition.R` and
 `HIKET_ATTR_RECAL=1 Rscript manuscript/figures/build_S15S17_attribution.R` → a THREE-PART recalibrated S16
