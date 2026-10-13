@@ -121,7 +121,7 @@ traj_panel <- function(sc, tag, title, sub) {
 
 # (a) stationary climate
 traj_panel("control", "(a)", "modelled SOC, climate held stationary",
-  "posterior medians; climate recycled from 2005-2024, no further warming")
+  "posterior medians; published arm: litter multiplier fitted to the three campaign means")
 legend("bottomright", bty="n", cex=.85, ncol=2, seg.len=2.8,
   legend=c(MODELS, "observed mean", "our calibration", "published parameters"),
   col=c(MODEL_COL[MODELS], "#4A1A0E", "grey30", "grey30"),

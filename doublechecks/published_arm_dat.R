@@ -55,6 +55,19 @@ setup <- function(M) {
   for (nm in c("to_original","assemble_params","compute_xi","compute_xi_mean",
                "steady_state","run_model"))
     assign(paste0(".", nm), eval(ml[[nm]], envir = e), envir = e)
+  e$.n_ss <- eval(ml[["steady_state_n"]], envir = e)
+  # 2026-10-13: the starting state must use the RUN'S OWN pre-run climate (the input bundle
+  # of the current posterior), as production and attribution_decomposition.R do. Before, the
+  # start was computed under the mean of the whole observed window (1985-2024), ~1.2 C warmer
+  # than the 1961-1984 pre-run of the current runs: our arm started 6-11 tC/ha too low, while
+  # the published arm hid it by refitting sigma_input to the campaign means (Samuli's catch).
+  fs  <- list.files("Calibration_real_data_transient/runs",
+                    pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", M))
+  rid_m <- sub(sprintf("^%s_posterior_(.+)\\.rds$", M), "\\1", sort(fs, decreasing = TRUE)[1])
+  bun <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", M, rid_m))
+  hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
+  if (!is.null(bun$climate_ss_by_plot)) assign("litter_means", bun$litter_means, envir = e)
+  cat(M, "pre-run climate:", hiket_prerun_label(), "(run", rid_m, ")\n")
   e
 }
 campaign_of <- function(y) ifelse(y <= 2000L, 1L, ifelse(y <= 2015L, 2L, 3L))
@@ -67,7 +80,8 @@ pred_means <- function(e, p_free, keep, mp = NULL) {
     clim <- cbp[[pid]]; inputs <- ibp[[pid]]; lm <- lms[[pid]]; meta <- om[[pid]]
     if (any(is.na(meta$idx))) return(NULL)
     xa <- tryCatch(e$.compute_xi(clim, mp), error=function(z) NULL); if (is.null(xa)) return(NULL)
-    xs <- tryCatch(e$.compute_xi_mean(clim, mp), error=function(z) NULL); if (is.null(xs)) return(NULL)
+    xs <- tryCatch(e$.compute_xi_mean(hiket_ss_clim(pid, clim, min(e$.n_ss, nrow(clim))), mp),
+                   error=function(z) NULL); if (is.null(xs)) return(NULL)   # run's pre-run climate
     C0 <- tryCatch(e$.steady_state(mp, lm, xs), error=function(z) NULL)
     if (is.null(C0) || any(!is.finite(C0)) || any(C0 < 0)) return(NULL)
     ro <- tryCatch(e$.run_model(inputs, mp, C0, xa), error=function(z) NULL); if (is.null(ro)) return(NULL)

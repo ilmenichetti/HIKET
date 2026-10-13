@@ -99,8 +99,8 @@ traj_mean <- function(e, mp, keep, dT) {
     # LINEAR RAMP: 0 at the first projection year, dT at the last (2084)
     if (dT != 0) cl[[tc]][j] <- cl[[tc]][j] + dT * rep(seq_len(N_PROJ)/N_PROJ, each = x$rpy)
     xa <- tryCatch(e$.compute_xi(cl, mp), error=function(z) NULL); if (is.null(xa)) return(NULL)
-    xs <- tryCatch(e$.compute_xi_mean(cl[seq_len(x$n_obs*x$rpy), , drop=FALSE], mp),
-                   error=function(z) NULL); if (is.null(xs)) return(NULL)
+    xs <- tryCatch(e$.compute_xi_mean(hiket_ss_clim(pid, cl, min(e$.n_ss, x$n_obs*x$rpy)), mp),
+                   error=function(z) NULL); if (is.null(xs)) return(NULL)   # run's pre-run climate (2026-10-13)
     C0 <- tryCatch(e$.steady_state(mp, lms[[pid]], xs), error=function(z) NULL)
     if (is.null(C0) || any(!is.finite(C0)) || any(C0 < 0)) return(NULL)
     ro <- tryCatch(e$.run_model(x$inp, mp, C0, xa), error=function(z) NULL); if (is.null(ro)) return(NULL)

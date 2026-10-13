@@ -29,7 +29,7 @@ doublechecks and the NextGenC bundle rebuilt. Old outputs kept for comparison in
 | headroom 2024 (forward) | +26…+42% | +21…+40% (SP1 ≈ 0) |
 | equilibrium headroom 1985 (doublecheck) | +28…+49% | +39…+67% ⚠ reference = cold 1961–84 climate |
 | sink 2025–44 production / eq | +0.07…+0.22 / −0.06…+0.02 | +0.07…+0.18 / −0.12…+0.02 |
-| warming SSP2-4.5, Yasso07 arm diff | −2.08 | −2.22 [−3.74, −0.97] |
+| warming SSP2-4.5, Yasso07 arm diff | −2.08 | **−2.66 [−4.21, −1.40]** (after the F15 fix below) |
 
 ⭐ **Story consequences.** (1) The balanced start now LOSES carbon in all six — R1 is sharper. (2) The
 inherited part EXCEEDS the whole modelled sink in all six; the warming (vs the colder reference) takes back
@@ -51,6 +51,16 @@ balanced start + reference climate held through 1985-2024, recalibrated (new swi
 known for free: the recalibrated inherited part (production − eqinit sinks) = fixed-parameter one within ±5%
 in all six (mean 11.5 vs 11.3). Pre-check first: prior→posterior shift of the climate parameters (S11/S12) —
 if prior-pinned, the recalibrated climate part will mostly test the priors. Not now: story first.
+
+⚠ **F15 FIX (2026-10-13, Samuli's catch: "our calibrated models perform worse than published" in panel A).**
+`f15_forward_experiment.R` and `published_arm_dat.R` built the 1985 start under the mean of the whole observed
+window (1985–2024) instead of the run's own pre-run climate (1961–1984, ~1.2 °C colder): our arm started 6–11
+tC/ha low (Yasso07 54.9 vs 66.0 in the predictive stage), while the published arm hid it by refitting σ_input
+to the campaign means. Both now load the run's input bundle and use `hiket_ss_clim` (shared `setup()`); the
+published arm was refitted with σ_init pinned to the NEW median (its .rds dated from 2 Sep). After the fix: ours
+starts at 65.6, sits 1.5–5 tC/ha above the campaign means (the known small positive bias), published ON them by
+construction (now stated in the F15 caption and panel label). SSP2-4.5: Yasso loss 5.0–7.3; Yasso07 arm diff
+−2.66 [−4.21, −1.40]. ⚠ Lesson: any script that builds a starting state must use the run's pre-run climate.
 
 ⬜ **Open from this update:** (a) the draft's "within 3.5 tC/ha of every campaign mean" does not reproduce
 (F3 cache: max gap 4.9 old, 5.0 new) — find its basis or restate; (b) the equilibrium-headroom doublecheck

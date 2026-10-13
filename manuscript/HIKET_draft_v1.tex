@@ -1758,7 +1758,8 @@ therefore be read as evidence that the model is better.
 % pair with the 1961-1984 pre-run climate (production 20261012_1042*). Moved: R2 0.015-0.020,
 % holdout RMSE spread 5.6% (median RMSE, multimodel holdout table; the old 3.6% did not
 % reproduce, 4.2% on this basis), flux 3.22-4.40, MTT 23.7/26.8/22.3 (0.71/0.88/1.02), fit cost
-% 8.4/1.3/0, ridge r -0.54..-0.61, headroom 21-40%, sinit 0.45-0.56 (SP1 0.78), F15 -2.22.
+% 8.4/1.3/0, ridge r -0.54..-0.61, headroom 21-40%, sinit 0.45-0.56 (SP1 0.78), F15 -2.66 (after the start-climate fix of 2026-10-13; the -2.22 of that morning was
+% mis-initialised: both F15 arms started from the 1985-2024 climate, not the run's 1961-1984 pre-run).
 % UNVERIFIED: "within 3.5 tC/ha of every campaign mean" -- the F3 cache gives a max gap of
 % 4.9 (old run) and 5.0 (new run); the 3.5 did not reproduce on either.
 The fit does not separate the model structures either. Skill does not increase with
@@ -2039,11 +2040,11 @@ only the litter input multiplier refitted so that both reach the observed window
 equally well. Because both arms reproduce the observed window, any divergence
 after the observed window is extrapolation and not fit. 
 
-\hfig{F15_forward_arms}{0.90}{forward}{\textbf{Projections from the published parameterisation and from the calibration, under the same scenarios.} Neither arm was recalibrated, and only the litter input multiplier was refitted, so that both arms reproduce the observed window equally well and any later divergence is extrapolation rather than fit. Only Yasso07 separates the two arms.}
+\hfig{F15_forward_arms}{0.90}{forward}{\textbf{Projections from the published parameterisation and from the calibration, under the same scenarios.} Neither arm was recalibrated, and only the litter input multiplier was refitted, so that both arms reproduce the observed window equally well and any later divergence is extrapolation rather than fit. The litter multiplier of the published arm is fitted to the three campaign means, so its close agreement with them is by construction; the calibration is fitted to the individual plot observations, not to the national means. Only Yasso07 separates the two arms.}
 
 
-Only Yasso07 separates the two arms. In Yasso07 the two arms differ by $-2.22$
-tonnes of carbon per hectare, with an interval from $-3.74$ to $-0.97$, under the
+Only Yasso07 separates the two arms. In Yasso07 the two arms differ by $-2.66$
+tonnes of carbon per hectare, with an interval from $-4.21$ to $-1.40$, under the
 SSP2-4.5 scenario. Yasso15 and Yasso20 do not separate at all.
 
 The reason only Yasso07 separates is structural. Yasso07 applies a single climate
