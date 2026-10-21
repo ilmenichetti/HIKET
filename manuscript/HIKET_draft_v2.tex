@@ -1,0 +1,96 @@
+% =============================================================================
+%  HIKET -- SECOND DRAFT (skeleton, 2026-10-21)
+%
+%  Built on manuscript/HIKET_storyline_v4.tex. For now: title, authors and the
+%  coarse layer of sections only. Next: nested headings, a little text here and
+%  there, figures and captions, for the coauthors to work on. The Materials and
+%  methods are the one section written in full: HIKET_methods_v2.tex, to be
+%  merged here once reviewed.
+%  Replaces HIKET_draft_v1.tex (to be dropped).
+%  STYLE: no imported jargon; no sentence-initial bare This/It/These; redundant
+%  rather than compact; never refer to our own development history.
+% =============================================================================
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage[round]{natbib}
+\usepackage{subfiles}
+\usepackage{caption}\captionsetup{font=small,labelfont=bf}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\titlespacing*{\paragraph}{0pt}{0.8\baselineskip}{0.4em}
+\linespread{1.08}
+
+% marks a place where the draft is not finished; nothing else should be coloured
+\newcommand{\gap}[1]{\textcolor{red!70!black}{\small[\,#1\,]}}
+\graphicspath{{figures/}}
+% One figure macro, so width and placement stay consistent across the paper.
+\newcommand{\hfig}[4]{%   #1 file  #2 width  #3 label  #4 caption
+  \begin{figure}[htbp]\centering
+    \includegraphics[width=#2\linewidth]{#1}
+    \caption{#4}\label{fig:#3}
+  \end{figure}}
+\newcommand{\suppfig}[1]{\textcolor{blue!55!black}{\small[Supplementary figure: \textsf{#1}]}}
+\newcommand{\figref}[1]{\textcolor{blue!55!black}{\small[Figure: \textsf{#1}]}}
+\newcommand{\sinput}{\sigma_{\mathrm{input}}}
+\newcommand{\sinit}{\sigma_{\mathrm{init}}}
+
+\title{\vspace{-1.2cm}Relaxing the steady-state assumption displaces\\
+forest soil carbon models along the trade-off\\
+between litter input and turnover}
+% Title as chosen 2026-09-11; to be revisited against storyline v4.
+% Author list as in HIKET_draft_v1.tex (2026-09-30). Order and affiliations pending.
+\author{Lorenzo Menichetti, Aleksi Lehtonen, Samuli Launiainen, Boris {\v T}upek,
+        Olli-Pekka Tikkasalo, \\
+        Juha Heikkinen, \gap{possibly others; order and affiliations to be decided;
+        Mikko Peltoniemi to be asked}}
+\date{Draft of \today}
+
+\begin{document}
+\maketitle
+\gap{Title: chosen before the storyline was rebuilt (trilemma, saturation); revisit.}
+
+\begin{abstract}
+\gap{Abstract.}
+\end{abstract}
+
+% =============================================================================
+\section{Introduction}\label{sec:intro}
+\gap{Introduction.}
+
+% =============================================================================
+\section{Materials and methods}\label{sec:methods}
+\gap{To be merged from \texttt{HIKET\_methods\_v2.tex} once reviewed.}
+
+% =============================================================================
+\section{Results and discussion}\label{sec:results}
+
+\subsection{R1 --- The problem, tested: a soil started in balance}\label{sec:r1}
+\gap{R1.}
+
+\subsection{R2 --- The resolution: relaxing the steady-state assumption}\label{sec:r2}
+\gap{R2.}
+
+\subsection{R3 --- Consequences for forecasts}\label{sec:r3}
+\gap{R3.}
+
+\subsection{R4 --- Future development: why the models fail locally}\label{sec:r4}
+\gap{R4.}
+
+% =============================================================================
+\section{Conclusions}\label{sec:conclusions}
+\gap{Conclusions.}
+
+% =============================================================================
+\section*{Acknowledgements}
+\gap{Acknowledgements.}
+
+\section*{Data and code availability}
+\gap{Data and code availability.}
+
+\bibliographystyle{plainnat}
+\bibliography{library}
+
+\end{document}

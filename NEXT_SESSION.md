@@ -1,5 +1,22 @@
 # NEXT SESSION — start here
 
+## ⭐⭐⭐⭐ RESUME HERE (2026-10-21 evening) — Lorenzo reviews the new M&M
+
+**Decided (Lorenzo, 2026-10-21):** `HIKET_draft_v1.tex` will be DROPPED. A new draft, `manuscript/HIKET_draft_v2.tex`,
+is built on storyline v4: for now an EMPTY skeleton (title, authors, coarse sections: Intro, M&M, Results and
+discussion R1–R4, Conclusions, Acknowledgements, Data). Next it gets nested headings (many levels), a little text,
+figures and captions, for the coauthors. **The M&M is the one section written in full**:
+`manuscript/HIKET_methods_v2.tex` (standalone, 19 pp), for Lorenzo's review → then merged into v2.
+- M&M v2 = v1's Methods (rounds 2–7) + NEW: pre-run climate (1961–1984 mean, plot mean 2.2 °C), the comparison
+  with a balanced start (with the four pre-registered expectations — `\gap` asks whether to keep them in Methods),
+  the division of the sink (recalibrated, three parts), and the forward runs (projection under both starts, input
+  that holds the sink, warming scenarios with the published arm, Ruosteenoja & Jylhä 2021 added to the bib).
+  CHANGED: order setup → calibration → experiments → evaluation; R 4.6.1 / BayesianTools 0.1.9 (v1 said
+  4.3.1 / 0.1.8); convergence of all 18 calibrations stated (R-hat ≤ 1.009, ESS ≥ 1716).
+- Open `\gap`s in it: exclusion rules not written out; 2024 stone volumes; data statement; region codes;
+  Yasso15/20 climate source; the prior-criteria table; the arm-A sensitivity (earlier setup only); five terms;
+  warming response under the balanced start (R3b).
+
 ## ⭐⭐⭐ RESUME HERE (closed 2026-10-13 evening)
 
 **✅ 1 DONE 2026-10-21:** `eqinit_climheld` landed (RUN_IDs `20261013_13*`, R-hat ≤ 1.007, ESS ≥ 1845), synced,
