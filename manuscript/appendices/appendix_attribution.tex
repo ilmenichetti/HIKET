@@ -15,8 +15,8 @@
 %  (equilibrium-start arm) is deliberately NOT referred to.
 %  Pre-run climate = one constant 1961-1984 mean, also used as the climate
 %  reference: IMPLEMENTED 2026-10-12 (HIKET_PRERUN_CLIM_YEARS, commit 57ad49c),
-%  recalibration of both arms pending; every number below is still on the
-%  1985-2004 reference.
+%  all arms recalibrated on it (2026-10-13); the recalibrated three-part
+%  division added 2026-10-21 (app:attribution_recal).
 %  2026-10-12: joint effects now described as MEASURED (runs 1', 4, 5; two
 %  differences of differences), with the five-term version (main effects +
 %  two joint effects, HIKET_ATTR_JOINT=1 -> *_joint figures) alongside the
@@ -375,16 +375,76 @@ the modelled sink of that period is carried by the state the soil inherited. Wha
 start removes is that inherited part, not the litter and climate parts; this is why it cannot
 reproduce the measured accumulation.
 
+\subsection{The division with every run calibrated on its own}
+\label{app:attribution_recal}
+
+% 2026-10-21. Numbers: doublechecks/attribution_decomposition.R with
+% HIKET_ATTR_MODE=recalibrated (doublechecks/attribution_recalibrated.rds); figures
+% S15/S16/S17 *_recal.png. Runs: production 20261012_1042*, balanced start
+% 20261012_12*-13*, balanced start with the climate held 20261013_13* (Roihu jobs
+% 2265953-58; R-hat <= 1.007, ESS >= 1845). Three parts only: the two runs that
+% measure the joint effects (1', 4) are not yet recalibrated.
+
+The division above keeps one set of parameters per model across the runs. In the recalibrated
+version every run carries its own calibration: run 1 is the production calibration, run 2 the
+calibration with a balanced start in 1985, and run 3 a calibration with a balanced start and
+the climate held at the reference through 1985--2024. The parts are then differences between
+three calibrated models, each fitted to the same measurements under its own assumptions, and
+the division becomes a comparison between assumptions only. The three parts are formed exactly
+as before (inherited = run 1 minus run 2, climate = run 2 minus run 3, litter = run 3), with
+the joint effects assigned by the order of the runs. Over 1985--2024:
+
+\begin{center}
+\small
+\begin{tabular}{lrrrrrrrr}
+\hline
+ & \multicolumn{2}{c}{inherited state} & \multicolumn{2}{c}{litter since 1985} & \multicolumn{2}{c}{climate} & \multicolumn{2}{c}{climate + litter} \\
+ & fixed & recal. & fixed & recal. & fixed & recal. & fixed & recal. \\
+\hline
+SP1     & $+6.0$  & $+6.4$  & $+12.1$ & $+11.0$ & $-16.8$ & $-15.8$ & $-4.6$ & $-4.7$ \\
+TP2     & $+16.6$ & $+16.8$ & $+7.3$  & $+6.3$  & $-11.3$ & $-11.1$ & $-3.8$ & $-4.9$ \\
+TP3     & $+15.6$ & $+17.6$ & $+7.4$  & $+6.3$  & $-11.1$ & $-11.7$ & $-3.9$ & $-5.1$ \\
+Yasso07 & $+12.9$ & $+13.2$ & $+8.4$  & $+6.7$  & $-11.9$ & $-10.3$ & $-3.3$ & $-3.7$ \\
+Yasso15 & $+9.7$  & $+9.4$  & $+9.2$  & $+7.0$  & $-10.3$ & $-8.0$  & $-1.2$ & $-1.0$ \\
+Yasso20 & $+7.0$  & $+6.9$  & $+9.0$  & $+7.0$  & $-11.5$ & $-9.1$  & $-2.4$ & $-2.0$ \\
+\hline
+six-model mean & $+11.3$ & $+11.7$ & $+8.9$ & $+7.4$ & $-12.2$ & $-11.0$ & $-3.2$ & $-3.6$ \\
+\hline
+\end{tabular}
+
+{\footnotesize t\,C\,ha$^{-1}$, medians over 50 posterior draws per run; ``fixed'' = one parameter
+set per model across the runs (above), ``recal.'' = every run its own calibration. The sink
+itself is run 1 in both versions: six-model mean $+8.0$.}
+\end{center}
+
+The inherited part changes by less than 5 per cent in four of the six models ($+7$ per cent in
+SP1, $+13$ per cent in TP3) and by 3 per cent in the six-model mean. The litter part shrinks in
+every model, by 9 to 24 per cent, and the climate part shrinks in five of the six, so that the
+recalibrated parts lie close to those obtained with the parameters of the balanced-start
+calibration (previous subsection): the litter and climate runs are balanced-start runs, and
+once they are calibrated as such they retain less litter input and less carbon passing through
+the soil. The sum of the litter and climate parts stays negative in every model, from $-1.0$
+(Yasso15) to $-5.1$\,t\,C\,ha$^{-1}$ (TP3), and the inherited part exceeds the whole sink in every
+model, because the balanced-start calibration loses carbon over 1985--2024 in every one of its
+draws. No part changes sign, and the ordering of the parts is the same as in the fixed-parameter
+division. The recalibration therefore confirms the reading above: the initial-state assumption
+reaches the litter and climate parts through the parameters, by about 10 to 20 per cent, and
+leaves the inherited part, and with it the conclusion, unchanged.
+
 \subsection{Open choices for review}
 \label{app:attribution_open}
 \begin{enumerate}
   \item \textbf{The window of the long-term climate mean}: DECIDED, 1961--1984 from the
-    gridded observations already extracted per plot (implemented; recalibration pending).
+    gridded observations already extracted per plot (implemented; all runs recalibrated on it).
     1917--1984 with a reconstruction of 1917--1960 remains possible.
   \item \textbf{Three parts or five terms}: the joint effects assigned by the order of the runs
     (inheritance--climate to the inherited part, litter--climate to the climate part), or
     reported as their own two terms, drawn as hatched bands
     (Section~\ref{app:attr_joint}).
+  \item \textbf{Fixed-parameter or recalibrated division}
+    (Section~\ref{app:attribution_recal}): which one the paper shows, and whether the other
+    stays in the appendix. The recalibrated version has three parts only until the two runs
+    that measure the joint effects are recalibrated as well (planned with the new input data).
   \item \textbf{Annual or smoothed values} in the figures that enter the paper, and the width
     of the running mean.
   \item \textbf{The cumulative view} (carbon gained since 1985 by each part, S17) is held

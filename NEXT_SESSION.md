@@ -2,14 +2,21 @@
 
 ## ⭐⭐⭐ RESUME HERE (closed 2026-10-13 evening)
 
-**1. First: the `eqinit_climheld` arm** (6 jobs, launched by Lorenzo the evening of 2026-10-13 with
+**✅ 1 DONE 2026-10-21:** `eqinit_climheld` landed (RUN_IDs `20261013_13*`, R-hat ≤ 1.007, ESS ≥ 1845), synced,
+decomposed, figures `S15/S16/S17_*_recal.png`. Recalibrated three parts (medians, six-model mean): inherited **+11.7**,
+litter **+7.4**, climate **−11.0**, sink +8.0 (fixed-parameter +11.3 / +8.9 / −12.2). No sign or rank change; the
+balanced-start calibration loses carbon in every draw. Restated in storyline v4 (R2 end, schema, figure plan) and in
+the attribution appendix (new §app:attribution_recal + open choice "fixed or recalibrated"). ⬜ Lorenzo decides which
+version the appendix keeps. Five terms wait for the new inputs (`submit_arms.sh all`).
+
+~~**1. First: the `eqinit_climheld` arm** (6 jobs, launched by Lorenzo the evening of 2026-10-13 with
 `submit_arms.sh eqinit_climheld`): jobs **2265953 SP1, 2265954 TP2, 2265955 TP3, 2265956 Yasso07, 2265957 Yasso15, 2265958 Yasso20** (submission order). ✅ All six started; switches verified in the logs (EQUILIBRIUM INIT + CLIMATE HELD + PRERUN CLIMATE 1961–1984 ON, 40 cores). `squeue -u menichet`; logs with the ONE-line check
 below (§ recalibrated decomposition). When landed: rsync `runs/`, `diagnostics/`, `Data/model_inputs/`, then
 `HIKET_ATTR_MODE=recalibrated Rscript doublechecks/attribution_decomposition.R` and
 `HIKET_ATTR_RECAL=1 Rscript manuscript/figures/build_S15S17_attribution.R` → a THREE-PART recalibrated S16
 (temporary main figure). Compare with the expectations written before launch (§ recalibrated decomposition).
 Then restate S16 numbers in the storyline (R2 end), the attribution appendix, and decide the appendix's
-fixed-parameter vs recalibrated presentation.
+fixed-parameter vs recalibrated presentation.~~
 
 **2. Where the story stands** — `manuscript/HIKET_storyline_v4.tex`, recomposed with Lorenzo's email to Samuli and
 Aleksi (`~/Downloads/The storyline I propose.eml`): general → Finnish case (saturation?) → trilemma in Finland as a

@@ -203,7 +203,7 @@
   $\cdot$ the soil series reconciled {\tiny\itshape\color{black!60}(F16 six)}\\
   $\cdot$ the ridge between inputs and kinetics shifts; the optima move {\tiny\itshape\color{black!60}(F12, F18)}\\
   $\cdot$ \textbf{the scenario decomposition}: the weight of the assumptions --- the sink is the history
-  {\tiny\itshape\color{black!60}(S16, five terms)}};
+  {\tiny\itshape\color{black!60}(S16 recalibrated; five terms later)}};
 \node[sp, key, font=\scriptsize, inner sep=2pt, below=8mm of R2] (H) {consequences for forecasts? \textbf{did we
   get it wrong so far?}};
 \node[sp, key, below=6mm of H] (R3) {\textbf{R3 · forecasts}\\the starting state decides the projection: a
@@ -366,10 +366,10 @@
   estimated start: $\sigma_{\mathrm{input}}$ and $\sigma_{\mathrm{init}}$} · $\sigma_{\mathrm{init}}$'s need was
   hidden in R1, not absent; the error model and the Bayesian points. \ev{F9, SX appendix}};
 \node[cl=150mm, key, below=5mm of u] (S) {\textbf{The weight of the assumptions, quantified: the scenario
-  decomposition} --- answering HIKET's questions. Of $+8.0$~tC\,ha$^{-1}$ gained 1985--2024, $+9.9$ inherited
-  ($+1.5$ more jointly with climate), litter $+8.9$, climate $-11.0$ ($-1.3$ jointly with litter); little change
-  model by model. To be sharpened as a comparison between assumptions (recalibrated run 3).
-  \ev{S16 five terms (main); S15 appendix}};
+  decomposition} --- answering HIKET's questions. Every run its own calibration (a comparison between
+  assumptions only): of $+8.0$~tC\,ha$^{-1}$ gained 1985--2024, $+11.7$ inherited, litter $+7.4$, climate $-11.0$;
+  little change model by model. Five terms once the two joint-effect runs are recalibrated.
+  \ev{S16 recalibrated, three parts (main, temporary); S15 appendix}};
 \node[cl=150mm, cav, below=4mm of S] (l) {$\to$ the bridge to R3: a sink that is the history fades. What the
   resolution leaves, the tension in the input corner, goes to R4.};
 \draw[arrk] (ch.south -| B.north) -- (B.north); \draw[arrk] (ch.south -| r.north) -- (r.north);
@@ -440,7 +440,8 @@
 \large a soil that carries its history: the trilemma of the balanced start, tested in Finland}
 \author{}
 \date{\small Version of \today. Numbers restated on 2026-10-13 on the recalibrated pair with the 1961--1984
-pre-run climate: production \texttt{20261012\_1042*}; balanced start \texttt{20261012\_12*--13*}.}
+pre-run climate: production \texttt{20261012\_1042*}; balanced start \texttt{20261012\_12*--13*}; S16 recalibrated on 2026-10-21
+with the balanced start and the climate held, \texttt{20261013\_13*}.}
 
 \begin{document}\maketitle
 
@@ -468,9 +469,9 @@ discussion with Samuli and Aleksi).}
   \item \textbf{R2 is the resolution}: the relaxed assumption works, and exposes the trilemma further --- the
     ridge between inputs and kinetics shifts in model space and the optima move (F16 six panels, F12, F18).
   \item \textbf{The scenario decomposition closes R2 and answers HIKET's questions}: the assumptions carry a
-    considerable weight, quantified (S16, five terms; S15 per model changes surprisingly little). It is the
-    bridge to the forecast, and will be sharpened by recalibrating the third scenario, so that it becomes a
-    comparison between assumptions only.
+    considerable weight, quantified (S16, every run its own calibration, so a comparison between
+    assumptions only; S15 per model changes surprisingly little). It is the bridge to the forecast. Three parts
+    for now; five terms once the two joint-effect runs are recalibrated with the new input data.
   \item \textbf{R3 asks the question the resolution raises}: are there consequences for forecasts --- did we
     get it wrong so far? Two side arcs: \textbf{the sensitivity to temperature} under the relaxed assumption,
     and \textbf{the inputs}, central to HIKET --- are we approaching saturation under the more realistic
@@ -482,7 +483,7 @@ discussion with Samuli and Aleksi).}
     ends with suggestions. The separate Discussion section is folded into it.
   \item \textbf{The load-bearing figures} are those sent to Samuli and Aleksi (email, 2026-10-13): Introduction
     F3\_mean\_SOCalt, F10b, F1 (S18 defending the inputs); R1--R2 F16 (six panels), F12, F18; the
-    decomposition S16 (five terms); R3 F15 and the input table; R4 F11, F11 stand and soil, F11b.
+    decomposition S16 (five terms; recalibrated three parts until the joint-effect runs exist); R3 F15 and the input table; R4 F11, F11 stand and soil, F11b.
     \textbf{Every other figure stays}, in the appendix; some can be promoted (marked in the figure plan).
   \item \textbf{The uncertainty stays a nested side arm} at the end of R1 ($\sinput$ only) and of R2 ($\sinput$
     and $\sinit$): $\sinit$'s need was hidden in R1 by the assumption, not absent.
@@ -585,8 +586,8 @@ R2 & F12\_mrt\_yasso & transit times, calibrated and published & \textbf{main} \
 R2 & F18\_eqinit\_tradeoff & the ridge shifts, the optima move & \textbf{main} \\
 R2 & \emph{F14} & the ridge on the likelihood surface & appendix \\
 R2 & \emph{F9}, \emph{SX} & the two auxiliary parameters (nested part) & appendix (F9 promote?) \\
-R2 end & S16\_attribution\_ensemble\_joint & the scenario decomposition: the weight of the assumptions & \textbf{main} \\
-R2 end & \emph{S15\_\dots\_joint} & the same per model (changes little) & appendix \\
+R2 end & S16\_attribution\_ensemble\_recal & the scenario decomposition: the weight of the assumptions (\emph{\_joint} later) & \textbf{main} \\
+R2 end & \emph{S15\_\dots\_recal} & the same per model (changes little) & appendix \\
 R3 & F15\_forward\_arms & the response to warming & \textbf{main} \\
 R3 & \emph{table} & the input that would hold the sink (political questions) & \textbf{main} \\
 R3 & \emph{F19} & the forecast under the two assumptions: room left or not & appendix (promote?) \\
@@ -857,13 +858,17 @@ along'' covers both; never add a direction.
 
 \subsubsection{The weight of the assumptions, quantified: the scenario decomposition}
 \paragraph{Answering HIKET's questions.} The scenario decomposition divides the modelled sink of 1985--2024
-among what the soil inherited from before 1985, the litter change since 1985 and the climate, with the two
-joint effects of climate as terms of their own. The assumptions carry a considerable weight, and this is it,
-quantified. Six-model average: of $+8.0$~tC\,ha$^{-1}$ gained, the inherited state carries $+9.9$ and a further
-$+1.5$ jointly with the climate; the litter change adds $+8.9$; the climate removes $-11.0$ and a further $-1.3$
-jointly with the litter. The inherited part exceeds the whole sink in all six models and in every posterior
-draw, because the litter change and the climate together remove a little carbon. Shown model by model (S15),
-the picture changes surprisingly little. \FIG{S16_attribution_ensemble_joint} \FIGA{S15_attribution_by_model_joint}
+among what the soil inherited from before 1985, the litter change since 1985 and the climate. Every
+scenario carries its own calibration (free start; balanced start; balanced start with the climate held at the
+reference), so the division is a comparison between assumptions only. The assumptions carry a considerable
+weight, and this is it, quantified. Six-model average (medians): of $+8.0$~tC\,ha$^{-1}$ gained, the inherited
+state carries $+11.7$; the litter change adds $+7.4$; the climate removes $-11.0$. The inherited part exceeds
+the whole sink in all six models, because the balanced-start calibration loses carbon in every draw: the
+litter change and the climate together remove a little carbon ($-1.0$ to $-5.1$). Shown model by model (S15),
+the picture changes surprisingly little. \FIG{S16_attribution_ensemble_recal} \FIGA{S15_attribution_by_model_recal}
+Three parts for now, the joint effects inside them by the order of the runs; the five-term version (joint
+effects $+1.5$ and $-1.3$ in the fixed-parameter division) waits until the two runs that measure them are
+recalibrated, with the new input data.
 
 \dparagraph{Necessary, and dominant.} The balanced start shows that the history is \emph{necessary} --- with
 everything else free, the models cannot do without it. The decomposition shows how much it \emph{weighs} ---
@@ -872,17 +877,15 @@ the objection to the first (``the inherited part is large only because the calib
 $\sinit$''): the data demand the deficit. \textbf{And it is the bridge to R3}: a sink that is the history is a
 sink that fades --- the mechanism of the saturation the forecast will show.
 
-\dparagraph{To be sharpened: a comparison between assumptions only.} At present each model keeps one parameter
-set across the runs, and only the start and the forcing change; the calibration's own initial-state assumption
-reaches the litter and climate parts through the parameters ($-6$ and $-10\%$ in the six-model mean, documented
-in the appendix). The planned run recalibrates the third scenario (balanced start, climate held at the
-reference), so that every scenario carries its own calibration and the decomposition becomes a comparison
-between assumptions only --- more robust, and easier to explain alongside the rest of the methods. Expected to
-change little: the recalibrated inherited part (production against balanced-start calibration) already agrees
-with the current one within $\pm 5\%$ in every model.
+\dparagraph{Recalibrated: what changed.} Against the fixed-parameter division (one parameter set per model
+across the runs; appendix), the inherited part moves by 3\% in the six-model mean ($+11.3 \to +11.7$), the
+litter part shrinks by 9--24\% ($+8.9 \to +7.4$) and the climate part by about 10\% ($-12.2 \to -11.0$): runs
+calibrated with a balanced start retain less litter input, and less carbon passes through their soil. No part
+changes sign or rank, as expected before the run. The recalibrated version is more robust and easier to
+explain alongside the rest of the methods; the fixed-parameter one stays in the appendix (decide).
 \begin{warn}
 \textbf{The size of the climate part depends on the reference climate} (1961--1984): it grew from $-7.5$ to
-$-12.2$ in the three-part reading when the reference moved there. The robust statement is the ordering --- the
+$-12.2$ in the fixed-parameter three-part reading when the reference moved there. The robust statement is the ordering --- the
 sink inherited; litter and warming of the same order and opposite sign. Say so in the text.
 \end{warn}
 
@@ -1034,10 +1037,11 @@ the plots: a starting state per plot, and the inputs no tree-based product recor
   \item The written expectations and the two that failed, in the Methods.
   \item R3b: compute the warming response under the balanced-start calibration.
   \item R3a: build the saturation figure (held litter vs $+20\%$).
-  \item S16: five terms (decided); the size of its climate part depends on the reference climate.
+  \item S16: five terms (decided) once the joint-effect runs are recalibrated; recalibrated three parts until
+    then. The size of its climate part depends on the reference climate.
   \item The target sink in the input table; a warming-corrected column; national units.
-  \item The recalibrated decomposition (third scenario recalibrated; a comparison between assumptions only):
-    one Roihu launch, expected to change little.
+  \item The recalibrated decomposition: DONE (2026-10-21), changed little. Decide whether the fixed-parameter
+    version stays in the appendix.
   \item Which appendix figures to promote: F19, the saturation figure, F4, F9.
 \end{enumerate}
 

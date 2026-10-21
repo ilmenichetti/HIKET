@@ -138,7 +138,7 @@ legend_top <- function(ncol = 4) {                                # ncol = 2 on 
          lwd = c(rep(NA, length(COMP)), 1.8))
 }
 note <- if (RECAL) sprintf("RECALIBRATED: every scenario its own calibration; balanced plot set (n = %d), unweighted national mean; %d draws per arm (mean); runs %s",
-                Z$models[[MS[1]]]$n_plots, Z$n_draw, paste(unique(substr(unlist(Z$rid[MS]), 1, 8)), collapse = "/")) else
+                Z$models[[MS[1]]]$n_plots, Z$n_draw, paste(unique(na.omit(substr(unlist(Z$rid[MS]), 1, 8))), collapse = "/")) else
   sprintf("balanced plot set (n = %d), unweighted national mean; %d posterior draws per model (mean); production runs %s",
                 Z$models[[MS[1]]]$n_plots, Z$n_draw, paste(unique(substr(Z$rid[MS], 1, 8)), collapse = "/"))
 ylab_sink <- expression("Sink  (tC ha"^-1*" yr"^-1*")")
