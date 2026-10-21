@@ -13,10 +13,15 @@
 #                         which holds the flux at J_t0*sigma_input = J_1985 for the
 #                         whole pre-run, so the routine returns ITS OWN equilibrium.
 # Headroom = C_eq/C_1985 - 1, the accumulation still owed at today's input.
+# 2026-10-21: the climate is now the RUN'S OWN pre-run climate (input bundle ->
+#   hiket_set_prerun_clim + hiket_ss_clim, as every starting-state builder must),
+#   and the bundle's litter_means; was the plot's 1985-2024 mean (wrong start).
+#   Default draws 5 -> 100. NOTE: this is the 1985 headroom (Liski comparison);
+#   the paper quotes the 2024 one from forward_scenarios.R (F19).
 # =============================================================================
 suppressWarnings(suppressMessages({
   a <- commandArgs(trailingOnly = TRUE)
-  N_DRAW <- if (length(a) >= 1) as.integer(a[[1]]) else 5L
+  N_DRAW <- if (length(a) >= 1) as.integer(a[[1]]) else 100L
   library(BayesianTools)
 }))
 set.seed(2025)
@@ -34,6 +39,7 @@ setup <- function(M){
   ml <- as.list(str2lang(sub("^\\s*ll_fn\\s*<-\\s*","",paste(src[seq(st,en)],collapse="\n"))))[-1]
   for(k in c("to_original","assemble_params","compute_xi_mean","steady_state"))
     assign(paste0(".",k), eval(ml[[k]],envir=e), envir=e)
+  e$.n_ss <- eval(ml[["steady_state_n"]], envir = e)
   e
 }
 cat("\n=== How far below equilibrium do our own models put the soil? ===\n")
@@ -46,14 +52,19 @@ for(M in MODELS){
   ch <- file.path(DIR,sprintf("%s_chains_%s.rds",M,r)); if(!file.exists(ch)) next
   s_ <- do.call(rbind, lapply(readRDS(ch), function(z) getSample(z,parametersOnly=FALSE,start=2)))
   free <- names(get("best_x",e)); plots <- get("plots",e)
-  cbp <- get("climate_by_plot",e); lms <- get("litter_means",e)
+  cbp <- get("climate_by_plot",e)
+  bun <- readRDS(sprintf("Data/model_inputs/%s_inputs_%s.rds", M, r))   # the run's own pre-run climate
+  hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
+  lms <- if (!is.null(bun$climate_ss_by_plot)) bun$litter_means else get("litter_means",e)
   H <- C0 <- CE <- numeric(0)
   for(k in sample(nrow(s_), min(N_DRAW,nrow(s_)))){
     pf <- tryCatch(e$.to_original(s_[k,free]), error=function(z) NULL); if(is.null(pf)) next
     mp <- e$.assemble_params(pf)
     pf2 <- pf; pf2["sigma_init"] <- 1; mp2 <- e$.assemble_params(pf2)
     v <- do.call(rbind, parallel::mclapply(plots, function(pid){
-      xi <- tryCatch(e$.compute_xi_mean(cbp[[pid]],mp), error=function(z) NULL); if(is.null(xi)) return(NULL)
+      cl <- cbp[[pid]]
+      xi <- tryCatch(e$.compute_xi_mean(hiket_ss_clim(pid, cl, min(e$.n_ss, nrow(cl))), mp),
+                     error=function(z) NULL); if(is.null(xi)) return(NULL)
       l <- lms[[pid]]; leq <- l; leq$preinit_shape <- rep(0, length(l$preinit_shape))
       c1 <- tryCatch(sum(e$.steady_state(mp ,l  ,xi)), error=function(z) NA_real_)
       c2 <- tryCatch(sum(e$.steady_state(mp2,leq,xi)), error=function(z) NA_real_)

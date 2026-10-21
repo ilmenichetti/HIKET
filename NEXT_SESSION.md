@@ -2,6 +2,22 @@
 
 ## ⭐⭐⭐⭐ RESUME HERE (2026-10-21 evening) — Lorenzo reviews the new M&M
 
+**TODO tomorrow (2026-10-22), in this order:**
+1. **While Lorenzo reads the M&M: run the warming response under the balanced start (R3b).** Add a third arm
+   `eqinit` to `doublechecks/f15_forward_experiment.R` (draws from `<M>_eqinit_posterior_*`, `sigma_init` = 1,
+   the run's own input bundle / pre-run climate as the other arms), Yasso07/15/20 only, 40 draws, ~20–30 min.
+   Then show it in F15 (third, dashed line) or as a small table (response at 2084, SSP2-4.5, per model and
+   start), and turn the R3b `\gap` in `HIKET_methods_v2.tex` §Simulations into one sentence.
+2. Lorenzo's review of `HIKET_methods_v2.tex` → settle its `\gap`s → merge into `HIKET_draft_v2.tex`.
+3. Build v2's nested headings + figures + captions from storyline v4.
+
+**Headroom: DECIDED 2026-10-21 — the paper quotes the 2024 headroom (21–40%, `forward_scenarios.R`, F19).**
+The 1985 figure (`doublechecks/equilibrium_headroom.R`) is NOT important (Liski comparison only). Its script
+was FIXED the same day: it built the 1985 state under the plot's 1985–2024 climate instead of the run's
+1961–1984 pre-run climate (same bug class as F15), with 5 draws. Now pre-run climate + bundle litter + 100
+draws: C_1985 62–67 tC/ha (was 52–58), headroom SP1 12 / TP2 63 / TP3 65 / Yasso07 57 / Yasso15 48 /
+Yasso20 41 %. Open item (b) of §0-NOW is closed.
+
 **Decided (Lorenzo, 2026-10-21):** `HIKET_draft_v1.tex` will be DROPPED. A new draft, `manuscript/HIKET_draft_v2.tex`,
 is built on storyline v4: for now an EMPTY skeleton (title, authors, coarse sections: Intro, M&M, Results and
 discussion R1–R4, Conclusions, Acknowledgements, Data). Next it gets nested headings (many levels), a little text,

@@ -740,6 +740,12 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **⭐ SESSION 2026-10-21 (closed):** `eqinit_climheld` landed → recalibrated division (+11.6 / +7.3 / −11.0 = +8.0),
+  fixed-parameter version DROPPED; draft v1 to be dropped → `manuscript/HIKET_draft_v2.tex` (skeleton) +
+  `manuscript/HIKET_methods_v2.tex` (complete M&M, Lorenzo reviews 2026-10-22); headroom: the paper quotes the 2024
+  figure, `doublechecks/equilibrium_headroom.R` fixed (pre-run climate). Next: warming response under the balanced
+  start (R3b). `NEXT_SESSION.md` § RESUME HERE.
+
 - **✅ CURRENT RUNS (2026-10-13): the 1961–1984 pre-run-climate pair.** Production `20261012_1042*`,
   balanced start `20261012_12*`–`13*` (jobs 2227219–24, 2234048–53; R-hat ≤ 1.009). Everything downstream
   rebuilt (stages 2–4, eq arm, all figure builders, residual chain, NextGenC bundle) and every number in
