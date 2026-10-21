@@ -318,8 +318,8 @@
   campaign offsets integrated out.};
 \node[cl=46mm, below=7mm of m] (b) {\textbf{Comparison with a balanced start} · one factor, all else
   recalibrated; expectations written before the run. \ev{$\to$ R1, R2, R3}};
-\node[cl=46mm, below=7mm of t] (a) {\textbf{Division of the sink} · the start, the climate and the litter
-  removed in turn, plus two joint effects. \ev{$\to$ R1 (S16)}};
+\node[cl=46mm, below=7mm of t] (a) {\textbf{Division of the sink} · one more calibration (balanced start,
+  climate held): the assumptions added one at a time. \ev{$\to$ R2 (S16)}};
 \node[cl=46mm, below=of e] (f) {\textbf{Forward runs} · litter held, $+20\%$, and warming scenarios.
   \ev{$\to$ R3}};
 \node[cl=46mm, below=of b] (mt) {\textbf{Mean transit time} · from the model equations. \ev{$\to$ R2}};
@@ -367,7 +367,7 @@
   hidden in R1, not absent; the error model and the Bayesian points. \ev{F9, SX appendix}};
 \node[cl=150mm, key, below=5mm of u] (S) {\textbf{The weight of the assumptions, quantified: the scenario
   decomposition} --- answering HIKET's questions. Every run its own calibration (a comparison between
-  assumptions only): of $+8.0$~tC\,ha$^{-1}$ gained 1985--2024, $+11.7$ inherited, litter $+7.4$, climate $-11.0$;
+  assumptions only): of $+8.0$~tC\,ha$^{-1}$ gained 1985--2024, $+11.6$ inherited, litter $+7.3$, climate $-11.0$;
   little change model by model. Five terms once the two joint-effect runs are recalibrated.
   \ev{S16 recalibrated, three parts (main, temporary); S15 appendix}};
 \node[cl=150mm, cav, below=4mm of S] (l) {$\to$ the bridge to R3: a sink that is the history fades. What the
@@ -704,8 +704,13 @@ everything else recalibrated. One factor. Stated as \emph{the steady-state assum
 of the measurements}, the strongest fair version because the models are free to compensate, and explicitly
 not as the inventory's procedure. The expectations were written down before the run.
 
-\paragraph{The division of the sink.} Three runs and two joint effects of climate, in the words of the
-appendix.
+\paragraph{The division of the sink.} Built the same way as the comparison with a balanced start, and on it:
+one further calibration, with a balanced start \emph{and} the climate held at the reference after 1985. Each
+model is then calibrated three times, adding one assumption at a time (free start; balanced start; balanced
+start and unchanging climate), and the parts of the sink are the differences between the three: inherited =
+free minus balanced start, climate = balanced start minus balanced start with the climate held, litter = what
+the last one still gains. A comparison between assumptions only, every one answered by the data; the joint
+effects of the climate sit inside the parts by the order of the runs. In words in the appendix.
 
 \begin{test}
 \textbf{Say in the Methods that the expectations were written before the run, and that two failed} (the
@@ -861,14 +866,13 @@ along'' covers both; never add a direction.
 among what the soil inherited from before 1985, the litter change since 1985 and the climate. Every
 scenario carries its own calibration (free start; balanced start; balanced start with the climate held at the
 reference), so the division is a comparison between assumptions only. The assumptions carry a considerable
-weight, and this is it, quantified. Six-model average (medians): of $+8.0$~tC\,ha$^{-1}$ gained, the inherited
-state carries $+11.7$; the litter change adds $+7.4$; the climate removes $-11.0$. The inherited part exceeds
+weight, and this is it, quantified. Six-model average: of $+8.0$~tC\,ha$^{-1}$ gained, the inherited
+state carries $+11.6$; the litter change adds $+7.3$; the climate removes $-11.0$. The inherited part exceeds
 the whole sink in all six models, because the balanced-start calibration loses carbon in every draw: the
-litter change and the climate together remove a little carbon ($-1.0$ to $-5.1$). Shown model by model (S15),
+litter change and the climate together remove a little carbon ($-1.0$ to $-5.3$). Shown model by model (S15),
 the picture changes surprisingly little. \FIG{S16_attribution_ensemble_recal} \FIGA{S15_attribution_by_model_recal}
-Three parts for now, the joint effects inside them by the order of the runs; the five-term version (joint
-effects $+1.5$ and $-1.3$ in the fixed-parameter division) waits until the two runs that measure them are
-recalibrated, with the new input data.
+Three parts for now, the joint effects inside them by the order of the runs; the five-term version waits
+for the two further calibrations that measure them, with the new input data.
 
 \dparagraph{Necessary, and dominant.} The balanced start shows that the history is \emph{necessary} --- with
 everything else free, the models cannot do without it. The decomposition shows how much it \emph{weighs} ---
@@ -877,15 +881,9 @@ the objection to the first (``the inherited part is large only because the calib
 $\sinit$''): the data demand the deficit. \textbf{And it is the bridge to R3}: a sink that is the history is a
 sink that fades --- the mechanism of the saturation the forecast will show.
 
-\dparagraph{Recalibrated: what changed.} Against the fixed-parameter division (one parameter set per model
-across the runs; appendix), the inherited part moves by 3\% in the six-model mean ($+11.3 \to +11.7$), the
-litter part shrinks by 9--24\% ($+8.9 \to +7.4$) and the climate part by about 10\% ($-12.2 \to -11.0$): runs
-calibrated with a balanced start retain less litter input, and less carbon passes through their soil. No part
-changes sign or rank, as expected before the run. The recalibrated version is more robust and easier to
-explain alongside the rest of the methods; the fixed-parameter one stays in the appendix (decide).
 \begin{warn}
-\textbf{The size of the climate part depends on the reference climate} (1961--1984): it grew from $-7.5$ to
-$-12.2$ in the fixed-parameter three-part reading when the reference moved there. The robust statement is the ordering --- the
+\textbf{The size of the climate part depends on the reference climate} (1961--1984): a reference that overlaps
+the observed period hides part of the warming and shrinks it. The robust statement is the ordering --- the
 sink inherited; litter and warming of the same order and opposite sign. Say so in the text.
 \end{warn}
 
@@ -1040,8 +1038,6 @@ the plots: a starting state per plot, and the inputs no tree-based product recor
   \item S16: five terms (decided) once the joint-effect runs are recalibrated; recalibrated three parts until
     then. The size of its climate part depends on the reference climate.
   \item The target sink in the input table; a warming-corrected column; national units.
-  \item The recalibrated decomposition: DONE (2026-10-21), changed little. Decide whether the fixed-parameter
-    version stays in the appendix.
   \item Which appendix figures to promote: F19, the saturation figure, F4, F9.
 \end{enumerate}
 

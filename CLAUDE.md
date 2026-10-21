@@ -755,7 +755,7 @@ guards key on those filenames.
   Aleksi (decomposition closes R2; R3 forecasts with two side arcs; R4 independent). (3) **Recalibrated
   decomposition machinery** (`scenario_switches.R`, `submit_arms.sh`, `refresh_all_local.sh`; tests
   `doublechecks/scenario_switch_tests.R`); the `eqinit_climheld` arm launched that evening (jobs 2265953–58, SP1…Yasso20; ✅ LANDED, decomposed 2026-10-21:
-  recalibrated +11.7 inherited / +7.4 litter / −11.0 climate = +8.0) → three-part
+  recalibrated +11.6 inherited / +7.3 litter / −11.0 climate = +8.0; fixed-parameter division DROPPED) → three-part
   recalibrated S16 first, interactions after the inputs are frozen. (4) **New inputs expected** (Boris: understorey
   litter 1985/1995/2006/2023; Ossi: 2006 BioSoil biomass) → rerun everything with `submit_arms.sh all` +
   `refresh_all_local.sh`. Resume point: `NEXT_SESSION.md` § RESUME HERE.

@@ -3,26 +3,21 @@
 %  state, the litter change and the climate
 %  Modular subfile -- see main file header.
 %
-%  STATUS (2026-10-09): REWRITTEN IN WORDS (Lorenzo: "just what's needed"),
-%  three-run sequential partition, FOR LORENZO'S REVIEW. Not in the draft yet.
-%  Code: doublechecks/attribution_decomposition.R (numbers, 50 draws x 310
-%  plots x 6 models; checks; diagnostic columns 'interaction' = litter x climate
-%  and 'inter_hist_clim' = inheritance x climate),
-%  manuscript/figures/build_S15S17_attribution.R (S15 per model, S16 average,
-%  S17 cumulative -- held back), all shown 1985-2024.
+%  STATUS (2026-10-21): REWRITTEN for the RECALIBRATED division only (Lorenzo:
+%  drop the fixed-parameter version; simpler, more consistent, more robust).
+%  Every run is its own calibration; three parts; the five-term version waits
+%  for the two joint-effect calibrations (planned with the new input data).
+%  Not in the draft yet.
+%  Code: doublechecks/attribution_decomposition.R with HIKET_ATTR_MODE=recalibrated
+%  (-> doublechecks/attribution_recalibrated.rds; checks printed and enforced),
+%  manuscript/figures/build_S15S17_attribution.R with HIKET_ATTR_RECAL=1
+%  (S15/S16/S17 *_recal.png). 50 draws per calibration x 310 plots x 6 models.
+%  Runs: production 20261012_1042*, balanced start 20261012_12*-13*, balanced
+%  start with the climate held 20261013_13* (Roihu jobs 2265953-58).
+%  Pre-run climate = reference climate = the 1961-1984 mean, in all three.
 %  Origin: S. Launiainen's total-differential note (Calibration_real_data_
-%  transient/documentation/Launiainen_20261008_...pdf). The other calibration
-%  (equilibrium-start arm) is deliberately NOT referred to.
-%  Pre-run climate = one constant 1961-1984 mean, also used as the climate
-%  reference: IMPLEMENTED 2026-10-12 (HIKET_PRERUN_CLIM_YEARS, commit 57ad49c),
-%  all arms recalibrated on it (2026-10-13); the recalibrated three-part
-%  division added 2026-10-21 (app:attribution_recal).
-%  2026-10-12: joint effects now described as MEASURED (runs 1', 4, 5; two
-%  differences of differences), with the five-term version (main effects +
-%  two joint effects, HIKET_ATTR_JOINT=1 -> *_joint figures) alongside the
-%  three-part split (Lorenzo).
-%  The matrix formulation (exact annual step, superposition) was removed on
-%  purpose (never committed); the two properties it proved are stated in words.
+%  transient/documentation/Launiainen_20261008_...pdf).
+%  Numbers below are MEANS (they add up); SDs over the 50 draws in brackets.
 % =====================================================================
 \documentclass[../HIKET_draft_v1.tex]{subfiles}
 
@@ -56,23 +51,27 @@ that sink comes from three sources:
     part, comparable with the single modifier of the other models. The part is shown in
     red.
 \end{description}
-The three parts add up to the model's sink in every year. They are obtained from three
-simulations of the same model, removing one source at a time: the inherited state is what
-disappears when the soil starts without a deficit, the climate is what disappears when, in
-addition, the climate stops changing, and the litter change is what remains.
+The answer comes from three calibrations of each model, fitted to the same measurements
+under three assumptions that remove one source at a time. The inherited state is what the
+sink loses when the soil is assumed to start in balance; the climate is what it loses when,
+in addition, the climate is assumed not to change; the litter change is what remains. Over
+1985--2024 the six models gain $+8.0$\,t\,C\,ha$^{-1}$ on average: $+11.6$ inherited, $+7.3$
+from the litter change and $-11.0$ from the climate. The inherited state carries more than
+the whole sink in every model.
 
-\subsection{The three runs}
+\subsection{Three calibrations}
 \label{app:attr_runs}
 
-For each plot and each posterior draw, the same calibrated model, with the same
-parameters, is run three times from 1985:
+Each model is calibrated three times, each time with one more assumption, and each time on
+the same measurements, with the same priors, error model and sampling (a balanced start
+fixes $\sigma_{\mathrm{init}}$ at one, so that parameter is not estimated in runs 2 and 3):
 
 \begin{center}
 \begin{tabular}{clll}
 \hline
-run & starting state in 1985 & litter & climate \\
+run & starting state in 1985 & litter & climate after 1985 \\
 \hline
-1 & calibrated (with the inherited deficit) & observed & observed \\
+1 & estimated (with the inherited deficit) & observed & observed \\
 2 & balanced (no deficit) & observed & observed \\
 3 & balanced (no deficit) & observed & held at reference \\
 \hline
@@ -80,32 +79,31 @@ run & starting state in 1985 & litter & climate \\
 \end{center}
 
 \begin{description}
-  \item[Run 1, the model as calibrated] the soil as the model actually simulates it: it
-    starts from the end of the transient initialisation, carrying the deficit left by the
-    litter rise before 1985, and receives the observed litter and climate. Its sink is the
-    sink being divided, the one in every result of the paper.
-  \item[Run 2, without a history] the same litter and climate, but the soil starts in
+  \item[Run 1, the model of the paper] the calibration used in every other result: the
+    starting state is estimated through the transient initialisation, so the soil carries
+    the deficit left by the litter rise before 1985, and receives the observed litter and
+    climate. Its sink is the sink being divided.
+  \item[Run 2, a balanced start] the same, except that the soil is assumed to start in
     balance: with the carbon the model would hold in 1985 had the litter always been at its
-    1985--1989 level, under the reference climate. Decomposition then equals the litter
-    entering, and there is no deficit to make up. The balanced start is the one the
-    conventional steady-state assumption would give the same model; nothing is refitted to
-    obtain it, and runs 2 and 3 are devices of the division only, never compared with
-    observations.
-  \item[Run 3, without a history and without climate change] as run 2, but the climate is
-    held at its reference in every year. Only the litter still changes.
+    1985--1989 level, under the reference climate. The balanced start is the one the
+    conventional steady-state assumption gives; the calibration is the balanced-start
+    comparison of the main text.
+  \item[Run 3, a balanced start and an unchanging climate] as run 2, but the climate is held
+    at its reference in every year after 1985, in the calibration as in the simulation. Only
+    the litter still changes.
 \end{description}
 
-Each part of the sink is what disappears from one run to the next, with each run number
-standing for that run's sink in a given year:
+Each part of the sink is the difference between two runs, with each run number standing for
+that run's sink in a given year:
 
 \begin{center}
 \small
 \begin{tabular}{lp{5.3cm}p{5.0cm}}
 \hline
-part & the two runs differ only in & what it measures \\
+part & the two runs differ in the assumption & what it measures \\
 \hline
-inherited state $= 1-2$ & the starting state (litter and climate both observed) & what the deficit inherited from before 1985 adds to the sink \\
-climate $= 2-3$ & the climate (both start balanced, both receive the observed litter) & what the observed climate adds, acting on the litter that actually arrived \\
+inherited state $= 1-2$ & of the starting state & what the deficit inherited from before 1985 adds to the sink \\
+climate $= 2-3$ & of the climate after 1985 & what the observed climate adds, acting on the litter that actually arrived \\
 litter change $= 3$ & --- & the sink of a balanced soil in an unchanging climate, which exists only because the litter departs from its 1985--1989 level \\
 \hline
 \end{tabular}
@@ -115,127 +113,49 @@ The three parts add up to the sink of run 1 because the runs cancel in pairs,
 $(1-2) + (2-3) + 3 = 1$. The adding-up is therefore arithmetic, not a finding; what gives
 each part its meaning is explained next.
 
-\subsection{Why the runs isolate the three sources}
+\subsection{What each part means}
 
-All six models advance the soil one year at a time in the same way: in each year a fixed
-share of the carbon in each pool decomposes or moves to another pool, and the litter of
-the year is added; the shares are set by the model's parameters and by that year's climate.
-Two consequences of this structure carry the division.
-
-\paragraph{The starting carbon and the litter do not interact.} Because each pool loses a
-fixed share of whatever it contains, the carbon that remains from the starting state and
-the carbon added by the litter evolve independently, and the stock in any year is simply
-their sum. Runs 1 and 2 receive the same litter under the same climate, so the carbon the
-litter adds is the same in both; it disappears from their difference, which leaves only the
-difference between the two starts, the deficit, closing year by year at the soil's own
-pace. The inherited part, run 1 minus run 2, is the yearly closing of that gap. In a single
-pool with a deficit of 10\,t\,C\,ha$^{-1}$ decomposing at 4\,\% per year, about
-0.4\,t\,C\,ha$^{-1}$ of the gap closes in the first year and slightly less in each year
-after. The litter after 1985 plays no role in the inherited part at all.
+\paragraph{A comparison between assumptions.} Every run is a model fitted to the
+measurements, so each part compares two fitted models that differ by one assumption. When
+the soil is assumed to start in balance, the calibration does not only remove the deficit:
+it also moves the parameters to explain the measured stocks without one (in most models
+less litter input, and faster, more temperature-sensitive decomposition; main text). The
+inherited part includes that response, and so does the climate part. Each part is therefore
+the change in the modelled sink that follows from one assumption, once the data have been
+allowed to answer it, and not the effect of one source on a model held fixed. The same
+logic as the balanced-start comparison of the main text applies throughout, and no part
+borrows parameters estimated under a different assumption.
 
 \paragraph{A balanced soil under unchanging conditions has no sink.} A soil in balance
 loses each year exactly what it receives: a litter input of 4\,t\,C\,ha$^{-1}$\,yr$^{-1}$
 decomposing at 6\,\% per year balances at about 67\,t\,C\,ha$^{-1}$, and stays there as long
-as the litter and the climate do not change. The balanced soil of runs 2 and 3 is built to be
-in balance with the 1985--1989 litter under the reference climate, so in run 3, where the
-climate stays at the reference, any sink can come only from the litter departing from its
-1985--1989 level. Run 3 is therefore the litter part as it stands, and run 2 minus run 3,
-where only the climate differs, is the climate part.
+as the litter and the climate do not change. The balanced soil of run 3 is in balance with
+the 1985--1989 litter under the reference climate, and the climate stays at the reference,
+so any sink of run 3 can come only from the litter departing from its 1985--1989 level.
+The property holds for any parameter values, and so for the run-3 calibration as for any
+other: run 3 is the litter part as it stands.
 
-\paragraph{The climate does not combine additively.} The climate changes the shares that
-decompose, so its effect depends on how much carbon is present: it acts on the extra litter,
-and it acts on the inherited deficit. Each of the two therefore has a joint effect with the
-climate, an amount of sink that exists only when both are present. The starting carbon and the
-litter have no joint effect with each other, as shown above, and so there is no joint effect of
-all three either: the climate acts on the carbon of each origin separately. The two joint effects
-are measured, not estimated, with three further runs of the same model.
-
-\subsection{Measuring the two joint effects}
-\label{app:attr_joint}
-
-\begin{center}
-\begin{tabular}{clll}
-\hline
-run & starting state in 1985 & litter & climate \\
-\hline
-1$'$ & calibrated (with the inherited deficit) & observed & held at reference \\
-4 & balanced (no deficit) & held at 1985--1989 level & observed \\
-5 & balanced (no deficit) & held at 1985--1989 level & held at reference \\
-\hline
-\end{tabular}
-\end{center}
-
-Run 5 changes nothing at all and so has no sink; it serves as the check that the balanced soil is
-in balance (Section~\ref{app:attr_checks}). With runs 1$'$ and 4, each source can be removed in
-both possible orders, and a joint effect is the amount by which the two orders disagree:
-\begin{description}
-  \item[Climate and the inherited state] the inherited part is run 1 minus run 2 when measured
-    under the observed climate, and run 1$'$ minus run 3 when measured under the reference
-    climate. The joint effect is the difference between the two,
-    $(1-2)-(1'-3)$: how much faster the deficit closes because the climate warmed. The litter
-    does not enter, because runs 1 and 2 (and runs 1$'$ and 3) receive the same litter and the
-    carbon it adds cancels in each difference.
-  \item[Climate and litter] the climate part is run 2 minus run 3 when measured on a soil that
-    receives the observed litter, and run 4 minus run 5 when measured on a soil whose litter
-    stays at its 1985--1989 level. The joint effect is the difference between the two,
-    $(2-3)-(4-5)$: how much faster the extra litter decomposes because the climate warmed.
-\end{description}
-Each joint effect is thus a difference of two differences, computed for every plot, draw and
-year like the parts themselves, and exact in the same sense.
-
-\paragraph{Why a joint effect belongs to neither source alone.} A joint effect disappears
-entirely when either of its two sources is removed: without a deficit there is nothing for the
-warming to close faster, and without the warming the deficit closes at its usual pace. Asking how
-much of it is due to the climate and how much to the inheritance is like asking how much of the
-area of a rectangle is due to its width and how much to its height. The runs measure the joint
-effect exactly; only its assignment to one source or the other is a convention.
-
-\paragraph{Two ways of reporting the same sink.} The three-part division of
-Section~\ref{app:attr_runs} assigns each joint effect by the order in which the sources are
-removed: the inherited part is measured under the observed climate and so contains the joint
-effect of climate and inheritance, and the climate part is measured on the observed litter and so
-contains the joint effect of climate and litter. Alternatively, the sink can be reported in five
-terms: each source on its own, measured with the other sources at their reference (the inherited
-state as run 1$'$ minus run 3, the litter as run 3, the climate as run 4 minus run 5), plus the
-two joint effects. Both versions add up to the same sink. Over 1985--2024, in the six-model
-average:
-
-\begin{center}
-\small
-\begin{tabular}{lrr}
-\hline
- & three parts & five terms \\
- & (t\,C\,ha$^{-1}$) & (t\,C\,ha$^{-1}$) \\
-\hline
-inherited state & $+11.3$ & $+9.9$ \\
-\quad joint with climate & (included above) & $+1.5$ \\
-litter change since 1985 & $+8.9$ & $+8.9$ \\
-climate & $-12.2$ & $-11.0$ \\
-\quad joint with litter & (included above) & $-1.3$ \\
-\hline
-sink & $+8.0$ & $+8.0$ \\
-\hline
-\end{tabular}
-\end{center}
-
-The joint effect of climate and inheritance is about 13\,\% of the inherited part in the
-six-model average, from 5--6\,\% in Yasso20 and Yasso15 to 18\,\% in TP2 and TP3, whose slow pools
-close the deficit over the longest time and so experience more of the warming. The joint effect
-of climate and litter ranges from $-0.7$ (TP2, TP3) to $-1.9$\,t\,C\,ha$^{-1}$ (SP1). The
-litter part is the same in both versions, because the litter has no joint effect with the
-inherited state. In neither version does any part change sign or its rank relative to the
-others. In the figures of the five-term version the two joint effects are drawn as hatched bands
-in the colour of the part they are assigned to in the three-part division, so the two readings
-can be compared directly.
+\paragraph{The joint effects are inside the parts.} The climate changes the share of carbon
+that decomposes each year, so its effect depends on how much carbon is present: it acts on
+the extra litter, and it acts on the inherited deficit. Each of the two therefore has a joint
+effect with the climate, an amount of sink that exists only when both are present, and that
+belongs to neither source alone (asking how much of it is due to each is like asking how much
+of the area of a rectangle is due to its width and how much to its height). In the three
+parts the joint effects are assigned by the order of the runs: the inherited part is measured
+under the observed climate and so contains the joint effect of climate and inheritance; the
+climate part is measured on the observed litter and so contains the joint effect of climate
+and litter. Reporting the two joint effects as terms of their own requires two further
+calibrations, with the inherited deficit and the climate held at the reference, and with a
+balanced start and the litter held at its 1985--1989 level; both are planned.
 
 \subsection{Computation and figures}
 
 The runs use each model's own code and the plot's own litter and climate series, with no
 approximation of the model. The division is computed for every plot of the set observed in
 all three campaigns (310 plots, the basis of every observed rate in the paper) and for 50
-posterior draws of each model. National values are plain averages over plots and draws, and
-the six-model summary is the plain average of the six models; averages, unlike medians,
-keep the parts adding up to the sink.
+posterior draws of each calibration. National values are plain averages over plots and
+draws, and the six-model summary is the plain average of the six models; averages, unlike
+medians, keep the parts adding up to the sink.
 
 The figures show 1985--2024, the period simulated with observed forcing and the one on which
 every part is anchored. Before 1985 the whole modelled sink is the soil catching up with the
@@ -248,13 +168,50 @@ part, so the smoothed parts still add up to the smoothed sink.
 \subsection{Checks}
 \label{app:attr_checks}
 
-Three checks are run for every model, plot and posterior draw before any number is kept:
-the pre-run replayed with the model's own run function reproduces the calibrated starting
-state (largest relative difference $1.5\times10^{-14}$); the balanced soil with litter and
-climate both held at their references keeps a sink of zero (largest departure
-$2.3\times10^{-13}$\,t\,C\,ha$^{-1}$\,yr$^{-1}$); and the three parts add up to the sink of
-run 1 (within $10^{-15}$). The balanced soil of the second check is run 5; runs 1$'$ and 4
-are made only to measure the two joint effects (Section~\ref{app:attr_joint}).
+The three calibrations of each model converged (largest potential scale reduction factor
+1.009, effective sample size above 1700 for every parameter). Two checks are run for every
+model before any number is kept. For every draw of the two balanced-start calibrations, the
+balanced soil with the litter and the climate both held at their references keeps a sink of
+zero on every plot (largest departure $1.7\times10^{-13}$\,t\,C\,ha$^{-1}$\,yr$^{-1}$), so the
+balanced start is in balance under each calibration's own parameters. The three parts add up
+to the sink of run 1 in every year and draw (within $10^{-15}$).
+
+\subsection{Results}
+\label{app:attr_results}
+
+Over 1985--2024:
+
+\begin{center}
+\small
+\begin{tabular}{lrrrr}
+\hline
+ & inherited state & litter since 1985 & climate & sink \\
+\hline
+SP1     & $+6.1$ (3.9)  & $+11.0$ (0.6) & $-15.7$ (1.3) & $+1.4$  \\
+TP2     & $+17.4$ (3.4) & $+6.2$ (0.8)  & $-11.3$ (2.0) & $+12.2$ \\
+TP3     & $+17.1$ (4.0) & $+6.1$ (1.0)  & $-11.4$ (2.1) & $+11.8$ \\
+Yasso07 & $+13.0$ (3.2) & $+6.6$ (0.4)  & $-10.3$ (0.8) & $+9.3$  \\
+Yasso15 & $+9.5$ (2.6)  & $+7.0$ (0.4)  & $-8.0$ (0.4)  & $+8.5$  \\
+Yasso20 & $+6.7$ (2.1)  & $+7.1$ (0.5)  & $-9.1$ (0.6)  & $+4.7$  \\
+\hline
+six-model mean & $+11.6$ & $+7.3$ & $-11.0$ & $+8.0$ \\
+\hline
+\end{tabular}
+
+{\footnotesize t\,C\,ha$^{-1}$, means over 50 posterior draws per calibration, standard deviation
+over the draws in brackets.}
+\end{center}
+
+The litter and climate parts are narrow, because they follow the measured litter and climate.
+The inherited part is the uncertain one: it is set by the size of the deficit, which the
+calibration estimates through $\sigma_{\mathrm{init}}$, and it carries most of the uncertainty of
+the sink. The litter change and the climate are of the same order and of opposite sign, and
+together they remove a little carbon in every model, from $-1.0$ (Yasso15) to
+$-5.3$\,t\,C\,ha$^{-1}$ (TP3); their sum is the sink of run 2, and the balanced-start calibration
+loses carbon over 1985--2024 in every one of its draws. The inherited part therefore exceeds the
+whole sink in every model. SP1 stands apart, with the largest litter and climate parts and the
+smallest sink: its single pool receives all the litter and responds to the climate as a whole,
+where the other models pass part of the carbon to slower pools.
 
 \subsection{Relation to a differential decomposition}
 
@@ -273,178 +230,28 @@ positive and directly comparable with the litter and the climate.
 \subsection{What the division does and does not say}
 
 The division describes the calibrated models, not the soil: each part is the share of the
-modelled sink produced by one source, given the parameters retained by the calibration. The
-inherited part is as large as the deficit the calibration chose, through
-$\sigma_{\mathrm{init}}$, and it fades at the pace of each model's slow pools, so its size and
-persistence differ between models for structural reasons; a model whose
-$\sigma_{\mathrm{init}}$ is close to one carries almost no inherited sink.
+modelled sink that follows from one assumption, given what the calibrations retain under it.
+The inherited part is as large as the deficit the calibration chose, and it fades at the pace
+of each model's slow pools, so its size and persistence differ between models for structural
+reasons.
 
 The climate part depends on the reference climate. The reference is one constant long-term
 mean of the 1961--1984 climate (plot mean 2.2\,\textdegree C), from the same gridded
 observations, used both for the pre-run 1917--1984 and as the reference: the soil enters 1985
 adjusted to the climate it had lived in, and the climate part shows the whole warming since
-then. An earlier version used the 1985--2004 mean (2.7\,\textdegree C), which made the climate
-part sum to nearly zero until about 2004, because the reference included the observed
-period. With the colder reference, and the models recalibrated on it, the climate part grew
-from $-7.5$ to $-12.2$\,t\,C\,ha$^{-1}$, the inherited part grew from $+9.3$ to $+11.3$, the litter
-part barely moved ($+8.6$ to $+8.9$), and the sink fell from $+10.5$ to $+8.0$; the joint
-effects roughly doubled, as expected. The \emph{size} of the climate part therefore rests on
-the choice of the reference, whereas its change between periods, and the ordering of the parts,
-do not.
+then. A reference that overlaps the observed period would hide part of that warming and
+shrink the climate part. The \emph{size} of the climate part therefore rests on the choice of
+the reference, whereas its change between periods, and the ordering of the parts, do not.
 
 The litter product includes harvest residues and has no separate natural-mortality term, so
 neither can be separated from the litter parts.
 
-\subsection{How much the parts depend on the calibration}
-\label{app:attribution_params}
-
-% 2026-10-13. Numbers: doublechecks/attribution_decomposition.R (production) and the same
-% script with HIKET_ATTR_PARAMS=eq (doublechecks/attribution_eqparams.rds); 50 draws per
-% model, 310 plots, 1985-2024. Production 20261012_1042*, balanced start 20261012_12*-13*.
-
-Within each model, all runs of the division use one and the same set of parameters, a draw
-from the posterior. The runs differ only in the starting state and in the forcing: the
-balanced start of runs 2 and 3 sets $\sigma_{\mathrm{init}}$ to one and changes nothing else, and
-$\sigma_{\mathrm{init}}$ acts on nothing after 1985. No run is recalibrated. The division is
-therefore a counterfactual on one fixed model, and the initial-state assumption cannot reach
-the litter and climate parts through the runs themselves.
-
-The assumption reaches them one level up, through the calibration. The parameters were
-estimated with the starting state free; a calibration that assumes a balanced start retains
-different parameters, less litter input and, in most models, faster and more
-temperature-sensitive decomposition (the balanced-start comparison of the main text). The litter and climate parts are
-computed on balanced runs, yet with parameters that were chosen because the soil was allowed a
-deficit. Two sources of variation in the parts are then worth separating: the uncertainty of the
-parameters within one calibration, and the change of the parameters between the two
-calibrations.
-
-\paragraph{Within one calibration.} Over the posterior draws of each model, the litter and
-climate parts are narrow (standard deviation 0.6 to 2.5\,t\,C\,ha$^{-1}$), because they follow the
-measured litter and climate. The inherited part is the uncertain one (standard deviation 2 to
-4\,t\,C\,ha$^{-1}$): it is set almost entirely by $\sigma_{\mathrm{init}}$ (correlation $-0.85$ to
-$-0.99$), the size of the deficit, and it carries most of the uncertainty of the total sink.
-The litter and climate parts move against each other (correlation $-0.75$ to $-0.93$): a draw in
-which more of the added litter stays in the soil also loses more to the warming, because both
-scale with the carbon passing through the soil. Their sum is therefore more stable than either
-part, and it is negative in every draw of every model, from $-1.2$ (Yasso15) to
-$-4.6$\,t\,C\,ha$^{-1}$ (SP1). That is why the inherited part exceeds the whole sink in every draw.
-
-\paragraph{Between the two calibrations.} The division was repeated with the parameters of the
-calibration that assumes a balanced start in 1985 (the same runs, plots and number of draws;
-$\sigma_{\mathrm{init}}$ is one, so the inherited part is zero by construction). Over 1985--2024:
-
-\begin{center}
-\small
-\begin{tabular}{lrrrrrr}
-\hline
- & \multicolumn{2}{c}{climate} & \multicolumn{2}{c}{litter since 1985} & \multicolumn{2}{c}{climate + litter} \\
- & free start & balanced start & free start & balanced start & free start & balanced start \\
-\hline
-SP1     & $-16.8$ & $-16.1$ & $+12.1$ & $+11.6$ & $-4.6$ & $-4.5$ \\
-TP2     & $-11.3$ & $-12.3$ & $+7.3$  & $+7.3$  & $-3.8$ & $-5.0$ \\
-TP3     & $-11.1$ & $-11.5$ & $+7.4$  & $+6.8$  & $-3.9$ & $-4.7$ \\
-Yasso07 & $-11.9$ & $-11.1$ & $+8.4$  & $+7.2$  & $-3.3$ & $-3.9$ \\
-Yasso15 & $-10.3$ & $-8.6$  & $+9.2$  & $+7.6$  & $-1.2$ & $-1.0$ \\
-Yasso20 & $-11.5$ & $-9.6$  & $+9.0$  & $+7.6$  & $-2.4$ & $-2.1$ \\
-\hline
-six-model mean & $-12.2$ & $-11.5$ & $+8.9$ & $+8.0$ & $-3.2$ & $-3.5$ \\
-\hline
-\end{tabular}
-
-{\footnotesize t\,C\,ha$^{-1}$, medians over 50 posterior draws; ``free start'' = the production
-calibration, ``balanced start'' = the calibration with $\sigma_{\mathrm{init}} \equiv 1$.}
-\end{center}
-
-The initial-state assumption of the calibration moves the climate part by $-17$ to $+9$ per cent
-and the litter part by $-18$ to $-1$ per cent; in the six-model mean, by $-6$ and $-10$ per cent.
-The largest shifts are in Yasso15 and Yasso20, where the balanced-start calibration retains 9 to
-15 per cent less litter input, which shrinks the litter part and, with less carbon passing
-through the soil, the climate part as well. In those two models the shift of the climate part,
-$1.7$ to $1.9$\,t\,C\,ha$^{-1}$, is larger than the uncertainty within one calibration; in the other
-four it is not. The sum of the two parts barely moves (six-model mean $-3.2$ against $-3.5$), and
-it is negative under both calibrations in every model.
-
-\paragraph{Reading.} The litter and climate parts are properties of each calibrated model, not of
-the processes in general, and the initial-state assumption reaches them through the parameters.
-The effect is measurable but second-order: smaller than the differences between model structures
-(the climate part ranges from $-10.3$ to $-16.8$ between models) and much smaller than the effect
-of the reference climate (the climate part grew by about 60 per cent when the reference moved to
-1961--1984). The conclusion the division supports does not depend on it: under either calibration
-the litter change since 1985 and the climate together remove a little carbon over 1985--2024, so
-the modelled sink of that period is carried by the state the soil inherited. What the balanced
-start removes is that inherited part, not the litter and climate parts; this is why it cannot
-reproduce the measured accumulation.
-
-\subsection{The division with every run calibrated on its own}
-\label{app:attribution_recal}
-
-% 2026-10-21. Numbers: doublechecks/attribution_decomposition.R with
-% HIKET_ATTR_MODE=recalibrated (doublechecks/attribution_recalibrated.rds); figures
-% S15/S16/S17 *_recal.png. Runs: production 20261012_1042*, balanced start
-% 20261012_12*-13*, balanced start with the climate held 20261013_13* (Roihu jobs
-% 2265953-58; R-hat <= 1.007, ESS >= 1845). Three parts only: the two runs that
-% measure the joint effects (1', 4) are not yet recalibrated.
-
-The division above keeps one set of parameters per model across the runs. In the recalibrated
-version every run carries its own calibration: run 1 is the production calibration, run 2 the
-calibration with a balanced start in 1985, and run 3 a calibration with a balanced start and
-the climate held at the reference through 1985--2024. The parts are then differences between
-three calibrated models, each fitted to the same measurements under its own assumptions, and
-the division becomes a comparison between assumptions only. The three parts are formed exactly
-as before (inherited = run 1 minus run 2, climate = run 2 minus run 3, litter = run 3), with
-the joint effects assigned by the order of the runs. Over 1985--2024:
-
-\begin{center}
-\small
-\begin{tabular}{lrrrrrrrr}
-\hline
- & \multicolumn{2}{c}{inherited state} & \multicolumn{2}{c}{litter since 1985} & \multicolumn{2}{c}{climate} & \multicolumn{2}{c}{climate + litter} \\
- & fixed & recal. & fixed & recal. & fixed & recal. & fixed & recal. \\
-\hline
-SP1     & $+6.0$  & $+6.4$  & $+12.1$ & $+11.0$ & $-16.8$ & $-15.8$ & $-4.6$ & $-4.7$ \\
-TP2     & $+16.6$ & $+16.8$ & $+7.3$  & $+6.3$  & $-11.3$ & $-11.1$ & $-3.8$ & $-4.9$ \\
-TP3     & $+15.6$ & $+17.6$ & $+7.4$  & $+6.3$  & $-11.1$ & $-11.7$ & $-3.9$ & $-5.1$ \\
-Yasso07 & $+12.9$ & $+13.2$ & $+8.4$  & $+6.7$  & $-11.9$ & $-10.3$ & $-3.3$ & $-3.7$ \\
-Yasso15 & $+9.7$  & $+9.4$  & $+9.2$  & $+7.0$  & $-10.3$ & $-8.0$  & $-1.2$ & $-1.0$ \\
-Yasso20 & $+7.0$  & $+6.9$  & $+9.0$  & $+7.0$  & $-11.5$ & $-9.1$  & $-2.4$ & $-2.0$ \\
-\hline
-six-model mean & $+11.3$ & $+11.7$ & $+8.9$ & $+7.4$ & $-12.2$ & $-11.0$ & $-3.2$ & $-3.6$ \\
-\hline
-\end{tabular}
-
-{\footnotesize t\,C\,ha$^{-1}$, medians over 50 posterior draws per run; ``fixed'' = one parameter
-set per model across the runs (above), ``recal.'' = every run its own calibration. The sink
-itself is run 1 in both versions: six-model mean $+8.0$.}
-\end{center}
-
-The inherited part changes by less than 5 per cent in four of the six models ($+7$ per cent in
-SP1, $+13$ per cent in TP3) and by 3 per cent in the six-model mean. The litter part shrinks in
-every model, by 9 to 24 per cent, and the climate part shrinks in five of the six, so that the
-recalibrated parts lie close to those obtained with the parameters of the balanced-start
-calibration (previous subsection): the litter and climate runs are balanced-start runs, and
-once they are calibrated as such they retain less litter input and less carbon passing through
-the soil. The sum of the litter and climate parts stays negative in every model, from $-1.0$
-(Yasso15) to $-5.1$\,t\,C\,ha$^{-1}$ (TP3), and the inherited part exceeds the whole sink in every
-model, because the balanced-start calibration loses carbon over 1985--2024 in every one of its
-draws. No part changes sign, and the ordering of the parts is the same as in the fixed-parameter
-division. The recalibration therefore confirms the reading above: the initial-state assumption
-reaches the litter and climate parts through the parameters, by about 10 to 20 per cent, and
-leaves the inherited part, and with it the conclusion, unchanged.
-
 \subsection{Open choices for review}
 \label{app:attribution_open}
 \begin{enumerate}
-  \item \textbf{The window of the long-term climate mean}: DECIDED, 1961--1984 from the
-    gridded observations already extracted per plot (implemented; all runs recalibrated on it).
-    1917--1984 with a reconstruction of 1917--1960 remains possible.
   \item \textbf{Three parts or five terms}: the joint effects assigned by the order of the runs
-    (inheritance--climate to the inherited part, litter--climate to the climate part), or
-    reported as their own two terms, drawn as hatched bands
-    (Section~\ref{app:attr_joint}).
-  \item \textbf{Fixed-parameter or recalibrated division}
-    (Section~\ref{app:attribution_recal}): which one the paper shows, and whether the other
-    stays in the appendix. The recalibrated version has three parts only until the two runs
-    that measure the joint effects are recalibrated as well (planned with the new input data).
+    (as now), or reported as their own two terms once the two further calibrations exist
+    (planned with the new input data).
   \item \textbf{Annual or smoothed values} in the figures that enter the paper, and the width
     of the running mean.
   \item \textbf{The cumulative view} (carbon gained since 1985 by each part, S17) is held

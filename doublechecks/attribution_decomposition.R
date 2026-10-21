@@ -218,14 +218,22 @@ arm_sinks <- function(e, M, A, rid, bal) {
   hiket_set_prerun_clim(bun$climate_ss_by_plot, as.character(bun$plots_real))
   if (!is.null(bun$climate_ss_by_plot)) e$litter_means <- bun$litter_means
   ks <- sort(sample(nrow(post), N_DRAW))
+  # CHECK (balanced arms): the same draw with litter AND climate held at their references
+  # must have no sink on any plot -- the balanced start is in balance under this calibration.
+  A0 <- modifyList(A, list(clim = TRUE, lit = TRUE)); drift <- 0
   S <- sapply(ks, function(k) {
     mp <- e$.assemble(setNames(as.numeric(post[k, ]), colnames(post)))
     R  <- parallel::mclapply(bal, function(p) tryCatch(arm_plot(e, mp, p, A), error = function(z) NULL),
                              mc.cores = CORES)
+    if (A$eq) {
+      D <- parallel::mclapply(bal, function(p) tryCatch(max(abs(arm_plot(e, mp, p, A0)[, "F"])),
+                                                       error = function(z) NA_real_), mc.cores = CORES)
+      drift <<- max(drift, unlist(D), na.rm = TRUE)
+    }
     R  <- R[!vapply(R, is.null, logical(1))]
     Reduce(`+`, lapply(R, function(r) r[, "F"])) / length(R)
   })
-  list(S = S, ks = ks)
+  list(S = S, ks = ks, drift = if (A$eq) drift else NA_real_)
 }
 
 out <- list(rid = RID[MODELS], params = if (EQP) "eqinit" else "production", n_draw = N_DRAW, proj_years = PROJ_YEARS, version = "level_v3_sequential", models = list())
@@ -248,7 +256,13 @@ if (RECAL) {
       cbind(year = yr, F = S1[, d], history = S1[, d] - S2[, d], inputs = S3[, d], climate = S2[, d] - S3[, d],
             interaction = S2[, d] - S3[, d] - S4[, d],
             inter_hist_clim = (S1[, d] - S2[, d]) - (S1p[, d] - S3[, d]))))
-    out$models[[M]] <- list(arr = arr, n_plots = length(bal), arms = rids,
+    chk <- c(eq_drift_S2 = SS$S2$drift, eq_drift_S3 = SS$S3$drift,
+             sum = max(abs(arr[, "F", ] - (arr[, "history", ] + arr[, "inputs", ] + arr[, "climate", ]))))
+    cat(sprintf("%-8s checks: balance drift S2 %.1e, S3 %.1e tC/ha/yr | sum %.1e\n", M,
+                chk[["eq_drift_S2"]], chk[["eq_drift_S3"]], chk[["sum"]]))
+    if (chk[["eq_drift_S2"]] > 1e-6 || chk[["eq_drift_S3"]] > 1e-6 || chk[["sum"]] > 1e-9)
+      stop(M, ": recalibrated decomposition check failed")
+    out$models[[M]] <- list(arr = arr, n_plots = length(bal), arms = rids, chk = chk,
                             draws = lapply(SS, function(z) if (is.null(z)) NULL else z$ks))
     out$rid[[M]] <- rids
     cat(sprintf("%-8s %d draws per arm x %d plots in %.1f min | 1985-2024: S1 %+.1f  S2 %+.1f  S3 %+.1f tC/ha\n",

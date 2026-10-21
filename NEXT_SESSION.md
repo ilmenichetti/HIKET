@@ -3,11 +3,15 @@
 ## ⭐⭐⭐ RESUME HERE (closed 2026-10-13 evening)
 
 **✅ 1 DONE 2026-10-21:** `eqinit_climheld` landed (RUN_IDs `20261013_13*`, R-hat ≤ 1.007, ESS ≥ 1845), synced,
-decomposed, figures `S15/S16/S17_*_recal.png`. Recalibrated three parts (medians, six-model mean): inherited **+11.7**,
-litter **+7.4**, climate **−11.0**, sink +8.0 (fixed-parameter +11.3 / +8.9 / −12.2). No sign or rank change; the
-balanced-start calibration loses carbon in every draw. Restated in storyline v4 (R2 end, schema, figure plan) and in
-the attribution appendix (new §app:attribution_recal + open choice "fixed or recalibrated"). ⬜ Lorenzo decides which
-version the appendix keeps. Five terms wait for the new inputs (`submit_arms.sh all`).
+decomposed, figures `S15/S16/S17_*_recal.png`. Recalibrated three parts (MEANS, six-model): inherited **+11.6**,
+litter **+7.3**, climate **−11.0**, sink +8.0. The balanced-start calibration loses carbon in every draw ⇒
+inherited > sink in all six. ⭐ **DECIDED (Lorenzo): the fixed-parameter division is DROPPED** — the appendix
+(`appendix_attribution.tex`) was rewritten for the recalibrated version only (three calibrations, one assumption
+added at a time; joint effects inside the parts by order) and the storyline Methods now present the division as
+one more calibration on top of the balanced-start comparison. The recalibrated path now ENFORCES two checks
+(balance drift ≤ 1.7e-13, adding-up ≤ 3e-16). The parameter-source test (`HIKET_ATTR_PARAMS=eq`) and the
+fixed-parameter joint terms are no longer in any text; their code paths and old S15–S17 figures remain on disk
+(still run by `refresh_all_local.sh`). Five terms wait for the new inputs (`submit_arms.sh all`).
 
 ~~**1. First: the `eqinit_climheld` arm** (6 jobs, launched by Lorenzo the evening of 2026-10-13 with
 `submit_arms.sh eqinit_climheld`): jobs **2265953 SP1, 2265954 TP2, 2265955 TP3, 2265956 Yasso07, 2265957 Yasso15, 2265958 Yasso20** (submission order). ✅ All six started; switches verified in the logs (EQUILIBRIUM INIT + CLIMATE HELD + PRERUN CLIMATE 1961–1984 ON, 40 cores). `squeue -u menichet`; logs with the ONE-line check
