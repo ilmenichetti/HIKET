@@ -66,11 +66,11 @@ legend("topleft", bty = "n", cex = 0.78, legend = c(MS, ARM_LAB),
 
 par(mar = c(4.2, 6.2, 2.4, 1))
 s_sink <- dot_panel("sink_first20", expression("tC ha"^-1*" yr"^-1), "(b) Projected sink, 2025-2044")
-s_head <- dot_panel("headroom", "% of the 2024 stock", "(c) Headroom to equilibrium", scale = 100)
+s_head <- dot_panel("headroom", "% of the 2024 stock", "(c) Remaining accumulation to balance", scale = 100)
 legend("bottomright", bty = "n", cex = 0.8, legend = ARM_LAB, pch = 21, pt.bg = c("grey50", "white"),
        col = "grey20", lty = c(1, 2), lwd = 2, pt.cex = 1.3)
 
-mtext("Forecast under a transient vs an equilibrium start (litter held at 2024, recent climate recycled)",
+mtext("Forecast under a transient vs a balanced start (litter held at 2024, recent climate recycled)",
       outer = TRUE, line = 0.5, cex = 1.05, font = 2)
 mtext(sprintf("%s; intervals: 90%% over posterior draws of the national mean", basis_note(seq_len(z$obs$n))),
       side = 1, outer = TRUE, line = 0.3, cex = 0.62, col = "grey35", adj = 0.01)

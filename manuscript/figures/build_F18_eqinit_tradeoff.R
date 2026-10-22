@@ -27,7 +27,7 @@ png("manuscript/figures/F18_eqinit_tradeoff.png", width = 11, height = 7.2, unit
 par(mfrow = c(2, 3), mar = c(4, 4.4, 2.4, 0.8), oma = c(1.4, 0, 2.2, 0), mgp = c(2.5, 0.6, 0), las = 1)
 med <- list()
 for (M in FIG_MODELS) {
-  if (!M %in% D$models) { plot.new(); title(main = M); text(0.5, 0.5, "equilibrium arm\nnot available", col = "grey40"); next }
+  if (!M %in% D$models) { plot.new(); title(main = M); text(0.5, 0.5, "balanced-start arm\nnot available", col = "grey40"); next }
   d  <- D$d[[M]]; Jb <- d$prod$J_bar
   pr <- d$prod$thin; eq <- d$eq$thin
   pr <- pr[is.finite(pr$mtt), ]; eq <- eq[is.finite(eq$mtt), ]
@@ -44,11 +44,11 @@ for (M in FIG_MODELS) {
   points(m1[1], m1[2], pch = 21, bg = "white", col = "grey10", cex = 1.7, lwd = 1.5)
   med[[M]] <- data.frame(model = M, flux_prod = m0[1], flux_eq = m1[1], mtt_prod = m0[2], mtt_eq = m1[2])
   if (M == D$models[1])
-    legend("topright", bty = "n", cex = 0.8, legend = c("transient start", "equilibrium start", "tree litter alone"),
+    legend("topright", bty = "n", cex = 0.8, legend = c("transient start", "balanced start", "tree litter alone"),
            pch = c(21, 21, NA), pt.bg = c(MODEL_COL[[M]], "white", NA), col = c("grey10", "grey10", "grey40"),
            lty = c(NA, NA, 3), pt.cex = 1.4)
 }
-mtext("Litter input against transit time: transient vs equilibrium start", outer = TRUE,
+mtext("Litter input against transit time: transient vs balanced start", outer = TRUE,
       line = 0.4, cex = 1.05, font = 2)
 mtext(sprintf("posterior draws (thinned) and medians; transit time at unit input and dataset-mean climate; runs %s / %s",
               paste(unique(substr(D$stamp$prod, 1, 8)), collapse = "/"), paste(unique(substr(D$stamp$eq, 1, 8)), collapse = "/")),

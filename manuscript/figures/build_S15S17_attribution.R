@@ -44,7 +44,7 @@ MS <- intersect(MODEL_ORDER, names(Z$models))
 COMP     <- c("history", "inputs", "climate")
 # Labels (Lorenzo, 2026-10-08): "historical C" IS an input effect -- the litter rise before
 # 1985 and its delayed legacy -- so both input parts are green, split by era.
-COMP_LAB <- c(history = "Litter rise before 1985 (initialisation)", inputs = "Litter change since 1985",
+COMP_LAB <- c(history = "Inherited state (litter rise before 1985)", inputs = "Litter change since 1985",
               climate = "Climate")
 COMP_COL <- c(history = "#2F6B3B", inputs = "#9CCB86", climate = "#C44E52")   # climate: red (Lorenzo)
 HATCH <- c(history = FALSE, inputs = FALSE, climate = FALSE)

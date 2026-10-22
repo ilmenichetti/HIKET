@@ -63,7 +63,7 @@ mtext(sprintf("total  %.1f -> %.1f (peak %d) -> %.1f tC/ha/yr",
 
 ## (b) spatial gradient -- litter by latitude band (median + IQR) -----------
 plot(NA, xlim = range(yr), ylim = c(1.2, 3.8), xlab = "", ylab = expression("Litter input (tC ha"^-1*" yr"^-1*")"),
-     main = "(b)  South–north gradient (447 plots, latitude terciles)")
+     main = sprintf("(b)  South–north gradient (%d plots, latitude terciles)", length(unique(ib$plot_id))))
 for (b in c("South","Central","North")) {          # all bands first
   lo <- qtile(b, .25); hi <- qtile(b, .75); by <- as.integer(names(lo))
   polygon(c(by, rev(by)), c(lo, rev(hi)), col = adjustcolor(bcol[b], 0.13), border = NA)

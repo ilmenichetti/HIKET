@@ -41,7 +41,7 @@ draw_obs <- function() {
 }
 foot <- function() {
   rd <- function(r) paste(unique(substr(r, 1, 8)), collapse = "/")      # run dates; full ids in the cache
-  mtext(sprintf("%s; transient = run %s, equilibrium = run %s%s", basis_note(seq_len(z$obs$n)),
+  mtext(sprintf("%s; transient = run %s, balanced = run %s%s", basis_note(seq_len(z$obs$n)),
                 rd(z$stamp$prod), rd(z$stamp$eq),
                 if (length(z$missing)) paste0("; missing: ", paste(z$missing, collapse = ", ")) else ""),
         side = 1, outer = TRUE, line = 0.4, cex = 0.62, col = "grey35", adj = 0)
@@ -65,11 +65,11 @@ draw_obs()
 text(max(yr), ylim[1] + 0.3, "projection: litter held at 2024,\nrecent climate recycled",
      adj = c(1, 0), cex = 0.72, col = "grey35", font = 3)
 legend("topleft", bty = "n", cex = 0.78, ncol = 2,
-       legend = c(MS, "ensemble, transient start", "ensemble, equilibrium start", "observed (95% CI)"),
+       legend = c(MS, "ensemble, transient start", "ensemble, balanced start", "observed (95% CI)"),
        col = c(MODEL_COL[MS], "grey10", "grey10", "grey15"),
        lty = c(rep(1, length(MS)), 1, 2, NA), lwd = c(rep(1.6, length(MS)), 3.2, 3.2, NA),
        pch = c(rep(NA, length(MS)), NA, NA, 21), pt.bg = c(rep(NA, length(MS) + 2), CAMPAIGN_COL[2]))
-mtext("solid: transient start (production)    dashed: equilibrium start in 1985",
+mtext("solid: transient start (production)    dashed: balanced start in 1985",
       side = 3, line = -1.1, adj = 0.99, cex = 0.72, col = "grey25")
 
 # lower strip: effective litter input sigma_input x J, history then held at 2024
@@ -87,7 +87,7 @@ mtext("Year", side = 1, line = 2.2)
 proj_shade(yl2)
 for (m in MS) for (a in c("prod", "eq")) {
   l <- flux_line(m, a); lines(l$x, l$y, col = MODEL_COL[[m]], lwd = 1.3, lty = ARM_LTY[[a]]) }
-mtext("Soil carbon under a transient vs an equilibrium start", outer = TRUE, line = 0.4, cex = 1.1, font = 2)
+mtext("Soil carbon under a transient vs a balanced start", outer = TRUE, line = 0.4, cex = 1.1, font = 2)
 foot()
 dev.off()
 
@@ -97,7 +97,7 @@ par(mfrow = c(2, 3), mar = c(3.2, 4.2, 2.2, 0.8), oma = c(1.6, 0, 2, 0), mgp = c
 yl <- range(c(unlist(lapply(MS, function(m) c(band(m, "prod"), band(m, "eq")))), obs$lo, obs$hi))
 for (m in FIG_MODELS) {
   plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = expression("SOC (tC ha"^-1*")"), main = m)
-  if (!m %in% MS) { text(mean(range(yr)), mean(yl), "equilibrium arm\nnot available", col = "grey40"); next }
+  if (!m %in% MS) { text(mean(range(yr)), mean(yl), "balanced-start arm\nnot available", col = "grey40"); next }
   proj_shade(yl)
   for (a in c("prod", "eq")) {
     b <- band(m, a)
@@ -110,7 +110,7 @@ for (m in FIG_MODELS) {
     legend("topleft", bty = "n", cex = 0.8, legend = ARM_LAB, lty = ARM_LTY, lwd = 2,
            col = c(MODEL_COL[[m]], "grey25"))
 }
-mtext("Transient vs equilibrium start, per model (median and 90% posterior band of the national mean)",
+mtext("Transient vs balanced start, per model (median and 90% posterior band of the national mean)",
       outer = TRUE, line = 0.4, cex = 1.0, font = 2)
 foot()
 dev.off()

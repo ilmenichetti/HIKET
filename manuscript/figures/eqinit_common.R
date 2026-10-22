@@ -28,7 +28,7 @@ source("manuscript/figures/model_palette.R")
 
 EQ_CACHE  <- "manuscript/figures/eqinit_comparison.rds"
 INTERVALS <- list("1985-2006" = c(1L, 2L), "2006-2024" = c(2L, 3L), "1985-2024" = c(1L, 3L))
-ARM_LAB   <- c(prod = "transient start", eq = "equilibrium start")
+ARM_LAB   <- c(prod = "transient start", eq = "balanced start")
 ARM_LTY   <- c(prod = 1, eq = 2)
 
 q90 <- function(x) c(med = median(x, na.rm = TRUE), lo = unname(quantile(x, .05, na.rm = TRUE)),

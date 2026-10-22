@@ -57,7 +57,7 @@ for (iv in names(INTERVALS)) {
            pch = c(21, 21, NA), pt.bg = c("grey50", "white", NA), col = c("grey20", "grey20", "#4477AA"),
            lty = c(1, 2, 1), lwd = c(2, 2, 2.2), pt.cex = 1.4)
 }
-mtext("Modelled vs observed rate of change, transient vs equilibrium start", outer = TRUE,
+mtext("Modelled vs observed rate of change, transient vs balanced start", outer = TRUE,
       line = 0.5, cex = 1.1, font = 2)
 mtext(sprintf("%s; model intervals: 90%% over posterior draws of the national mean", basis_note(seq_len(z$obs$n))),
       side = 1, outer = TRUE, line = 0.3, cex = 0.65, col = "grey35", adj = 0.01)
