@@ -13,8 +13,25 @@
    the run's own input bundle / pre-run climate as the other arms), Yasso07/15/20 only, 40 draws, ~20–30 min.
    Then show it in F15 (third, dashed line) or as a small table (response at 2084, SSP2-4.5, per model and
    start), and turn the R3b `\gap` in `HIKET_methods_v2.tex` §Simulations into one sentence.
-2. Lorenzo's review of `HIKET_methods_v2.tex` → settle its `\gap`s → merge into `HIKET_draft_v2.tex`.
-3. Build v2's nested headings + figures + captions from storyline v4.
+2. **M&M revision cycle — notes from Lorenzo's reading (2026-10-22). He is editing the .tex himself; when he
+   hands it over, `git pull`, re-read from disk, then:**
+   - ✅ DONE 2026-10-22 (bib `Yasso15code`/`Yasso20code`; files are in YASSOmodel/YASSO15 and /Yasso20, NOT Ryassofortran). **Yasso15/20 climate source — DECIDED: cite the REPOSITORY.** Yasso20 → `Viskari2022` (+ Zenodo
+     10.5281/zenodo.5059909). Yasso15 → the posterior sample distributed with the model code (FMI
+     Ryassofortran, `data/Yasso15.dat`; state version/commit or access date; use a Zenodo DOI if one covers
+     it). Viskari 2022 never mentions Yasso15 — no peer-reviewed source exists. Not "in preparation".
+     Add a bib entry, replace the `\gap`. Optional: ask Toni whether a citable Yasso15 reference exists.
+     Name it as a remaining asymmetry: Yasso15 widths come from an unpublished calibration.
+   - Check whether he applied (answered in chat, NOT edited by me): natural mortality — "that product" =
+     Tupek's, it has NO mortality term (wording implied partial); upland AREA held 13.90 Mha → linear rise
+     1965–1980 → 15.22 Mha; the pre-run equation $J(t)=J_{1917}+(J_{1985}-J_{1917})\,s(t)$ applied per AWEN ×
+     size (composition fixed at 1985–89) and naming $J_{1917}=\sinit J_{1985}$; "what remains is stated with
+     each compromise" is honoured only for the rates — add one leftover sentence per subsection (fractions:
+     number 0/1/2/12; climate: borrowed response, 1 vs 3 modifiers; auxiliary: none); the ICBM rescaling
+     = divide by Yasso07 ξ at Ultuna (5.4 °C, amplitude 10, 520 mm) = 0.94.
+3. Lorenzo's review of `HIKET_methods_v2.tex` → settle its `\gap`s → merge into `HIKET_draft_v2.tex`.
+3. ✅ DONE 2026-10-22: `HIKET_draft_v2.tex` is the full skeleton (M&M copied whole after round 8; R1–R4 + Intro +
+   Conclusions as numbered nested headings to \subparagraph with \gap gists; 12 main figures + input table; Supplement S1–S6
+   in the same file). From now on edit the M&M in draft_v2, not in HIKET_methods_v2.tex.
 
 **Headroom: DECIDED 2026-10-21 — the paper quotes the 2024 headroom (21–40%, `forward_scenarios.R`, F19).**
 The 1985 figure (`doublechecks/equilibrium_headroom.R`) is NOT important (Liski comparison only). Its script

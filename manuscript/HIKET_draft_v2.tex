@@ -1,12 +1,30 @@
 % =============================================================================
-%  HIKET -- SECOND DRAFT (skeleton, 2026-10-21)
+%  HIKET -- SECOND DRAFT: the full skeleton (2026-10-22)
 %
-%  Built on manuscript/HIKET_storyline_v4.tex. For now: title, authors and the
-%  coarse layer of sections only. Next: nested headings, a little text here and
-%  there, figures and captions, for the coauthors to work on. The Materials and
-%  methods are the one section written in full: HIKET_methods_v2.tex, to be
-%  merged here once reviewed.
-%  Replaces HIKET_draft_v1.tex (to be dropped).
+%  Built on manuscript/HIKET_storyline_v4.tex. Replaces HIKET_draft_v1.tex.
+%  * The Materials and methods are COMPLETE: copied from HIKET_methods_v2.tex after
+%    Lorenzo's review (round 8, 2026-10-22). From now on this file is the master;
+%    HIKET_methods_v2.tex is kept only as the record of that review.
+%  * Every other section is a skeleton of NESTED NARRATIVE ARCS, on six numbered levels:
+%      section / subsection     the large arcs (Introduction; R1--R4; Conclusions)
+%      subsubsection            one arc inside it
+%      paragraph                the STEPS of that arc, tagged in grey small capitals by
+%                               their OCAR role (Schimel 2012): opening = the context;
+%                               challenge = the problem or question; action = what was
+%                               done or found; resolution = what it means, where it leads
+%      subparagraph             the points inside a step
+%      subsubparagraph          the evidence, numbers and figures for a point
+%    (\subsubparagraph is a sixth level added with titlesec; the article class stops at
+%    \subparagraph.) Each level is indented one step further than its parent.
+%  * Each leaf carries a red \gap{} with the gist and the numbers to use and, below it,
+%    a red REFS line with the references it will cite (\refs{}), from the
+%    storyline (runs: production 20261012_1042*, balanced start 20261012_12*-13*,
+%    balanced start + climate held 20261013_13*). The gists are guidance, not text.
+%  * Each figure has a red ANCHOR (\figanchor) at the place in the structure where it is
+%    first discussed; the float itself follows the anchor.
+%  * Figures: the load-bearing figures of the storyline in the main text, every other
+%    figure in the Supplement (same file, numbered S1, S2, ...). Captions are drafts
+%    written against the current PNGs; "\gap" inside a caption flags a figure to fix.
 %  STYLE: no imported jargon; no sentence-initial bare This/It/These; redundant
 %  rather than compact; never refer to our own development history.
 % =============================================================================
@@ -14,26 +32,55 @@
 \usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{graphicx}\usepackage{amsmath}\usepackage{amssymb}
-\usepackage[hidelinks]{hyperref}
-\usepackage[round]{natbib}
-\usepackage{subfiles}
 \usepackage{caption}\captionsetup{font=small,labelfont=bf}
 \usepackage{xcolor}
 \usepackage{titlesec}
-\titlespacing*{\paragraph}{0pt}{0.8\baselineskip}{0.4em}
+\usepackage[hidelinks]{hyperref}
+\usepackage[round]{natbib}
 \linespread{1.08}
 
+% --- six numbered heading levels ---------------------------------------------
+% paragraph and subparagraph as display headings, plus a sixth level, \subsubparagraph.
+\titleclass{\subsubparagraph}{straight}[\subparagraph]
+\newcounter{subsubparagraph}[subparagraph]
+\renewcommand{\thesubsubparagraph}{\thesubparagraph.\arabic{subsubparagraph}}
+\makeatletter
+\def\toclevel@subsubparagraph{6}
+\def\l@subsubparagraph{\@dottedtocline{6}{14em}{6em}}
+\makeatother
+\titleformat{\paragraph}[hang]{\normalfont\normalsize\bfseries}{\theparagraph}{0.8em}{}
+\titlespacing*{\paragraph}{0pt}{1.0\baselineskip}{0.3\baselineskip}
+\titleformat{\subparagraph}[hang]{\normalfont\normalsize\bfseries\itshape}{\thesubparagraph}{0.8em}{}
+\titlespacing*{\subparagraph}{1.6em}{0.7\baselineskip}{0.2\baselineskip}
+\titleformat{\subsubparagraph}[hang]{\normalfont\normalsize\itshape}{\thesubsubparagraph}{0.8em}{}
+\titlespacing*{\subsubparagraph}{3.2em}{0.5\baselineskip}{0.15\baselineskip}
+\setcounter{secnumdepth}{6}\setcounter{tocdepth}{3}
+
+% the OCAR role of a paragraph in its arc (Opening, Challenge, Action, Resolution)
+\newcommand{\beat}[1]{\textcolor{black!45}{\textsc{\small #1}}\enspace}
 % marks a place where the draft is not finished; nothing else should be coloured
 \newcommand{\gap}[1]{\textcolor{red!70!black}{\small[\,#1\,]}}
-\graphicspath{{figures/}}
+% the references a leaf will cite, listed under its gist
+\newcommand{\refs}[1]{\par\textcolor{red!70!black}{\footnotesize\textsc{refs:}\ #1}\par}
+% where a figure belongs in the structure: #1 label, #2 file name
+\newcommand{\figanchor}[2]{\par\textcolor{red!70!black}{\small$\blacktriangleright$\,\textbf{Figure~\ref{fig:#1}
+  here} (\texttt{#2})}\par}
+% where a Supplement figure is cited
+\newcommand{\suppanchor}[2]{\textcolor{red!70!black}{\small$\triangleright$\,Supplement,
+  Figure~\ref{fig:#1} (\texttt{#2})}}
+\graphicspath{{figures/}{../doublechecks/figures/}}
 % One figure macro, so width and placement stay consistent across the paper.
 \newcommand{\hfig}[4]{%   #1 file  #2 width  #3 label  #4 caption
   \begin{figure}[htbp]\centering
     \includegraphics[width=#2\linewidth]{#1}
     \caption{#4}\label{fig:#3}
   \end{figure}}
-\newcommand{\suppfig}[1]{\textcolor{blue!55!black}{\small[Supplementary figure: \textsf{#1}]}}
-\newcommand{\figref}[1]{\textcolor{blue!55!black}{\small[Figure: \textsf{#1}]}}
+% A figure still to be built: a framed placeholder with its caption.
+\newcommand{\tofig}[3]{%   #1 label  #2 what it shows  #3 caption
+  \begin{figure}[htbp]\centering
+    \fbox{\parbox{0.8\linewidth}{\centering\vspace{2.5em}\gap{FIGURE TO BUILD: #2}\vspace{2.5em}}}
+    \caption{#3}\label{fig:#1}
+  \end{figure}}
 \newcommand{\sinput}{\sigma_{\mathrm{input}}}
 \newcommand{\sinit}{\sigma_{\mathrm{init}}}
 
@@ -50,47 +97,1580 @@ between litter input and turnover}
 
 \begin{document}
 \maketitle
-\gap{Title: chosen before the storyline was rebuilt (trilemma, saturation); revisit.}
+\gap{Title: chosen before the storyline was rebuilt (trilemma, saturation); revisit. The verb
+must stay ``displaces along'', never ``reveals''; no direction of turnover; Finland stays out.}
 
 \begin{abstract}
-\gap{Abstract.}
+\gap{Abstract, to write last, as one arc of five to seven sentences. (1) The general problem:
+soil carbon carries a long history, and models started in balance with today's litter do not
+capture it. (2) The case: Finland, a forestry history that clearly changed, and three soil
+campaigns on the same plots, gaining and slowing. (3) The test: six models (three versions of
+Yasso and three simpler benchmarks), started in balance in 1985 or with the starting state
+estimated and dated back to 1917. (4) A balanced start loses carbon where the soil gained it;
+the estimated start reproduces the gain and moves the models along the trade-off between litter
+input and transit time. (5) Most of the modelled sink is inherited from before 1985, and fades:
+the sink is approaching saturation although the stock stays 21--40\% below balance; about a
+tenth more litter input would postpone it. (6) The models reproduce the national trend but not
+the plots, whose residuals follow each stand's history.}
 \end{abstract}
+
+{\small\tableofcontents}
+\gap{Table of contents: for the drafting phase only; remove before submission.}
+
+\paragraph*{How to read the skeleton}
+\gap{Six numbered levels nest the arcs: subsection = a large arc, subsubsection = one arc in it,
+paragraph = a step of that arc, tagged by its role in the arc (OCAR, Schimel 2012):
+\beat{opening} the context, \beat{challenge} the problem or question, \beat{action} what was done
+or found, \beat{resolution} what it means and where it leads; subparagraph = a point,
+subsubparagraph = its evidence. Red brackets hold the gist and the numbers, and the red REFS
+lines the references each point will cite; they are guidance, not text. Red triangles anchor each figure where it is first discussed. Remove this note before
+submission.}
 
 % =============================================================================
 \section{Introduction}\label{sec:intro}
-\gap{Introduction.}
+% The arc of the Introduction: the general problem -> the case -> the hypothesis -> objectives.
+
+% -----------------------------------------------------------------------------
+\subsection{The general problem: soil carbon carries a long history}
+
+\subsubsection{Soil carbon change is usually modelled, not measured}
+\paragraph{\beat{opening}What inventories report}
+\subparagraph{The change of the stock, not the stock}
+\gap{Greenhouse gas inventories report the annual change of the soil carbon stock of forest
+land. The change is small against the stock and hard to measure directly.}
+\refs{\citet{Blujdea2015}}
+\subsubparagraph{Who measures, who models}
+\gap{A few countries measure the change by repeated soil sampling on inventory plots (Sweden,
+Germany); most model it, Finland, Norway, Switzerland and Austria with Yasso07 (national
+inventory reports; \texttt{literature/10\_national\_soil\_terms}). Cite the 2025 Finnish report
+for the current term.}
+\refs{\citet{SwedenNID2026}; \citet{Gruneberg2014}; \citet{StatFin2025NID}; \citet{NorwayNID2025}; \citet{Didion2016}; \citet{Hernandez2017}; \citet{Jandl2014}}
+\paragraph{\beat{challenge}A modelled change depends on where the model starts}
+\gap{One sentence: whatever the model, the change it reports depends on the state it starts
+from, and that state is rarely measured.}
+
+\subsubsection{The soil remembers its past inputs}
+\paragraph{\beat{opening}Two timescales}
+\subparagraph{Carbon passes through in decades}
+\subsubparagraph{The mean transit time}
+\gap{The mean time a unit of carbon spends in the soil is decades (Sierra et al.\ 2017, 2018);
+20--30 years in the models used here.}
+\refs{\citet{Sierra2017}; \citet{Sierra2018}}
+\subparagraph{The slow pools adjust over centuries}
+\subsubparagraph{The adjustment timescale}
+\gap{After a change of input, the slowest pool takes centuries to reach its new balance
+(Wutzler \& Reichstein 2007; Sierra et al.\ 2018). The two timescales differ because most
+carbon passes quickly through the fast pools, while most of the stock sits in the slow one.}
+\refs{\citet{Wutzler2007}; \citet{Sierra2018}}
+\paragraph{\beat{resolution}Today's soil reflects inputs of long before any model starts}
+\gap{The soil keeps the memory of past land use and inputs far longer than its turnover
+suggests: a soil whose inputs changed within the last century is unlikely to be in balance
+with them.}
+
+\subsubsection{The usual assumption does not capture that history}
+\paragraph{\beat{opening}Models are started in balance}
+\subparagraph{Where the assumption is used}
+\subsubparagraph{Inventories and models}
+\gap{The Finnish inventory (Yasso07 started in balance with the litter of the first years),
+the nationwide Yasso07 evaluation (Lehtonen et al.\ 2016), RothC applications, the land
+models of the Earth system models.}
+\refs{\citet{StatFin2025NID}; \citet{Lehtonen2016}; \citet{ColemanJenkinson1996}; \citet{Kurz2009}; \citet{Carvalhais2008}; \citet{Luo2016}}
+\subparagraph{How it is justified}
+\subsubparagraph{The inventory's own words}
+\gap{``approximately ten years of simulation since spin-up is enough to cancel out the effect of
+the spin-up level'' (national inventory report). True for the fast pools; the slow pool is
+the one that holds the stock.}
+\refs{\citet{StatFin2025NID}}
+\paragraph{\beat{challenge}What a balanced start can and cannot carry}
+\subparagraph{It responds to every change after its start date}
+\gap{The model follows any change of litter or climate after the start, so the assumption looks
+harmless.}
+\subparagraph{It cannot carry a deficit that existed on that date}
+\gap{The history of the site is replaced by an equilibrium with its present litter: a soil
+still recovering from past losses is set as if it had already recovered.}
+\paragraph{\beat{resolution}A question raised before, from within the same community}
+\subparagraph{The lineage}
+\subsubparagraph{Earlier statements}
+\gap{Peltoniemi et al.\ 2004 (the stand-age signal of soil carbon), 2006 (the initial state as
+a dominant share of the uncertainty, around an assumed balance) and 2007 (balance ``likely to
+be violated in most applications''); Wutzler \& Reichstein 2007 (soils apart from
+equilibrium); Liski et al.\ 2006 (ran the transient simulation and assumed the state). Frame
+as the group's own lineage, never as a correction (Aleksi and Mikko are in that lineage).
+HIKET is not the first to question the assumption: do not write that it is.}
+\refs{\citet{Peltoniemi2004}; \citet{Peltoniemi2006}; \citet{Peltoniemi2007}; \citet{Wutzler2007}; \citet{Liski2006}}
+
+% -----------------------------------------------------------------------------
+\subsection{The case: Finland, and the question of saturation}
+
+\subsubsection{A forestry history that clearly changed}
+\paragraph{\beat{opening}From exploitation to regrowth}
+\subparagraph{Exploitation}
+\subsubparagraph{Slash-and-burn, grazing, high-grading}
+\gap{Centuries of slash-and-burn cultivation, forest grazing and selective cutting of the best
+trees left the forests of the early twentieth century sparse (Liski et al.\ 2006; Korhonen et
+al.\ 2024).}
+\refs{\citet{Liski2006}; \citet{Korhonen2024}; \citet{Aakala2023}}
+\subparagraph{The war decades}
+\subsubparagraph{Financed by the forest export economy}
+\gap{War reparations to the Soviet Union (1944--1952), financed by the forest export economy,
+and the use of wood in the 1950s and 1960s, which reduced the growing stock (Korhonen et al.\
+2021); the ceded Karelia held 12\% of the forests. Say ``financed by the forest export
+economy'': the reparations were delivered mostly as metal goods, ships and machinery (Mitrunen
+2024), so ``paid in timber'' is wrong.}
+\refs{\citet{Korhonen2021}; \citet{Mitrunen2024}; \citet{Kochetkova2020}}
+\subparagraph{A century of regrowth}
+\subsubparagraph{Growing stock}
+\gap{Growing stock $+84\%$ over 1921--2023, most of the rise after the late 1960s (Korhonen et
+al.\ 2024). Litter follows standing biomass, so the litter input has been rising throughout.}
+\refs{\citet{Korhonen2024}}
+\figanchor{F10b}{F10b\_forest\_history}
+\hfig{F10b_forest_history}{0.85}{F10b}{\textbf{The growing stock of Finnish forests,
+1921--2023.} Growing stock rose by $84$ per cent over the century shown, and most of the rise
+occurred after the late 1960s. The litter falling to the soil is tied to the standing biomass,
+so the litter input that the soil has integrated has been rising throughout the period that the
+models are asked to reproduce. Data from \citet{Korhonen2024}.}
+\paragraph{\beat{resolution}A soil with such a history is unlikely to be in balance}
+\gap{The condition the steady-state assumption needs, a constant input for a long time before
+the start, is least likely to hold here.}
+
+\subsubsection{The soil, measured three times on the same plots}
+\paragraph{\beat{opening}Gaining, then slowing}
+\subparagraph{The three campaign means}
+\subsubparagraph{Numbers}
+\gap{$64.5 \rightarrow 71.5 \rightarrow 73.6$~tC\,ha$^{-1}$ on the 310 plots measured in all
+three campaigns, unweighted (the basis the models are compared with); area-weighted
+$63.7 \rightarrow 68.8 \rightarrow 69.9$. Rates $+0.40$ then $+0.12$~tC\,ha$^{-1}$\,yr$^{-1}$
+(unweighted), $+0.30$ then $+0.06$ (weighted): the slowing holds on both.}
+\figanchor{F3alt}{F3\_mean\_SOCalt}
+\hfig{F3_mean_SOCalt}{0.85}{F3alt}{\textbf{The measured soil carbon stock of Finnish forest
+plots in three campaigns.} Each point is the mean stock across the plots measured in all three
+campaigns ($n=310$), and the bars show the $95\%$ confidence interval of that mean. The first
+campaign is drawn at the mean year in which its plots were actually sampled, and the bar low in
+the panel shows that the sampling of the first campaign ran from 1986 to 1995. Each segment is
+labelled with the rate of change over that interval and with the $95\%$ confidence interval of
+the rate, calculated from the paired difference between campaigns on the same plots. The filled
+points and the solid line are the unweighted means, in which every plot counts equally; the
+unweighted means are the ones compared with the models. The open points and the dashed line are
+the means weighted by the area of forest that each plot represents, with a weight of three for
+the plots in the north, which are sampled at a third of the southern density. The stock is the
+whole soil profile: the organic layer and the mineral soil, measured to $40$~cm and extrapolated
+below, down to one metre or to the depth at which the auger stopped. \gap{Open: merge with
+Figure~\ref{fig:F10b}?}}
+\subparagraph{A caution on the slowing}
+\subsubparagraph{The fragile interval}
+\gap{The slowing rests on 2006--2024, whose rate interval includes zero, while the whole span
+is robust: ``suggest'', not ``show''.}
+\paragraph{\beat{challenge}Is the forest soil sink approaching saturation?}
+\gap{HIKET's question, and the one the paper answers first (Conclusion~1). ``Saturation'' here
+means a sink that fades, not a stock at a ceiling.}
+
+\subsubsection{The reported soil term}
+\paragraph{\beat{resolution}A modelled soil follows its litter}
+\subparagraph{The source from 2021}
+\gap{Optional. The Finnish modelled mineral-soil term turned into a source from 2021, once the
+litter input was recalculated (smaller foliage turnover from recalculated expansion factors;
+national inventory report 2025).}
+\refs{\citet{StatFin2025NID}; \citet{Luke2025news}}
+\subparagraph{How to say it}
+\gap{Describe the method, never judge the inventory (Aleksi leads it): the reported term is, in
+both directions, the response of a modelled soil to a litter input that departs from the level
+the soil was started in balance with. Keep, soften or move?}
+
+% -----------------------------------------------------------------------------
+\subsection{The hypothesis: a trilemma}
+
+\subsubsection{Three sources of information on the same ground}
+\paragraph{\beat{opening}The three corners}
+\subparagraph{The soil series}
+\gap{Three campaigns on the same plots, 1985--2024, on one homogenised basis.}
+\refs{\citet{Kramarenko}}
+\subparagraph{The kinetics}
+\gap{The published calibrations of the inventory's own model family (Yasso07, Yasso15,
+Yasso20): decomposition rates, transfers and climate response estimated on litter-bag and soil
+data worldwide.}
+\refs{\citet{Tuomi2009}; \citet{Tuomi2011woody}; \citet{Viskari2022}; \citet{Yasso15code}}
+\subparagraph{The inputs}
+\subsubparagraph{The litter record}
+\gap{A litter record for every plot (Tupek et al.), from tree biomass models and turnover,
+rising by about $45\%$ to a peak in 2006 and flat after; the north receives about two thirds of
+the southern input.}
+\refs{\citet{TupekLitter}}
+\figanchor{F1}{F1\_inputs}
+\hfig{F1_inputs}{0.85}{F1}{\textbf{The litter input to the study plots, 1986--2024, from the
+plot-level product of \citet{TupekLitter}.} (a) Composition of the mean input across plots:
+non-woody litter (foliage and fine roots), fine woody and coarse woody litter; the total rises
+from $2.1$ to $3.0$~tC\,ha$^{-1}$\,yr$^{-1}$ at its 2006 peak and stands at $2.7$ in 2024. (b) The
+total input by thirds of latitude, with the interquartile range across the plots of each third;
+the north receives about two thirds of the southern input. (c, d) Mean annual temperature and
+precipitation over the plots, for context.}
+\subsubparagraph{The input corner is relatively robust}
+\gap{On the scope shared with the national inventory (tree turnover and harvest residues), the
+product agrees with the inventory in the south, where 406 of the 456 plots lie, and neither
+rises after about 2006; the inventory also carries natural mortality, which the product lacks.
+\suppanchor{S_litter_inventory}{S18\_litter\_vs\_inventory}}
+\refs{\citet{StatFin2025NID}}
+
+\subsubsection{Under the steady-state assumption, two of the three at most}
+\paragraph{\beat{challenge}Why the three are tied}
+\subparagraph{In balance, stock = input $\times$ transit time}
+\gap{In a soil in balance the stock is the input times the mean transit time, so the three
+sources constrain one another: given two, the third is fixed. A soil that keeps gaining carbon
+while its litter has stopped rising cannot be in balance with that litter.}
+\refs{\citet{Olson1963}; \citet{Sierra2017}}
+\paragraph{\beat{resolution}The hypothesis}
+\gap{Under the steady-state assumption the soil series, the kinetics and the inputs cannot be
+reconciled: a model started in balance can satisfy two of them at most.}
+\paragraph{\beat{resolution}Where it is tested, and where it comes back}
+\subparagraph{Tested}
+\gap{At the opening of the Results (R1), with the balanced-start calibrations, which cannot
+appear in the Introduction.}
+\subparagraph{Its threads}
+\gap{The ridge between input and turnover (R2), the forecast (R3), the history of each plot
+(R4).}
+
+% -----------------------------------------------------------------------------
+\subsection{Objectives}
+\paragraph{\beat{action}The test}
+\gap{The same six models, on the same data, started in balance at the beginning of the
+measurements and with the starting state estimated from the measurements and dated back to
+1917. Open: name the balanced-start comparison here, or only in the Methods?}
+\paragraph{\beat{challenge}Four questions}
+\begin{enumerate}\itemsep0pt
+  \item[(i)] Can a model started in balance reconcile the soil series, the kinetics and the
+    inputs, and does relaxing the assumption?
+  \item[(ii)] Where does reconciling them place the models on the trade-off between litter
+    input and transit time?
+  \item[(iii)] Under the relaxed assumption, is the forest soil sink approaching saturation, how
+    does it respond to warming, and how much additional litter input would postpone saturation?
+  \item[(iv)] Why do the models reproduce the national trend but not the differences between
+    plots?
+\end{enumerate}
+\paragraph{\beat{resolution}Scope of the applied answer}
+\gap{The projections describe the calibrated models on the study plots, per hectare; the
+inventory's term is not re-estimated, and the baseline projection holds the litter at 2024 and
+repeats the recent climate. The answer to (iii) is about direction and sensitivity, not a
+forecast of the reported numbers. National units would need a sourced area and Aleksi's
+review.}
 
 % =============================================================================
+% MATERIALS AND METHODS -- copied whole from HIKET_methods_v2.tex (reviewed, round 8, 2026-10-22).
+% Only changes: the two \suppfig pointers and the Supplement \gap now point to the Supplement below.
+% =============================================================================
 \section{Materials and methods}\label{sec:methods}
-\gap{To be merged from \texttt{HIKET\_methods\_v2.tex} once reviewed.}
+
+% CHANGED 2026-10-21: one orienting paragraph, so the reader knows the order.
+The section first describes the data (the soil carbon observations, the litter input and
+the climate), then the six models and how they are started and calibrated, and then the
+calibrations and simulations built on that common setup: the comparison with a soil
+started in balance, the division of the modelled sink among its sources, and the
+simulations beyond the observations. The evaluation of the models against the
+observations closes the section.
+
+% =============================================================================
+\subsection{Study plots and soil carbon observations}\label{sec:plots}
+
+The study is based on data from permanent forest plots of the Finnish National Forest
+Inventory for which soil carbon has been measured in three campaigns: the eighth national
+forest inventory (VMI8), the BioSoil campaign of 2006, and the Komeetta campaign of 2024.
+After the exclusions described below, $456$ plots are available for calibration, carrying
+$1205$ plot-year observations of soil carbon in total. Of the $456$ plots, $365$ plots
+($80$ per cent, carrying $959$ observations) were used to fit the models, and $91$ plots
+($20$ per cent, carrying $246$ observations) were held out and used only for evaluation.
+Plots were assigned to the two groups at random, and a plot was assigned as a whole, so
+that no plot contributes observations to both groups.
+
+The first campaign is not a single year. Its plots were sampled region by region between
+1986 and 1995: 69 plots in 1986, 76 in 1987, 103 in 1988, 54 in 1989 and 72 in 1995.
+Averaged over the plots, the sampling year of the first campaign is 1989, and that is the
+year at which the campaign is drawn whenever it is shown as a single point. In the
+calibration, each observation is compared with the model in the year in which that plot
+was actually sampled.
+
+On the plots measured in all three campaigns ($310$ plots, the set on which every observed
+rate of change in this paper is computed), the mean stock of the groups sampled in 1986,
+1987, 1988, 1989 and 1995 differs by $18.3$ tonnes of carbon per hectare at first visit,
+which might reflect a trend within that same campaign. The five groups of plots defined by
+their first-campaign sampling year differ by $37.2$ tonnes in 2006 and by $34.2$ tonnes in
+2024, years in which every plot of every group was measured in the same campaign. The
+difference between the five groups is therefore a property of which plots each group
+contains, and not of the year in which it was sampled, because the difference is larger
+when the sampling year is held constant.
+
+\gap{The exclusion rules (zero litter, absent organic layer, peat soils, constant litter
+series, whole-profile stock above 250 t\,C\,ha$^{-1}$) are referred to as ``described below''
+but are not yet written out; add one short paragraph listing them with the number of plots
+each removes.}
+
+% =============================================================================
+\subsection{Soil carbon stocks on a single homogenised basis}\label{sec:soc}
+
+Since the three campaigns were measured and processed under protocols that differed in
+ways that matter for a comparison between them, all three campaigns were rebuilt on a
+uniform basis, starting from the layer-by-layer carbon stocks measured in each of the three
+campaigns and applying one set of conventions to all three. Those stocks are corrected for
+the volume occupied by stones and for the bulk density of the fine earth. The volume of
+stones was measured in 2006 on every plot by the rod-penetration method of
+\citet{Viro1952}, in which a steel rod is driven into the mineral soil at the sampling
+points and the mean depth it reaches is converted into a stone volume, and the same stone
+volume is applied to the first campaign \citep{Lehtonen2016,Kramarenko}. The bulk density of
+the mineral layers was predicted from the equations of \citet{TamminenStarr1994} for all
+layers of the first campaign and for most layers of 2006, and measured directly for part of
+the 2006 samples from the upper $20$ cm \citep{Kramarenko}. \gap{Confirm that the 2024
+campaign uses the same stone volumes and the same bulk density equations.} The
+coarse-fragment correction matters because the coarse-fragment content of these plots has a
+median of $43$ per cent by volume, so a mineral stock computed without it is too large by a
+factor of about $1.6$.
+
+The quantity used as the calibration target is the whole soil profile: the measured organic
+layer, plus the measured mineral soil to $40$ cm, plus a modelled deep tail, integrated only
+as far down as the auger actually reached on that plot and in no case deeper than one metre.
+The depth to which the profile is integrated is therefore a per-plot quantity and not a fixed
+one metre, since using a fixed depth of, for example, one metre would invent soil carbon
+below bedrock on the $38$ plots where augering stopped at $10$, $20$ or $40$ cm. The modelled
+deep tail was validated against the measured $40$--$80$ cm layer of the BioSoil campaign,
+which was held out of the fit: the median ratio of predicted to observed carbon in that layer
+is $0.96$, with a bias of $-2.5$ tonnes of carbon per hectare.
+
+The rebuilt target was checked against the national figures published for the two campaigns
+for which such figures exist. Applying the same plot exclusions as the official calculation,
+and integrating over the same layers, the rebuilt target returns weighted national means of
+$59.06$ and $61.05$ tonnes of carbon per hectare for 2006 and 2024 against official values of
+$59.06$ and $61.05$, that is, agreement to the nearest $0.01$ tonnes per hectare on $446$
+plots.
+
+Two further steps were taken with the first campaign, both of them established from the
+structure of the measurements themselves rather than from the fit. First, the layers of the
+three campaigns were standardised, because they were recorded differently: the organic layer
+of the first campaign contains the fermentation and humus horizons only, whereas the organic
+layer of the two later campaigns also contains the litter and moss layer. Each plot's own
+litter and moss layer from 2006 was therefore added to its first-campaign organic layer, so
+that the same compartment is compared across the three campaigns. Second, the first campaign
+is treated as what it is, a campaign whose fieldwork ran over several years rather than a
+campaign carried out in a single year. The year in which each plot was actually sampled is on
+record, and those years, rather than one nominal year for the whole campaign, are the years
+at which the models are compared with the observations.
+
+On this final basis the median whole-profile stock is $62.0$ tonnes of carbon per hectare for
+the first campaign, $66.4$ for 2006 and $67.2$ for 2024, and the observations vary between
+plots with a coefficient of variation of $0.44$ to $0.53$ depending on the campaign.
+(Figure~\ref{fig:S_baseline}) \gap{wrong figure: Figure~\ref{fig:S_baseline} shows the uncalibrated Yasso20, not the soil carbon basis; drop the pointer or replace the figure}
+
+\gap{Data availability and acknowledgement: the soil carbon measurements are not a published
+dataset, so the statement has to say where they come from, who compiled them and what of the
+compiled form can be deposited. Settle this with the people who hold them before
+submission.}
+
+% =============================================================================
+\subsection{Litter input}\label{sec:litter}
+
+Litter input is taken from the annual reconstruction of tree biomass and litter input for the
+permanent plots of the Finnish National Forest Inventory by \citet{TupekLitter}, published as
+an open dataset. In that reconstruction, the tree biomass measured by the inventory is
+interpolated to every year with the help of satellite-derived basal area, and litter is
+computed as the biomass of each tree component multiplied by a turnover rate for that
+component, plus the branches, foliage, stumps and roots left on site when a drop in basal
+area identifies a harvest; the full method is given in \citet{TupekLitter}. The product
+supplies, for each plot and year, the carbon in litter from trees, separated into non-woody
+litter (foliage and fine roots), fine woody litter (branches and coarse roots) and coarse
+woody litter (stumps), and each of the three classes is further divided into the four
+chemical fractions used by the Yasso models, using proportions specific to each tree species
+and component. The product does not contain a separate term for trees that die without being
+harvested, and it does not include the understorey vegetation, because the product is a tree
+litter product by design. Across the study plots the mean litter input carried by the product
+is $\bar{J} = 2.511$ tonnes of carbon per hectare per year.
+
+The national greenhouse gas inventory estimates the same flux for the mineral forest soils of
+southern and northern Finland, from the forest inventory and biomass models
+\citep{StatFin2025NID}. On the part that the two estimates have in common, the litter from
+the turnover of living trees and from harvest residues, they agree in level in southern
+Finland, where most of the study plots lie, and neither rises after about 2006; in northern
+Finland the inventory estimate lies higher and keeps rising
+\suppanchor{S_litter_inventory}{S18\_litter\_vs\_inventory}. The inventory estimate also carries the litter of trees
+that die without being harvested, a term that grows over the period and that the plot product
+does not contain. \gap{confirm with LUKE that the two regions of the inventory data match the
+region code of the study plots}
+
+The first year of the product is treated separately. The median litter input of 1985 is
+$0.060$ tonnes of carbon per hectare per year against $1.398$ in 1986, a step that the series
+does not repeat in any later year. Because 1985 is both the first year of the simulation and
+the year in which the first soil observations fall, the value for 1985 was reconstructed for
+each plot and each chemical fraction by fitting a linear trend over 1986--1990 and
+extrapolating one year backwards. The reconstruction places 1985 just below 1986, which is
+the direction the growing-stock record requires.
+
+% =============================================================================
+\subsection{Climate}\label{sec:climate}
+
+Climate forcing comes from the gridded daily weather observations of the Finnish
+Meteorological Institute, interpolated from the station network onto a $10$ by $10$ km grid
+by kriging with external drift \citep{Aalto2016} and extended by the Institute to the
+present. The grids were obtained through the internal weather database of the Natural
+Resources Institute Finland, which mirrors them from the Finnish Meteorological Institute.
+From the grid cell nearest to each plot we took the daily mean, minimum and maximum
+temperature, precipitation and global radiation for 1961--2025, and each model takes from
+those series the variables it requires.
+% NEW 2026-10-21: the two uses of the climate record (forward run vs pre-run).
+The record is used in two ways. From 1985 onwards each year of the simulation is driven by
+the climate observed in that year. Before 1985 the simulation is driven by one constant
+climate, the mean of 1961--1984 at each plot (a plot mean of $2.2$ degrees Celsius, against
+$2.7$ for 1985--2004), so that the soil enters 1985 adjusted to the climate it had lived in;
+the same long-term mean serves as the reference climate wherever one is needed later
+(Sections~\ref{sec:init}, \ref{sec:balanced} and \ref{sec:division}).
+
+Because the response of decomposition to climate is not a straight line, the average of the
+response over the years is not the response evaluated at the average climate. Averaging the
+climate first and evaluating the response afterwards biases the climate modifier by $5$ to
+$15$ per cent in boreal conditions. The climate modifier is therefore computed for each year
+and averaged afterwards, in all six models.
+
+% =============================================================================
+\subsection{The six models}\label{sec:models}
+
+Six models are used (three Yasso versions, plus three simpler benchmark models), and the two groups have different roles.
+Yasso is the model this study is
+focused on, because Yasso is the model the Finnish greenhouse gas inventory is currently based upon. All three
+published versions of Yasso are included: Yasso07, Yasso15 and Yasso20. Alongside the three
+versions of Yasso we included three simple models with one, two and three carbon pools,
+denoted SP1, TP2 and TP3. The three simple models are there as a benchmark, since their
+behaviour is transparent enough so that any result obtained with Yasso can be checked against
+a structure simple enough to reason about quickly.
+
+Due to their different structures and designs, the number of free parameters differs greatly
+across the six models, from six free parameters in SP1 to twenty-six in Yasso15 and Yasso20.
+The free parameters of the three versions of Yasso are the twelve fractions describing
+transfers between pools, the climate parameters, the parameters describing the effect of the
+size of woody litter, and the two input parameters described in
+Section~\ref{sec:inputunc}.
+
+The decomposition rates of Yasso are not fitted, and are held at their published values.
+Holding the rates fixed is a deliberate choice to keep the model anchored to its original
+definitions. Since decomposition rates and transfer fractions do not act independently on the
+carbon stock but are always interacting, a slower rate and a larger transfer into a slow pool
+produce very similar trajectories, so fitting both together adds little information and makes
+the result harder to read.
+
+% ROUND 8: the two adjacent "Whether..." sentences merged.
+Whether the pools of a soil carbon model can be identified with fractions of organic matter
+isolated in the laboratory is a long-standing question in soil carbon modelling, and has been
+examined at length \citep{vonLutzow2007}.
+A chemical fractionation is itself a
+discretization: it divides a continuum into a small number of classes, and where the boundaries between classes fall
+is set by the method chosen, so that the fractions are defined by the procedure that isolates
+them \citep{vonLutzow2007}. The material being divided is not necessarily a set of discrete compounds, since the chemical diversity of soil organic matter is large enough that the diversity can be treated as a continuum \citep{LehmannKleber2015}.
+Yasso was built on the assumption that the pools can be identified chemically, and that litter consists of groups of organic compounds, each group decomposing at its own rate regardless of the litter it came from, and defined its
+decomposition compartments accordingly as extractives, celluloses and lignin-like compounds,
+followed by two compartments of humus \citep{Liski2005}. All following Yasso versions are built on the same assumption, and the models have been calibrated on data derived from such assumption, which is therefore a fundamental part of the model.  The same aim, of matching the pools of a model with fractions that can be isolated in the laboratory, has been pursued for other models, for example through fractionation schemes designed to correspond to the pools of RothC \citep{Zimmermann2007}.
+Whatever the pools are meant to represent, however, and whatever the nature of soil organic
+matter, which remains debated, a compartmental model defines each pool by its decomposition
+rate: the rate groups carbon by how long it stays in that pool, its turnover time
+\citep{Sierra2017}, and changing a rate changes what the pool is.
+
+We therefore treated the rates as part of the definition of each model, kept the rates as the published parameterisation set them, and calibrated the transfer fractions. In all three versions of Yasso the decomposition rates, together with the
+fraction of decomposed carbon that enters the humus pool, are fixed at their published
+values: they are constants of the model and not parameters of the calibration, and no prior
+is placed on them.
+
+% =============================================================================
+\subsection{The uncertainty of the litter input}\label{sec:inputunc}
+
+The litter input is among the least certain of the quantities that drive a soil carbon model.
+% ROUND 8: split into sentences; natural mortality added (the product has no term for it).
+Litter is not measured on the plots but derived from tree biomass. Parts of the input, such as
+the litter of the understorey, the litter of trees that die naturally and root exudates, are
+missing from the product used here (Section~\ref{sec:litter}), and the input carries
+year-to-year variation that periodic inventories cannot capture. Uncertainty analyses of the Finnish soil carbon estimate
+have already identified the litter input, together with the initial state of the soil, as the dominant
+sources of uncertainty \citep{Peltoniemi2006,LehtonenHeikkinen2015}. Those analyses propagated
+the uncertainty forward by Monte Carlo simulation, sampling the input, and in
+\citet{LehtonenHeikkinen2015} also the parameters of Yasso07, from error distributions derived
+from the data sources, and running the soil model with each sample.
+We instead estimate the error of the input from the soil
+observations themselves, together with the parameters of the models, so that the correction
+applied to the input and the uncertainty of that correction are both learned from the data
+and carried into every result.
+
+The correction is a single multiplier, $\sinput$, the \emph{input multiplier}, applied to the
+litter input of the product over the whole simulation. The prior of $\sinput$ is centred on
+$1.08$, the ratio of the total litter input to Finnish upland soils estimated by
+\citet{LehtonenHeikkinen2015}, which includes the understorey, to the tree litter input of the
+product used here, $2.70$ against $2.511$ tonnes of carbon per hectare per year. The prior is
+set on the litter input that $\sinput$ produces, which is kept within $0.05$ to $8.7$ tonnes of
+carbon per hectare per year, the upper end of the net primary production reported for evergreen
+forests \citep{Gower2001}, so that no value of $\sinput$ can produce an impossible input. Within
+that range the prior gives $\sinput$ a median of $1.07$ and a 95 per cent probability of lying
+between $0.75$ and $1.45$. Because the multiplier is one number for the whole country, it
+rescales only the national level of the input and not the input of individual plots, whose errors
+are carried by the error model described below.
+
+The same reasoning is extended to the initial state. The litter input of 1917, which sets the
+state of the soil at the start of the simulation, is not known either, and is estimated
+through a second parameter, $\sinit$, the \emph{initial input ratio}, the ratio of the litter
+input of 1917 to the litter input of 1985. The prior of $\sinit$ is centred on $0.90$, the ratio of the
+growing stock of Finnish forests in 1917 to that in 1985 \citep{Korhonen2024} converted to a
+ratio of litter input with the relation between litter input and growing stock observed in the
+product, and is constructed in the same way, on the litter input of 1917, giving a median of
+$0.93$ and a 95 per cent range of $0.58$ to $1.49$; the reconstruction of \citet{Liski2006}, based on the
+same growing-stock record, implies a similar ratio, about $0.86$. Both parameters are estimated
+together with the model parameters, so that the uncertainty of the input and of the starting
+state propagates into the initial state, into the simulated trajectory and into the predictive
+intervals of every model.
+
+% =============================================================================
+\subsection{Transient initialisation}\label{sec:init}
+
+Rather than starting each plot from a soil in balance with its present litter input, each draw
+of the parameter vector starts the soil in 1917 and runs it forward to the first soil
+observation before the comparison with data begins. The year 1917 is a convention, chosen as
+the year of Finnish independence.
+The state of the soil in 1917 is obtained conventionally, with a steady state assumption with a
+constant litter input equal to the estimated litter input of 1917 and constant climate (calculated as the mean of
+1961--1984, Section~\ref{sec:climate}). The litter input is then raised along a prescribed
+shape over the sixty-eight years from 1917 to 1985, still under the same constant climate,
+after which the simulation is driven by the annual litter and climate of the record. A
+constant climate is used before 1985 because the records start in 1961 and do not reach back to 1917; the
+mean of the earliest observed decades is the closest available measure of the climate in
+which the soil developed before the observations began.
+
+The shape along which the litter input is raised is taken from the reconstruction of the
+litter input to Finland's forest soils published by \citet{Liski2006}, who estimated that input
+annually from 1922 onwards by combining national forest inventory data with biomass and
+turnover models. 
+
+Three decisions were made about that reconstruction. 
+
+First, only the
+tree-derived terms are used, meaning tree litter together with harvest residues (and natural tree mortality), because those are the terms closest to the litter product used
+after 1985. The plot-level product of \citet{TupekLitter} has no term for natural mortality: a tree that dies is registered only as a loss of basal area, and its stem does not enter the soil. Natural mortality is, however, only $2$ to $4$ per cent of the tree-derived input in \citet{Liski2006}, and leaving it out of the shape changes no year by more than $0.04$ on the scale of zero to one defined below.
+The ground vegetation from \citet{Liski2006} is left out for uniformity with the product used after 1985, assuming that it is absorbed by the input multiplier described in
+Section~\ref{sec:inputunc}. Including it before 1985 but not after would make that
+multiplier mean two different things on either side of the join. 
+
+Second, the national totals
+are converted to a per-hectare basis by dividing by the area of upland forest soil, derived from \citet{Liski2006}.
+\citet{Liski2006} report the carbon of upland soils both as a national total and per unit area, and the ratio of the two gives an upland soil area of $13.90$ million hectares in 1922 and $15.22$ million hectares in 2004. The area is held at the first value until 1965, increases linearly to the second over 1965--1980, the period in which \citet{Korhonen2024} locate most of the expansion of productive forest land, and is held constant afterwards.
+
+Third, only
+the shape is taken from \citet{Liski2006} and not the level: the series is rescaled to run from zero in 1917 to one in
+1985, so that the reconstruction supplies only the path between the two endpoints. 
+The litter input in year $t$ of the pre-run is $J(t) = J_{1917} + (J_{1985} - J_{1917}) \times s(t)$, where $s(t)$ is the rescaled shape; the same weighting is applied to each chemical fraction and size class of the input, so that the composition of the input is that of the plot in 1985--1989 throughout and only its amount changes.
+The two
+endpoints ($J_{1917}$ and $J_{1985}$) are set by the two input parameters described in Section~\ref{sec:inputunc}: the input at the end of the path is the litter input of the product, averaged over 1985--1989 for each plot
+and scaled by $\sinput$, and the input at the start of the path is a fraction $\sinit$ of the
+input at the end.
+
+\figanchor{init}{F4\_initialization}
+\hfig{F4_initialization}{0.90}{init}{\textbf{How the starting state of the soil is obtained.}
+Rather than starting each plot from a soil already in balance with its present litter input,
+the simulation starts in 1917 from a soil in balance with the litter input of 1917 and the mean
+climate of 1961--1984, and the litter input is then raised over the following sixty-eight years
+along a shape taken from the reconstruction of Finland's forest litter input by
+\citet{Liski2006}, after which the simulation is driven by the annual litter and climate of the
+record. The litter input of 1917 is not known and is estimated as part of the calibration.}
+
+% =============================================================================
+\subsection{Keeping the models as comparable as possible}\label{sec:comparable}
+
+The six models cannot be given the same amount of external information. The models differ in structure
+and in the number of their parameters, and the published literature provides different
+information for each of them: the three versions of Yasso come with their own calibrations,
+whereas the three simple models have no calibration for forest soils. The more the models
+differ in the information they are given, in their assumptions and in their freedom, the less
+a difference between their results can be attributed to their structure. We therefore reduced
+that difference as far as the models allow, through one compromise for each class of
+parameter, summarised in Table~\ref{tab:priors}. The compromises reduce the asymmetry between the models without removing it, and this must be considered when interpreting the results.
+
+\subsubsection{Decomposition rates}
+
+The rates of the three versions of Yasso are fixed at their published values, for the reasons
+given in Section~\ref{sec:models}. The three simple models have no rates of their own for
+forest soils, and take theirs from the ICBM model \citep{AndrenKatterer1997}: the fast rate is
+fixed, and the slow rate or rates are given a very informative prior centred on the ICBM value,
+so that the data can move them only slightly. The slow rates are pinned rather than fixed
+because the ICBM values cannot be transferred to a forest soil unchanged. ICBM was calibrated
+on an arable long-term experiment, and cropland and forest soils differ in what controls
+decomposition. Moreover, a rate is only meaningful together
+with the climate response it was estimated with, and the simple models combine the rates of
+ICBM with the climate response of Yasso07; the rates of ICBM were divided once by the value of the Yasso07 climate modifier calculated on the climate of the experiment on which ICBM was calibrated ($0.94$).
+Fitting the rates freely (or under wide priors), on the other hand, would give the simple
+models a freedom that the versions of Yasso do not have, and a narrow prior around the ICBM
+value is the compromise between the two.
+
+\subsubsection{Transfer fractions}
+
+The fractions that describe how carbon passes between pools are free in every model that has
+them: twelve in each version of Yasso, and the fraction of decomposed carbon passed on to the
+slower pool in the simple models, of which SP1 has none, TP2 one and TP3 two. All fractions
+carry a prior of the same width, $0.4$ on the logit scale, centred on the published value of
+each model, which for the simple models is the humification coefficient of ICBM.
+
+\subsubsection{Climate response and size of woody litter}
+
+% ROUND 8 (2026-10-22): Yasso15/20 source settled -- cite the repositories. Both local .dat files
+% are byte-identical to the GitHub copies (YASSOmodel/YASSO15 parameters/Yasso15.dat, commit
+% 14e2389; YASSOmodel/Yasso20 parameters/Yasso20.dat + ParY20.dat). NOT in Ryassofortran, NOT in
+% the Viskari Zenodo archive. Viskari 2022 never mentions Yasso15; no peer-reviewed source exists.
+The three versions of Yasso take the centres and widths of their climate priors from their own
+calibrations: Yasso07 from \citet{Tuomi2009,Tuomi2011woody}; Yasso20 from the sample of
+$10\,000$ parameter sets of \citet{Viskari2022}, distributed with the model code
+\citep{Yasso20code}; and Yasso15, whose calibration has not been published in a journal, from
+the posterior sample distributed with its model code \citep{Yasso15code}. The simple models, which
+have no published climate response of their own, borrow the climate response of Yasso07, centre
+and width. Only the versions of Yasso describe how decomposition depends on the size of woody
+litter, with priors taken from their own calibrations; the simple models have no such term.
+
+\subsubsection{The two input parameters}
+
+Every model carries the two parameters described in Section~\ref{sec:inputunc}, the input
+multiplier $\sinput$ and the initial input ratio $\sinit$, with the same prior in every model.
+
+\begin{table}[htbp]\centering\small
+\caption{\textbf{How the prior of each class of parameter was set.}\label{tab:priors}}
+\gap{Parameter-class by prior-criteria table: for each class (decomposition rates, transfer
+fractions, climate response, size of woody litter, the two input parameters), the source of
+the centre, the source of the width, the transformation and constraint, and which models carry
+it. The worked version is in \texttt{Prior\_specs/PRIOR\_HOMOGENIZATION\_PLAN.md}, section 2.}
+\end{table}
+
+% =============================================================================
+\subsection{Numerical integration}\label{sec:integration}
+
+Each model is run forward one year at a time, from 1917 to the last observation, with the
+litter input and the climate of each year held constant within that year. Within each year the
+equations of every model are solved exactly rather than stepped forward. 
+ For the
+one-, two- and three-pool models, in which carbon moves in one direction only, the exact solution has a closed form, an exponential approach of each pool to its balance value, and is evaluated directly. 
+In the three versions of Yasso carbon moves between pools
+in every direction, and the solution, the exponential of the matrix of rates and transfers, is
+computed in the Fortran code of the models by scaling and squaring \citep{MolerVanLoan2003}. 
+All models are run with an annual time step, the step for which Yasso was designed and calibrated; the seasonal course of temperature enters through the annual temperature amplitude in the climate modifier \citep{Tuomi2009}, which the simple models share.
+
+
+% =============================================================================
+\subsection{Mean transit time as a common measure of a model}\label{sec:mtt}
+
+The six models differ in the number of their pools and in how carbon moves between those pools,
+so their parameters cannot be compared directly. The models are compared instead through one
+number, the mean time a unit of carbon spends in the soil between entering it as litter and
+leaving it as carbon dioxide, which \citet{Sierra2017} call the mean transit time. The same
+quantity is often called the mean residence time; Sierra and coauthors show that the term
+residence time has been used for at least three different quantities, and we follow their
+convention. For a model whose pools lose carbon in proportion to the carbon they hold, and whose
+rates do not change with time, the mean transit time equals the carbon the system holds at steady
+state divided by the carbon entering it \citep{Rasmussen2016,Sierra2017}. Each model is therefore
+given an input of one tonne of carbon per hectare per year, and its steady-state stock is computed
+directly: as a formula for the three simple models, and as the solution of one linear system for
+the three versions of Yasso. Because the models are linear, the ratio of stock to input does not
+depend on the input chosen.
+
+The mean transit time computed in this way is a property of the model alone. Neither $\sinput$,
+nor $\sinit$, nor any observation enters the calculation, so different models (and the calibrated and the published parameterisations of the same model)
+are compared on the same scale. 
+Because the models respond to climate and to the quality of the litter, the mean transit time for every model and every parameter set
+is evaluated at one reference condition: the mean climate of the study plots over all the observed
+years (mean annual temperature $3.4$\,\textdegree C, temperature amplitude $13.8$\,\textdegree C,
+annual precipitation $591$\,mm), and
+the mean litter of the study plots, divided into $0.766$ non-woody, $0.219$ fine woody and
+$0.014$ coarse woody litter, each with its own chemical composition. The values reported are
+therefore those of each model under that condition, not those of the real soil under changing
+conditions; the comparison between parameterisations does not depend on the reference, because
+both sides are evaluated at the same one.
+
+
+% =============================================================================
+\subsection{The error model}\label{sec:error}
+
+Observations are compared with predictions on the logarithmic scale, so that the error is
+proportional to the size of the stock. The total standard deviation of the error is fixed at
+$0.800$ on that scale, about twice the spread of the observed stocks around the national mean of
+each campaign, $0.39$. That spread is the error of an idealised model that follows the national
+mean exactly and knows nothing about individual plots. A process-based model adds information that
+the measurements do not contain, in the litter input, the climate and the representation of
+decomposition, and is expected to depart from the measurements where the measurements are in
+error. The realistic error is larger still, for four reasons: the litter input carries errors of
+its own at each plot, which counted as an independent error alone raise the total to $0.57$; the
+observed errors have heavier tails than a normal distribution; outlying plots were excluded from
+the sample; and part of the measurement error, in the stone volume, the bulk density and the
+modelled deep tail of the profile, is shared between plots and does not appear in a spread between
+plots. A value at the upper end of the plausible range was chosen, because a larger error weakens
+the pull of the observations against the priors and keeps conclusions drawn from the observations
+conservative.
+
+Observations of soil carbon are not independent of one another: observations of the same plot,
+of the same part of the country and of the same campaign share whatever the models get wrong about
+that plot, that region or that protocol. The error of each observation is therefore divided into
+four parts,
+\[
+  \log y_{ij} \;=\; \log f_{ij}(\theta) \;+\; u^{R}_{r(i)} \;+\; u^{P}_{i} \;+\; u^{C}_{j} \;+\; e_{ij},
+\]
+where $y_{ij}$ is the stock observed on plot $i$ in campaign $j$, $f_{ij}(\theta)$ the stock
+predicted by the model, $u^{R}$ a part shared by all plots in the same band of latitude, $u^{P}$ a
+part shared by all observations of the same plot, $u^{C}$ a part shared by all observations of the
+same campaign, and $e$ a part that belongs to the observation alone. Each part has a mean of zero
+and a fixed standard deviation, and no part is estimated for any plot, band or campaign: the
+likelihood is averaged over all the values the shared parts could take, which for normal errors
+can be done exactly and leaves only a correlation between observations that share a plot, a band
+or a campaign.
+
+The standard deviations of the shared parts were taken from the observations after removing the
+mean of each campaign: $0.117$ for the regional part, the spread between the means of eight bands
+of latitude holding equal numbers of plots, and $0.396$ for the plot part, from how strongly two
+observations of the same plot vary together. The part that belongs to each observation alone,
+$0.685$, is what remains of the total once the shared parts are accounted for, the variances
+(the squares of the standard deviations) of the four parts adding up to $0.800^2$. Dividing the
+error does not change how far a single observation may lie from the model, but observations that
+share part of their error partly repeat one another, and the $1205$ observations carry about as
+much information on the national mean as $220$ independent observations would. Both published
+calibrations of Yasso treated the observations as independent \citep{Tuomi2009,Viskari2022}, the
+second naming the correlation of errors within a time series as an effect still to be included,
+and treating correlated observations as independent makes parameter uncertainties too narrow
+\citep{Oberpriller2021}.
+
+The standard deviations of the campaign parts cannot be measured, because a shared offset between
+campaigns and a genuine change of the stock look the same in the observations, and were therefore
+prescribed: $0.030$ for each of the two later campaigns, which followed similar protocols, and
+$0.060$ for the first, which differs from them in three documented ways. Its organic layer
+excluded the litter and moss layer, added here from each plot's measurement of 2006; its
+fieldwork extended over a decade; and the carbon content of its mineral layers below $5$\,cm was
+mostly predicted from the loss of mass on ignition rather than measured \citep{Kramarenko}.
+% CUT: the equal-count band justification shortened to "holding equal numbers of plots";
+% the step-by-step explanation of adding variances to one parenthesis.
+
+% =============================================================================
+\subsection{Sampling}\label{sec:sampling}
+
+Each model was calibrated with five independent runs of $50\,000$ iterations, of which the first
+$5\,000$ were discarded, with the differential evolution Markov chain sampler of
+\citet{terBraakVrugt2008}, which adapts its proposals to strongly correlated posteriors, as
+implemented in the \texttt{BayesianTools} package \citep{BayesianTools}, version $0.1.9$, under R
+$4.6.1$ \citep{RCore}. Each run maintains three interacting chains, so that the five runs together
+provide fifteen chains, and every calibration in this paper uses the same settings. Convergence was
+assessed with the potential scale reduction factor and the effective sample size: over all eighteen
+calibrations (six models, each with the transient initialisation, with a balanced start, and with a
+balanced start and the climate held) the largest potential scale reduction factor of any parameter
+was $1.009$ and the smallest effective sample size $1716$.
+
+The information that the observations add to each parameter was measured as the Kullback--Leibler
+divergence of the marginal posterior from the marginal prior, estimated from kernel densities of the
+samples and expressed in nats. The divergence is zero when the observations say nothing about a
+parameter; for scale, a posterior with the centre of its prior and a quarter of its width gives
+about $0.9$ nats, and a posterior with the width of its prior moved by one prior standard deviation
+gives $0.5$ nats.
+
+
+% =============================================================================
+\subsection{The comparison with a soil started in balance}\label{sec:balanced}
+
+To test whether the transient initialisation is needed, every model was calibrated a second time
+with the soil started in balance, identical in data, error model, priors and sampling, and
+different in one factor only: in 1985 the soil is set to the state at which its gains and losses
+balance under the litter input of 1985--1989, scaled by $\sinput$, and the reference climate of
+1961--1984. The initial input ratio $\sinit$ is fixed at one, which makes the litter path of
+Section~\ref{sec:init} flat, and is removed from the parameters; the prior of $\sinput$ is
+unchanged. The balanced start is the steady-state assumption applied at the start of the
+measurements, and not the procedure of any particular inventory, and is the strongest fair version
+of that assumption: every other parameter is recalibrated, so the models are free to compensate for
+the missing deficit through the litter input, the transfer fractions and the response to climate.
+A soil started in balance is not expected to stay flat, because the litter input rose by about
+half until 2006; what distinguishes the two starts is the size of the accumulation they produce.
+The expectations for the comparison were written down before the calibrations were run
+(Supplementary Section~\ref{supp:expectations}).
+The two calibrations are compared on the trajectory of the national mean against the three
+campaigns, on the rates of change over 1985--2006, 2006--2024 and 1985--2024, on the position of
+each model along the trade-off between litter input and mean transit time, and on the fit. The
+comparison rests mainly on the rates rather than on the log-likelihoods, which are directly
+comparable here but inherit the overconfidence that the error model only partly removes.
+
+
+% =============================================================================
+\subsection{The partitioning of the modelled sink}\label{sec:division}
+
+The sink each calibrated model produces over 1985--2024 was divided among three sources: the state
+inherited from before 1985, the change of the litter input since 1985, and the climate. One further
+calibration was made for every model, with the soil started in balance \emph{and} the climate held
+at its 1961--1984 reference in every year after 1985, in the calibration as in the simulation. Each
+model is thereby calibrated three times on the same measurements, adding one assumption at a time:
+\begin{enumerate}\itemsep0pt
+  \item the transient initialisation, with the observed litter and climate;
+  \item a balanced start, with the observed litter and climate (Section~\ref{sec:balanced});
+  \item a balanced start, with the observed litter and the climate held at the reference.
+\end{enumerate}
+% ROUND 8 (Lorenzo's note: basic equation + the table of the three parts): equation and table
+% merged from appendices/appendix_attribution.tex (runs table + parts table); the sentence that
+% listed the differences in words is cut to its last clause, which the table does not say.
+With $S_1$, $S_2$ and $S_3$ the sinks of the three calibrations, the division is
+\[
+  S_1 \;=\; \underbrace{(S_1 - S_2)}_{\text{inherited state}}
+       \;+\; \underbrace{(S_2 - S_3)}_{\text{climate}}
+       \;+\; \underbrace{S_3}_{\text{litter change}} ,
+\]
+summarised in Table~\ref{tab:division}; the three parts add up to the sink of the first
+calibration by construction.
+
+\begin{table}[htbp]\centering\small
+\caption{\textbf{The three parts of the modelled sink.} Each part is the difference between
+two calibrations fitted to the same measurements, which differ in one assumption.}
+\label{tab:division}
+\begin{tabular}{lcp{4.2cm}p{5.2cm}}
+\hline
+part & calibrations & the assumption that differs & what the part measures \\
+\hline
+inherited state & $1-2$ & starting state: estimated, or balanced in 1985 &
+  what the deficit inherited from before 1985 adds to the sink \\
+climate & $2-3$ & climate after 1985: observed, or held at the 1961--1984 reference &
+  what the observed climate adds, acting on the litter that actually arrived \\
+litter change & $3$ & --- &
+  the sink of a soil started in balance under an unchanging climate, which exists only
+  because the litter departs from its 1985--1989 level \\
+\hline
+\end{tabular}
+\end{table}
+
+Each part therefore compares two fitted models that
+differ by one assumption, including the change of the other parameters that the data demand once
+the assumption is made, and is not the effect of one source on a model held fixed. The joint effects
+of climate with the inherited deficit and with the litter change are assigned by the order of the
+calibrations, to the inherited and to the climate part respectively. The parts are computed for the
+plots measured in all three campaigns ($310$ plots) and $50$ posterior draws of each calibration,
+and their additivity and a zero sink under constant litter and climate were checked for every draw.
+The size of the climate part depends on the reference climate, whereas the ordering of the parts
+does not.
+\gap{Five terms (two further calibrations) planned with the new input data.}
+% CUT: "built in the same way as Section X, and on it"; the year-by-year wording; the
+% check paragraph to one clause; the reason for the reference (already in sec:init).
+
+% =============================================================================
+\subsection{Simulations beyond the observations}\label{sec:forward}
+
+The calibrated models were then run beyond the observations. The simulations describe the
+calibrated models on the study plots, per hectare, under stated forcing, and are not a forecast of
+the national soil carbon balance.
+Each model is run for $60$ years after 2024 with the litter input held
+at its 2024 value and the climate of the last $20$ observed years repeated three times, so that the
+projection contains no change of climate or of forest growth; rates over the projection are
+computed over whole $20$-year cycles, because the repeated climate alternates between a cooler and a
+warmer decade. The projection uses $100$ posterior draws and the plots measured in all three
+campaigns, for both the transient and the balanced-start calibration. The projection is the basis of three further quantities:
+
+\paragraph{The carbon remaining to be accumulated before balance.} The equilibrium stock of each plot is the stock at which gains
+and losses would balance under the litter and climate of the projection, computed as for the mean
+transit time (Section~\ref{sec:mtt}); the remaining accumulation is the equilibrium stock divided by
+the stock of 2024, minus one. The remaining accumulation is a quantity of carbon, not a time: how
+long the soil would take to reach balance is set by its slowest pool and is not computed here.
+
+\paragraph{What could happen with more litter input.} The projection is repeated with the litter input increased by $20$
+per cent from 2025. Because the models are linear in their input, the sink over any period is a straight line in the
+input multiplier, passing through the projections with the input held and increased by $20$ per
+cent; the increase of input that would hold the observed rates of 1985--2024 and of 2006--2024
+over the first $10$ and $20$ years of the projection is read off that line, without further
+simulation. Without further warming, these increases are lower bounds.
+
+\paragraph{What could happen with warming.} A linear rise of temperature, from zero in 2025 to its full value in 2084, is
+added to the repeated climate, and the stock in 2084 is compared with that of the projection
+without the rise. The rises are the warming still to come under SSP1-2.6, SSP2-4.5 and SSP5-8.5 for Finland \citep{RuosteenojaJylha2021}: the published warming relative to 1981--2010, minus the $1.0$\,\textdegree C by which the repeated climate of 2005--2024 already exceeds that of 1985--2010 on the study plots, giving $1.3$, $2.6$ and $5.4$\,\textdegree C.
+ The litter input is held constant at its
+2024 value, with no response of forest growth, so the result isolates the response of
+decomposition to warming, and it is a sensitivity, not a projection. The
+response is computed for three parameterisations of each version of Yasso, each started from its
+own state under the pre-run climate: the transient and the balanced-start calibrations ($40$ posterior draws each), and the published parameterisation, from draws of the published posterior ($40$ posterior draws each)
+for Yasso15 and Yasso20 and from the published values for Yasso07. None of the published kinetic parameters is
+refitted. The published posterior samples carry no input parameters for our plots, so both are supplied: the initial input ratio $\sinit$ is taken as the posterior median of the transient calibration, and the input multiplier $\sinput$ is chosen so that the published model fits the three observed campaign means as closely as possible, fitted for the draw closest to the published median transit time and, for the other draws, scaled by the ratio of their transit times to that of the fitted draw. Because the stock is proportional to the input multiplier, this choice sets the level of the published arm without changing its kinetics, and the response to warming, computed within each draw, does not depend on it.
+
+
+% =============================================================================
+\subsection{Predictive evaluation and residual analysis}\label{sec:residuals_methods}
+
+The fit of each model to the observations is evaluated with the transient calibration: for $100$ posterior draws, the stock is simulated at each date and on each plot where soil carbon was measured, both on the calibration plots and on the held-out plots, which did not enter the calibration. Skill is reported, separately for the two sets, as the coefficient of determination between the observed stocks and the mean of the simulated ones, and as the root mean squared error between the observed stocks and the median of the simulated ones.
+Residuals are the logarithm of the ratio of the observed to the predicted stock, the scale of the error model; a residual of $0.1$ corresponds to about $10$ per cent more carbon in the soil than predicted. The
+residuals of any two models correlate at $0.99$ or more, and the detailed analyses use one value
+per observation, the mean residual of Yasso07 and Yasso15.
+
+These residuals were analysed in three ways. 
+First, a random forest was fitted to the residuals of each model and
+evaluated out of bag, with about sixty site variables (climate, soil texture and chemistry, litter
+composition, the stand in 1985), to measure how much of the residual can be predicted and which
+variables lead; the ranking was checked with several hundred further variables from the four
+inventories, soil chemistry, topography, nitrogen deposition, management records and the
+understorey cover of 2023, leaving out variables that measure soil carbon itself. 
+
+Second, the mean
+residual was regressed on the leading predictor of the random forest, the basal area of the stand in 1985, together with the
+forest site type, the texture of the mineral soil recorded in 1985 and the volume share of stones.
+
+Third, the residual of each observation was related to the time since the last regeneration cut (a
+felling that removes the stand) before sampling, dated from the inventories of 1985, 1990, 1995
+and 2021--2023 and from the forest use declarations filed with the Finnish Forest Centre from 1997,
+or, where no cut was recorded, the age of the stand in 1985 plus the years since; the comparison
+with the basal area of 1985 used a regression with a separate intercept for each plot.
 
 % =============================================================================
 \section{Results and discussion}\label{sec:results}
+% The arc of the Results: R1 the problem tested -> R2 the resolution -> R3 its consequences
+% for forecasts -> R4 what the models still miss (a side arm).
 
+% -----------------------------------------------------------------------------
 \subsection{R1 --- The problem, tested: a soil started in balance}\label{sec:r1}
-\gap{R1.}
+% Arc: what the soil did -> a balanced start fails -> first conclusions -> (nested) uncertainty.
 
+\subsubsection{What the soil did}
+\paragraph{\beat{opening}Gaining, then slowing}
+\subparagraph{The rates}
+\subsubparagraph{Numbers}
+\gap{$+0.40$~tC\,ha$^{-1}$\,yr$^{-1}$ over 1985--2006, $+0.12$ over 2006--2024, $+0.26$ over the
+whole span (310 plots measured in all three campaigns, unweighted, at the true sampling years,
+so that the first interval is about 17 years, not 21).}
+\refs{\citet{Kramarenko}}
+\subparagraph{The robust and the fragile interval}
+\gap{The rate interval of 2006--2024 includes zero; the span is robust. The models are judged
+mainly on the span and on the first interval.}
+\paragraph{\beat{challenge}A demanding trend for a soil assumed in balance}
+\gap{A gain that continues while the litter has stopped rising is what a soil in balance with
+its litter cannot produce: the test the trend sets.}
+
+\subsubsection{A balanced start cannot satisfy the three}
+\paragraph{\beat{action}The test}
+\gap{The same models, data, priors and error model, with the soil started in balance in 1985
+under the 1985--1989 litter and the 1961--1984 climate, and every other parameter recalibrated:
+the models are free to compensate through the input multiplier, the transfer fractions and the
+climate response. The strongest fair version of the assumption.}
+\refs{\citet{Wutzler2007}}
+\paragraph{\beat{action}Started in balance, all six models lose carbon}
+\subparagraph{Over the whole span}
+\subsubparagraph{Numbers}
+\gap{1985--2024: $-0.11$ to $-0.02$~tC\,ha$^{-1}$\,yr$^{-1}$ against the observed $+0.26$, in
+all six models. The models rise with the litter to 2006 and give the rise back after it.}
+\figanchor{F16}{F16\_eqinit\_trajectories\_six}
+\hfig{F16_eqinit_trajectories_six}{0.95}{F16}{\textbf{Modelled national mean soil carbon under
+the two starting assumptions, model by model, against the three campaigns.} Coloured line and
+band: the transient start, with the starting state estimated and dated back to 1917; dashed black
+line and grey band: the soil started in balance in 1985. Lines are posterior medians and bands
+$90\%$ intervals of the national mean over posterior draws. Points are the measured campaign
+means with their $95\%$ confidence intervals, on the $310$ plots measured in all three campaigns,
+unweighted, at the mean sampling year of each campaign. The shaded area after 2024 is the
+projection, with the litter held at its 2024 value and the climate of 2005--2024 repeated. The two
+starts differ most at the first campaign, where the balanced start lies above the measurement in
+every model, and separate again in the projection.}
+\subparagraph{Above the first campaign from the start}
+\subsubparagraph{Numbers}
+\gap{About $9$~tC\,ha$^{-1}$ above the first campaign ($73$--$76$ against $64.5$): a soil in
+balance with the 1985 litter holds more carbon than the soil held.}
+\subparagraph{Short of the early rise, losing after 2006}
+\subsubparagraph{Numbers}
+\gap{1985--2006: $+0.06$ to $+0.20$ against $+0.40$, none within the observed interval;
+2006--2024: all six lose carbon. \suppanchor{S_eqinit_rates}{F17\_eqinit\_rates}}
+\paragraph{\beat{resolution}The trilemma, visualised}
+\subparagraph{The balanced start gives up the soil series}
+\gap{Held to the measured litter and to kinetics near the published ones, the balanced start
+gives up the corner the Introduction predicted: the series.}
+\subparagraph{It bends the kinetics, and still fails}
+\subsubparagraph{How the parameters move}
+\gap{Less input than the transient start, faster and more temperature-sensitive decomposition
+(transit time $22$--$27 \rightarrow 17$--$24$~yr), and still no accumulation. The expectation
+written before the runs was the opposite for the input (more, not less): report it.}
+\subparagraph{The third corner, partly open}
+\gap{How far the kinetics would have to move to fit the series with the measured input is left
+open: a balanced start with widened rate priors (one factor, six jobs), or a limitation?}
+\paragraph{\beat{resolution}The two starts are judged on the rates, not on the fit}
+\subparagraph{Why the fit cannot decide}
+\subsubparagraph{Numbers}
+\gap{The likelihood is dominated by the stock levels, which both starts reach
+(log-likelihoods within $8$, the estimated start better in five of six); the rates and the
+early stock discriminate. Two sentences, before a reader concludes the starts are
+equivalent.}
+
+\subsubsection{A first round of conclusions}
+\paragraph{\beat{resolution}Three things settled}
+\subparagraph{The trilemma is real on these data}
+\gap{With the measured litter and near-published kinetics, a soil assumed in balance in 1985
+cannot reproduce the measured accumulation.}
+\subparagraph{The failure is not a matter of tuning}
+\gap{The failure survives the freedom to compensate through every other parameter.}
+\subparagraph{What is missing is a state out of balance on the start date}
+\gap{The balanced start lacks a deficit on the start date, a soil still catching up with its
+inputs.}
+\paragraph{\beat{resolution}The justification of the central choice}
+\gap{Relax the steady-state assumption and estimate the starting state from the measurements:
+R2.}
+
+\subsubsection{Nested: the uncertainty under a balanced start}
+\paragraph{\beat{action}The input multiplier relaxes}
+\subparagraph{Numbers}
+\gap{Yasso15 $1.54 \rightarrow 1.31$, TP2 $1.75 \rightarrow 1.60$; SP1 about unchanged. The
+input multiplier is the point where the uncertainty of the input estimate enters the
+calibration; under a balanced start the kinetics strain while the input relaxes.}
+\paragraph{\beat{resolution}The initial input ratio is not absent but fixed}
+\gap{$\sinit = 1$ by the steady-state assumption: a value assumed, never tested.}
+\paragraph{\beat{resolution}Mirrored at the end of R2}
+\gap{One sentence: the same two parameters, now both estimated.}
+
+% -----------------------------------------------------------------------------
 \subsection{R2 --- The resolution: relaxing the steady-state assumption}\label{sec:r2}
-\gap{R2.}
+% Arc: the central choice -> it works -> where the models land -> across the ridge ->
+% (nested) uncertainty -> the weight of the assumptions -> bridge to R3.
 
+\subsubsection{The central choice}
+\paragraph{\beat{opening}From the idea to its implementation}
+\subparagraph{The idea}
+\gap{The soil may enter the observations out of balance.}
+\subparagraph{The implementation}
+\gap{The start is estimated from the measurements and dated back to 1917, through $\sinit$, the
+ratio of the 1917 to the 1985 litter input, the parameter the balanced start fixed at one. Same
+data, priors and likelihood; one parameter more (Section~\ref{sec:init}).}
+
+\subsubsection{The estimated start reconciles the soil series}
+\paragraph{\beat{action}All six reach the three campaign levels}
+\subparagraph{Over the whole span}
+\subsubparagraph{Numbers}
+\gap{1985--2024: $+0.05$ to $+0.30$ against $+0.26$, four of six inside its interval (SP1 $+0.05$
+and Yasso20 $+0.10$ below). Figure~\ref{fig:F16} (coloured lines); the six models together:
+\suppanchor{S_mean_soc}{F3\_mean\_soc}}
+\subparagraph{By interval}
+\subsubparagraph{Numbers}
+\gap{1985--2006: all six reach the observed rise. 2006--2024: only TP2 and TP3 reach $+0.12$;
+Yasso07 near zero ($-0.03$); SP1, Yasso15 and Yasso20 lose carbon.}
+\paragraph{\beat{resolution}Bracketing is informative because it is not automatic}
+\gap{Matching the rate would mean little if any calibration on the same data could do it. The
+balanced start, calibrated on the same measurements with one parameter fewer, fails in every
+model.}
+
+\subsubsection{Where the models land: transit times against the published ones}
+\paragraph{\beat{action}Calibrated against published}
+\subparagraph{Faster in Yasso07 and Yasso15, unchanged in Yasso20}
+\subsubparagraph{Numbers}
+\gap{Median transit time at the reference: Yasso07 $23.7$ against a published $33.5$~yr
+($0.71\times$), Yasso15 $26.8$ against $30.5$ ($0.88\times$), Yasso20 $22.3$ against $22.1$
+($1.01\times$).}
+\figanchor{F12}{F12\_mrt\_yasso}
+\hfig{F12_mrt_yasso}{0.80}{F12}{\textbf{Mean transit time of carbon in the three versions of
+Yasso, calibrated and published.} Transit times are computed from the model equations alone,
+with a unit litter input at a common reference climate (mean annual temperature
+$3.4$\,\textdegree C, precipitation $591$~mm) and litter composition, so that the comparison
+depends neither on the input multiplier nor on the starting state. Coloured boxes: the posterior
+of this study; grey boxes: the published posterior samples of Yasso15 and Yasso20; Yasso07, for
+which no published sample exists, is drawn as a line at its published value. The ratios below
+the axis are our median over the published one.}
+\paragraph{\beat{resolution}Three different findings, not one}
+\subparagraph{Yasso07: its single climate modifier}
+\gap{Yasso07 applies one climate modifier to every pool, so its transit time is the reference
+value divided by that modifier: the whole gap is the climate response, which the calibration
+moves.}
+\subparagraph{Yasso15 and Yasso20: pool-specific modifiers}
+\gap{The slow pool keeps its own climate response, which moves little; the gap is small
+(Yasso15) or absent (Yasso20).}
+
+\subsubsection{Across the ridge between input and turnover}
+\paragraph{\beat{action}The two starts land at different places on the same trade-off}
+\subparagraph{The soil fixes the product of input and transit time}
+\gap{Within each start the posterior draws lie along a ridge: more input with faster turnover
+fits as well as less input with slower turnover.}
+\subparagraph{The balanced start sits at less input and faster turnover}
+\subsubparagraph{Numbers}
+\gap{Five of six models (SP1, a single slow pool, barely moves); e.g.\ TP2 from about $4.4$ to
+$4.0$~tC\,ha$^{-1}$\,yr$^{-1}$ and from $22$ to $17$~yr. The likelihood surface:
+\suppanchor{S_ridge}{F14\_mrt\_ridge}}
+\figanchor{F18}{F18\_eqinit\_tradeoff}
+\hfig{F18_eqinit_tradeoff}{0.95}{F18}{\textbf{Effective litter input against mean transit time
+under the two starting assumptions.} Points are thinned posterior draws of each model under the
+transient start (colour) and the balanced start (grey); large points are the medians, joined by
+an arrow from the transient to the balanced start. The effective input is the input multiplier
+times the mean litter input of the product; the dotted line marks the tree litter of the product
+alone ($2.51$~tC\,ha$^{-1}$\,yr$^{-1}$). Transit times as in Figure~\ref{fig:F12}. Within each start
+the draws lie along a ridge of near-constant product of input and transit time; in five of six
+models the balanced start moves toward less input and faster turnover.}
+\paragraph{\beat{resolution}The trilemma, in parameter space}
+\gap{The soil series is the ridge; the measured input (the dotted line) and the published
+kinetics sit off it; a balanced start stands on two of the three at most, the estimated start
+elsewhere on the same ridge. One or two sentences, without redrawing the figure.}
+\paragraph{\beat{resolution}What the resolution leaves}
+\gap{The tension concentrates in the input corner: the soil series is met and the kinetics stay
+near the published ones, while the input the models need stays above what the product supplies
+($3.2$--$4.4$ against $2.5$). Thread to R4.}
+
+\subsubsection{Nested: the uncertainty under the estimated start}
+\paragraph{\beat{challenge}The need for the initial input ratio was there before}
+\gap{Hidden in R1 by the steady-state assumption, not absent. R2 may look more uncertain; it only
+makes explicit a quantity R1 assumed.
+\suppanchor{S_aux_sigmas}{F9\_auxiliary\_sigmas}}
+\paragraph{\beat{action}The two input parameters}
+\subparagraph{The input multiplier: more input than measured}
+\subsubparagraph{Numbers}
+\gap{Effective flux $3.22$--$4.40$ against $2.511$~tC\,ha$^{-1}$\,yr$^{-1}$, set by the likelihood
+rather than the prior (the posterior stays above the prior centre whichever anchor is used).}
+\subsubparagraph{Against independent estimates}
+\gap{The national inventory's full estimate is $1.08$--$1.26\times$ the product on the southern
+plots, bracketing the understorey-corrected anchor ($1.21$), below the posteriors
+($1.28$--$1.75$). \suppanchor{S_input_literature}{SX\_input\_vs\_literature}}
+\refs{\citet{LehtonenHeikkinen2015}; \citet{Gower2001}}
+\subparagraph{The initial input ratio: the deficit the data demand}
+\subsubparagraph{Numbers}
+\gap{$0.45$--$0.56$ in five of six models (SP1 $0.78$), below the growing-stock record
+($\sim0.90$).}
+\subsubparagraph{How to read it}
+\gap{An effective starting deficit of the soil (slash-and-burn, raking, heavy cutting) rather
+than a ratio of litter inputs. It carries the forecast: the remaining accumulation correlates with
+it at $-0.76$ to $-0.97$ (R3).}
+\refs{\citet{Liski2006}; \citet{Peltoniemi2004}}
+\paragraph{\beat{resolution}The error model and the Bayesian points}
+\subparagraph{Correlated errors, honest information}
+\gap{Region, plot and campaign offsets integrated out, a declared total of $0.800$: the $1205$
+observations carry about as much information on the national mean as $220$ independent ones
+(check: $220$ in the Methods, $221$ in the storyline).}
+\refs{\citet{Oberpriller2021}}
+\subparagraph{Priors as information}
+\gap{Homogenised across models (Table~\ref{tab:priors}); the posterior against the prior shows
+what the data added.}
+\subparagraph{The direction depends on the comparator}
+\gap{Against the published parameters the calibration turns over faster (Yasso07, Yasso15);
+against the balanced start, slower. Never add a direction to ``displaces along''.}
+
+\subsubsection{The weight of the assumptions: the division of the sink}
+\paragraph{\beat{challenge}How much of the sink does the starting state carry?}
+\gap{Every part is a comparison between calibrations that differ by one assumption
+(Table~\ref{tab:division}), so the division compares assumptions, each answered by the data.}
+\paragraph{\beat{action}The sink is mostly inherited}
+\subparagraph{The six-model mean}
+\subsubparagraph{Numbers}
+\gap{1985--2024: of $+8.0$~tC\,ha$^{-1}$ gained, inherited state $+11.6$, litter change $+7.3$,
+climate $-11.0$.}
+\figanchor{S16}{S16\_attribution\_ensemble\_recal}
+\hfig{S16_attribution_ensemble_recal}{0.85}{S16}{\textbf{The modelled sink divided into its three
+parts, year by year, as the average of the six models.} Dark green: the inherited state, the part
+of the sink due to the litter rise before 1985 that the soil had not yet caught up with; light
+green: the change of the litter input since 1985; red: the climate after 1985; black line: the
+total sink. Each part is the difference between two calibrations fitted to the same
+measurements (Table~\ref{tab:division}). Plots measured in all three campaigns ($310$),
+unweighted, $50$ posterior draws per calibration. \gap{Three parts until the five-term version exists.}}
+\subparagraph{The inherited part exceeds the whole sink in all six}
+\subsubparagraph{Numbers}
+\gap{Litter and climate together remove $1.0$--$5.3$~tC\,ha$^{-1}$: the warming takes back more
+than the litter rise adds.}
+\subparagraph{Model by model, the picture changes little}
+\gap{Inherited $+6.1$ (SP1) to $+17.4$ (TP2); litter $+6.1$ to $+11.0$; climate $-8.0$ to
+$-15.7$. \suppanchor{S_attr_models}{S15\_attribution\_by\_model\_recal}}
+\paragraph{\beat{resolution}Necessary, and dominant}
+\subparagraph{Necessary}
+\gap{The balanced start shows the history is necessary: with everything else free, the models
+cannot do without it.}
+\subparagraph{Dominant}
+\gap{The division shows how much it weighs, and answers the objection that the inherited part
+is large only because the calibration chose a low $\sinit$: the data demand the deficit.}
+\subparagraph{The size of the climate part depends on the reference climate}
+\gap{The ordering is robust (the sink inherited; litter and warming of the same order and
+opposite sign); the size of the climate part follows the 1961--1984 reference, and a reference
+that overlaps the observed period would shrink it.}
+\paragraph{\beat{resolution}The bridge to the forecast}
+\gap{A sink that is the history is a sink that fades: the mechanism of R3. Five terms once the two
+joint-effect calibrations are run with the new input data.}
+
+% -----------------------------------------------------------------------------
 \subsection{R3 --- Consequences for forecasts}\label{sec:r3}
-\gap{R3.}
+% Arc: the question -> the starting state decides the forecast -> side arc a (inputs and
+% saturation) -> side arc b (temperature).
 
+\subsubsection{The question the resolution raises}
+\paragraph{\beat{challenge}Did we get the forecast wrong so far?}
+\gap{If the starting state decides what the models reproduce, does it decide what they project?
+Within the scope declared in the objectives: litter held at 2024, recent climate repeated, per
+hectare on the study plots.}
+
+\subsubsection{The starting state decides the forecast}
+\paragraph{\beat{action}Two starts, two futures}
+\subparagraph{A balanced soil has no sink left}
+\subsubparagraph{Numbers}
+\gap{2025--2044: $-0.12$ to $+0.02$~tC\,ha$^{-1}$\,yr$^{-1}$; remaining accumulation to balance
+$-8$ to $+9\%$ of the 2024 stock.}
+\subparagraph{A soil carrying its history keeps a sink, which fades}
+\subsubparagraph{Numbers}
+\gap{$+0.07$ to $+0.18$; remaining accumulation $+21$ to $+40\%$ (SP1 $\approx0$).
+\suppanchor{S_forecast}{F19\_eqinit\_forecast} (promote?)}
+\paragraph{\beat{resolution}The disequilibrium found by another route}
+\gap{Liski et al.\ (2006) estimated $+38\%$ from the reconstructed national input. The division of
+the sink explains the forecast: the sink is the history, and the history fades.}
+\refs{\citet{Liski2006}}
+
+\subsubsection{Side arc: inputs and saturation}
+\paragraph{\beat{action}Yes, the sink is approaching saturation}
+\subparagraph{The sink falls while the stock stays below balance}
+\subsubparagraph{Numbers}
+\gap{Under the estimated start the sink falls by a third to a half within 60 years, while the
+stock stays $21$--$40\%$ below balance.}
+\subparagraph{Saturation of the sink, not of the stock}
+\gap{The fast pools approach balance first; the remaining distance lies in the slow pool, which
+closes it over centuries.}
+\refs{\citet{Sierra2018}}
+\paragraph{\beat{action}How much input would postpone it}
+\subparagraph{About a tenth more, sustained}
+\subsubparagraph{Numbers}
+\gap{About $10\%$ more input holds the long-term observed sink ($+0.26$) for twenty years in the
+three versions of Yasso, $0.4$--$0.5$~tC\,ha$^{-1}$\,yr$^{-1}$ of effective input; each $+10\%$
+buys $0.15$--$0.24$~tC\,ha$^{-1}$\,yr$^{-1}$ of sink.}
+\par\textcolor{red!70!black}{\small$\blacktriangleright$\,\textbf{Table~\ref{tab:input_hold} here}}\par
+\subparagraph{Which target}
+\gap{Observed long-term rate, recent rate, or each model's own? A warming-corrected column?
+National units need a sourced area and Aleksi's review.}
+\paragraph{\beat{resolution}Saturation comes regardless}
+\subparagraph{A higher input raises the balance, and the new sink fades too}
+\subsubparagraph{Numbers}
+\gap{With $+20\%$ from 2025, the versions of Yasso realise about half of the eventual gain within
+60 years, and the gain lasts only while the input does.
+\suppanchor{S_saturation}{to build} (promote?)}
+\subparagraph{Input postpones saturation; it does not remove it}
+\subparagraph{Lower bounds}
+\gap{No further warming in these projections: under warming, the input needed is larger. The
+required input depends on both the starting state (the baseline sink) and the transit time (the
+gain per unit of input).}
+
+\begin{table}[htbp]\centering\small
+\caption{\textbf{The increase of litter input that would hold a given sink, in per cent of the
+calibrated input, sustained from 2025.} Computed from the projections with the input held and
+increased by $20$ per cent, using the linearity of the models in their input (Section~\ref{sec:forward});
+the projections carry no further warming, so the values are lower bounds. \gap{Numbers from
+\texttt{doublechecks/input\_to\_hold\_sink.R}, runs of 2026-10-12; provisional.}}
+\label{tab:input_hold}
+\begin{tabular}{llccccc}
+\hline
+target sink & period & Yasso07 & Yasso15 & Yasso20 & TP2 / TP3 & SP1 \\
+\hline
+observed 1985--2024 ($+0.26$) & 10 yr & $+8\%$ & $+7\%$ & $+5\%$ & $+5$ / $+5\%$ & $+11\%$ \\
+ & 20 yr & $+11\%$ & $+10\%$ & $+11\%$ & $+7$ / $+6\%$ & $+13\%$ \\
+each model's own 1985--2024 & 20 yr & $+9\%$ & $+7\%$ & $+3\%$ & $+10$ / $+10\%$ & $+4\%$ \\
+observed 2006--2024 ($+0.12$) & 20 yr & $+2\%$ & $+2\%$ & $+3\%$ & $-5$ / $-5\%$ & $+6\%$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Side arc: the sensitivity to temperature}
+\paragraph{\beat{challenge}Does the starting assumption change how the soil responds to warming?}
+\gap{The balanced start settles at faster, more temperature-sensitive decomposition (R1); the
+published parameters are a second point of comparison.}
+\paragraph{\beat{action}Warming takes carbon in every version of Yasso}
+\subparagraph{Numbers}
+\gap{Linear warming to SSP2-4.5 ($+2.6$\,\textdegree C still to come by 2084): $-5$ to
+$-7$~tC\,ha$^{-1}$ by 2084 against the stationary projection. Litter frozen: a sensitivity of
+decomposition, biased toward loss. SSP1-2.6 and SSP5-8.5 scale the same pattern.}
+\refs{\citet{RuosteenojaJylha2021}}
+\figanchor{F15}{F15\_forward\_arms}
+\hfig{F15_forward_arms}{0.95}{F15}{\textbf{The response of soil carbon to warming under three
+parameterisations of each version of Yasso.} (a) Modelled national mean stock with the climate
+of 2005--2024 repeated after 2024, and (b) with a linear warming added from 2025 to $+2.6$\,\textdegree C
+in 2084, the warming still to come under SSP2-4.5 \citep{RuosteenojaJylha2021}; posterior medians
+for the transient start (solid), the balanced start (dotted) and the published parameters
+(dashed), against the measured campaign means. (c) The change of stock in 2084 due to warming,
+(b) minus (a), computed within each parameter set; boxes span the interquartile range of $40$
+draws, and the published parameters of Yasso07 are a single set. (d) The difference in that
+change between the transient calibration and the published parameters (blue) and between the
+transient and the balanced start (brown); a box that crosses zero means that the choice changes
+nothing. The litter input is held at 2024, so the response is that of decomposition alone. The
+input multiplier of the published arm is set to fit the three campaign means, so its agreement
+with them in (a) is by construction and not a better fit.}
+\paragraph{\beat{action}The starting state moves the trajectory, hardly the sensitivity}
+\subparagraph{Numbers}
+\gap{Transient minus balanced start, SSP2-4.5: Yasso07 $-0.2$ [$-2.3$, $2.2$], Yasso15 $-0.9$
+[$-2.1$, $0.3$], Yasso20 $-1.0$ [$-2.4$, $0.4$]~tC\,ha$^{-1}$ (90\% intervals).}
+\paragraph{\beat{resolution}Only Yasso07 separates from its published parameters}
+\subparagraph{Its single climate modifier ties turnover to temperature sensitivity}
+\subsubparagraph{Numbers}
+\gap{Transient minus published: $-2.7$~tC\,ha$^{-1}$ [$-4.2$, $-1.4$]; Yasso15 and Yasso20 cross
+zero.}
+\refs{\citet{Tuomi2009}; \citet{Viskari2022}}
+\subparagraph{The applied point}
+\gap{The inventory runs Yasso07: its response to warming depends on which parameters it runs
+with, more than on how it is started.}
+
+% -----------------------------------------------------------------------------
 \subsection{R4 --- Future development: why the models fail locally}\label{sec:r4}
-\gap{R4.}
+% Arc (a side arm, independent): good trends, poor local skill -> the inputs and the soil
+% disagree -> what the residual follows -> what the models miss -> suggestions.
+
+\subsubsection{Good trends, poor local skill}
+\paragraph{\beat{action}The skill numbers}
+\subparagraph{Numbers}
+\gap{Calibration $R^2$ $0.015$--$0.020$, held-out $R^2 \le 0.001$; skill does not climb the pool
+ladder (SP1 to Yasso20). \suppanchor{S_obs_pred}{F6\_obs\_vs\_pred\_holdout}}
+\subparagraph{Against the spread of the observations}
+\gap{Optional: the observed stocks vary between plots with a coefficient of variation of
+$0.44$--$0.53$, which the models do not order.}
+\paragraph{\beat{challenge}What the national fit hides}
+\gap{The models reproduce the national trend and almost none of the differences between plots:
+the question of R4.}
+
+\subsubsection{The inputs and the soil disagree between plots}
+\paragraph{\beat{challenge}The trilemma at plot scale}
+\subparagraph{Numbers}
+\gap{Across the range of basal area the litter product varies about $\times18$, the measured soil
+about $\times1.2$; the models pass the litter gradient through (the models do not amplify it).
+A soil in balance with its litter would follow the litter; the soil does not. One or two
+sentences.}
+
+\subsubsection{What the residual follows: each plot carries its own history}
+\paragraph{\beat{action}The stand of 1985 leads}
+\subparagraph{The random forest}
+\gap{On each model's residual, out-of-bag $R^2$ $0.44$--$0.65$: basal area of 1985 first, then
+the development class of 1985 and the coarse fragments; several hundred further variables
+(defoliation, damage, management, nitrogen deposition, topographic wetness, understorey cover)
+add nothing.}
+\figanchor{F11}{F11\_rf\_heatmap}
+\hfig{F11_rf_heatmap}{0.75}{F11}{\textbf{Site variables that predict what the models leave
+behind.} Relative importance of each site variable in a random forest fitted to the residuals of
+each model, scaled within each model so that the most important variable equals one; the
+out-of-bag coefficient of determination of each forest is given above its column. The same
+variables lead in all six models: the basal area of the stand in 1985 first, then the
+development class of the stand in 1985 and the content of coarse fragments in the soil.}
+\paragraph{\beat{action}The stand and the soil}
+\subparagraph{After basal area}
+\gap{Basal area alone explains $42\%$ of the residual variance; fertility, texture and stones
+raise the share to $53\%$. Fertile sites $+14\%$, xeric $-26\%$; fewer stones $+29\%$, many
+$-17\%$ relative to the average plot.}
+\figanchor{F11sas}{F11\_stand\_and\_soil}
+\hfig{F11_stand_and_soil}{0.95}{F11sas}{\textbf{What the models leave behind, in two parts: the
+stand of 1985 and the soil.} The residual is the logarithm of the measured over the predicted soil
+carbon, as the mean of Yasso07 and Yasso15 over the observations of each plot ($419$ plots); a
+positive residual means that the soil holds more carbon than the models predict. One regression
+on the basal area of the stand in 1985 (a smooth curve) and on the fertility, texture and stone
+content of the site divides the predicted residual of each plot into parts, each measured from
+the average plot. Left: the part due to basal area, with its $95\%$ confidence band; the points
+are the plots. Right: the part due to each property of the site, with $95\%$ confidence
+intervals, at the same basal area; the labels translate each part into soil carbon relative to
+the average plot. Basal area alone explains $42$ per cent of the residual variance, and the
+three properties of the site raise the share to $53$ per cent.}
+\subparagraph{The stone effect}
+\gap{Check whether the stone effect is partly the stone correction of the observed stocks.}
+\paragraph{\beat{resolution}The excess fades in the same plots}
+\subparagraph{A wrong starting state, not a missing input}
+\subsubparagraph{Numbers}
+\gap{In the 88 plots with less than $10$~m$^2$\,ha$^{-1}$ in 1985, the residual falls
+$+0.91 \rightarrow +0.53 \rightarrow +0.28$ over the three campaigns; above $20$~m$^2$\,ha$^{-1}$,
+$-0.44 \rightarrow -0.41 \rightarrow -0.29$. An error largest at the start and shrinking is
+the signature of the starting state; a missing input would persist or grow.}
+\subparagraph{One national pre-run shape cannot carry each stand's history}
+\gap{A stand regenerated in the 1960s starts in balance with its low young-stand litter while
+its soil still holds the previous stand's carbon; mature stands the reverse.}
+
+\subsubsection{What the models miss: hypotheses}
+\paragraph{\beat{opening}Hypotheses, with the literature mixed with our results}
+\gap{Speculative by design; each hypothesis with the evidence we have and the literature that
+supports or limits it.}
+\paragraph{\beat{resolution}A starting state per plot}
+\subparagraph{The error fades at the models' turnover pace}
+\gap{The decay of the plot error takes about 30 years, close to the models' transit time.}
+\subparagraph{The excess lives in stands young in 1985}
+\subsubparagraph{Time since the last regeneration cut}
+\gap{The residual peaks 20--30 years after the cut, and only in stands that were sparse in 1985;
+dated cuts after 1985 show no peak: the signal belongs to the starting state, not to cutting.}
+\figanchor{F11b}{F11b\_time\_since\_cut}
+\hfig{F11b_time_since_cut}{0.85}{F11b}{\textbf{What the models leave behind, against the time
+since the last regeneration cut.} The residual is defined as in Figure~\ref{fig:F11sas}, here for
+each soil observation ($1172$ observations), with binned means and $95\%$ confidence intervals.
+The time since the cut is taken from the dated cuts in the stand records and the forest use
+declarations where a cut precedes the sampling, and otherwise as the age of the stand in 1985
+plus the years elapsed since. The solid line is all observations; the dashed lines divide them by
+the basal area of the stand in 1985, with wider bins. The right axis translates the residual
+into soil carbon relative to the prediction. The shaded band marks $20$ to $30$ years after the
+cut.}
+\paragraph{\beat{resolution}Understorey}
+\subparagraph{Numbers}
+\gap{Field-layer cover of 2023 (438 of 456 plots) adds a little after basal area (graminoid and
+field-layer cover positive, about $\Delta R^2 = 0.01$); the plot-level understorey litter gives
+(J+u)/J $\approx1.13$, below the posteriors ($1.28$--$1.75$).}
+\refs{\citet{MuukkonenMakipaa2006}; \citet{Muukkonen2006cover}; \citet{LehtonenHeikkinen2015}}
+\paragraph{\beat{resolution}Natural mortality and below-ground inputs}
+\subparagraph{Natural mortality}
+\gap{$0.10$--$0.16$~tC\,ha$^{-1}$\,yr$^{-1}$ by now in the south in the national inventory, absent
+from the product.}
+\refs{\citet{StatFin2025NID}}
+\subparagraph{Roots, rhizodeposition, mycorrhizal fungi, fine-root lifespan}
+\gap{Exudates and mycorrhizal necromass add input; a longer fine-root lifespan would point the
+other way (\texttt{literature/05--07}).}
+\refs{\citet{Bolinder2007}; \citet{Clemmensen2013}; \citet{Helmisaari2007}; \citet{Strand2008}}
+\subparagraph{A set that brackets the input gap, never a sum that matches it}
+\paragraph{\beat{resolution}Pioneer vegetation, where the two meet}
+\subparagraph{Inherited, or supplied by vegetation no product records}
+\gap{The excess carbon of stands young in 1985 was built during early stand development, either
+inherited or supplied by pioneer vegetation no tree-based product records; the data do not
+separate the two. Cite Lauri Mehtätalo (LUKE): which work?}
+\refs{\citet{Rana2023}; \citet{Mehtatalo2025}; \citet{Palviainen2005}}
+\subparagraph{What the models do after a cut}
+\gap{Litter, stock and heterotrophic respiration around a dated cut; modelled respiration
+against stand age, to set beside flux-tower data (compare trajectories only).
+\suppanchor{S_harvest}{harvest\_dynamics}, \suppanchor{S_rh_age}{rh\_vs\_stand\_age}}
+\refs{\citet{Kolari2004}; \citet{Kulmala2011}; \citet{Peichl2022}}
+
+\subsubsection{Suggestions for the models}
+\paragraph{\beat{resolution}A short list}
+\subparagraph{A starting state per plot from each stand's dated history}
+\subparagraph{Understorey and natural mortality in the litter input}
+\subparagraph{An early-succession input after regeneration cuts}
+\subparagraph{The site, where litter alone cannot order the soil}
+\gap{Fertility and stones.}
 
 % =============================================================================
 \section{Conclusions}\label{sec:conclusions}
-\gap{Conclusions.}
+% Arc, in the decided order: saturation -> the limits of the assumption -> forecasts ->
+% the spatial variance.
+\paragraph{Yes, the forest soil sink is approaching saturation}
+\subparagraph{The remaining sink is inherited and fades}
+\gap{By a third to a half within 60 years, although the stock stays $21$--$40\%$ below balance:
+the sink saturates, not the stock.}
+\subparagraph{More input postpones saturation, but does not remove it}
+\gap{About a tenth more holds the past sink for twenty years.}
+\paragraph{The steady-state assumption shows its limits under a complex forestry history}
+\subparagraph{Started in balance, the models cannot reconcile the three}
+\gap{The soil series, the kinetics and the inputs.}
+\subparagraph{Carrying the history, they can, as far as the data allow}
+\gap{The tension concentrates in the input corner.}
+\paragraph{The starting state has consequences for forecasts}
+\subparagraph{A soil assumed balanced has no room left}
+\gap{A soil that carries its history keeps a fading sink.}
+\subparagraph{The response to warming depends on the parameters more than on the start}
+\gap{Where turnover and temperature sensitivity are tied, as in Yasso07, the inventory's model.}
+\paragraph{The models need improving for the spatial variance}
+\subparagraph{A starting state per plot}
+\subparagraph{The inputs no tree-based product records}
 
 % =============================================================================
 \section*{Acknowledgements}
-\gap{Acknowledgements.}
+\gap{Acknowledgements: LUKE Data Support (climate data); the soil carbon data providers.}
 
 \section*{Data and code availability}
-\gap{Data and code availability.}
+\gap{Data and code availability: the soil carbon measurements (not a published dataset; settle
+with the holders), the litter product (Zenodo 10.5281/zenodo.19736499), the climate (FMI via the
+LUKE weather database), the code repository, the SOC maps (Zenodo).}
 
 \bibliographystyle{plainnat}
 \bibliography{library}
+
+% =============================================================================
+%  SUPPLEMENT (same file for now; figures, tables and sections numbered S1, S2, ...)
+% =============================================================================
+\clearpage
+\appendix
+\renewcommand{\thesection}{S\arabic{section}}
+\setcounter{figure}{0}\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{table}{0}\renewcommand{\thetable}{S\arabic{table}}
+\begin{center}\Large\bfseries Supplementary material\end{center}
+
+\section{Data}\label{supp:data}
+\subsection{The published Yasso07 against the campaigns}
+\gap{Where does this figure belong? It shows the published model before calibration, not the soil
+carbon basis the Methods point it to; R1 is the natural place.}
+\hfig{F2_baseline}{0.75}{S_baseline}{\textbf{Yasso07, the model of the Finnish inventory, before
+calibration: the published parameter values, a soil started in balance and the litter of the
+product, against the three campaign means.} Line and band: the mean modelled stock with its
+standard error, over the $310$ plots measured in all three campaigns; points: the measured
+campaign means with $95\%$ confidence intervals, on the same plots, unweighted. The model is
+started in balance in 1985 under the 1985--1989 litter and the 1961--1984 climate, with the
+published parameters of \citet{Tuomi2009,Tuomi2011woody} and no correction of the input. The
+modelled stock stays nearly flat ($87.2$, $88.8$ and $85.7$~tC\,ha$^{-1}$ at 1985, 2006 and 2024)
+while the soil gains, so the model starts $22$~tC\,ha$^{-1}$ above the first campaign and the gap
+closes to $12$ only because the soil rises toward it: a soil started in balance has no deficit
+to recover from, and its level is the litter of the product times the published transit time
+($33.5$ years, Figure~\ref{fig:F12}). \gap{Move to R1 as the first picture of the problem?
+Same figure for Yasso20 (below the soil, $-11$ to $-21$) with \texttt{HIKET\_F2\_MODEL=Yasso20}.}}
+
+\subsection{The litter product against the national inventory}
+\paragraph{The shared scope}
+\gap{Tree turnover and harvest residues; the inventory's natural mortality and ground vegetation
+excluded.}
+\paragraph{South and north}
+\gap{Agreement in the south, where 406 of the 456 plots lie; in the north the inventory lies
+higher and keeps rising (50 plots).}
+\paragraph{Natural mortality}
+\gap{In the inventory only, and growing.}
+\hfig{S18_litter_vs_inventory}{0.90}{S_litter_inventory}{\textbf{The litter input of the plot
+product against the national inventory's estimate, on the scope they share.} Litter from the
+turnover of living trees and from harvest residues, per hectare: the national inventory (blue,
+per hectare of mineral forest land) and the plot product used here (red, the mean of the study
+plots), in southern (a, $406$ plots) and northern Finland (b, $50$ plots). The inventory's terms
+for natural mortality and ground vegetation are excluded. Shaded: 1985--2024.}
+
+\section{Methods in detail}\label{supp:methods}
+\subsection{The prior of the two input parameters}\label{supp:inputprior}
+\paragraph{The construction}
+\gap{A normal prior with standard deviation $0.25$ on the logistic scale of the litter flux inside
+$0.05$--$8.7$~tC\,ha$^{-1}$\,yr$^{-1}$ (Gower et al.\ 2001), for the present and the 1917 flux.}
+\paragraph{The resulting priors}
+\gap{$\sinput$ median $1.07$, 95\% $0.75$--$1.45$; $\sinit$ median $0.93$, 95\% $0.58$--$1.49$.
+A figure of the two priors?}
+\subsection{The expectations written before the balanced-start calibrations}\label{supp:expectations}
+\paragraph{The four expectations and the refuting one}
+\gap{From \texttt{NEXT\_RUN\_equilibrium\_init.md}, written 2026-10-08: both starts reproduce the
+campaign levels; the balanced start accumulates too little; it compensates along the trade-off
+with more input, shorter transit time or both; Yasso07 has the most room. Refuting: the balanced
+start reproduces the observed rates at no cost in fit.}
+\paragraph{Which held}
+\gap{Two did not: the balanced start overshoots the first campaign; its input multiplier went
+down, not up.}
+\subsection{The exact yearly solution of the simple models}\label{supp:exact}
+\gap{SP1 $C_{t+1} = C^* + (C_t - C^*)\,e^{-k\xi}$, $C^* = I/(k\xi)$; TP2 and TP3 as cascades of
+one exponential per pool.}
+\subsection{The rates of ICBM and the climate of Ultuna}\label{supp:ultuna}
+\gap{$\xi_{\mathrm{Ultuna}} = 0.94$ at 5.4\,\textdegree C, amplitude 10\,\textdegree C, 520~mm;
+sensitivity to the amplitude convention (9--12\,\textdegree C).}
+\subsection{The division of the sink, in words}\label{supp:division}
+\gap{From \texttt{appendices/appendix\_attribution.tex}: the three calibrations, the meaning of
+each part, the checks.}
+
+\section{R1: the balanced start}\label{supp:r1}
+\hfig{F17_eqinit_rates}{0.95}{S_eqinit_rates}{\textbf{Modelled against observed mean annual
+change of soil carbon over 1985--2006, 2006--2024 and 1985--2024.} Filled points: the transient
+start; open points: the balanced start; bars: $90\%$ intervals over posterior draws of the
+national mean. Blue line and band: the observed rate with its $95\%$ confidence interval. Plots
+measured in all three campaigns ($310$), unweighted, whole profile.}
+
+\section{R2: the estimated start}\label{supp:r2}
+\hfig{F3_mean_soc}{0.80}{S_mean_soc}{\textbf{Modelled and measured mean soil carbon, 1985--2024,
+under the transient start.} Lines are the mean stock across plots for each of the six models,
+and the shaded bands are $95\%$ posterior intervals. Red points are the measured campaign means
+with their confidence intervals, on the same plots as the model curves; open blue points are the
+means of the first campaign by sampling year, each a different subset of plots. \gap{Check the
+plot set of the curves against Figure~\ref{fig:F16}.}}
+\hfig{F14_mrt_ridge}{0.95}{S_ridge}{\textbf{The trade-off between transit time and litter input
+on the likelihood surface.} For each version of Yasso, the best fit to the data attainable at each
+combination of mean transit time and input multiplier. The colours show the fit to the data
+alone, with the priors excluded, from blue at the best fit to red at the worst; the white contour
+lines show the posterior, which combines the fit with the priors. The dashed line marks the
+published transit time and the white dot the posterior median. Cells visited fewer than five
+times are left blank: not visited, rather than impossible to fit.}
+\hfig{F9_auxiliary_sigmas}{0.95}{S_aux_sigmas}{\textbf{The two input parameters, read as physical
+quantities.} Left: the input multiplier expressed as an effective flux of litter carbon to the
+soil, the multiplier times the input the product supplies; the dotted line marks the flux of the
+product itself, and the shaded bands the envelope of independent estimates of boreal net primary
+production. Right: the initial input ratio, the 1917 litter input over the 1985 input. \gap{Promote?}}
+\hfig{SX_input_vs_literature}{0.95}{S_input_literature}{\textbf{The litter input inferred by the
+calibration, against independent estimates of the same flux.} Green: inventory-based litter
+products; blue: independent estimates of net primary production, which bound the litter flux
+from above; lower group: the effective flux inferred here for each of the six models. Bars are
+reported ranges for the literature and $95\%$ posterior intervals for the models.}
+\hfig{S15_attribution_by_model_recal}{0.95}{S_attr_models}{\textbf{The modelled sink divided into
+its three parts, model by model.} As Figure~\ref{fig:S16}, for each of the six models.}
+
+\section{R3: forecasts}\label{supp:r3}
+\hfig{F19_eqinit_forecast}{0.95}{S_forecast}{\textbf{The forecast under the two starting
+assumptions}, with the litter held at 2024 and the climate of 2005--2024 repeated. (a) Projected
+change of the national mean stock since 2024, transient start (solid) and balanced start
+(dashed); (b) the sink over 2025--2044; (c) the remaining accumulation to balance, in per cent of
+the 2024 stock. Bars are $90\%$ intervals over posterior draws of the national mean; plots
+measured in all three campaigns, unweighted. \gap{Promote?}}
+\tofig{S_saturation}{held litter against $+20\%$ from 2025, the sink fading in both (from the
+forward runs already done)}{\textbf{Saturation, postponed but not removed.} \gap{Caption once
+built. Promote?}}
+
+\section{R4: the plots}\label{supp:r4}
+\hfig{F6_obs_vs_pred_holdout}{0.95}{S_obs_pred}{\textbf{Predicted against measured soil carbon on
+the held-out plots.} Points are coloured by the standing basal area of the plot, in quintiles.
+The dashed line is the one-to-one line, the dotted line the prediction of the mean, and the solid
+line the fitted relation. The predicted stocks spread more widely than the measured stocks and
+are ordered by basal area, whereas the measured stocks are not.}
+\hfig{harvest_dynamics}{0.95}{S_harvest}{\textbf{Litter input, soil carbon and heterotrophic
+respiration around a regeneration cut.} Mean over the $63$ calibrated plots with a dated
+regeneration cut in 1989--2004, aligned on the year of the cut, posterior-mean trajectories of
+the six models. Left: litter input (the product times the input multiplier); centre: soil carbon
+relative to the three years before the cut; right: heterotrophic respiration derived as input
+minus change of stock (including leaching in Yasso15 and Yasso20). \gap{Keep?}}
+\hfig{rh_vs_stand_age}{0.95}{S_rh_age}{\textbf{Modelled heterotrophic respiration against stand
+age.} Respiration is the litter input times the posterior median input multiplier minus the
+annual change of the posterior-mean stock. (a) Mean of Yasso07 and Yasso15, one point per plot
+every five years over 1990--2020, coloured by air temperature, size by fertility; (b) binned
+median of the six models. Stand age is the tally age of 1985 plus the years since, reset at dated
+regeneration cuts after 1985. \gap{Keep?}}
 
 \end{document}

@@ -1694,4 +1694,7 @@ guards key on those filenames.
 | Mikko Peltoniemi | LUKE; author of the keystone Peltoniemi et al. 2004 (the direct antecedent — identified the non-equilibrium init problem). Close collaborator (~2 yr), on good terms — approachable for the litter/understorey/stock questions while Aleksi is away. |
 
 **GitHub:** `ilmenichetti/HIKET`  
-**Prior sources:** FMI Ryassofortran repository (`https://github.com/YASSOmodel/Ryassofortran/tree/master/data`); `Priors_model_matching.R` derives prior specs.
+**Prior sources:** `Yasso15.dat` = GitHub **YASSOmodel/YASSO15** `parameters/Yasso15.dat` (commit 14e2389,
+2020-03-11); `Yasso20.dat` + `ParY20.dat` = **YASSOmodel/Yasso20** `parameters/` (2022-06-15). All byte-identical to our
+copies (checked 2026-10-22). ⚠ NOT in Ryassofortran (its `data/` holds only `.rda` samples) and NOT in the Viskari Zenodo
+archive. Cited as `Yasso15code` / `Yasso20code` in `manuscript/library.bib`. `Priors_model_matching.R` derives prior specs.

@@ -130,7 +130,7 @@ traj_panel <- function(sc, tag, title, sub) {
 traj_panel("control", "(a)", "modelled SOC, climate held stationary",
   "posterior medians; published arm: litter multiplier fitted to the three campaign means")
 legend("bottomright", bty="n", cex=.85, ncol=2, seg.len=2.8,
-  legend=c(MODELS, "observed mean", "our calibration", "published parameters",
+  legend=c(MODELS, "observed mean", "transient start", "published parameters",
            if ("eqinit" %in% ARMS) "balanced start"),
   col=c(MODEL_COL[MODELS], "#4A1A0E", "grey30", "grey30", if ("eqinit" %in% ARMS) "grey30"),
   lty=c("solid","solid","solid",NA,"solid","22", if ("eqinit" %in% ARMS) "13"),
@@ -157,7 +157,7 @@ for (i in seq_along(MODELS)) {
 legend("bottomleft", bty="n", cex=.83,
   fill=adjustcolor(c("#4C72A8", MODEL_COL[["Yasso15"]], if ("eqinit" %in% ARMS) EQ_COL), .35),
   border=c("#4C72A8", MODEL_COL[["Yasso15"]], if ("eqinit" %in% ARMS) EQ_COL),
-  legend=c("published parameters", "our calibration (model colour)",
+  legend=c("published parameters", "transient start (model colour)",
            if ("eqinit" %in% ARMS) "balanced start"))
 mtext("(c) SOC in 2084: warmed minus stationary, by arm", 3, line=1.0, adj=0, font=2, cex=.95)
 mtext(sprintf("panel (b) minus panel (a) at 2084; boxes = IQR of %d draws; Yasso07 published = point", R$n_draw),
@@ -176,7 +176,7 @@ for (i in seq_along(MODELS)) {
 }
 if (!is.null(de)) legend("bottomleft", bty="n", cex=.83,
   fill=adjustcolor(c("#4C72A8", EQ_COL), .35), border=c("#4C72A8", EQ_COL),
-  legend=c("ours - published parameters", "ours - balanced start"))
+  legend=c("transient - published parameters", "transient - balanced start"))
 mtext("(d) difference between arms in that change", 3, line=1.0, adj=0, font=2, cex=.95)
 mtext("distance between (c)'s boxes; crossing zero = the choice changes nothing",
       3, line=0.0, adj=0, cex=.72, col="grey35")
