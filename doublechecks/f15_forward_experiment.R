@@ -7,6 +7,13 @@
 #   ARM "published" : published kinetics, sigma_input refitted so the arm matches
 #                     the three observed campaign means, sigma_init PINNED to ours
 #   ARM "ours"      : arm B posterior (RUN_IDs 20260831_1624*)
+#   ARM "eqinit"    : the balanced-start posterior (<M>_eqinit_posterior_*),
+#                     sigma_init = 1 (2026-10-22, R3b). Its input bundle is
+#                     identical to production's (litter, pre-run climate, plots;
+#                     checked), so setup() serves both.
+#
+# HIKET_F15_ARMS=eqinit (comma list) runs only those arms and MERGES them into the
+# existing .rds, leaving the other arms untouched. Unset = all three.
 #
 # Forcing: observed 1985-2024, then 60 projection years recycling the last 20
 # observed years, with a LINEAR WARMING RAMP over the projection (not a step).
@@ -69,6 +76,13 @@ rid <- vapply(c("Yasso07","Yasso15","Yasso20"), function(m) {
                    pattern = sprintf("^%s_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
   sub(sprintf("^%s_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
 }, character(1))
+rid_eq <- vapply(c("Yasso07","Yasso15","Yasso20"), function(m) {
+  fs <- list.files("Calibration_real_data_transient/runs",
+                   pattern = sprintf("^%s_eqinit_posterior_[0-9]{8}_[0-9]{6}\\.rds$", m))
+  sub(sprintf("^%s_eqinit_posterior_(.+)\\.rds$", m), "\\1", sort(fs, decreasing = TRUE)[1])
+}, character(1))
+ARMS <- strsplit(Sys.getenv("HIKET_F15_ARMS", "published,ours,eqinit"), ",")[[1]]
+cat("ours:", rid, "\neqinit:", rid_eq, "\narms:", ARMS, "\n")
 N_PROJ <- 60L; N_RECYCLE <- 20L
 # terminal warming (C) at 2084, already baseline-adjusted; 0 = control
 SCEN <- c(control = 0, ssp126 = 1.3, ssp245 = 2.6, ssp585 = 5.4)
@@ -112,7 +126,7 @@ traj_mean <- function(e, mp, keep, dT) {
   rowMeans(do.call(cbind, v))
 }
 
-OUT <- list()
+OUT <- if (length(ARMS) < 3L) readRDS("doublechecks/f15_forward_experiment.rds")$out else list()
 for (M in c("Yasso07","Yasso15","Yasso20")) {
   e <- setup(M); p_def <- e$.to_original(get("best_x", e))
   om <- get("obs_meta", e)
@@ -132,6 +146,12 @@ for (M in c("Yasso07","Yasso15","Yasso20")) {
   idx <- round(seq(1, nrow(smp), length.out = N_DRAW))
   ours_mp <- lapply(idx, function(i) { p <- p_def
     for (n in intersect(names(p), colnames(smp))) p[n] <- smp[i, n]; e$.assemble_params(p) })
+  smq <- getSample(readRDS(sprintf("Calibration_real_data_transient/runs/%s_eqinit_posterior_%s.rds", M, rid_eq[[M]])))
+  stopifnot(!"sigma_init" %in% colnames(smq))
+  iq <- round(seq(1, nrow(smq), length.out = N_DRAW))
+  eq_mp <- lapply(iq, function(i) { p <- p_def
+    for (n in intersect(names(p), colnames(smq))) p[n] <- smq[i, n]
+    mp <- e$.assemble_params(p); mp["sigma_init"] <- 1; mp })   # balanced start
 
   df <- file.path(DAT, paste0(M, ".dat"))
   if (file.exists(df)) {
@@ -150,8 +170,8 @@ for (M in c("Yasso07","Yasso15","Yasso20")) {
     mp <- ARM[[M]]$mp_pub; mp["sigma_input"] <- ARM[[M]]$s_pub; pub_mp <- list(mp)
   }
 
-  for (arm in c("published","ours")) {
-    mps <- if (arm=="published") pub_mp else ours_mp
+  for (arm in ARMS) {
+    mps <- switch(arm, published = pub_mp, ours = ours_mp, eqinit = eq_mp)
     t0 <- Sys.time()
     res <- lapply(seq_along(mps), function(i) {
       mp <- mps[[i]]
@@ -167,6 +187,6 @@ for (M in c("Yasso07","Yasso15","Yasso20")) {
 }
 saveRDS(list(out=OUT, n_draw=N_DRAW, n_proj=N_PROJ, scen=SCEN, scen_lab=SCEN_LAB,
              ref="Ruosteenoja & Jylha 2021, Geophysica 56(1-2), 39-69; CMIP6, Finland, annual mean, vs 1981-2010; baseline-adjusted -1.00 C for our 2005-2024 recycled climate",
-             arm=ARM, rid=rid),
+             arm=ARM, rid=rid, rid_eq=rid_eq),
         "doublechecks/f15_forward_experiment.rds")
 cat("\nwrote doublechecks/f15_forward_experiment.rds\n")

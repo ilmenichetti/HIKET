@@ -3,7 +3,12 @@
 ## ⭐⭐⭐⭐ RESUME HERE (2026-10-21 evening) — Lorenzo reviews the new M&M
 
 **TODO tomorrow (2026-10-22), in this order:**
-1. **While Lorenzo reads the M&M: run the warming response under the balanced start (R3b).** Add a third arm
+1. ✅ **DONE 2026-10-22 — R3b.** F15 now has a third arm (`HIKET_F15_ARMS=eqinit` merges it into the existing
+   .rds; backup `doublechecks/f15_forward_experiment_pre_eqinit_20261022.rds`). SSP2-4.5 at 2084, tC/ha (ours /
+   balanced / published): Yasso07 −7.3 / −7.1 / −4.7; Yasso15 −5.5 / −4.6 / −5.0; Yasso20 −6.0 / −4.9 / −6.3.
+   Ours − balanced: −0.2 [−2.3, 2.2], −0.9 [−2.1, 0.3], −1.0 [−2.4, 0.4] ⇒ the start moves the trajectory, hardly
+   the sensitivity; only Yasso07's published parameters separate. Methods `\gap` replaced; storyline v4 updated.
+   OLD TEXT: **While Lorenzo reads the M&M: run the warming response under the balanced start (R3b).** Add a third arm
    `eqinit` to `doublechecks/f15_forward_experiment.R` (draws from `<M>_eqinit_posterior_*`, `sigma_init` = 1,
    the run's own input bundle / pre-run climate as the other arms), Yasso07/15/20 only, 40 draws, ~20–30 min.
    Then show it in F15 (third, dashed line) or as a small table (response at 2084, SSP2-4.5, per model and

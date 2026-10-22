@@ -808,8 +808,9 @@ value under warming, with no response of forest growth, so the rise isolates the
 decomposition and biases every model toward a loss of carbon; the result is a sensitivity, not a
 projection.
 
-The response to warming is computed for two parameterisations of each version of Yasso: our
-calibration ($40$ posterior draws) and the published parameterisation. Both arms start from the
+The response to warming is computed for three parameterisations of each version of Yasso: our
+calibration ($40$ posterior draws), the calibration with a balanced start ($40$ posterior draws,
+Section~\ref{sec:balanced}), and the published parameterisation. Both arms start from the
 state built with the run's own pre-run climate (Section~\ref{sec:init}). For Yasso15 and Yasso20
 the published arm uses draws from the published posterior distributions of the parameters; for
 Yasso07, for which no such distribution is available, it uses the published parameter values. The
@@ -818,8 +819,10 @@ for each draw, so that the arm reproduces the three campaign means, with $\sinit
 of our calibration. Because the stock is exactly proportional to the litter input multiplier, the
 adjustment sets the level without changing the kinetics, and the relative response to warming does
 not depend on it.
-\gap{Decide whether the warming response is also computed for the balanced-start calibration
-(storyline v4, R3b): not yet done.}
+The balanced-start calibration is run from its own starting state, the steady state under the
+pre-run climate with $\sinit = 1$, and with its own posterior litter input multiplier; comparing its
+response with that of our calibration shows whether relaxing the steady-state assumption changes
+the sensitivity of the calibrated models to temperature, and not only their trajectory.
 
 % =============================================================================
 \subsection{Predictive evaluation and residual analysis}\label{sec:residuals_methods}
