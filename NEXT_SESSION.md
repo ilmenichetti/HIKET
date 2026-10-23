@@ -1,6 +1,40 @@
 # NEXT SESSION — start here
 
-## ⭐⭐⭐⭐ RESUME HERE (2026-10-21 evening) — Lorenzo reviews the new M&M
+## ⭐⭐⭐⭐⭐ RESUME HERE (closed 2026-10-22 evening) — Lorenzo reviews the draft v2 skeleton
+
+**State:** everything committed and pushed (`f518a92` + Overleaf merges). `manuscript/HIKET_draft_v2.tex` is now the
+MASTER (59 pp, builds clean): M&M in full (round 8), R1–R4 / Intro / Conclusions as nested OCAR-tagged headings with
+red `\gap` gists and red `\refs` lines, all figures anchored with captions, Supplement S1–S6 in the same file.
+`HIKET_methods_v2.tex` is only the record of the M&M review — do not edit it further. On Overleaf switch the main
+document to `manuscript/HIKET_draft_v2.tex`.
+
+**First:** `git pull`, re-read draft_v2 from disk (Lorenzo edits in parallel), collect his notes.
+
+**Decisions waiting for Lorenzo (skeleton stage):**
+- F2 (rebuilt: Yasso07 published, balanced start, product litter, 310 plots; +22/+17/+12 above obs, flat) → move to
+  R1 as the first picture of the problem? And the wrong Methods pointer to S_baseline (red flag in the SOC section).
+- Keep the KL paragraph (no result uses KL)? n_eff 220 (Methods) vs 221 (storyline)?
+- Promote F19, F9, the saturation figure (still to build)? Keep harvest / Rh-vs-age figures? Merge F10b with F3alt?
+- Name the balanced-start comparison in the objectives? Third-corner run (balanced start + widened rate priors) or a
+  limitation?
+
+**Remaining Methods `\gap`s:** exclusion rules, 2024 stone volumes, data statement, region codes, prior-criteria
+table `tab:priors` (from `Prior_specs/PRIOR_HOMOGENIZATION_PLAN.md` §2, with the CORRECTED input prior: N(·,0.25) on
+the logistic scale of the flux within [0.05, 8.7] ⇒ σ_input median 1.07, 95% 0.75–1.45; σ_init 0.93, 0.58–1.49),
+five terms (after the new inputs).
+
+**Other open:** cite Lauri Mehtätalo (which work?); stone effect vs stone correction; build the saturation figure;
+F9 file name still says "auxiliary"; "log-SD 0.25" statements in CLAUDE.md / memory / v1 / storyline should state the
+effective prior (offered, not done). New inputs (Boris understorey litter, Ossi 2006 biomass) → `submit_arms.sh all`
++ `refresh_all_local.sh`, then restate.
+
+**R3b result (done 2026-10-22, F15 third arm):** the start moves the trajectory, hardly the warming sensitivity
+(transient − balanced: −0.2 / −0.9 / −1.0 tC/ha at 2084, SSP2-4.5, CIs span 0); only Yasso07 separates from its
+published parameters (−2.66 [−4.21, −1.40]).
+
+---
+
+## (closed 2026-10-22) RESUME HERE (2026-10-21 evening) — Lorenzo reviews the new M&M
 
 **TODO tomorrow (2026-10-22), in this order:**
 1. ✅ **DONE 2026-10-22 — R3b.** F15 now has a third arm (`HIKET_F15_ARMS=eqinit` merges it into the existing
