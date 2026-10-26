@@ -74,9 +74,12 @@ num <- do.call(rbind, lapply(FIG_MODELS, function(m) {
 print(num, digits = 3, row.names = FALSE)
 
 # === Figure ===
-png("manuscript/figures/S_saturation.png", width = 14, height = 7.2, units = "in", res = 200)
-layout(rbind(c(1, 2, 3, 7), c(4, 5, 6, 7)), widths = c(1, 1, 1, 1.45))
-par(oma = c(1.6, 0, 2.6, 0), mgp = c(2.3, 0.55, 0), las = 1, cex.axis = 0.85)
+# Drawn at the size it is printed (0.98 x the 6.53 in text width), so the type is the
+# type: pointsize 9, nothing below cex 0.8 (~7 pt). Title and basis note live in the
+# caption, not in the figure.
+png("manuscript/figures/S_saturation.png", width = 6.5, height = 8.4, units = "in", res = 300, pointsize = 9)
+layout(rbind(1:3, 4:6, 7), heights = c(1, 1, 1.25))
+par(oma = c(0, 0, 0, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
 band <- function(x, Q, col) polygon(c(x, rev(x)), c(Q["lo", ], rev(Q["hi", ])),
                                     col = adjustcolor(col, 0.22), border = NA)
 
@@ -84,58 +87,50 @@ for (k in seq_along(FIG_MODELS)) {
   m <- FIG_MODELS[k]; z <- Z[[m]]; col <- MODEL_COL[[m]]
   Qh <- q90(z$held); Qu <- q90(z$up); ce <- median(z$CE)
   pj <- z$yr >= 2024
-  par(mar = c(3.4, 3.9, 2.2, 0.6))
-  plot(NA, xlim = c(1985, 2084), ylim = range(0, Qh, Qu[, pj], ce * MULT, z$obs$lo, z$obs$hi) * c(0.97, 1.08),
+  par(mar = c(2.4, if (k %in% c(1, 4)) 3.4 else 2.4, 1.8, 0.4))
+  plot(NA, xlim = c(1985, 2084), ylim = c(0, max(Qh, Qu[, pj], ce * MULT, z$obs$hi) * 1.12),
        xlab = "", ylab = if (k %in% c(1, 4)) expression("Stock  (tC ha"^-1*")") else "",
-       main = sprintf("(%s) %s", letters[k], m), font.main = 1, yaxs = "i")
-  rect(2024.5, -1e3, 2100, 1e3, col = "grey95", border = NA)
-  abline(h = c(ce, ce * MULT), col = "grey30", lty = 3, lwd = 1.2)
+       main = sprintf("(%s) %s", letters[k], m), font.main = 1, cex.main = 1.1, yaxs = "i",
+       xaxt = "n")
+  axis(1, at = c(1990, 2030, 2070))
+  rect(2024.5, -1e3, 2100, 1e3, col = "grey94", border = NA)
+  abline(h = c(ce, ce * MULT), col = "grey30", lty = 3, lwd = 1.1)
   band(z$yr[pj], Qu[, pj], "grey40"); band(z$yr, Qh, col)
-  lines(z$yr[pj], Qu["med", pj], col = "grey15", lwd = 1.8, lty = 2)
-  lines(z$yr, Qh["med", ], col = col, lwd = 2.4)
-  segments(z$obs$year, z$obs$lo, z$obs$year, z$obs$hi, col = CAMPAIGN_COL[z$obs$camp], lwd = 1.6)
-  points(z$obs$year, z$obs$m, pch = 21, bg = CAMPAIGN_COL[z$obs$camp], col = "grey15", cex = 1.2)
-  text(1987, ce, "balance, held", adj = c(0, -0.35), cex = 0.68, col = "grey25")
-  text(1987, ce * MULT, sprintf("balance, +%d%%", round(100 * (MULT - 1))), adj = c(0, -0.35),
-       cex = 0.68, col = "grey25")
+  lines(z$yr[pj], Qu["med", pj], col = "grey15", lwd = 1.4, lty = 2)
+  lines(z$yr, Qh["med", ], col = col, lwd = 2)
+  segments(z$obs$year, z$obs$lo, z$obs$year, z$obs$hi, col = CAMPAIGN_COL[z$obs$camp], lwd = 1.4)
+  points(z$obs$year, z$obs$m, pch = 21, bg = CAMPAIGN_COL[z$obs$camp], col = "grey15", cex = 1.1)
   nk <- num[num$model == m, ]
-  legend("bottomright", bty = "n", cex = 0.7, text.col = "grey20",
-         legend = c(sprintf("to gain before balance: %.0f%% (2024) -> %.0f%% (2084)",
-                            round(100 * nk$head_2024) + 0, round(100 * nk$head_2084) + 0),
-                    sprintf("+%d%% gain realised by 2084: %.0f%%", round(100 * (MULT - 1)),
-                            100 * nk$up_realised)))
+  text(1986, c(ce * MULT, ce), c("balance, +20%", "balance"), adj = c(0, -0.3), cex = 0.8, col = "grey25")
+  text(2083, 0, adj = c(1, -0.25), cex = 0.8, col = "grey15",
+       sprintf("to gain: %.0f%% → %.0f%%\n+20%% realised: %.0f%%",
+               round(100 * nk$head_2024) + 0, round(100 * nk$head_2084) + 0, 100 * nk$up_realised))
 }
 
-par(mar = c(3.4, 4.4, 2.2, 1))
-OFF <- setNames(seq(-2.5, 2.5, length.out = 6), FIG_MODELS)  # dodge, years
-cx  <- c(2034.5, 2054.5, 2074.5)                              # cycle mid-years
+par(mar = c(2.6, 3.8, 2.0, 0.6))
+OFF <- setNames(seq(-3, 3, length.out = 6), FIG_MODELS)    # dodge, years
+cx  <- c(2034.5, 2054.5, 2074.5)                             # cycle mid-years
 S90 <- lapply(Z, function(z) list(h = q90(z$Rh), u = q90(z$Ru)))
 yl  <- range(0, 0.27, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
-plot(NA, xlim = c(2024, 2085), ylim = yl + c(-0.01, 0.02), xaxt = "n", xlab = "",
-     ylab = expression("Sink over the climate cycle  (tC ha"^-1*" yr"^-1*")"),
-     main = "(g) The sink fades with either input", font.main = 1)
+plot(NA, xlim = c(2023, 2086), ylim = yl + c(-0.01, 0.02), xaxt = "n", xlab = "",
+     ylab = expression("Sink  (tC ha"^-1*" yr"^-1*")"),
+     main = "(g) Sink over each 20-year climate cycle", font.main = 1, cex.main = 1.1)
 axis(1, at = cx, labels = c("2025-44", "2045-64", "2065-84"), tick = FALSE)
 abline(h = 0, col = "grey35", lty = 2)
 abline(h = c(0.26, 0.12), col = "#AA3333", lty = 3)
-text(2024, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024"), adj = c(0, -0.4),
-     cex = 0.7, col = "#AA3333")
+text(2023, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024"), adj = c(0, -0.4),
+     cex = 0.85, col = "#AA3333")
 for (m in FIG_MODELS) for (a in c("h", "u")) {
-  Q <- S90[[m]][[a]]; x <- cx + OFF[[m]] + if (a == "u") 0.4 else -0.4
-  lines(x, Q["med", ], col = MODEL_COL[[m]], lwd = 1.6, lty = if (a == "u") 2 else 1)
-  segments(x, Q["lo", ], x, Q["hi", ], col = adjustcolor(MODEL_COL[[m]], 0.6), lwd = 1.4)
-  points(x, Q["med", ], pch = 21, cex = 1.15, col = "grey20",
+  Q <- S90[[m]][[a]]; x <- cx + OFF[[m]] + if (a == "u") 0.5 else -0.5
+  lines(x, Q["med", ], col = MODEL_COL[[m]], lwd = 1.4, lty = if (a == "u") 2 else 1)
+  segments(x, Q["lo", ], x, Q["hi", ], col = adjustcolor(MODEL_COL[[m]], 0.6), lwd = 1.3)
+  points(x, Q["med", ], pch = 21, cex = 1.1, col = "grey20",
          bg = if (a == "h") MODEL_COL[[m]] else "white")
 }
-legend("topright", bty = "n", cex = 0.78, ncol = 2,
-       legend = c(FIG_MODELS, "litter held at 2024", sprintf("litter +%d%% from 2025", round(100 * (MULT - 1)))),
+legend("topright", bty = "n", cex = 0.85, ncol = 2,
+       legend = c(FIG_MODELS, "litter held at 2024", "litter +20% from 2025"),
        col = c(MODEL_COL[FIG_MODELS], "grey20", "grey20"), lty = c(rep(1, 6), 1, 2),
        pch = c(rep(NA, 6), 21, 21), pt.bg = c(rep(NA, 6), "grey50", "white"),
-       lwd = c(rep(2.2, 6), 1.6, 1.6))
-
-mtext("Saturation, postponed but not removed: litter held at 2024 against +20% from 2025 (2005-2024 climate recycled)",
-      outer = TRUE, line = 0.7, cex = 1.0, font = 2)
-mtext(sprintf("%s; bands: 90%% over posterior draws of the national mean; points: campaign means (95%% CI) at their mean sampling year; dotted: equilibrium stock of each arm",
-              basis_note(seq_len(Z[[1]]$n))),
-      side = 1, outer = TRUE, line = 0.4, cex = 0.62, col = "grey35", adj = 0.01)
+       lwd = c(rep(2, 6), 1.4, 1.4))
 dev.off()
 cat("\nWrote manuscript/figures/S_saturation.png\n")
