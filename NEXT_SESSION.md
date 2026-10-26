@@ -5,7 +5,22 @@
   at alpha 0.3 with solid borders. Still "Promote?".
 - **Introduction opening restructured** (`% ROUND 9`): inventories matter → report changes, not stocks → mostly modelled →
   start state → soil memory. ⬜ bib: Paris Agreement, EU 2018/841 (+2023/839), IPCC 2006 vol. 4; ⬜ source "soil term =
-  largest uncertainty"; ✅ Finnish 2021 example: CUT from the opening, stays in the case. ⭐ Also 2026-10-26: Fig S2 (S_soc_by_region) — far North loses SOC; paper stays national, one sentence by Fig 2; reply to Aleksi: doublechecks/ghgi_steady_state_vs_obs.R (inventory run matches nationally only by cancellation).
+  largest uncertainty"; ✅ Finnish 2021 example: CUT from the opening, stays in the case.
+- **Intro opening, later the same day (Lorenzo writing prose on Overleaf in parallel — PULL FIRST):** 1.1 retitled "a
+  modelled soil sink depends on where the soil starts"; abstract plan (1) follows; stage-setting cut to 2–3 lines; soil
+  subparagraph = small arc: forests usually sink (Pan2024, ~3.5 PgC/yr ≈ ½ fossil) → not always (deforestation cancels ⅔;
+  boreal sink −36%) → boreal special case (Pan2011: 239 vs tropical 242 tC/ha, 272 PgC ≈ ⅓ of forest C, ~60% in soil)
+  → high latitudes warm fastest (IPCC2021SPM, Rantanen2022 — both ARCTIC; ⬜ boreal-specific source, Gauthier 2015 unread).
+  Bib added + Crossref-checked: Pan2024, Rantanen2022, IPCC2021SPM. ⬜ read the Pan2024 correction (Nature 632:E7).
+  ⚠ "a quarter of fossil emissions" was wrong (Pan2011 gives none; ≈⅓ gross 1990–2007) — do not reintroduce.
+- **Aleksi's question** (email 2026-10-26: is a steady-state-1970s inventory run outside the measured uncertainty?):
+  `doublechecks/ghgi_steady_state_vs_obs.R` uses the inventory's OWN Yasso07 run (LUKE package). Nationally (area-wt.)
+  it matches (+0.11) only by CANCELLATION: South measured +0.48/+0.16 vs inventory +0.19/+0.05 (outside), North measured
+  −0.15/−0.16 vs inventory +0.13/+0.07. ⬜ reply to Aleksi (Samuli: keep for the paper/final report, not the interim).
+- ⭐ **Far North LOSES SOC** (39 plots >66°N, −0.16 [−0.27, −0.04], smooth latitude gradient) → **Fig S2**
+  (`manuscript/figures/build_S_soc_by_region.R`) + one paragraph under Fig 2. Lorenzo: paper stays NATIONAL, no figure is
+  split. ⬜ `\gap` there: state the caveats (39 plots; first-campaign comparability) or not. Supplement figures after S2
+  shifted by one (saturation is now S11). Memory `north-loses-soc`.
 - **All draft-v2 figures redrawn at print size** (memory `figures-print-size-convention`). ⬜ offered: benchmark alpha
   treatment in F17, F19, attribution figures.
 
