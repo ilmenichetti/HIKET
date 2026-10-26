@@ -112,32 +112,32 @@ for (k in seq_along(FIG_MODELS)) {
                round(100 * nk$head_2024) + 0, round(100 * nk$head_2084) + 0, 100 * nk$up_realised))
 }
 
-# (g)/(h): the sink on a real time axis. Each 20-year climate repetition is ONE value per
-# model (whole repetitions, because the repeated climate alternates by decade), drawn as a
-# horizontal step across its own years with its 90% interval as a band -- the steps are
-# block averages, not samples of a smooth curve, so they are not joined. The annual sink was
-# tried behind the steps and DROPPED (2026-10-26): it swings -1.2..+1.4 with the repeated
-# climate and buries the block averages (0..0.45).
+# (g)/(h): the sink as grouped bars -- one group per 20-year repetition of the climate
+# (whole repetitions, because the repeated climate alternates by decade), one bar per model,
+# 90% interval as whiskers. Tried before: dodged points joined by lines (read as a time
+# series) and steps on a time axis (cluttered); bars say "one value per block" directly.
 S90 <- lapply(Z, function(z) list(h = q90(z$Rh), u = q90(z$Ru)))
-yl  <- range(-0.1, 0.5, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
-st  <- c(2024.5, 2044.5, 2064.5)
-sink_panel <- function(a, A, tag) {
-  plot(NA, xlim = c(2024, 2085), ylim = yl, xaxs = "i", xlab = "",
-       ylab = if (a == "h") expression("Sink  (tC ha"^-1*" yr"^-1*")") else "")
-  mtext(tag, 3, 0.4, adj = 0)
-  abline(v = st[-1], col = "grey85"); abline(h = 0, col = "grey35", lty = 2)
+yl  <- range(-0.1, 0.55, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
+sink_panel <- function(a, tag, first) {
+  M  <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["med", ])          # 3 blocks x 6 models
+  LO <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["lo", ])
+  HI <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["hi", ])
+  bp <- barplot(t(M), beside = TRUE, col = MODEL_COL[FIG_MODELS], border = NA, ylim = yl,
+                names.arg = c("2025-44", "2045-64", "2065-84"), space = c(0, 1.2),
+                ylab = if (first) expression("Sink  (tC ha"^-1*" yr"^-1*")") else "")
+  abline(h = 0, col = "grey35")
   abline(h = c(0.26, 0.12), col = "#AA3333", lty = 3)
-  for (m in FIG_MODELS) { Q <- S90[[m]][[a]]
-    rect(st, Q["lo", ], st + 20, Q["hi", ], col = adjustcolor(MODEL_COL[[m]], 0.18), border = NA)
-    segments(st, Q["med", ], st + 20, Q["med", ], col = MODEL_COL[[m]], lwd = 2.4) }
+  arrows(bp, t(LO), bp, t(HI), angle = 90, code = 3, length = 0.015, col = "grey25", lwd = 0.9)
+  mtext(tag, 3, 0.4, adj = 0)
+  bp
 }
 par(mar = c(2.6, 3.8, 2.0, 0.4))
-sink_panel("h", "Ah", "(g) Sink, litter held at 2024")
-text(2085, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024"), adj = c(1, -0.4),
-     cex = 0.8, col = "#AA3333")
+bp <- sink_panel("h", "(g) Sink, litter held at 2024", TRUE)
+text(max(bp) + 0.6, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024"),
+     adj = c(1, -0.4), cex = 0.8, col = "#AA3333")
 par(mar = c(2.6, 2.4, 2.0, 0.6))
-sink_panel("u", "Au", "(h) Sink, litter +20% from 2025")
+sink_panel("u", "(h) Sink, litter +20% from 2025", FALSE)
 legend("topright", bty = "n", cex = 0.85, ncol = 2, legend = FIG_MODELS,
-       col = MODEL_COL[FIG_MODELS], lwd = 2.4, bg = "white")
+       fill = MODEL_COL[FIG_MODELS], border = NA)
 dev.off()
 cat("\nWrote manuscript/figures/S_saturation.png\n")
