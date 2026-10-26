@@ -1,5 +1,14 @@
 # NEXT SESSION — start here
 
+## SESSION 2026-10-26 (closed)
+- **S10 saturation figure** (`build_S_saturation.R`): stock panels + sink per 20-yr repetition as grouped bars; benchmarks
+  at alpha 0.3 with solid borders. Still "Promote?".
+- **Introduction opening restructured** (`% ROUND 9`): inventories matter → report changes, not stocks → mostly modelled →
+  start state → soil memory. ⬜ bib: Paris Agreement, EU 2018/841 (+2023/839), IPCC 2006 vol. 4; ⬜ source "soil term =
+  largest uncertainty"; ⬜ Finnish 2021 sink→source example: opening or case?
+- **All draft-v2 figures redrawn at print size** (memory `figures-print-size-convention`). ⬜ offered: benchmark alpha
+  treatment in F17, F19, attribution figures.
+
 ## ⭐⭐⭐⭐⭐ RESUME HERE (closed 2026-10-22 evening) — Lorenzo reviews the draft v2 skeleton
 
 **State:** everything committed and pushed (`f518a92` + Overleaf merges). `manuscript/HIKET_draft_v2.tex` is now the
