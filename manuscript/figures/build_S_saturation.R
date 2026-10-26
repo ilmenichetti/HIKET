@@ -119,7 +119,7 @@ for (k in seq_along(FIG_MODELS)) {
 S90 <- lapply(Z, function(z) list(h = q90(z$Rh), u = q90(z$Ru)))
 yl  <- range(-0.1, 0.55, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
 BENCH <- c("SP1", "TP2", "TP3")
-BAR_FILL   <- ifelse(FIG_MODELS %in% BENCH, adjustcolor(MODEL_COL[FIG_MODELS], 0.5), MODEL_COL[FIG_MODELS])
+BAR_FILL   <- ifelse(FIG_MODELS %in% BENCH, adjustcolor(MODEL_COL[FIG_MODELS], 0.3), MODEL_COL[FIG_MODELS])
 BAR_BORDER <- ifelse(FIG_MODELS %in% BENCH, MODEL_COL[FIG_MODELS], NA)
 sink_panel <- function(a, tag, first) {
   M  <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["med", ])          # 3 blocks x 6 models
