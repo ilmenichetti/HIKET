@@ -23,7 +23,7 @@ table `tab:priors` (from `Prior_specs/PRIOR_HOMOGENIZATION_PLAN.md` §2, with th
 the logistic scale of the flux within [0.05, 8.7] ⇒ σ_input median 1.07, 95% 0.75–1.45; σ_init 0.93, 0.58–1.49),
 five terms (after the new inputs).
 
-**Other open:** cite Lauri Mehtätalo (which work?); stone effect vs stone correction; build the saturation figure;
+**Other open:** cite Lauri Mehtätalo (which work?); stone effect vs stone correction; ✅ saturation figure BUILT 2026-10-26 (`manuscript/figures/build_S_saturation.R` → `S_saturation.png`, in draft v2 Supplement + numbers in the R3 side-arc gists; promote?);
 F9 file name still says "auxiliary"; "log-SD 0.25" statements in CLAUDE.md / memory / v1 / storyline should state the
 effective prior (offered, not done). New inputs (Boris understorey litter, Ossi 2006 biomass) → `submit_arms.sh all`
 + `refresh_all_local.sh`, then restate.
