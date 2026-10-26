@@ -105,12 +105,13 @@ yrs <- 1985:(1985 + R$n_proj + 39)
 om  <- readRDS(sprintf("Data/model_inputs/Yasso07_inputs_%s.rds", R$rid[["Yasso07"]]))$obs_meta
 oc  <- obs_campaigns(om, balanced_plots(om))
 YL  <- range(unlist(lapply(MODELS, function(M) lapply(ARMS,
-        function(a) c(med(M,a,"control"), med(M,a,PLOT_S))))), oc$lo, oc$hi) + c(-0.8, 0.8)
+        function(a) c(med(M,a,"control"), med(M,a,PLOT_S))))), oc$lo, oc$hi) + c(-4.5, 0.8)   # room below for legends
 
-png("manuscript/figures/F15_forward_arms.png", width = 11.2, height = 8.6,
-    units = "in", res = 220)
-par(mfrow = c(2,2), mar = c(4.1, 4.6, 3.1, 0.9), mgp = c(2.7, 0.7, 0), las = 1,
-    cex.axis = 0.95)
+# Print size (0.95 x 6.53 in text width, 9 pt), so nothing prints below ~7 pt.
+png("manuscript/figures/F15_forward_arms.png", width = 6.2, height = 5.33,
+    units = "in", res = 300, pointsize = 9)
+par(mfrow = c(2,2), mar = c(3.0, 3.8, 1.8, 0.5), mgp = c(2.1, 0.5, 0), las = 1, tcl = -0.3)
+par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 
 traj_panel <- function(sc, tag, title, sub) {
   plot(NA, xlim=range(yrs), ylim=YL, xlab="", ylab=expression("SOC (tC ha"^-1*")"))
@@ -119,67 +120,61 @@ traj_panel <- function(sc, tag, title, sub) {
   for (M in MODELS) for (arm in ARMS)
     lines(yrs, med(M, arm, sc), col=MODEL_COL[M], lwd=2.4, lty=ARM_LTY[arm])
   arrows(oc$year, oc$lo, oc$year, oc$hi, angle=90, code=3, length=.03, lwd=1.7, col="#4A1A0E")
-  points(oc$year, oc$m, pch=21, bg="#C85A3C", col="#4A1A0E", cex=1.55)
-  text(2004, usr[4]-1.4, "observed", cex=.8, col="grey35")
-  text(2056, usr[4]-1.4, "projection", cex=.8, col="grey35")
-  mtext(sprintf("%s %s", tag, title), 3, line=1.0, adj=0, font=2, cex=.95)
-  mtext(sub, 3, line=0.0, adj=0, cex=.72, col="grey35")
+  points(oc$year, oc$m, pch=21, bg="#C85A3C", col="#4A1A0E", cex=1.2)
+  text(2004, usr[4]-1.0, "observed", cex=.85, col="grey35")
+  text(2056, usr[4]-1.0, "projection", cex=.85, col="grey35")
+  mtext(sprintf("%s %s", tag, title), 3, line=0.4, adj=0, font=2)
 }
 
 # (a) stationary climate
-traj_panel("control", "(a)", "modelled SOC, climate held stationary",
+traj_panel("control", "(a)", "Climate of 2005-2024 repeated",
   "posterior medians; published arm: litter multiplier fitted to the three campaign means")
-legend("bottomright", bty="n", cex=.85, ncol=2, seg.len=2.8,
-  legend=c(MODELS, "observed mean", "transient start", "published parameters",
-           if ("eqinit" %in% ARMS) "balanced start"),
-  col=c(MODEL_COL[MODELS], "#4A1A0E", "grey30", "grey30", if ("eqinit" %in% ARMS) "grey30"),
-  lty=c("solid","solid","solid",NA,"solid","22", if ("eqinit" %in% ARMS) "13"),
-  lwd=c(2.4,2.4,2.4,NA,2.4,2.4, if ("eqinit" %in% ARMS) 2.4),
-  pch=c(NA,NA,NA,21,NA,NA, if ("eqinit" %in% ARMS) NA), pt.bg="#C85A3C")
+legend("bottomright", bty="n", cex=.8, seg.len=2.4,
+  legend=c("transient start", "published parameters", if ("eqinit" %in% ARMS) "balanced start"),
+  col="grey30", lty=c("solid","22", if ("eqinit" %in% ARMS) "13"), lwd=2.2)
 
 # (b) warmed levels -- same design and axes as (a)
-traj_panel(PLOT_S, "(b)", "modelled SOC, warming to SSP2-4.5",
+traj_panel(PLOT_S, "(b)", "Warming to SSP2-4.5",
   "same models and axes as (a); projection warmed on a linear ramp to +2.6 °C at 2084")
+legend("bottomleft", bty="n", cex=.8, ncol=2, seg.len=1.6,
+  legend=c(MODELS, "observed"), col=c(MODEL_COL[MODELS], "#4A1A0E"),
+  lty=c(1,1,1,NA), lwd=c(2.2,2.2,2.2,NA), pch=c(NA,NA,NA,21), pt.bg="#C85A3C")
 
 # (c) response
-par(mar = c(4.1, 4.6, 3.1, 0.9))
+par(mar = c(2.6, 3.8, 1.8, 0.5))
 rr <- unlist(lapply(MODELS, function(M) lapply(ARMS, function(a) resp(M,a))))
 OFF <- if ("eqinit" %in% ARMS) c(published=-0.27, ours=0, eqinit=0.27) else c(published=-0.22, ours=0.22)
 BW  <- if ("eqinit" %in% ARMS) 0.12 else 0.16
-plot(NA, xlim=c(.5,3.5), ylim=range(rr)+c(-.7,.7), xaxt="n", xlab="",
-     ylab=expression("SOC change, warmed - stationary (tC ha"^-1*")"))
+plot(NA, xlim=c(.5,3.5), ylim=range(rr)+c(-2.4,.5), xaxt="n", xlab="",
+     ylab=expression("Warmed - repeated  (tC ha"^-1*")"))
 axis(1, at=1:3, labels=MODELS); abline(h=0, col="grey65")
 for (i in seq_along(MODELS)) {
   bx(resp(MODELS[i],"published"), i+OFF[["published"]], "#4C72A8",           w=BW)
   bx(resp(MODELS[i],"ours"),      i+OFF[["ours"]],      MODEL_COL[MODELS[i]], w=BW)
   if ("eqinit" %in% ARMS) bx(resp(MODELS[i],"eqinit"), i+OFF[["eqinit"]], EQ_COL, w=BW)
 }
-legend("bottomleft", bty="n", cex=.83,
+legend("bottomleft", bty="n", cex=.8, ncol=2,
   fill=adjustcolor(c("#4C72A8", MODEL_COL[["Yasso15"]], if ("eqinit" %in% ARMS) EQ_COL), .35),
   border=c("#4C72A8", MODEL_COL[["Yasso15"]], if ("eqinit" %in% ARMS) EQ_COL),
-  legend=c("published parameters", "transient start (model colour)",
+  legend=c("published parameters", "transient start",
            if ("eqinit" %in% ARMS) "balanced start"))
-mtext("(c) SOC in 2084: warmed minus stationary, by arm", 3, line=1.0, adj=0, font=2, cex=.95)
-mtext(sprintf("panel (b) minus panel (a) at 2084; boxes = IQR of %d draws; Yasso07 published = point", R$n_draw),
-      3, line=0.0, adj=0, cex=.72, col="grey35")
+mtext("(c) Effect of warming in 2084", 3, line=0.4, adj=0, font=2)
 
 # (d) difference
-par(mar = c(4.1, 4.9, 3.1, 0.9))
+par(mar = c(2.6, 3.8, 1.8, 0.5))
 dd <- lapply(MODELS, dif)
 de <- if ("eqinit" %in% ARMS) lapply(MODELS, dif, vs = "eqinit") else NULL
-plot(NA, xlim=c(.5,3.5), ylim=range(unlist(c(dd, de)))+c(-.4,.4), xaxt="n", xlab="",
-     ylab=expression("difference in that change (tC ha"^-1*")"))
+plot(NA, xlim=c(.5,3.5), ylim=range(unlist(c(dd, de)))+c(-2.2,.4), xaxt="n", xlab="",
+     ylab=expression("Difference  (tC ha"^-1*")"))
 axis(1, at=1:3, labels=MODELS); abline(h=0, col="grey25", lwd=1.5)
 for (i in seq_along(MODELS)) {
   if (is.null(de)) bx(dd[[i]], i, MODEL_COL[MODELS[i]], w=0.28) else {
     bx(dd[[i]], i-0.18, "#4C72A8", w=0.14); bx(de[[i]], i+0.18, EQ_COL, w=0.14) }
 }
-if (!is.null(de)) legend("bottomleft", bty="n", cex=.83,
+if (!is.null(de)) legend("bottomleft", bty="n", cex=.8,
   fill=adjustcolor(c("#4C72A8", EQ_COL), .35), border=c("#4C72A8", EQ_COL),
-  legend=c("transient - published parameters", "transient - balanced start"))
-mtext("(d) difference between arms in that change", 3, line=1.0, adj=0, font=2, cex=.95)
-mtext("distance between (c)'s boxes; crossing zero = the choice changes nothing",
-      3, line=0.0, adj=0, cex=.72, col="grey35")
+  legend=c("transient - published", "transient - balanced"))
+mtext("(d) Difference between the arms", 3, line=0.4, adj=0, font=2)
 dev.off()
 cat("wrote manuscript/figures/F15_forward_arms.png\n\n")
 

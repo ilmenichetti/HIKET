@@ -79,6 +79,7 @@ print(num, digits = 3, row.names = FALSE)
 # caption, not in the figure.
 png("manuscript/figures/S_saturation.png", width = 6.5, height = 8.4, units = "in", res = 300, pointsize = 9)
 layout(rbind(1:3, 4:6, 7), heights = c(1, 1, 1.25))
+par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 par(oma = c(0, 0, 0, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
 band <- function(x, Q, col) polygon(c(x, rev(x)), c(Q["lo", ], rev(Q["hi", ])),
                                     col = adjustcolor(col, 0.22), border = NA)

@@ -152,7 +152,8 @@ draw <- function(W) {
   yl <- yl + c(0, 0.08) * diff(yl)
   # Print size (0.95 x 6.53 in, 9 pt); title and basis note live in the caption (fig:S_attr_models).
   png(sprintf("manuscript/figures/S15_attribution_by_model%s%s.png", sfx, SFX_J), width = 6.2, height = 4.8, units = "in", res = 300, pointsize = 9)
-  par(mfrow = c(2, 3), mar = c(3.0, 3.6, 1.6, 0.4), oma = c(0, 0, 2.4, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
+  par(mfrow = c(2, 3), mar = c(3.0, 3.6, 1.6, 0.4), oma = c(0, 0, 3.6, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
+  par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
   for (m in MODEL_ORDER) {
     plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = if (match(m, MODEL_ORDER) %in% c(1, 4)) ylab_sink else "")
     mtext(sprintf("(%s) %s", letters[match(m, MODEL_ORDER)], m), 3, 0.3, adj = 0, font = 2)
@@ -161,7 +162,7 @@ draw <- function(W) {
     if (m == MS[1]) period_labels(yl, 0.62)
   }
   message("S15 ", wtxt, "; ", note)
-  legend_top(); dev.off()
+  legend_top(2); dev.off()
   # --- S16: average, annual sink ----------------------------------------------------
   Ps <- sm(Pm, W); okm <- stats::complete.cases(Ps)
   # Print size (0.85 x 6.53 in, 9 pt); title and basis note live in the caption (fig:S16).

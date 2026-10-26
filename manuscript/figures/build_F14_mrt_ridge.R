@@ -123,6 +123,7 @@ for (M in names(RID)) {
 # manuscript caption (fig:S_ridge), which now states the colour range.
 png("manuscript/figures/F14_mrt_ridge.png", width = 6.2, height = 4.9, units = "in", res = 300, pointsize = 9)
 layout(matrix(1:6, 2, 3, byrow = TRUE), heights = c(1.35, 1))
+par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 par(mar = c(3.3, 3.6, 1.8, 0.5), mgp = c(2.1, 0.5, 0), las = 1, tcl = -0.3)
 # Kovesi bgymr diverging rainbow, REVERSED: BLUE = best fit, through green/yellow, to
 # RED = worst. Chosen over viridis for CONTRAST -- viridis is monotone in lightness, and
@@ -226,7 +227,8 @@ par(mar = c(3.0, 3.6, 1.8, 0.5))
 for (M in names(RID)) {                       # --- row 2: variance of MRT ---
   v <- 100 * VAR[[M]]; v <- v[is.finite(v)]
   bp <- barplot(v, col = GC[names(v)], border = NA, ylim = c(0, max(115, max(v)*1.15)),
-                ylab = "Share of MTT variance (%)", cex.names = 0.85)
+                ylab = "Share of MTT variance (%)", cex.names = 0.85,
+                names.arg = sub("woody size", "size", names(v)))
   mtext(sprintf("(%s) %s", letters[3 + match(M, names(RID))], M), 3, 0.4, adj = 0, font = 2, cex = 1.0)
   abline(h = 100, lty = 3, col = "grey50")
   text(bp, v, sprintf("%.0f%%", v), pos = 3, cex = 0.85, font = 2, xpd = NA)

@@ -217,21 +217,22 @@ S_all <- binned(dt$T, dt$r)
 S_cl  <- lapply(split(dcl, dcl$cl), function(z) binned_cl(z$T, z$r))
 COL_CL <- c(`< 10` = "#1baf7a", `10-20` = "#2a78d6", `> 20` = "#eb6834")
 LTY_CL <- c(`< 10` = 2, `10-20` = 4, `> 20` = 5)
-png(file.path(OUT, "residuals_time_since_cut_summary.png"), 9, 6, units = "in", res = 150)
-par(mar = c(5.2, 4.6, 4.2, 4.6), mgp = c(2.5, 0.6, 0), tcl = -0.3,
+# Print size (0.85 x 6.53 in text width, 9 pt), so nothing prints below ~7 pt.
+png(file.path(OUT, "residuals_time_since_cut_summary.png"), 5.55, 3.8, units = "in", res = 300, pointsize = 9)
+par(mar = c(3.4, 3.8, 0.6, 4.2), mgp = c(2.1, 0.5, 0), tcl = -0.3,
     col.axis = INK, col.lab = INK, fg = INK)
 all_lo <- unlist(lapply(c(list(S_all), S_cl), function(s) s$m - 1.96 * s$se))
 all_hi <- unlist(lapply(c(list(S_all), S_cl), function(s) s$m + 1.96 * s$se))
 yl <- range(all_lo, all_hi) + c(-0.03, 0.1)
 plot(NA, xlim = tx(c(1.5, 160)), ylim = yl, bty = "u", xaxt = "n",
-     xlab = "Years since the last regeneration cut, at sampling (log scale)",
+     xlab = "Years since the last regeneration cut (log scale)",
      ylab = "Mean log residual (obs / pred)")
 rect(tx(20), yl[1], tx(30), yl[2], col = adjustcolor(INK, 0.05), border = NA)
 xax(); abline(h = 0, col = GRID, lwd = 2)
 pc <- c(-40, -30, -20, -10, 0, 10, 20, 30, 50, 100, 150)
 pc <- pc[log(1 + pc / 100) > yl[1] & log(1 + pc / 100) < yl[2]]
 axis(4, log(1 + pc / 100), sprintf("%+d%%", pc), las = 1)
-mtext("Observed SOC relative to predicted", 4, 3.2, col = INK)
+mtext("Measured relative to predicted", 4, 3.0, col = INK)
 dodge <- c(`< 10` = -0.03, `10-20` = 0, `> 20` = 0.03)
 for (k in names(S_cl)) {
   s <- S_cl[[k]]; x <- tx(s$xm) + dodge[[k]]
@@ -246,16 +247,9 @@ lines(tx(S_all$xm), S_all$m, col = INK, lwd = 2.8)
 points(tx(S_all$xm), S_all$m, pch = 21, bg = "white", col = INK, cex = 1.3, lwd = 1.8)
 legend("topright", c("all observations", paste("basal area 1985", names(S_cl), "m2/ha")),
        col = c(INK, COL_CL[names(S_cl)]), lty = c(1, LTY_CL[names(S_cl)]), lwd = c(2.8, 2, 2, 2),
-       pch = 21, pt.bg = c("white", COL_CL[names(S_cl)]), bty = "n", cex = 0.82, bg = "white")
-mtext("Residual over time since the last regeneration cut, overall and by 1985 stand", 3, 2.4, adj = 0, font = 2, cex = 1.05)
-mtext(sprintf("Binned means ± 95%% CI, %d soil observations, mean of Yasso07 and Yasso15. Shaded: 20-30 yr.",
-              nrow(dt)), 3, 1.25, adj = 0, cex = 0.72, col = MUTED)
-mtext(sprintf("Time since cut beyond basal area: p %.1g; with soil classes p %.1g; dated cuts only p %.1g.",
-              lr("ba", "both"), lr("ba_soil", "both_soil"), anova(m1, m2)[2, "Pr(>Chisq)"]),
-      3, 0.35, adj = 0, cex = 0.72, col = MUTED)
-mtext(paste("Time since cut = dated cut where recorded, else stand age in 1985 + years since 1985.",
-            "Class lines: bins 0-10, 10-20, 20-30, 30-50, 50-90, > 90 yr."),
-      1, 3.3, adj = 0, cex = 0.68, col = MUTED, at = par("usr")[1])
+       pch = 21, pt.bg = c("white", COL_CL[names(S_cl)]), bty = "n", cex = 0.85, bg = "white")
+message(sprintf("F11b: time since cut beyond basal area p %.1g; with soil classes p %.1g; dated cuts only p %.1g",
+                lr("ba", "both"), lr("ba_soil", "both_soil"), anova(m1, m2)[2, "Pr(>Chisq)"]))
 dev.off()
 cat("\nClass means by time bin:\n")
 for (k in names(S_cl)) { cat(k, ": "); cat(sprintf("%.0f:%+.2f(n%d) ", S_cl[[k]]$xm, S_cl[[k]]$m, S_cl[[k]]$n), "\n") }

@@ -47,11 +47,11 @@ ours <- do.call(rbind, lapply(names(rid), function(m) {
 # --- literature -------------------------------------------------------------
 # lo/hi are RANGES where reported (not CIs) -- see notes column.
 lit <- data.frame(
-  label = c("Boris / Tupek  J̄  (tree only, no understorey)",
-            "Lehtonen & Heikkinen 2015  (tree + understorey)",
-            "Zheng 2004  gridded TNPP  (DM→C)",
-            "Gower 2001  Nordic  TNPP",
-            "Gower 2001  Class I evergreen  TNPP"),
+  label = c("Plot product, trees only",
+            "Lehtonen & Heikkinen 2015",
+            "Zheng et al. 2004, NPP",
+            "Gower et al. 2001, Nordic NPP",
+            "Gower et al. 2001, evergreen NPP"),
   mid = c(2.511, 2.70, 2.81, 3.21, 3.87),
   lo  = c(NA,    2.43, 1.26, 2.15, 2.14),
   hi  = c(NA,    2.97, 7.13, 4.62, 9.12),
@@ -59,29 +59,28 @@ lit <- data.frame(
   stringsAsFactors = FALSE)
 
 # --- candidate window ceilings ----------------------------------------------
-ceil <- data.frame(
-  label = c("CURRENT window (Gower global max)", "Gower Nordic max", "Zheng gridded mean"),
-  x     = c(8.70, 4.62, 2.81),
-  col   = c("grey35", "#0072B2", "#D55E00"), stringsAsFactors = FALSE)
+# Only the upper bound of the prior window on the flux is drawn (Methods, input prior);
+# the Nordic 4.62 and Zheng-mean lines belonged to the abandoned hard window (2026-08-31).
+ceil <- data.frame(label = "upper bound of the prior", x = 8.70, col = "grey35", stringsAsFactors = FALSE)
 
-png(OUT, width = 2100, height = 1500, res = 200)
-op <- par(mar = c(5.5, 16, 5.2, 1.5), xaxs = "i")
+# Print size (0.95 x 6.53 in text width, 9 pt), so nothing prints below ~7 pt.
+png(OUT, width = 6.2, height = 4.96, units = "in", res = 300, pointsize = 9)
+op <- par(mar = c(3.4, 12.5, 1.0, 0.6), xaxs = "i", mgp = c(2.0, 0.5, 0), tcl = -0.3)
 XMAX <- 9.6
 n <- nrow(lit) + nrow(ours) + 1
 plot(NA, xlim = c(0, XMAX), ylim = c(0.3, n + 0.7), yaxt = "n", bty = "n",
-     xlab = expression("litter input to soil / NPP  (tC ha"^-1*" yr"^-1*")"), ylab = "")
+     xlab = expression("Litter input or NPP  (tC ha"^-1*" yr"^-1*")"), ylab = "")
 
 # ceilings first, behind everything
 for (i in seq_len(nrow(ceil))) {
-  abline(v = ceil$x[i], col = ceil$col[i], lwd = 2, lty = c(3, 2, 4)[i])
-  text(ceil$x[i], n + 0.55, ceil$label[i], srt = 90, adj = c(1, -0.35),
-       cex = 0.62, col = ceil$col[i], xpd = NA)
+  abline(v = ceil$x[i], col = ceil$col[i], lwd = 1.5, lty = 3)
+  text(ceil$x[i], n + 0.6, ceil$label[i], srt = 90, adj = c(1, -0.4), cex = 0.85, col = ceil$col[i], xpd = NA)
 }
 
 ypos <- n; labs <- c(); cols <- c()
 draw <- function(y, lo, mid, hi, col, pch = 19) {
   if (!is.na(lo)) segments(lo, y, hi, y, col = col, lwd = 3, lend = 1)
-  points(mid, y, pch = pch, col = col, cex = 1.4)
+  points(mid, y, pch = pch, col = col, cex = 1.2)
 }
 # literature
 for (i in seq_len(nrow(lit))) {
@@ -94,24 +93,16 @@ abline(h = ypos + 0.5, col = "grey80", lty = 1); ypos <- ypos - 0.6
 # ours
 for (i in seq_len(nrow(ours))) {
   draw(ypos, ours$lo[i], ours$mid[i], ours$hi[i], "#CC79A7", pch = 18)
-  labs <- c(labs, paste0("OURS: ", ours$model[i], "  (σ_input × J̄)"))
+  labs <- c(labs, ours$model[i])
   cols <- c(cols, "#CC79A7"); ypos <- ypos - 1
 }
 axis(2, at = seq(n, by = -1, length.out = nrow(lit)), labels = labs[seq_len(nrow(lit))],
-     las = 1, cex.axis = 0.72, tick = FALSE, line = -0.5)
+     las = 1, cex.axis = 0.9, tick = FALSE, line = -0.5)
 axis(2, at = seq(n - nrow(lit) - 0.6, by = -1, length.out = nrow(ours)),
-     labels = labs[-seq_len(nrow(lit))], las = 1, cex.axis = 0.72, tick = FALSE, line = -0.5)
+     labels = labs[-seq_len(nrow(lit))], las = 1, cex.axis = 0.9, tick = FALSE, line = -0.5)
 
-title_x <- grconvertX(0, "ndc", "user")   # left device edge, so long titles are not clipped
-mtext("Litter input to Finnish forest soil: inventory products vs independent NPP vs our calibration",
-      side = 3, line = 3.6, at = title_x, adj = 0, cex = 0.92, font = 2, xpd = NA)
-mtext("Bars are reported ranges (Gower, Zheng) or 95% intervals (L&H, ours).",
-      side = 3, line = 2.4, at = title_x, adj = 0, cex = 0.6, col = "grey30", xpd = NA)
-mtext("litter = NPP − biomass increment − stemwood removed − exudates.",
-      side = 3, line = 0.8, at = title_x, adj = 0, cex = 0.6, col = "grey30", xpd = NA)
-legend("bottomright", bty = "n", cex = 0.66,
-       legend = c("inventory product (NFI biomass × turnover)", "independent NPP (upper bound)",
-                  "our posterior effective flux"),
+legend("bottomright", bty = "n", cex = 0.85, inset = c(0.06, 0),
+       legend = c("inventory-based litter", "independent NPP", "calibrated effective input"),
        col = c("#009E73", "#56B4E9", "#CC79A7"), pch = c(19, 19, 18), lwd = 3, lty = 1)
 par(op); dev.off()
 cat("wrote", OUT, "\n")

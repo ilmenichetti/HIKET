@@ -92,11 +92,15 @@ foot()
 dev.off()
 
 # --- (2) six panels -------------------------------------------------------------
-png("manuscript/figures/F16_eqinit_trajectories_six.png", width = 11, height = 7, units = "in", res = 200)
-par(mfrow = c(2, 3), mar = c(3.2, 4.2, 2.2, 0.8), oma = c(1.6, 0, 2, 0), mgp = c(2.3, 0.6, 0), las = 1)
+# Print size (0.95 x 6.53 in, 9 pt); title and basis note live in the caption (fig:F16).
+png("manuscript/figures/F16_eqinit_trajectories_six.png", width = 6.2, height = 4.6, units = "in", res = 300, pointsize = 9)
+par(mfrow = c(2, 3), mar = c(3.0, 3.6, 1.6, 0.4), oma = c(0, 0, 0, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
+par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 yl <- range(c(unlist(lapply(MS, function(m) c(band(m, "prod"), band(m, "eq")))), obs$lo, obs$hi))
 for (m in FIG_MODELS) {
-  plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = expression("SOC (tC ha"^-1*")"), main = m)
+  k <- match(m, FIG_MODELS)
+  plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = if (k %in% c(1, 4)) expression("SOC (tC ha"^-1*")") else "")
+  mtext(sprintf("(%s) %s", letters[k], m), 3, 0.3, adj = 0, font = 2)
   if (!m %in% MS) { text(mean(range(yr)), mean(yl), "balanced-start arm\nnot available", col = "grey40"); next }
   proj_shade(yl)
   for (a in c("prod", "eq")) {
@@ -107,12 +111,9 @@ for (m in FIG_MODELS) {
   }
   draw_obs()
   if (m == FIG_MODELS[1])
-    legend("topleft", bty = "n", cex = 0.8, legend = ARM_LAB, lty = ARM_LTY, lwd = 2,
+    legend("topleft", bty = "n", cex = 0.85, legend = ARM_LAB, lty = ARM_LTY, lwd = 2,
            col = c(MODEL_COL[[m]], "grey25"))
 }
-mtext("Transient vs balanced start, per model (median and 90% posterior band of the national mean)",
-      outer = TRUE, line = 0.4, cex = 1.0, font = 2)
-foot()
 dev.off()
 
 # --- numbers ------------------------------------------------------------------

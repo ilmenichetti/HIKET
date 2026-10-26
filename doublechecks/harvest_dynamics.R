@@ -108,9 +108,10 @@ panel <- function(v, ylab, h = NULL, title) {
 png(file.path(OUT, "harvest_dynamics.png"), 6.2, 2.9, units = "in", res = 300, pointsize = 9)
 par(mfrow = c(1, 3), mar = c(3.3, 3.4, 1.8, 0.4), oma = c(0, 0, 0, 0), mgp = c(2.0, 0.5, 0),
     tcl = -0.3, col.axis = INK, col.lab = INK, fg = INK)
+par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 panel("J", "Litter input (tC/ha/yr)", title = "(a) Litter input")
+legend("topright", FIG_MODELS, col = MCOL, lwd = 2, bty = "n", cex = 0.8, ncol = 2, seg.len = 1.2, x.intersp = 0.5)
 panel("C_rel", "SOC / SOC before the cut", h = 1, title = "(b) Soil carbon")
-legend("bottomleft", FIG_MODELS, col = MCOL, lwd = 2, bty = "n", cex = 0.85, ncol = 2)
-panel("Rh", "Rh (tC/ha/yr)", title = "(c) Heterotrophic respiration")
+panel("Rh", "Rh (tC/ha/yr)", title = "(c) Respiration")
 dev.off()
 cat("Wrote", file.path(OUT, "harvest_dynamics.png"), "\n")

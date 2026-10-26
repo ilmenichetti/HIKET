@@ -66,7 +66,8 @@ rate_w <- t(sapply(1:2, function(k) {                  # weighted PAIRED rate + 
   wmean_ci(d, wwide$w) / (cm$year[k + 1] - cm$year[k])
 }))
 
-png("manuscript/figures/F3_mean_SOCalt.png", width = 8.6, height = 5.6, units = "in", res = 200)
+# Print size (0.85 x 6.53 in text width, 9 pt), so nothing prints below ~7 pt.
+png("manuscript/figures/F3_mean_SOCalt.png", width = 5.55, height = 4.05, units = "in", res = 300, pointsize = 9)
 par(mar = c(5.8, 5.2, 3.2, 1.6), mgp = c(3.0, 0.8, 0), las = 1,
     cex.axis = 1.15, cex.lab = 1.3)
 yl <- range(cm$lo, cm$hi, cw[, "lo"], cw[, "hi"]) + c(-3.0, 3.5)

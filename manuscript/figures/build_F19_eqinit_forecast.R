@@ -54,6 +54,7 @@ dot_panel <- function(v, xlab, main, scale = 1) {
 # basis note live in the caption (fig:S_forecast).
 png("manuscript/figures/F19_eqinit_forecast.png", width = 6.2, height = 6.0, units = "in", res = 300, pointsize = 9)
 layout(rbind(c(1, 1), c(2, 3)), heights = c(1, 1))
+par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 par(oma = c(0, 0, 0, 0), mgp = c(2.1, 0.5, 0), las = 1, tcl = -0.3)
 
 par(mar = c(3.3, 3.8, 1.8, 0.6))

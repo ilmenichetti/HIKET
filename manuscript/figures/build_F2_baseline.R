@@ -73,28 +73,27 @@ tj <- data.frame(year = as.integer(rownames(tj)), m = tj[, "m"], se = tj[, "se"]
 cm <- obs_campaigns(om, BAL)
 message("F2 ", basis_note(BAL), "; model run on ", sum(ok), " of ", length(pl), " plots")
 
-png("manuscript/figures/F2_baseline.png", width = 8.4, height = 5.2, units = "in", res = 200)
-par(mar = c(4.0, 4.6, 3.0, 1.2), mgp = c(2.6, 0.7, 0), las = 1, cex.axis = 1.05, cex.lab = 1.2, cex.main = 1.1)
+# Print size (0.75 x 6.53 in text width, 9 pt), so nothing prints below ~7 pt.
+png("manuscript/figures/F2_baseline.png", width = 4.9, height = 3.4, units = "in", res = 300, pointsize = 9)
+par(mar = c(3.2, 3.8, 0.6, 0.6), mgp = c(2.1, 0.5, 0), las = 1, tcl = -0.3)
 YL <- range(tj$m - tj$se, tj$m + tj$se, cm$lo, cm$hi); YL <- YL + c(-0.08, 0.42) * diff(YL)   # headroom for the legend
 plot(NA, xlim = c(min(tj$year), max(tj$year) + 2), ylim = YL, xlab = "Year",
      ylab = expression("Mean SOC across plots (tC ha"^-1*")"),
-     main = sprintf("%s before calibration: published parameters, balanced start", M))
+     main = "")
 mb <- approx(tj$year, tj$m, cm$year)$y
 lab_side <- ifelse(cm$year == max(cm$year), 2, 4)
 segments(cm$year, mb, cm$year, cm$m, col = "grey65", lwd = 8, lend = 1)
 text(cm$year, (mb + cm$m)/2, sprintf("%+.0f", mb - cm$m), pos = lab_side, offset = 0.5,
-     cex = 0.8, col = "grey35", font = 2)
+     cex = 0.9, col = "grey35", font = 2)
 polygon(c(tj$year, rev(tj$year)), c(tj$m - tj$se, rev(tj$m + tj$se)),
         col = adjustcolor("steelblue", 0.30), border = NA)
 lines(tj$year, tj$m, col = "steelblue", lwd = 2.6)
 arrows(cm$year, cm$lo, cm$year, cm$hi, angle = 90, code = 3, length = 0.05, col = "firebrick", lwd = 1.8)
-points(cm$year, cm$m, pch = 19, col = "firebrick", cex = 1.5)
+points(cm$year, cm$m, pch = 19, col = "firebrick", cex = 1.2)
 legend("topleft", inset = c(0.01, 0.02), bty = "n", cex = 0.85,
-       legend = c(sprintf("%s, published parameters, balanced start, product litter (mean +/- SE, %d plots)", M, sum(ok)),
-                  "Observed campaign mean +/- 95% CI",
-                  "Model-observation gap"),
+       legend = c(sprintf("%s, published, balanced start", M), "measured campaign mean", "gap"),
        pch = c(NA, 19, NA), lwd = c(2.6, NA, 7), col = c("steelblue", "firebrick", "grey65"))
-mtext(basis_note(BAL), side = 1, line = 2.9, adj = 0, cex = 0.6, col = "grey40")
+message("F2 ", basis_note(BAL))
 dev.off()
 cat("Wrote manuscript/figures/F2_baseline.png\n")
 cat(sprintf("Model: %.1f (1985) .. %.1f (2006) .. %.1f (2024);  obs %.1f -> %.1f -> %.1f;  gaps %s\n",
