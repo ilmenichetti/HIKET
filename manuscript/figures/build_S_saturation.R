@@ -55,7 +55,10 @@ for (m in FIG_MODELS) {
   ends <- c(2044L, 2064L, 2084L)                         # whole climate cycles
   rate <- function(M) { R <- (M[, match(ends, yr)] - M[, match(ends - W, yr)]) / W
     colnames(R) <- ends; R }
+  ann <- function(M) { py <- 2025:2084                     # annual sink, median over draws
+    apply(M[, match(py, yr)] - M[, match(py - 1L, yr)], 2, median) }
   Z[[m]] <- list(yr = yr, held = held, up = up, CE = CE, Rh = rate(held), Ru = rate(up),
+                 Ah = ann(held), Au = ann(up),
                  obs = obs_campaigns(om, bal), n = length(bal))
 }
 
@@ -72,13 +75,14 @@ num <- do.call(rbind, lapply(FIG_MODELS, function(m) {
     up_realised  = median((at(z$up, 2084) - at(z$held, 2084)) / ((MULT - 1) * z$CE)))
 }))
 print(num, digits = 3, row.names = FALSE)
+cat("annual sink range (medians):", round(range(unlist(lapply(Z, function(z) c(z$Ah, z$Au)))), 3), "\n")
 
 # === Figure ===
 # Drawn at the size it is printed (0.98 x the 6.53 in text width), so the type is the
 # type: pointsize 9, nothing below cex 0.8 (~7 pt). Title and basis note live in the
 # caption, not in the figure.
 png("manuscript/figures/S_saturation.png", width = 6.5, height = 8.4, units = "in", res = 300, pointsize = 9)
-layout(rbind(1:3, 4:6, 7), heights = c(1, 1, 1.25))
+layout(rbind(c(1,1,2,2,3,3), c(4,4,5,5,6,6), c(7,7,7,8,8,8)), heights = c(1, 1, 1.15))
 par(cex = 1)   # layout/mfrow shrink text to 0.66 (or 0.83 in 2x2); keep the 9 pt
 par(oma = c(0, 0, 0, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
 band <- function(x, Q, col) polygon(c(x, rev(x)), c(Q["lo", ], rev(Q["hi", ])),
@@ -108,30 +112,32 @@ for (k in seq_along(FIG_MODELS)) {
                round(100 * nk$head_2024) + 0, round(100 * nk$head_2084) + 0, 100 * nk$up_realised))
 }
 
-par(mar = c(2.6, 3.8, 2.0, 0.6))
-OFF <- setNames(seq(-3, 3, length.out = 6), FIG_MODELS)    # dodge, years
-cx  <- c(2034.5, 2054.5, 2074.5)                             # cycle mid-years
+# (g)/(h): the sink on a real time axis. Each 20-year climate repetition is ONE value per
+# model (whole repetitions, because the repeated climate alternates by decade), drawn as a
+# horizontal step across its own years with its 90% interval as a band -- the steps are
+# block averages, not samples of a smooth curve, so they are not joined. The annual sink was
+# tried behind the steps and DROPPED (2026-10-26): it swings -1.2..+1.4 with the repeated
+# climate and buries the block averages (0..0.45).
 S90 <- lapply(Z, function(z) list(h = q90(z$Rh), u = q90(z$Ru)))
-yl  <- range(0, 0.27, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
-plot(NA, xlim = c(2023, 2086), ylim = yl + c(-0.01, 0.02), xaxt = "n", xlab = "",
-     ylab = expression("Sink  (tC ha"^-1*" yr"^-1*")"),
-     main = "(g) Sink over each 20-year climate cycle", font.main = 1, cex.main = 1.1)
-axis(1, at = cx, labels = c("2025-44", "2045-64", "2065-84"), tick = FALSE)
-abline(h = 0, col = "grey35", lty = 2)
-abline(h = c(0.26, 0.12), col = "#AA3333", lty = 3)
-text(2023, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024"), adj = c(0, -0.4),
-     cex = 0.85, col = "#AA3333")
-for (m in FIG_MODELS) for (a in c("h", "u")) {
-  Q <- S90[[m]][[a]]; x <- cx + OFF[[m]] + if (a == "u") 0.5 else -0.5
-  lines(x, Q["med", ], col = MODEL_COL[[m]], lwd = 1.4, lty = if (a == "u") 2 else 1)
-  segments(x, Q["lo", ], x, Q["hi", ], col = adjustcolor(MODEL_COL[[m]], 0.6), lwd = 1.3)
-  points(x, Q["med", ], pch = 21, cex = 1.1, col = "grey20",
-         bg = if (a == "h") MODEL_COL[[m]] else "white")
+yl  <- range(-0.1, 0.5, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
+st  <- c(2024.5, 2044.5, 2064.5)
+sink_panel <- function(a, A, tag) {
+  plot(NA, xlim = c(2024, 2085), ylim = yl, xaxs = "i", xlab = "",
+       ylab = if (a == "h") expression("Sink  (tC ha"^-1*" yr"^-1*")") else "")
+  mtext(tag, 3, 0.4, adj = 0)
+  abline(v = st[-1], col = "grey85"); abline(h = 0, col = "grey35", lty = 2)
+  abline(h = c(0.26, 0.12), col = "#AA3333", lty = 3)
+  for (m in FIG_MODELS) { Q <- S90[[m]][[a]]
+    rect(st, Q["lo", ], st + 20, Q["hi", ], col = adjustcolor(MODEL_COL[[m]], 0.18), border = NA)
+    segments(st, Q["med", ], st + 20, Q["med", ], col = MODEL_COL[[m]], lwd = 2.4) }
 }
-legend("topright", bty = "n", cex = 0.85, ncol = 2,
-       legend = c(FIG_MODELS, "litter held at 2024", "litter +20% from 2025"),
-       col = c(MODEL_COL[FIG_MODELS], "grey20", "grey20"), lty = c(rep(1, 6), 1, 2),
-       pch = c(rep(NA, 6), 21, 21), pt.bg = c(rep(NA, 6), "grey50", "white"),
-       lwd = c(rep(2, 6), 1.4, 1.4))
+par(mar = c(2.6, 3.8, 2.0, 0.4))
+sink_panel("h", "Ah", "(g) Sink, litter held at 2024")
+text(2085, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024"), adj = c(1, -0.4),
+     cex = 0.8, col = "#AA3333")
+par(mar = c(2.6, 2.4, 2.0, 0.6))
+sink_panel("u", "Au", "(h) Sink, litter +20% from 2025")
+legend("topright", bty = "n", cex = 0.85, ncol = 2, legend = FIG_MODELS,
+       col = MODEL_COL[FIG_MODELS], lwd = 2.4, bg = "white")
 dev.off()
 cat("\nWrote manuscript/figures/S_saturation.png\n")
