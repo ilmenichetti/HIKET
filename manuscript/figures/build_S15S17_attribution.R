@@ -131,7 +131,7 @@ period_labels <- function(yl, cex = 0.72) invisible(NULL)        # one period on
 legend_top <- function(ncol = 4) {                                # ncol = 2 on single-panel figures
   op <- par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE); on.exit(par(op))
   plot.new()
-  legend("top", inset = 0.045, ncol = ncol, bty = "n", cex = 0.85, x.intersp = 0.5,
+  legend("top", inset = 0.005, ncol = ncol, bty = "n", cex = 0.9, x.intersp = 0.5,
          legend = c(COMP_LAB[COMP], "total"), border = NA,
          fill = c(COMP_COL[COMP], NA), density = c(ifelse(HATCH[COMP], 40, -1), -1), angle = 45,
          col = c(rep(NA, length(COMP)), "grey10"), lty = c(rep(NA, length(COMP)), 1),
@@ -150,26 +150,26 @@ draw <- function(W) {
   PS <- lapply(P_all, sm, W = W); ok <- stats::complete.cases(PS[[1]])
   yl <- range(unlist(lapply(PS, function(P) c(rowSums(pmax(P[ok, ], 0)), rowSums(pmin(P[ok, ], 0))))))
   yl <- yl + c(0, 0.08) * diff(yl)
-  png(sprintf("manuscript/figures/S15_attribution_by_model%s%s.png", sfx, SFX_J), width = 12.5, height = 7.6, units = "in", res = 200)
-  par(mfrow = c(2, 3), mar = c(3.4, 4.4, 2.2, 0.8), oma = c(1.6, 0, 4.2, 0), mgp = c(2.4, 0.6, 0), las = 1)
+  # Print size (0.95 x 6.53 in, 9 pt); title and basis note live in the caption (fig:S_attr_models).
+  png(sprintf("manuscript/figures/S15_attribution_by_model%s%s.png", sfx, SFX_J), width = 6.2, height = 4.8, units = "in", res = 300, pointsize = 9)
+  par(mfrow = c(2, 3), mar = c(3.0, 3.6, 1.6, 0.4), oma = c(0, 0, 2.4, 0), mgp = c(2.0, 0.5, 0), las = 1, tcl = -0.3)
   for (m in MODEL_ORDER) {
-    plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = ylab_sink, main = m)
+    plot(NA, xlim = range(yr), ylim = yl, xlab = "Year", ylab = if (match(m, MODEL_ORDER) %in% c(1, 4)) ylab_sink else "")
+    mtext(sprintf("(%s) %s", letters[match(m, MODEL_ORDER)], m), 3, 0.3, adj = 0, font = 2)
     if (!m %in% MS) { text(mean(range(yr)), 0, "not computed", col = "grey40"); next }
     periods(yl); stack_bars(yr[ok], PS[[m]][ok, , drop = FALSE])
     if (m == MS[1]) period_labels(yl, 0.62)
   }
-  mtext(sprintf("Where the modelled sink comes from, per model (%s)", wtxt), outer = TRUE, line = 2.6, cex = 1.1, font = 2)
-  mtext(note, side = 1, outer = TRUE, line = 0.4, cex = 0.62, col = "grey35", adj = 0.01)
+  message("S15 ", wtxt, "; ", note)
   legend_top(); dev.off()
   # --- S16: average, annual sink ----------------------------------------------------
   Ps <- sm(Pm, W); okm <- stats::complete.cases(Ps)
-  png(sprintf("manuscript/figures/S16_attribution_ensemble%s%s.png", sfx, SFX_J), width = 9, height = 5.6, units = "in", res = 200)
-  par(mar = c(4, 4.6, 2.4, 1), oma = c(1.6, 0, 5, 0), mgp = c(2.5, 0.6, 0), las = 1)
+  # Print size (0.85 x 6.53 in, 9 pt); title and basis note live in the caption (fig:S16).
+  png(sprintf("manuscript/figures/S16_attribution_ensemble%s%s.png", sfx, SFX_J), width = 5.55, height = 3.6, units = "in", res = 300, pointsize = 9)
+  par(mar = c(3.2, 3.8, 0.6, 0.6), oma = c(0, 0, 3.0, 0), mgp = c(2.2, 0.5, 0), las = 1, tcl = -0.3)
   yl1 <- range(c(rowSums(pmax(Ps[okm, ], 0)), rowSums(pmin(Ps[okm, ], 0)))); yl1 <- yl1 + c(0, 0.1) * diff(yl1)
-  plot(NA, xlim = range(yr), ylim = yl1, xlab = "Year", ylab = ylab_sink, main = sprintf("Annual sink (%s)", wtxt))
+  plot(NA, xlim = range(yr), ylim = yl1, xlab = "Year", ylab = ylab_sink, main = "")
   periods(yl1); stack_bars(yr[okm], Ps[okm, , drop = FALSE]); period_labels(yl1)
-  mtext(sprintf("%d-model average (%s)", length(MS), paste(MS, collapse = ", ")), outer = TRUE, line = 3.4, cex = 1.05, font = 2)
-  mtext(note, side = 1, outer = TRUE, line = 0.4, cex = 0.55, col = "grey35", adj = 0.01)
   legend_top(2); dev.off()
   cat(sprintf("Wrote S15_attribution_by_model%s.png and S16_attribution_ensemble%s.png\n", sfx, sfx))
 }
