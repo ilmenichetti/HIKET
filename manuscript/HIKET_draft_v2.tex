@@ -133,21 +133,57 @@ submission.}
 % -----------------------------------------------------------------------------
 \subsection{The general problem: soil carbon carries a long history}
 
+% ROUND 9 (2026-10-26, Lorenzo): opening made more dramatic -- why inventories matter first, then
+% why they report changes and not stocks, then that most of them model the change, then the
+% challenge that bridges to the memory of the soil.
 \subsubsection{Soil carbon change is usually modelled, not measured}
-\paragraph{\beat{opening}What inventories report}
-\subparagraph{The change of the stock, not the stock}
-\gap{Greenhouse gas inventories report the annual change of the soil carbon stock of forest
-land. The change is small against the stock and hard to measure directly.}
-\refs{\citet{Blujdea2015}}
-\subsubparagraph{Who measures, who models}
+\paragraph{\beat{opening}Why greenhouse gas inventories matter}
+\subparagraph{The inventories are the accounts of climate policy}
+\gap{Every party to the climate convention reports its emissions and removals each year, and
+the Paris Agreement rests on those reports: its transparency framework checks them and the
+global stocktake adds them up. National and EU targets are judged against the same numbers; in
+the EU the land sector carries a binding target of net removals for 2030 ($310$~Mt~CO$_2$~eq),
+divided among member states. Whether a country meets its climate target can therefore turn on
+the carbon its forests and soils are reported to take up.}
+\refs{\gap{to add to the bib:} UNFCCC Paris Agreement 2015 (Art.~4, 13, 14); EU Regulation
+2018/841 as amended by 2023/839; IPCC 2006 Guidelines vol.~4 and the 2019 Refinement}
+\subparagraph{The soil holds most of the carbon and most of the uncertainty}
+\gap{Forests take up about a quarter of fossil emissions \citep{Pan2011}; in boreal forests most
+of the carbon is stored in the soil, not in the trees. Because the stock is so large, a change of a
+fraction of a per cent per year is a flux of the same order as the reported sink, and the soil
+term is the least certain part of the forest balance. Source the uncertainty statement.}
+\refs{\citet{Pan2011}; \gap{a source for the soil term as the largest uncertainty of the land sector}}
+\subsubparagraph{An illustration, here or in the case}
+\gap{One national inventory reported its forest land turning from a sink into a source in 2021,
+largely because its modelled soil term moved \citep{Luke2025news,StatFin2025NID}. Decide: a
+one-line illustration here, or kept for the Finnish case (generic first, Finland as the case).}
+
+\paragraph{\beat{opening}What inventories report: the change, not the stock}
+\subparagraph{The atmosphere sees only the change}
+\gap{A stock that stays constant, however large, neither emits nor removes carbon; only its change
+exchanges carbon with the atmosphere. A national balance therefore counts the annual change of
+each carbon pool, and the change of the soil stock enters the balance next to fossil emissions,
+in the same units. The size of the stock matters for the balance only through how it changes.}
+\refs{\gap{IPCC 2006 vol.~4 ch.~2 (stock-difference and gain--loss methods)}; \citet{Blujdea2015}}
+\subparagraph{The change is small against the stock}
+\gap{The change is a few tenths of a per cent of the stock per year ($+0.26$ against about
+$70$~tC\,ha$^{-1}$ in our campaigns), against a spread between plots of about $\pm44\%$. Measuring
+it needs the same plots sampled again over decades.}
+
+\paragraph{\beat{opening}Most inventories model the change}
+\subparagraph{Who measures, who models}
 \gap{A few countries measure the change by repeated soil sampling on inventory plots (Sweden,
 Germany); most model it, Finland, Norway, Switzerland and Austria with Yasso07 (national
 inventory reports; \texttt{literature/10\_national\_soil\_terms}). Cite the 2025 Finnish report
 for the current term.}
 \refs{\citet{SwedenNID2026}; \citet{Gruneberg2014}; \citet{StatFin2025NID}; \citet{NorwayNID2025}; \citet{Didion2016}; \citet{Hernandez2017}; \citet{Jandl2014}}
+
 \paragraph{\beat{challenge}A modelled change depends on where the model starts}
-\gap{One sentence: whatever the model, the change it reports depends on the state it starts
-from, and that state is rarely measured.}
+\gap{A model computes the change as the difference between what enters the soil and what
+decomposes, and what decomposes depends on how much carbon the soil holds and in which pools: on
+the state the model starts from. That state is rarely measured. The change a model reports is
+then the soil's response to its own past, which is why the next question is how long the soil
+remembers.}
 
 \subsubsection{The soil remembers its past inputs}
 \paragraph{\beat{opening}Two timescales}
@@ -1435,8 +1471,8 @@ carbon, as the mean of Yasso07 and Yasso15 over the observations of each plot ($
 positive residual means that the soil holds more carbon than the models predict. One regression
 on the basal area of the stand in 1985 (a smooth curve) and on the fertility, texture and stone
 content of the site divides the predicted residual of each plot into parts, each measured from
-the average plot. Left: the part due to basal area, with its $95\%$ confidence band; the points
-are the plots. Right: the part due to each property of the site, with $95\%$ confidence
+the average plot. (a) The part due to basal area, with its $95\%$ confidence band; the points
+are the plots. (b) The part due to each property of the site, with $95\%$ confidence
 intervals, at the same basal area; the labels translate each part into soil carbon relative to
 the average plot. Basal area alone explains $42$ per cent of the residual variance, and the
 three properties of the site raise the share to $53$ per cent.}
@@ -1634,10 +1670,13 @@ plot set of the curves against Figure~\ref{fig:F16}.}}
 \hfig{F14_mrt_ridge}{0.95}{S_ridge}{\textbf{The trade-off between transit time and litter input
 on the likelihood surface.} For each version of Yasso, the best fit to the data attainable at each
 combination of mean transit time and input multiplier. The colours show the fit to the data
-alone, with the priors excluded, from blue at the best fit to red at the worst; the white contour
+alone, with the priors excluded, as the deficit of log-likelihood from the best fit found, from $0$
+(blue) to $25$ units or more (red); the white contour
 lines show the posterior, which combines the fit with the priors. The dashed line marks the
 published transit time and the white dot the posterior median. Cells visited fewer than five
-times are left blank: not visited, rather than impossible to fit.}
+times are left blank: not visited, rather than impossible to fit. (d)--(f) The share of the posterior
+variance of the transit time due to each group of parameters (first-order indices; a total above
+$100\%$ means that the groups interact).}
 \hfig{F9_auxiliary_sigmas}{0.95}{S_aux_sigmas}{\textbf{The two input parameters, read as physical
 quantities.} Left: the input multiplier expressed as an effective flux of litter carbon to the
 soil, the multiplier times the input the product supplies; the dotted line marks the flux of the
@@ -1681,8 +1720,8 @@ are ordered by basal area, whereas the measured stocks are not.}
 \hfig{harvest_dynamics}{0.95}{S_harvest}{\textbf{Litter input, soil carbon and heterotrophic
 respiration around a regeneration cut.} Mean over the $63$ calibrated plots with a dated
 regeneration cut in 1989--2004, aligned on the year of the cut, posterior-mean trajectories of
-the six models. Left: litter input (the product times the input multiplier); centre: soil carbon
-relative to the three years before the cut; right: heterotrophic respiration derived as input
+the six models. (a) Litter input (the product times the input multiplier); (b) soil carbon
+relative to the three years before the cut; (c) heterotrophic respiration derived as input
 minus change of stock (including leaching in Yasso15 and Yasso20). \gap{Keep?}}
 \hfig{rh_vs_stand_age}{0.95}{S_rh_age}{\textbf{Modelled heterotrophic respiration against stand
 age.} Respiration is the litter input times the posterior median input multiplier minus the

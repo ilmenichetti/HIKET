@@ -218,26 +218,27 @@ ribbon <- function(d, keep, c0){ i<-d$year %in% keep
 ## ylim is COMPUTED, never hardcoded -- the old ylim=c(55,114) sat above the anchored
 ## spin-up (which starts near 20 tC/ha), so the initialization was drawn off-scale and
 ## the panel silently showed nothing of the thing the figure is named after.
-png("manuscript/figures/F4_initialization.png", width = 12.6, height = 8.6, units = "in", res = 200)
+# Print size (0.90 x 6.53 in text width, 9 pt), so nothing prints below ~7 pt.
+png("manuscript/figures/F4_initialization.png", width = 5.9, height = 4.9, units = "in", res = 300, pointsize = 9)
 # Two stacked panels sharing one x axis: SOC (2/3) over input flux (1/3). Ticks and the
 # "Year" label live on the LOWER panel only; the panels touch (top has bottom mar 0,
 # bottom has top mar 0), so the shared axis reads as one.
 layout(matrix(1:2, ncol = 1), heights = c(2, 1))
-par(mar = c(0, 4.8, 2.6, 4.4), mgp = c(2.8, 0.7, 0), las = 1)
+par(mar = c(0, 4.2, 1.2, 4.6), mgp = c(2.5, 0.55, 0), las = 1, tcl = -0.3)
 
 yl <- range(unlist(lapply(names(rid), function(m)
         c(spin[[m]]$m, stored[[m]]$lo, stored[[m]]$hi))), cm$lo, cm$hi, sy$lo, sy$hi, finite = TRUE)
 yl <- yl + c(-1, 1) * 0.04 * diff(yl)
 
 plot(NA, xlim = c(1917, 2084), ylim = yl, xlab = "", xaxt = "n",
-     ylab = "Mean SOC across plots (tC/ha)", main = "")
+     ylab = expression("Mean SOC  (tC ha"^-1*")"), main = "")
 rect(1917, yl[1], 1985, yl[2], col = adjustcolor("grey85",  0.40), border = NA)
 rect(2024, yl[1], 2084, yl[2], col = adjustcolor("#9ec7e8", 0.22), border = NA)
 abline(v = c(1985, 2024), col = "grey60", lty = 2)
 ytop <- yl[2] - 0.03 * diff(yl)
-text(1951,   ytop, "initialization", cex = 0.8, col = "grey45", font = 3)
-text(2004.5, ytop, "calibration",    cex = 0.8, col = "grey45", font = 3)
-text(2054,   ytop, "forecast",       cex = 0.8, col = "grey45", font = 3)
+text(1951,   ytop, "initialization", cex = 0.9, col = "grey45", font = 3)
+text(2004.5, ytop, "calibration",    cex = 0.9, col = "grey45", font = 3)
+text(2054,   ytop, "forecast",       cex = 0.9, col = "grey45", font = 3)
 
 for (m in names(rid)) {
   ribbon(stored[[m]], 1985:2084, col[m])
@@ -248,25 +249,27 @@ arrows(sy$year, sy$lo, sy$year, sy$hi, angle = 90, code = 3, length = 0.03, col 
 points(sy$year, sy$m, pch = 21, bg = "white", col = SUBYEAR_COL, cex = 0.95, lwd = 1.6)
 lines(cm$year, cm$m, col = "black", lwd = 3)
 arrows(cm$year, cm$lo, cm$year, cm$hi, angle = 90, code = 3, length = 0.04, col = "firebrick", lwd = 2)
-points(cm$year, cm$m, pch = 21, bg = "firebrick", col = "black", cex = 1.5)
-text(cm$year, cm$lo, sprintf("%s\n%d", CAMPAIGN_LABELS, yc), pos = c(2,1,1), offset = 0.9,
-     cex = 0.7, col = "firebrick")
-legend("bottomright", bty = "n", cex = 0.72, pch = c(21, 21), pt.bg = c("firebrick", "white"),
-       col = c("black", SUBYEAR_COL), pt.cex = c(1.5, 0.95), pt.lwd = c(1, 1.6),
+points(cm$year, cm$m, pch = 21, bg = "firebrick", col = "black", cex = 1.3)
+# campaign names in the empty band above the curves (below the curves they collide
+# with the VMI8 sampling-year bars and with each other at print size)
+segments(cm$year, cm$hi, cm$year, yl[2] - 0.17 * diff(yl), col = adjustcolor("firebrick", 0.35), lty = 3)
+text(cm$year, yl[2] - 0.12 * diff(yl), sprintf("%s\n%d", CAMPAIGN_LABELS, yc), cex = 0.85, col = "firebrick")
+legend("bottomright", bty = "n", cex = 0.85, pch = c(21, 21), pt.bg = c("firebrick", "white"),
+       col = c("black", SUBYEAR_COL), pt.cex = c(1.3, 0.95), pt.lwd = c(1, 1.6),
        legend = c("campaign mean", "VMI8 sampling year (plot subset)"))
 
 # per-model labels at the right edge, nudged apart where they coincide
 lab  <- sort(sapply(stored, function(d) d$m[d$year == 2084]), decreasing = TRUE)
-laby <- lab; mind <- 0.032 * diff(yl)
+laby <- lab; mind <- 0.058 * diff(yl)
 for (k in 2:length(laby)) if (laby[k-1] - laby[k] < mind) laby[k] <- laby[k-1] - mind
-text(2084, laby, names(lab), pos = 4, cex = 0.7, col = col[names(lab)], font = 2, xpd = NA)
+text(2084, laby, names(lab), pos = 4, cex = 0.85, col = col[names(lab)], font = 2, xpd = NA)
 
 ## ---- LOWER PANEL: the litter input flux driving the panel above -------------
-par(mar = c(4.2, 4.8, 0, 4.4))
+par(mar = c(3.2, 4.2, 0, 4.6), mgp = c(2.0, 0.55, 0))
 fl <- range(unlist(lapply(flux, function(d) c(d$lo, d$hi))), finite = TRUE)
 fl <- fl + c(-1, 1) * 0.06 * diff(fl)
 plot(NA, xlim = c(1917, 2084), ylim = fl, xlab = "Year",
-     ylab = expression("Mean litter input (tC ha"^-1*" yr"^-1*")"), main = "")
+     ylab = expression("Input  (tC ha"^-1*" yr"^-1*")"), main = "")
 rect(1917, fl[1], 1985, fl[2], col = adjustcolor("grey85",  0.40), border = NA)
 rect(2024, fl[1], 2084, fl[2], col = adjustcolor("#9ec7e8", 0.22), border = NA)
 abline(v = c(1985, 2024), col = "grey60", lty = 2)
@@ -277,7 +280,7 @@ for (m in names(rid)) {
 }
 for (m in names(rid)) lines(flux[[m]]$year, flux[[m]]$m, col = col[m], lwd = 2)
 # Name the assumption on the figure: the 1917-1985 segment is not data.
-text(1951, fl[1] + 0.06 * diff(fl), "growing-stock ramp (assumed)",
-     cex = 0.68, col = "grey40", font = 3)
+text(1951, fl[2] - 0.10 * diff(fl), "shape after Liski et al. (2006), assumed",
+     cex = 0.85, col = "grey40", font = 3)
 dev.off()
 cat(sprintf("\nstart mean=%.1f; gap=%+.1f; obs rate=%.2f mod rate=%.2f\nWrote F4_initialization.png\n", mstart, gap, obs_rate, mod_rate))

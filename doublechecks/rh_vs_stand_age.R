@@ -94,28 +94,26 @@ pt <- REF |> filter(year %% 5 == 0, !is.na(fert))
 set.seed(2025); pt <- pt[sample(nrow(pt)), ]
 YL <- c(0, 1300)
 
-png(file.path(OUT, "rh_vs_stand_age.png"), 13.5, 5.6, units = "in", res = 150)
+# Print size (0.95 x 6.53 in, 9 pt); the definitions live in the manuscript caption (fig:S_rh_age).
+png(file.path(OUT, "rh_vs_stand_age.png"), 6.2, 3.2, units = "in", res = 300, pointsize = 9)
 layout(matrix(1:2, 1), widths = c(1.15, 1))
-par(mar = c(4.2, 4.6, 3, 1), oma = c(1.6, 0, 0, 0), mgp = c(2.5, 0.6, 0), tcl = -0.3,
+par(mar = c(3.3, 3.6, 1.8, 0.4), oma = c(0, 0, 0, 0), mgp = c(2.1, 0.5, 0), tcl = -0.3,
     col.axis = INK, col.lab = INK, fg = INK)
 plot(NA, xlim = c(0, 210), ylim = YL, bty = "l", xlab = "Stand age (yr)",
      ylab = expression(R[h]~"(g C"~m^-2~a^-1*")"))
 points(pt$age, pt$Rh, pch = 21, bg = adjustcolor(tcol(pt$T), 0.85), col = adjustcolor(INK, 0.5),
        cex = ifelse(pt$fert == "high", 1.15, 0.7), lwd = 0.4)
-mtext("a) Mean of Yasso07 and Yasso15, one point per plot every 5 years (1990-2020)", 3, 0.6, adj = 0, cex = 0.8, font = 2)
+mtext("(a) Yasso07 and Yasso15, plots", 3, 0.5, adj = 0, cex = 0.95, font = 2)
 legend("topright", c("-2", "0", "2", "4", "6"), pt.bg = tcol(c(-2, 0, 2, 4, 6)), pch = 21,
-       title = "Tair (°C)", bty = "n", cex = 0.8, col = INK)
+       title = "Tair (°C)", bty = "n", cex = 0.85, col = INK)
 legend(160, 860, c("High (1-3)", "Low (4-5)"), pch = 21, pt.cex = c(1.15, 0.7), pt.bg = "grey80", col = INK,
-       title = "Fertility", bty = "n", cex = 0.8)
+       title = "Fertility", bty = "n", cex = 0.85)
 plot(NA, xlim = c(0, 210), ylim = YL, bty = "l", xlab = "Stand age (yr)",
      ylab = expression(R[h]~"(g C"~m^-2~a^-1*")"))
 for (m in FIG_MODELS) { s <- BIN[BIN$model == m, ]
   polygon(c(s$age, rev(s$age)), c(s$q1, rev(s$q3)), col = adjustcolor(MCOL[[m]], 0.08), border = NA)
   lines(s$age, s$Rh, col = MCOL[[m]], lwd = 2.2) }
-legend("topright", FIG_MODELS, col = MCOL, lwd = 2.2, bty = "n", cex = 0.8, ncol = 2)
-mtext("b) Six models: binned median and interquartile range", 3, 0.6, adj = 0, cex = 0.8, font = 2)
-mtext(paste("Modelled Rh = litter input x posterior median sigma_input - annual change in posterior-mean SOC (Yasso15/20 include leaching).",
-            "Stand age = tally age 1985 + years, reset at dated regeneration cuts after 1985. Mineral soils only."),
-      1, 0.4, outer = TRUE, cex = 0.62, col = MUTED)
+legend("topright", FIG_MODELS, col = MCOL, lwd = 2, bty = "n", cex = 0.85, ncol = 2)
+mtext("(b) Six models, binned median and IQR", 3, 0.5, adj = 0, cex = 0.95, font = 2)
 dev.off()
 cat("Wrote", file.path(OUT, "rh_vs_stand_age.png"), "\n")

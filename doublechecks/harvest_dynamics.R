@@ -98,22 +98,19 @@ INK <- "#3d3d3a"; GRID <- "#e6e5df"; MUTED <- "#8a8983"
 MCOL <- c(SP1 = "#8a8983", TP2 = "#1baf7a", TP3 = "#0b6a48",
           Yasso07 = "#86b6ef", Yasso15 = "#2a78d6", Yasso20 = "#0d366b")
 panel <- function(v, ylab, h = NULL, title) {
-  yl <- range(S[[v]]); plot(NA, xlim = range(REL), ylim = yl, bty = "l", xlab = "Years since regeneration cut",
+  yl <- range(S[[v]]); plot(NA, xlim = range(REL), ylim = yl, bty = "l", xlab = "Years since the cut",
                             ylab = ylab)
   abline(v = 0, col = GRID, lwd = 2); if (!is.null(h)) abline(h = h, col = GRID, lwd = 2)
   for (m in FIG_MODELS) { s <- S[S$model == m, ]; lines(s$rel, s[[v]], col = MCOL[[m]], lwd = 2.2) }
-  mtext(title, 3, 0.4, adj = 0, cex = 0.8, font = 2)
+  mtext(title, 3, 0.4, adj = 0, cex = 0.95, font = 2)
 }
-png(file.path(OUT, "harvest_dynamics.png"), 13, 4.6, units = "in", res = 150)
-par(mfrow = c(1, 3), mar = c(4.2, 4.4, 2.6, 1), oma = c(1.6, 0, 1.6, 0), mgp = c(2.4, 0.6, 0),
+# Print size (0.95 x 6.53 in, 9 pt); the provenance lines live in the manuscript caption (fig:S_harvest).
+png(file.path(OUT, "harvest_dynamics.png"), 6.2, 2.9, units = "in", res = 300, pointsize = 9)
+par(mfrow = c(1, 3), mar = c(3.3, 3.4, 1.8, 0.4), oma = c(0, 0, 0, 0), mgp = c(2.0, 0.5, 0),
     tcl = -0.3, col.axis = INK, col.lab = INK, fg = INK)
-panel("J", "Litter input (tC/ha/yr)", title = "Litter input (Tupek x sigma_input)")
-panel("C_rel", "SOC relative to the 3 pre-cut years", h = 1, title = "Modelled soil carbon")
-legend("bottomleft", FIG_MODELS, col = MCOL, lwd = 2.2, bty = "n", cex = 0.85, ncol = 2)
-panel("Rh", "Rh = input - stock change (tC/ha/yr)", title = "Derived heterotrophic respiration")
-mtext(sprintf("Mean over the same %d calibrated plots in every year (dated regeneration cut 1989-2004); posterior-mean trajectories",
-              S$n[1]), 3, 0.2, outer = TRUE, cex = 0.8)
-mtext("Sources: NFI 1990/1995 stand records, MUSTIKKA 2021-23, Metsäkeskus declarations (filing year). Rh includes leaching for Yasso15/20.",
-      1, 0.4, outer = TRUE, cex = 0.65, col = MUTED)
+panel("J", "Litter input (tC/ha/yr)", title = "(a) Litter input")
+panel("C_rel", "SOC / SOC before the cut", h = 1, title = "(b) Soil carbon")
+legend("bottomleft", FIG_MODELS, col = MCOL, lwd = 2, bty = "n", cex = 0.85, ncol = 2)
+panel("Rh", "Rh (tC/ha/yr)", title = "(c) Heterotrophic respiration")
 dev.off()
 cat("Wrote", file.path(OUT, "harvest_dynamics.png"), "\n")

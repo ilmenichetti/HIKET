@@ -36,9 +36,9 @@ d <- data.frame(
   r  = X$resid, ba = X$wb.ppa_kaikki_85,
   fert  = factor(c("Fertile (1-2)", "Fertile (1-2)", "Mesic (3)", "Sub-xeric (4)", "Xeric (5)")[ft],
                  levels = c("Fertile (1-2)", "Mesic (3)", "Sub-xeric (4)", "Xeric (5)")),
-  tex   = factor(ifelse(ml %in% c(3, 5, 6), "Coarse (sand, gravel, coarse moraine)",
+  tex   = factor(ifelse(ml %in% c(3, 5, 6), "Coarse (sand, gravel, moraine)",
                  ifelse(ml == 4, "Fine moraine", ifelse(ml %in% 7:9, "Fine (fine sand, silt, clay)", NA))),
-                 levels = c("Coarse (sand, gravel, coarse moraine)", "Fine moraine", "Fine (fine sand, silt, clay)")),
+                 levels = c("Coarse (sand, gravel, moraine)", "Fine moraine", "Fine (fine sand, silt, clay)")),
   stone = cut(st, c(-Inf, 20, 50, Inf), labels = c("< 20 %", "20-50 %", "> 50 %")))
 d <- d[complete.cases(d), ]
 m <- lm(r ~ ns(ba, 3) + fert + tex + stone, d)
@@ -87,13 +87,16 @@ rowcol <- unlist(lapply(c("fert", "tex", "stone"), function(v) {
   if (DARK_FIRST[[v]]) rev(h) else h }))
 blockcol <- c(fert = HUE$fert[3], tex = HUE$tex[2], stone = HUE$stone[3])
 pct <- function(x) sprintf("%+d%%", round(100 * (exp(x) - 1)))
-png(file.path(OUT, "residuals_stand_and_soil.png"), 14.5, 7.4, units = "in", res = 150)
-layout(matrix(1:2, 1), widths = c(1, 1.15))
-par(oma = c(3.2, 0, 0, 0))
-par(mgp = c(2.4, 0.6, 0), tcl = -0.3, col.axis = INK, col.lab = INK, fg = INK)
+# Drawn at print size (0.95 x 6.53 in text width, 9 pt): the two panels STACKED,
+# because the soil panel's row labels need the full width. The long explanation
+# lives in the manuscript caption (fig:F11sas), not in the figure.
+png(file.path(OUT, "residuals_stand_and_soil.png"), 6.2, 7.6, units = "in", res = 300, pointsize = 9)
+layout(matrix(1:2, 2), heights = c(1, 1.25))
+par(oma = c(0, 0, 0, 0))
+par(mgp = c(2.2, 0.55, 0), tcl = -0.3, col.axis = INK, col.lab = INK, fg = INK)
 
 # left: stand
-par(mar = c(4.6, 5.4, 4.6, 1.2))
+par(mar = c(3.6, 4.6, 2.6, 1))
 # partial residuals: model residual + the plot's own basal-area term (centred on
 # the data mean, i.e. the same deviation-from-average construction as the curve)
 # partial residuals: regression residual + the plot's own basal-area part
@@ -108,14 +111,13 @@ polygon(c(grid, rev(grid)), c(bacurve[, "est"] - 1.96 * bacurve[, "se"], rev(bac
 lines(grid, bacurve[, "est"], col = INK, lwd = 3)
 # direction notes on the left, outside the axis title (text runs upward,
 # so the arrows point up/down), split at zero
-mtext("\u2190 overpredicting", 2, 3.6, at = -0.1, adj = 1, cex = 0.75, col = MUTED)
-mtext("underpredicting \u2192", 2, 3.6, at = 0.1, adj = 0, cex = 0.75, col = MUTED)
-mtext("Basal-area part of the residual (stand in 1985)", 3, 2.2, adj = 0, font = 2)
-mtext(sprintf("Curve ± 95%% CI; points: plots (partial residuals). Basal area alone R² %.2f",
-              R2["ba"]), 3, 1.0, adj = 0, cex = 0.72)
+mtext("\u2190 over", 2, 3.3, at = -0.05, adj = 1, cex = 0.85, col = MUTED)
+mtext("under \u2192", 2, 3.3, at = 0.05, adj = 0, cex = 0.85, col = MUTED)
+mtext(sprintf("(a) The stand in 1985   (basal area alone: R\u00b2 %.2f)", R2["ba"]), 3, 0.8, adj = 0, font = 2,
+      at = grconvertX(0.01, "ndc", "user"))
 
 # right: soil dot-and-whisker
-par(mar = c(5.2, 17, 4.6, 3.5))
+par(mar = c(4.2, 15.5, 2.6, 3.2))
 gap <- 0.8; y <- numeric(nrow(rows)); pos <- 0; yv <- c()
 for (v in c("fert", "tex", "stone")) { k <- which(rows$var == v)
   y[k] <- pos - seq_along(k) + 1; yv[v] <- max(y[k]) + 0.75; pos <- min(y[k]) - 1 - gap }
@@ -127,15 +129,12 @@ abline(v = 0, col = GRID, lwd = 2)
 for (v in names(yv)[-1]) abline(h = max(y[rows$var == v]) + (1 + gap) / 2 + 0.1, col = GRID, lwd = 1)
 segments(lo, y, hi, y, col = rowcol, lwd = 2.5)
 points(rows$est, y, pch = 21, bg = rowcol, col = "white", cex = 1.9, lwd = 1.5)
-axis(2, y, sprintf("%s  (n %d)", rows$cls, rows$n), las = 1, tick = FALSE, cex.axis = 0.8)
-for (v in names(yv)) mtext(VAR_LAB[[v]], 2, 16, at = yv[[v]], las = 1, adj = 0, font = 2, cex = 0.9, col = blockcol[[v]])
-text(hi, y, pct(rows$est), pos = 4, cex = 0.72, col = INK, xpd = NA)
-mtext("Soil parts of the residual, at the same basal area", 3, 2.2, adj = 0, font = 2)
-mtext(sprintf("Each class ± 95%% CI; a plot takes one row from each block.\nSoil raises R² %.2f -> %.2f. Labels: SOC relative to the average plot.",
-              R2["ba"], R2["full"]), 3, 0.3, adj = 0, cex = 0.72)
-mtext("\u2190 overpredicting", 1, 3.8, at = XL[1], adj = 0, cex = 0.7, col = MUTED)
-mtext("underpredicting \u2192", 1, 3.8, at = XL[2], adj = 1, cex = 0.7, col = MUTED)
-mtext(sprintf("Residual = log(observed / predicted SOC), plot mean of Yasso07 and Yasso15 (n = %d). Linear regression on 1985 basal area (spline) + fertility + texture + stoniness, so that\npredicted residual = average (%.2f) + basal-area part (left) + fertility, texture and stoniness parts (right, one row each). Positive = models predict too little SOC.",
-              nrow(d), mean(d$r)), 1, 0.2, outer = TRUE, cex = 0.72, col = INK, adj = 0.03)
+axis(2, y, sprintf("%s  (n %d)", rows$cls, rows$n), las = 1, tick = FALSE, cex.axis = 0.9)
+for (v in names(yv)) mtext(VAR_LAB[[v]], 2, 14.8, at = yv[[v]], las = 1, adj = 0, font = 2, cex = 0.95, col = blockcol[[v]])
+text(hi, y, pct(rows$est), pos = 4, cex = 0.85, col = INK, xpd = NA)
+mtext(sprintf("(b) The soil, at the same basal area   (R\u00b2 %.2f \u2192 %.2f)", R2["ba"], R2["full"]),
+      3, 0.8, adj = 0, font = 2, at = grconvertX(0.01, "ndc", "user"))
+mtext("\u2190 overpredicting", 1, 3.0, at = XL[1], adj = 0, cex = 0.85, col = MUTED)
+mtext("underpredicting \u2192", 1, 3.0, at = XL[2], adj = 1, cex = 0.85, col = MUTED)
 dev.off()
 cat("Wrote", file.path(OUT, "residuals_stand_and_soil.png"), "\n")

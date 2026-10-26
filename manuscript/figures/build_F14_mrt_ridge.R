@@ -119,9 +119,11 @@ for (M in names(RID)) {
 }
 
 # =============================================================================
-png("manuscript/figures/F14_mrt_ridge.png", width = 13.2, height = 9.0, units = "in", res = 200)
+# Print size (0.95 x 6.53 in text width, 9 pt). The per-panel subtitles moved to the
+# manuscript caption (fig:S_ridge), which now states the colour range.
+png("manuscript/figures/F14_mrt_ridge.png", width = 6.2, height = 4.9, units = "in", res = 300, pointsize = 9)
 layout(matrix(1:6, 2, 3, byrow = TRUE), heights = c(1.35, 1))
-par(mar = c(4.4, 4.8, 5.0, 1.2), mgp = c(2.8, 0.7, 0), las = 1)
+par(mar = c(3.3, 3.6, 1.8, 0.5), mgp = c(2.1, 0.5, 0), las = 1, tcl = -0.3)
 # Kovesi bgymr diverging rainbow, REVERSED: BLUE = best fit, through green/yellow, to
 # RED = worst. Chosen over viridis for CONTRAST -- viridis is monotone in lightness, and
 # most of this surface sits within a few ll units of the best, so a lightness-only ramp
@@ -210,31 +212,24 @@ for (M in names(RID)) {                       # --- row 1: the ridge ---
                                      grid.list = list(x = fx, y = fy))$z
 
   image(fx, fy, Zi2, col = pal, zlim = c(best - DLL, best),
-        xlab = "intrinsic MTT (yr)", ylab = expression(sigma[input]),
+        xlab = "Intrinsic MTT (yr)", ylab = expression(sigma[input]), cex.lab = 1.15,
         main = "", cex.main = 1.0)
   box()
   contour(MASS::kde2d(d$mrt, d$si, n = 60), add = TRUE, drawlabels = FALSE,
           col = adjustcolor("white", 0.75), lwd = 1.3, nlevels = 5)
-  points(median(d$mrt), median(d$si), pch = 21, bg = "white", col = "black", cex = 1.5, lwd = 2)
+  points(median(d$mrt), median(d$si), pch = 21, bg = "white", col = "black", cex = 1.3, lwd = 1.6)
   abline(v = PUB[[M]], lty = 2, lwd = 2, col = "grey15")
-  title(main = sprintf("%s  --  best attainable fit over (MTT, sigma_input)", M),
-        line = 2.65, cex.main = 1.05)
-  mtext(sprintf("posterior reaches %.1f-%.1f yr;  published %.1f (dashed)",
-                min(d$mrt), max(d$mrt), PUB[[M]]), side = 3, line = 1.45, cex = 0.60, col = "grey35")
-  mtext(sprintf("colour = log-likelihood deficit: 0 (blue = best fit) to %d+ (red)", DLL),
-        side = 3, line = 0.45, cex = 0.58, col = "grey45")
+  mtext(sprintf("(%s) %s", letters[match(M, names(RID))], M), 3, 0.4, adj = 0, font = 2, cex = 1.0)
 }
 
-par(mar = c(4.4, 4.8, 3.4, 1.2))
+par(mar = c(3.0, 3.6, 1.8, 0.5))
 for (M in names(RID)) {                       # --- row 2: variance of MRT ---
   v <- 100 * VAR[[M]]; v <- v[is.finite(v)]
   bp <- barplot(v, col = GC[names(v)], border = NA, ylim = c(0, max(115, max(v)*1.15)),
-                ylab = "share of posterior MTT variance (%)",
-                main = sprintf("%s  --  what makes MTT vary", M), cex.main = 1.0, cex.names = 0.95)
+                ylab = "Share of MTT variance (%)", cex.names = 0.85)
+  mtext(sprintf("(%s) %s", letters[3 + match(M, names(RID))], M), 3, 0.4, adj = 0, font = 2, cex = 1.0)
   abline(h = 100, lty = 3, col = "grey50")
-  text(bp, v, sprintf("%.0f%%", v), pos = 3, cex = 0.85, font = 2)
-  mtext(sprintf("first-order indices, total %.0f%%  (>100%% = the groups interact)", sum(v)),
-        side = 3, line = 0.3, cex = 0.62, col = "grey35")
+  text(bp, v, sprintf("%.0f%%", v), pos = 3, cex = 0.85, font = 2, xpd = NA)
 }
 dev.off()
 cat("\nWrote manuscript/figures/F14_mrt_ridge.png\n")
