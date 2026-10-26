@@ -5,7 +5,7 @@
   at alpha 0.3 with solid borders. Still "Promote?".
 - **Introduction opening restructured** (`% ROUND 9`): inventories matter → report changes, not stocks → mostly modelled →
   start state → soil memory. ⬜ bib: Paris Agreement, EU 2018/841 (+2023/839), IPCC 2006 vol. 4; ⬜ source "soil term =
-  largest uncertainty"; ⬜ Finnish 2021 sink→source example: opening or case?
+  largest uncertainty"; ✅ Finnish 2021 example: CUT from the opening, stays in the case. ⭐ Also 2026-10-26: Fig S2 (S_soc_by_region) — far North loses SOC; paper stays national, one sentence by Fig 2; reply to Aleksi: doublechecks/ghgi_steady_state_vs_obs.R (inventory run matches nationally only by cancellation).
 - **All draft-v2 figures redrawn at print size** (memory `figures-print-size-convention`). ⬜ offered: benchmark alpha
   treatment in F17, F19, attribution figures.
 
