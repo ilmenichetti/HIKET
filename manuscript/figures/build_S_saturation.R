@@ -118,11 +118,16 @@ for (k in seq_along(FIG_MODELS)) {
 # series) and steps on a time axis (cluttered); bars say "one value per block" directly.
 S90 <- lapply(Z, function(z) list(h = q90(z$Rh), u = q90(z$Ru)))
 yl  <- range(-0.1, 0.55, unlist(lapply(S90, function(s) c(s$h[c("lo", "hi"), ], s$u[c("lo", "hi"), ]))))
+BENCH <- c("SP1", "TP2", "TP3")
+BAR_FILL   <- ifelse(FIG_MODELS %in% BENCH, adjustcolor(MODEL_COL[FIG_MODELS], 0.5), MODEL_COL[FIG_MODELS])
+BAR_BORDER <- ifelse(FIG_MODELS %in% BENCH, MODEL_COL[FIG_MODELS], NA)
 sink_panel <- function(a, tag, first) {
   M  <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["med", ])          # 3 blocks x 6 models
   LO <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["lo", ])
   HI <- sapply(FIG_MODELS, function(m) S90[[m]][[a]]["hi", ])
-  bp <- barplot(t(M), beside = TRUE, col = MODEL_COL[FIG_MODELS], border = NA, ylim = yl,
+  # the simple benchmarks (SP1/TP2/TP3) at half opacity with a solid border, so they read as
+  # benchmarks, not as alternative estimates of the Finnish sink
+  bp <- barplot(t(M), beside = TRUE, col = BAR_FILL, border = BAR_BORDER, lwd = 1, ylim = yl,
                 names.arg = c("2025-44", "2045-64", "2065-84"), space = c(0, 1.2),
                 ylab = if (first) expression("Sink  (tC ha"^-1*" yr"^-1*")") else "")
   abline(h = 0, col = "grey35")
@@ -138,6 +143,6 @@ text(max(bp) + 0.6, c(0.26, 0.12), c("observed 1985-2024", "observed 2006-2024")
 par(mar = c(2.6, 2.4, 2.0, 0.6))
 sink_panel("u", "(h) Sink, litter +20% from 2025", FALSE)
 legend("topright", bty = "n", cex = 0.85, ncol = 2, legend = FIG_MODELS,
-       fill = MODEL_COL[FIG_MODELS], border = NA)
+       fill = BAR_FILL, border = ifelse(is.na(BAR_BORDER), "white", BAR_BORDER))
 dev.off()
 cat("\nWrote manuscript/figures/S_saturation.png\n")
