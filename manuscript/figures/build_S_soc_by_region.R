@@ -1,5 +1,7 @@
 # =============================================================================
-# F3_mean_SOCalt_by_region.R   (2026-10-26)
+# build_S_soc_by_region.R   (2026-10-26)
+#
+# Supplement figure fig:S_soc_by_region (draft v2, Supplement S1 Data).
 #
 # Fig 2 of draft v2 (manuscript/figures/build_F3_mean_SOCalt.R) split into South and
 # North. Prompted by doublechecks/ghgi_steady_state_vs_obs.R: the far north LOSES
@@ -13,8 +15,11 @@
 # plot has the same weight, so each panel is both the plot mean and the area mean.
 # Shared y-axis span so the two slopes compare by eye.
 #
-# Run from repo root:  Rscript doublechecks/F3_mean_SOCalt_by_region.R
-# Output: doublechecks/figures/F3_mean_SOCalt_by_region.png
+# Decision (Lorenzo, 2026-10-26): the paper stays national -- no figure is split by region;
+# this one figure and one sentence by Fig 2 carry the regional difference.
+#
+# Run from repo root:  Rscript manuscript/figures/build_S_soc_by_region.R
+# Output: manuscript/figures/S_soc_by_region.png
 # =============================================================================
 suppressMessages({
   source("manuscript/figures/run_ids.R"); source("manuscript/figures/obs_basis.R")
@@ -46,7 +51,7 @@ for (k in names(S)) {
 }
 
 # === Figure (print size, 9 pt) ===
-png("doublechecks/figures/F3_mean_SOCalt_by_region.png", width = 6.5, height = 3.6, units = "in",
+png("manuscript/figures/S_soc_by_region.png", width = 6.4, height = 3.6, units = "in",
     res = 300, pointsize = 9)
 par(mfrow = c(1, 2)); par(cex = 1)
 par(mgp = c(2.2, 0.5, 0), las = 1, tcl = -0.3)
@@ -74,4 +79,4 @@ for (k in seq_along(S)) {
         1, 1.9, cex = 0.85, col = "grey25")
 }
 dev.off()
-cat("Wrote doublechecks/figures/F3_mean_SOCalt_by_region.png\n")
+cat("Wrote manuscript/figures/S_soc_by_region.png\n")
