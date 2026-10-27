@@ -357,6 +357,11 @@ precipitation over the plots, for context.}
 product agrees with the inventory in the south, where 406 of the 456 plots lie, and neither
 rises after about 2006; the inventory also carries natural mortality, which the product lacks.
 \suppanchor{S_litter_inventory}{S18\_litter\_vs\_inventory}}
+% ROUND 9: set-up for the unexpected result in R2 (sec:r2inputgap). Robust on what the product
+% COVERS; its SCOPE (understorey, natural mortality, below-ground inputs) is named here once,
+% plainly, and not flagged as a risk --- the reader should expect this corner to hold.
+\gap{One clause on scope: robust for the tree litter it estimates; the understorey, natural
+mortality and below-ground inputs lie outside it. Plant, do not announce.}
 \refs{\citet{StatFin2025NID}}
 
 \subsubsection{Under the steady-state assumption, two of the three at most}
@@ -1232,7 +1237,42 @@ elsewhere on the same ridge. One or two sentences, without redrawing the figure.
 \paragraph{\beat{resolution}What the resolution leaves}
 \gap{The tension concentrates in the input corner: the soil series is met and the kinetics stay
 near the published ones, while the input the models need stays above what the product supplies
-($3.2$--$4.4$ against $2.5$). Thread to R4.}
+($3.2$--$4.4$ against $2.5$). Leads straight into the next subsection.}
+
+% ROUND 9: the unexpected result. The Introduction expected the input corner to hold
+% (sec:intro, "The input corner is relatively robust"); after the ridge it is the corner that
+% gives way. Staged as a finding, not as a parameter description. The plot-scale story in R4
+% is a different scale and must not be read as denying this one.
+\subsubsection{Unexpected: the input corner gives way}\label{sec:r2inputgap}
+\paragraph{\beat{challenge}The corner expected to hold}
+\gap{The Introduction treated the litter input as the most defensible of the three corners.
+Having crossed the ridge, the models still ask for more input than the trees supply.}
+\paragraph{\beat{action}More input than the trees supply}
+\subparagraph{The size of the gap}
+\gap{Effective input $3.22$--$4.40$ against $2.511$~tC\,ha$^{-1}$\,yr$^{-1}$ of tree litter,
+i.e.\ $1.28$--$1.75\times$, in all six models.}
+\subparagraph{Set by the soil data, not by the prior}
+\gap{The posterior stays above the prior centre whichever anchor is used: with the higher
+anchor ($1.27$) it lands $1.28$--$1.50\times$ above it (earlier setup; state as such or rerun).
+The likelihood, not the prior, places the input. Pointer to Supplement~\ref{supp:inputprior}.}
+\subparagraph{Not the ridge being paid on the input side}
+\gap{Yasso20 keeps its published transit time and still needs more input (check its effective
+input on the current run). The excess is therefore not only the trade-off: it remains where
+the kinetics are not displaced.}
+\subparagraph{Smaller, but present, without the history}
+\gap{Under the balanced start the input multiplier relaxes (Yasso15 $1.54\rightarrow1.31$, TP2
+$1.75\rightarrow1.60$, SP1 about unchanged; R1 nested), because a balanced soil already holds its
+full stock. Part of the gap is the start, part survives it.}
+\paragraph{\beat{action}Against independent estimates}
+\gap{The national inventory's full estimate is $1.08$--$1.26\times$ the product on the southern
+plots, bracketing the understorey-corrected anchor ($1.21$); the plot-level understorey litter
+gives $1.13$. All below the posteriors ($1.28$--$1.75$).
+\suppanchor{S_input_literature}{SX\_input\_vs\_literature}}
+\refs{\citet{LehtonenHeikkinen2015}; \citet{Gower2001}; \citet{StatFin2025NID}}
+\paragraph{\beat{resolution}A national gap, carried to R4}
+\gap{The gap is a national level, not a plot pattern: one multiplier, the same in every plot.
+What could close it (understorey, natural mortality, below-ground inputs) is taken up as
+hypotheses in Section~\ref{sec:r4}; the plot-scale residual there is a separate matter.}
 
 \subsubsection{Nested: the uncertainty under the estimated start}
 \paragraph{\beat{challenge}The need for the initial input ratio was there before}
@@ -1244,11 +1284,8 @@ makes explicit a quantity R1 assumed.
 \subsubparagraph{Numbers}
 \gap{Effective flux $3.22$--$4.40$ against $2.511$~tC\,ha$^{-1}$\,yr$^{-1}$, set by the likelihood
 rather than the prior (the posterior stays above the prior centre whichever anchor is used).}
-\subsubparagraph{Against independent estimates}
-\gap{The national inventory's full estimate is $1.08$--$1.26\times$ the product on the southern
-plots, bracketing the understorey-corrected anchor ($1.21$), below the posteriors
-($1.28$--$1.75$). \suppanchor{S_input_literature}{SX\_input\_vs\_literature}}
-\refs{\citet{LehtonenHeikkinen2015}; \citet{Gower2001}}
+% ROUND 9: "Against independent estimates" moved to sec:r2inputgap, where it carries the finding.
+\gap{The finding is in Section~\ref{sec:r2inputgap}; here only the posterior, beside $\sinit$.}
 \subparagraph{The initial input ratio: the deficit the data demand}
 \subsubparagraph{Numbers}
 \gap{$0.45$--$0.56$ in five of six models (SP1 $0.78$), below the growing-stock record
@@ -1492,7 +1529,9 @@ three properties of the site raise the share to $53$ per cent.}
 \subparagraph{The stone effect}
 \gap{Check whether the stone effect is partly the stone correction of the observed stocks.}
 \paragraph{\beat{resolution}The excess fades in the same plots}
-\subparagraph{A wrong starting state, not a missing input}
+% ROUND 9: was "A wrong starting state, not a missing input" --- read beside the national input
+% gap (sec:r2inputgap) it seemed to deny it. The claim is about the PLOT pattern only.
+\subparagraph{At plot scale, a wrong starting state rather than a missing input}
 \subsubparagraph{Numbers}
 \gap{In the 88 plots with less than $10$~m$^2$\,ha$^{-1}$ in 1985, the residual falls
 $+0.91 \rightarrow +0.53 \rightarrow +0.28$ over the three campaigns; above $20$~m$^2$\,ha$^{-1}$,
@@ -1506,6 +1545,11 @@ its soil still holds the previous stand's carbon; mature stands the reverse.}
 \paragraph{\beat{opening}Hypotheses, with the literature mixed with our results}
 \gap{Speculative by design; each hypothesis with the evidence we have and the literature that
 supports or limits it.}
+% ROUND 9: two scales, kept apart.
+\subparagraph{Two gaps at two scales}
+\gap{The national input gap (Section~\ref{sec:r2inputgap}) and the plot residual are different
+findings: the first is a level shared by all plots, the second a pattern that fades with time.
+The starting state explains the second; the missing fluxes below are candidates for the first.}
 \paragraph{\beat{resolution}A starting state per plot}
 \subparagraph{The error fades at the models' turnover pace}
 \gap{The decay of the plot error takes about 30 years, close to the models' transit time.}
@@ -1539,6 +1583,13 @@ from the product.}
 other way (\texttt{literature/05--07}).}
 \refs{\citet{Bolinder2007}; \citet{Clemmensen2013}; \citet{Helmisaari2007}; \citet{Strand2008}}
 \subparagraph{A set that brackets the input gap, never a sum that matches it}
+% ROUND 9
+\gap{Understorey about $+13\%$, natural mortality $0.10$--$0.16$~tC\,ha$^{-1}$\,yr$^{-1}$ (about
+$+4$--$6\%$): together about $1.18$--$1.19\times$, and the inventory's full estimate at most
+$1.26\times$, all short of the lowest posterior ($1.28$). Roots, exudates and fungi are the
+only candidates for the remainder, and their sign is uncertain. Each is a candidate; no
+combination is fitted to the gap. NOTE: the measured fluxes do NOT bracket the gap, so the title
+must change unless the below-ground terms carry it: decide.}
 \paragraph{\beat{resolution}Pioneer vegetation, where the two meet}
 \subparagraph{Inherited, or supplied by vegetation no product records}
 \gap{The excess carbon of stands young in 1985 was built during early stand development, either
