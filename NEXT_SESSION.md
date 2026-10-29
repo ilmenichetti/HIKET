@@ -1,5 +1,29 @@
 # NEXT SESSION — start here
 
+## SESSION 2026-10-27/29 (closed) — PULL FIRST (Lorenzo wrote Intro prose on Overleaf in parallel)
+- ⚠ **VPN on ⇒ GitHub fails with "SSL certificate problem"** (curl too). Not a git config issue: turn the VPN off.
+- ⭐ **Input gap staged as R2's UNEXPECTED result** (`634680c`, `% ROUND 9`): new subsubsection
+  `sec:r2inputgap` "Unexpected: the input corner gives way" after the ridge (gap 1.28–1.75×; data-set not
+  prior-set; persists in Yasso20; smaller but present under the balanced start, Y15 1.54→1.31, TP2 1.75→1.60;
+  independent estimates moved here). Intro plants the product's SCOPE (understorey, mortality, below-ground)
+  without announcing. R4: "Two gaps at two scales" (national level = input gap; plot pattern = start state);
+  subparagraph retitled "At plot scale, a wrong starting state rather than a missing input".
+  ⚠⚠ **The measured candidates do NOT bracket the gap**: understorey 1.13 + mortality 4–6% ≈ 1.18–1.19, NID full
+  estimate ≤ 1.26, all below the lowest posterior 1.28 ⇒ the heading "a set that brackets the input gap" is wrong
+  unless the below-ground terms carry the remainder. ⬜ Lorenzo decides.
+  ⬜ Check on the current run: arm-A figure (1.28–1.50× above centre, earlier setup) and Yasso20 still at its
+  published transit time.
+- **Intro texts given in chat (Lorenzo pasting on Overleaf; check what landed):** (1) "a small relative change is a
+  large flux" — Minasny et al. 2017 *Geoderma* 292:59–86 (8.9 Gt C/yr ÷ 2400 Gt to 2 m = 0.4%, VERIFIED in the OA
+  PDF); our 0.26/70 = 0.37%/yr ≈ 4‰. Use as arithmetic only, never endorse the initiative. ⬜ **`Minasny2017` NOT yet
+  in `library.bib`** (entry in chat; add if Lorenzo has not). (2) one phrase on why most inventories model ("rely",
+  not "relies"). (3) measured vs modelled: `SwedenNID2026`, `Gruneberg2014`, `StatFin2025NID`, `NorwayNID2025`,
+  `Didion2016` (CH/AT are secondary via Norway NID fn 50). (4) Two timescales: transit time follows the INPUT, most of
+  which leaves within years; adjustment follows the STOCK, held by the slow pool. Worked example (ours, uncited):
+  100 in, 90 → 2 yr pool, 10 → 300 yr pool ⇒ stocks 180/3000 (94% slow), MTT 31.8 yr, adjustment centuries.
+  Cite `Sierra2018` (stock ages vs transit times) + `Wutzler2007` (slow pool adjusts over centuries).
+- NextGenC (not HIKET): Yu-Feng's CTree questions answered; pending items recorded in that repo's CLAUDE.md.
+
 ## SESSION 2026-10-26 (closed)
 - **S10 saturation figure** (`build_S_saturation.R`): stock panels + sink per 20-yr repetition as grouped bars; benchmarks
   at alpha 0.3 with solid borders. Still "Promote?".
