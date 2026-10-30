@@ -451,7 +451,8 @@ contains, and not of the year in which it was sampled, because the difference is
 when the sampling year is held constant.
 
 \gap{The exclusion rules (zero litter, absent organic layer, peat soils, constant litter
-series, whole-profile stock above 250 t\,C\,ha$^{-1}$) are referred to as ``described below''
+series, whole-profile stock above 250 t\,C\,ha$^{-1}$, and the 82 first-campaign observations
+without a recorded sampling year) are referred to as ``described below''
 but are not yet written out; add one short paragraph listing them with the number of plots
 each removes.}
 
@@ -480,7 +481,20 @@ layer, plus the measured mineral soil to $40$ cm, plus a modelled deep tail, int
 as far down as the auger actually reached on that plot and in no case deeper than one metre.
 The depth to which the profile is integrated is therefore a per-plot quantity and not a fixed
 one metre, since using a fixed depth of, for example, one metre would invent soil carbon
-below bedrock on the $38$ plots where augering stopped at $10$, $20$ or $40$ cm. The modelled
+below bedrock on the $38$ plots where augering stopped at $10$, $20$ or $40$ cm.
+% ROUND 10 (2026-10-30): the deep tail described, and how it applies to the first campaign.
+Below $40$ cm the stock was extrapolated assuming that the carbon content decreases
+exponentially with depth. One rate of decrease was fitted for each soil class of the national
+soil map, jointly on the profiles of all three campaigns, and the level of each profile's curve
+was set by that profile's own measured mineral layers. The first campaign was sampled in
+different depth intervals ($0$--$5$, $5$--$20$ and $20$--$40$ cm, against $0$--$10$, $10$--$20$
+and $20$--$40$ cm in the two later campaigns); the fit uses the actual interval of each layer, so
+the two layer schemes need no conversion. The depth reached by the auger is recorded only in
+2006 and, like the stone volume, is applied to the first campaign. In the first campaign the
+carbon content of the mineral layers below $5$ cm was mostly predicted from the loss of mass on
+ignition rather than measured \citep{Kramarenko}, and because the deep tail is scaled from those
+layers, the deep tail carries the same uncertainty. The extrapolated part is about $15$ per cent
+of the profile stock in each of the three campaigns. The modelled
 deep tail was validated against the measured $40$--$80$ cm layer of the BioSoil campaign,
 which was held out of the fit: the median ratio of predicted to observed carbon in that layer
 is $0.96$, with a bias of $-2.5$ tonnes of carbon per hectare.
@@ -497,16 +511,20 @@ structure of the measurements themselves rather than from the fit. First, the la
 three campaigns were standardised, because they were recorded differently: the organic layer
 of the first campaign contains the fermentation and humus horizons only, whereas the organic
 layer of the two later campaigns also contains the litter and moss layer. Each plot's own
-litter and moss layer from 2006 was therefore added to its first-campaign organic layer, so
+litter and moss layer from 2006 was therefore added to its first-campaign organic layer (for
+the $20$ calibrated plots without a value from 2006, the median of all plots), so
 that the same compartment is compared across the three campaigns. Second, the first campaign
 is treated as what it is, a campaign whose fieldwork ran over several years rather than a
 campaign carried out in a single year. The year in which each plot was actually sampled is on
 record, and those years, rather than one nominal year for the whole campaign, are the years
 at which the models are compared with the observations.
 
-On this final basis the median whole-profile stock is $62.0$ tonnes of carbon per hectare for
-the first campaign, $66.4$ for 2006 and $67.2$ for 2024, and the observations vary between
-plots with a coefficient of variation of $0.44$ to $0.53$ depending on the campaign.
+% ROUND 10: restated on the 1205 calibration observations (was all 1408 non-peat plot-years:
+% 62.0 / 66.4 / 67.2, CV 0.44--0.53).
+On this final basis, over the $1205$ observations used in this study, the median whole-profile
+stock is $61.4$ tonnes of carbon per hectare for the first campaign, $65.3$ for 2006 and $66.8$
+for 2024, and the observations vary between plots with a coefficient of variation of $0.36$ to
+$0.48$ depending on the campaign.
 (Figure~\ref{fig:S_baseline}) \gap{wrong figure: Figure~\ref{fig:S_baseline} shows the uncalibrated Yasso20, not the soil carbon basis; drop the pointer or replace the figure}
 
 \gap{Data availability and acknowledgement: the soil carbon measurements are not a published
@@ -1482,7 +1500,7 @@ with, more than on how it is started.}
 ladder (SP1 to Yasso20). \suppanchor{S_obs_pred}{F6\_obs\_vs\_pred\_holdout}}
 \subparagraph{Against the spread of the observations}
 \gap{Optional: the observed stocks vary between plots with a coefficient of variation of
-$0.44$--$0.53$, which the models do not order.}
+$0.36$--$0.48$, which the models do not order.}
 \paragraph{\beat{challenge}What the national fit hides}
 \gap{The models reproduce the national trend and almost none of the differences between plots:
 the question of R4.}
