@@ -204,19 +204,16 @@ Yet, SOC models are usually initialized assuming equilibrium conditions just a f
 The Finnish inventory, specifically, initializes Yasso07 assuming as constant the of inputs of the first available years in the time series (in the 70s) \citep{StatFin2025NID, Lehtonen2016}.
 \refs{\citet{StatFin2025NID}; \citet{Lehtonen2016}; \citet{ColemanJenkinson1996}; \citet{Kurz2009}; \citet{Carvalhais2008}; \citet{Luo2016}}
 
-\subparagraph{How it is justified}
-\subsubparagraph{The inventory's own words}
-\gap{``approximately ten years of simulation since spin-up is enough to cancel out the effect of
-the spin-up level'' (national inventory report). True for the fast pools; the slow pool is
-the one that holds the stock.}
-\refs{\citet{StatFin2025NID}}
+
 \paragraph{\beat{challenge}What a balanced start can and cannot carry}
-\subparagraph{It responds to every change after its start date}
-\gap{The model follows any change of litter or climate after the start, so the assumption looks
-harmless.}
-\subparagraph{It cannot carry a deficit that existed on that date}
-\gap{The history of the site is replaced by an equilibrium with its present litter: a soil
-still recovering from past losses is set as if it had already recovered.}
+The assumption is that ``approximately ten years of simulation since spin-up is enough to cancel out the effect of
+the spin-up level'' \citet{StatFin2025NID}, meaning that the years would be enough to offset eventual error carried out by the equilibrium assumption. The model still reacts to every change after its start date, so the assumption looks harmless.
+But with its published parameters and the mean climate and litter of our plots, Yasso07 started in balance differs from a soil that started 10 per cent below balance by 8.7 t C ha⁻¹ at the start and still by 84 per cent of that difference after ten years. The soil would still be gaining 0.09 t C ha⁻¹ yr⁻¹ at that point.
+
+Replacing the history of the site with an equilibrium with its present litter means that a soil that could
+still be recovering from past losses is set as if it had already recovered. This changes the trajectories that the model would simulate, since all changes in SOC stocks are given by a trajectory between two different equilibrium points (two land uses, or two C input levels). For a soil that is gaining C, which is therefore clearly not in equilibrium, this assumption is particularly strong and forces us to explain the sinks with changes in C inputs to the soil happened after the start of the simulation. This is not impossible, but it is also quite likely that a soil that is a sink was not at equilibrium since already quite some time.
+
+
 \paragraph{\beat{resolution}A question raised before, from within the same community}
 \subparagraph{The lineage}
 \subsubparagraph{Earlier statements}
@@ -228,7 +225,7 @@ as the group's own lineage, never as a correction (Aleksi and Mikko are in that 
 HIKET is not the first to question the assumption: do not write that it is.}
 \refs{\citet{Peltoniemi2004}; \citet{Peltoniemi2006}; \citet{Peltoniemi2007}; \citet{Wutzler2007}; \citet{Liski2006}}
 
-% -----------------------------------------------------------------------------
+
 \subsection{The case: Finland, and the question of saturation}
 
 \subsubsection{A forestry history that clearly changed}
