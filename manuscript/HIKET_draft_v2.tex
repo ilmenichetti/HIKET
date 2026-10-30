@@ -150,7 +150,7 @@ forests hold as much carbon per hectare as tropical forests ($239$ against
 $242$~tC\,ha$^{-1}$; temperate forests $155$) and about a third of all forest carbon ($272$~PgC),
 but most of it is in the soil, not in the trees: about $60\%$ in the soil and $20\%$ in the living
 biomass, where the tropical forests hold $56\%$ in biomass and $32\%$ in the soil \citep{Pan2011}.
-Here the forest carbon balance is therefore largely a soil balance. Because its C partially sits underground, the soil C balance is the least certain part of the total forest C balance. Also, high latitudes warm fastest, so the boreal soil is also where the climate pressure is largest.
+In boreal forests the forest carbon balance is therefore largely a soil balance. Because its C partially sits underground, the soil C balance is the least certain part of the total forest C balance. Also, high latitudes warm fastest, so the boreal soil is also where the climate pressure is largest.
 \refs{\citet{Pan2024}; \citet{Pan2011}; \gap{Pan et al.\ 2024: check the correction (Nature 632:E7) against the numbers;
 a source for the soil term as
 the largest uncertainty}; high-latitude warming: \citet{IPCC2021SPM} (land warms faster than the
@@ -160,59 +160,50 @@ which the boreal zone only borders; a boreal-specific source would be tighter, e
 al.\ 2015, Science 349:819--822, not yet read.}}
 
 
-\paragraph{\beat{opening}What inventories report: the change, not the stock}
+\paragraph{\beat{opening}What inventories focus on: the change, not the stock}
 \subparagraph{The atmosphere sees only the change}
-\gap{A stock that stays constant, however large, neither emits nor removes carbon; only its change
-exchanges carbon with the atmosphere. A national balance therefore counts the annual change of
-each carbon pool, and the change of the soil stock enters the balance next to fossil emissions,
-in the same units. The size of the stock matters for the balance only through how it changes.}
+The absolute amount of C stocks is not relevant for GHG balances, because stock that stays constant, however large, neither emits nor removes carbon; only its change
+exchanges carbon with the atmosphere. A national inventory therefore focuses on the annual change of the soil stocks, which enters the balance (next to other emissions,
+in the same units). The size of the stock is irrelevant for the balance, how it changes affects it sometimes dramatically.
 \refs{\gap{IPCC 2006 vol.~4 ch.~2 (stock-difference and gain--loss methods)}; \citet{Blujdea2015}}
-\subparagraph{The change is small against the stock}
-\gap{The change is a few tenths of a per cent of the stock per year ($+0.26$ against about
-$70$~tC\,ha$^{-1}$ in our campaigns), against a spread between plots of about $\pm44\%$. Measuring
-it needs the same plots sampled again over decades.}
+\subparagraph{A small relative change can be a very large flux}
+A change of a few tenths of a per cent per year is small against the stock, but not against the emissions. Soils hold about $2400$ billion tonnes of carbon to a depth of two metres, and fossil fuels release about $8.9$ billion tonnes of carbon each year; a gain of four tenths of a per cent of the soil stock per year would therefore equal the whole of the fossil emissions
+\citep{Minasny2017}. 
 
 \paragraph{\beat{opening}Most inventories relies on models}
+But such a small change in SOC is hard to detect, and measuring it requires expensive long-term campaigns that resample the same plot over decades. Most countries model it from litter input and climate.
 \subparagraph{Who measures, who models}
-\gap{A few countries measure the change by repeated soil sampling on inventory plots (Sweden,
-Germany); most model it, Finland, Norway, Switzerland and Austria with Yasso07 (national
-inventory reports; \texttt{literature/10\_national\_soil\_terms}). Cite the 2025 Finnish report
-for the current term.}
-\refs{\citet{SwedenNID2026}; \citet{Gruneberg2014}; \citet{StatFin2025NID}; \citet{NorwayNID2025}; \citet{Didion2016}; \citet{Hernandez2017}; \citet{Jandl2014}}
+Only a few countries measure the change by repeated soil sampling on inventory plots, Sweden \citep{SwedenNID2026} and Germany \citep{Gruneberg2014} among them; most model it. Finland, Norway, Switzerland and Austria run Yasso07 on their inventory plots
+\citep{StatFin2025NID,NorwayNID2025,Didion2016}.
+\gap{\refs{\citet{SwedenNID2026}; \citet{Gruneberg2014}; \citet{StatFin2025NID}; \citet{NorwayNID2025}; \citet{Didion2016}; \citet{Hernandez2017}; \citet{Jandl2014}}}
 
-\paragraph{\beat{challenge}A modelled change depends on where the model starts}
-\gap{A model computes the change as the difference between what enters the soil and what
-decomposes, and what decomposes depends on how much carbon the soil holds and in which pools: on
-the state the model starts from. That state is rarely measured. The change a model reports is
-then the soil's response to its own past, which is why the next question is how long the soil
-remembers.}
+\paragraph{\beat{challenge}A modelled change depends on many assumptions}
+But the results of a process-based SOC models depend on many assumptions. The most crucial is the initial state of the simulation, the more important the closer in time the start is to current state.  That initial state is never measured. This effect dissipates over time, but can still persist for many decades after the start of the simulation and influences heavily the trajectories simulated by the model.
+The change a model reports is also the soil's response to its own past.
 
-\subsubsection{The soil remembers its past inputs}
+\subsubsection{The initialization problem and why it matters: the soil remembers its past inputs}
 \paragraph{\beat{opening}Two timescales}
 \subparagraph{Carbon passes through in decades}
-\subsubparagraph{The mean transit time}
-\gap{The mean time a unit of carbon spends in the soil is decades (Sierra et al.\ 2017, 2018);
-20--30 years in the models used here.}
+The mean time a unit of carbon spends in the soil is usually decades (Sierra et al.\ 2017, 2018); 20--30 years in the models used here. But this does not mean that the initial state effects dissipates in such a short time.
 \refs{\citet{Sierra2017}; \citet{Sierra2018}}
-\subparagraph{The slow pools adjust over centuries}
-\subsubparagraph{The adjustment timescale}
-\gap{After a change of input, the slowest pool takes centuries to reach its new balance
-(Wutzler \& Reichstein 2007; Sierra et al.\ 2018). The two timescales differ because most
-carbon passes quickly through the fast pools, while most of the stock sits in the slow one.}
-\refs{\citet{Wutzler2007}; \citet{Sierra2018}}
-\paragraph{\beat{resolution}Today's soil reflects inputs of long before any model starts}
-\gap{The soil keeps the memory of past land use and inputs far longer than its turnover
-suggests: a soil whose inputs changed within the last century is unlikely to be in balance
-with them.}
+\subparagraph{But he slow pools adjust over centuries}
+After a change of input we move from an equilibrium state to another and over this trajectory changes in C stocks occour.
+And the slowest C takes centuries to reach its new balance. The two timescales measure different things \citep{Sierra2018}. The mean transit time is an average over the carbon that enters the soil, and most of that carbon decomposes within a few years and leaves. The time a soil takes to reach a new equilibrium instead depends on where the carbon is stored, and most of the stored carbon sits in the slow components which keeps adjusting for centuries after a change of input \citep{Wutzler2007}. Most of the input leaves within years, so the average time carbon spends in the soil is decades; but most of the stock is built by the small share that accumulates.
+
+\paragraph{\beat{challenge}Today's soil reflects inputs of long before any model starts}
+Because of that, the soil keeps a memory of past land use and inputs far longer than its turnover
+suggests: a soil that underwent land use changes, or management changes, within the last century, is unlikely to be in equilibrium and the consequences of those changes are still present in current SOC stocks.
+
+%LORENZO: not sure here how to close the arch with a resolution, not sure it is needed to have everything nested and complete
 
 \subsubsection{The usual assumption does not capture that history}
+Yet, SOC models are usually initialized assuming equilibrium conditions just a few decades before current state. This convention is justified with the obvious difficulties in reconstructing past history beyond that, but still is not going to represent reality.
 \paragraph{\beat{opening}Models are started in balance}
 \subparagraph{Where the assumption is used}
 \subsubparagraph{Inventories and models}
-\gap{The Finnish inventory (Yasso07 started in balance with the litter of the first years),
-the nationwide Yasso07 evaluation (Lehtonen et al.\ 2016), RothC applications, the land
-models of the Earth system models.}
+The Finnish inventory, specifically, initializes Yasso07 assuming as constant the of inputs of the first available years in the time series (in the 70s) \citep{StatFin2025NID, Lehtonen2016}.
 \refs{\citet{StatFin2025NID}; \citet{Lehtonen2016}; \citet{ColemanJenkinson1996}; \citet{Kurz2009}; \citet{Carvalhais2008}; \citet{Luo2016}}
+
 \subparagraph{How it is justified}
 \subsubparagraph{The inventory's own words}
 \gap{``approximately ten years of simulation since spin-up is enough to cancel out the effect of
