@@ -740,6 +740,12 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-11-02 (closed): Introduction red marks of `HIKET_draft_v2.tex` all addressed** (`35175dc`,
+  `b2729d8`), every citation read before use. ⚠⚠ **Blujdea et al. 2015: ~2013 only 5 EU states MODEL forest mineral
+  soil, 7 measure, the rest assume no change ⇒ never write "most countries model it" — "many"/"often".** Open items
+  (LUKE region codes, Juha on turnover rates, Didion2016, F3/F10b, dramatize note, uncommitted PDFs):
+  `NEXT_SESSION.md` top.
+
 - **⭐ SESSION 2026-10-21 (closed):** `eqinit_climheld` landed → recalibrated division (+11.6 / +7.3 / −11.0 = +8.0),
   fixed-parameter version DROPPED; draft v1 to be dropped → `manuscript/HIKET_draft_v2.tex` (skeleton) +
   `manuscript/HIKET_methods_v2.tex` (complete M&M, Lorenzo reviews 2026-10-22); headroom: the paper quotes the 2024

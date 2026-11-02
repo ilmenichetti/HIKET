@@ -1,5 +1,27 @@
 # NEXT SESSION — start here
 
+## SESSION 2026-11-02 (closed) — Introduction red marks DONE (`35175dc`, `b2729d8`) — PULL FIRST
+- ✅ Every `\gap`/`\refs` in the Introduction of `manuscript/HIKET_draft_v2.tex` addressed, citations READ before
+  use. Key changes: policy sentence = EU 2018/841 (+2023/839) only, Paris dropped (bib `EU2018_841`); soil
+  uncertainty "about three times the trees', mostly from the assumed starting stock" = `Peltoniemi2006` (§3.1 +
+  abstract); Pan2024 correction checked (only ED Fig 2e–f); warming narrowed to "High northern latitudes", Gauthier
+  dropped; `IPCC2006V4` added. ⚠⚠ **Blujdea et al. 2015 (p. 256): ~2013 only 5 EU member states MODEL forest mineral
+  soil (AT FI SE CZ UK, ~18% of area), 7 measure (~49%), the rest assume no change ⇒ "most countries model it" is
+  FALSE → "many" / "often modelled"** (title, heading, abstract plan line). Initialisation refs: `Wutzler2007` added;
+  Luo2016, Kurz2009 (CBM spin-up ends OUT of equilibrium), ColemanJenkinson1996 dropped; `Carvalhais2008` moved to the
+  lineage paragraph. Kramarenko out of the Intro (stays in Methods/R1). Kinetics sentence cites the Yasso family
+  (`Tuomi2009`, `Tuomi2011woody`, `Yasso15code`, `Viskari2022`); inputs `\citep{TupekLitter}`.
+- Input-corner paragraph now ends: product most robust in its LEVEL and in the absence of a post-2006 rise; the
+  pre-2006 rise is the less certain part (S18: South +32% vs inventory +13%, 1986–90 → 2004–08 means). ⚠ "about 45%"
+  in F1 (2.1→3.0) uses a different window from S18's +32% — keep them apart.
+- Balance paragraph rewritten for changing input AND climate (recalibrated split +11.6 / +7.3 / −11.0 = +8.0).
+- ⬜ OPEN: confirm the LUKE region codes (S18); ask Juha whether the Tupek turnover rates are the inventory's (then the
+  S18 comparison is not independent); `Didion2016` unread (ask Aleksi); F3/F10b merge (Lorenzo: leave; if merged,
+  side by side); the %LORENZO "dramatize … national economies" note (needs sourced Finnish LULUCF shortfall + cost);
+  Lorenzo's arc note ~line 211; maybe a pointer to R4 in *Its threads*; the two new PDFs in
+  `literature/10_national_soil_terms/` (Blujdea 2015, Abad Viñas 2014 — the latter unread) are NOT committed.
+- Next: Lorenzo's review moves past the Introduction.
+
 ## SESSION 2026-10-27/29 (closed) — PULL FIRST (Lorenzo wrote Intro prose on Overleaf in parallel)
 - ⚠ **VPN on ⇒ GitHub fails with "SSL certificate problem"** (curl too). Not a git config issue: turn the VPN off.
 - ⭐ **Input gap staged as R2's UNEXPECTED result** (`634680c`, `% ROUND 9`): new subsubsection
