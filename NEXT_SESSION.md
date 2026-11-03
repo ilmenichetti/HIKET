@@ -1,5 +1,57 @@
 # NEXT SESSION — start here
 
+## SESSION 2026-11-03 (closed) — Boris's new litter estimates: PLAN AGREED, WAITING FOR HIS CORRECTED UNDERSTOREY FILE
+Files (Lorenzo: definitive unless errors), in `~/Downloads`, NOT yet in `Data/`:
+`tree_litter_per_site_year_by_component_30.10.26.csv` (1.0 GB — normal, the April file is the same size/layout) and
+`understory_litter_per_site_INTERP_year_awen_kgCha_30.10.26.csv`. Boris's emails (2026-11-02): BioSoil 2006 tree
+inventory now in the stand series; understorey processed from NFI cover 1985/1995/2006/2023; then a FIX (cover was
+SUMMED across subplots, inflating the old inventories → now averaged first).
+- **Tree file:** same 2805 plots/years, all rows match April; 0–2% lower (max −2% in 2006), 1271 plots changed (360
+  of 365 calibration plots, all < 2%). 1985 still ~0 (backcast stays); plot spikes up to 34 tC/ha/yr remain. The AWEN
+  file is DERIVABLE: April by_component summed over species/component == April awen (max diff 5e-14).
+  New column `region.y` = **LUKE's standard South/North split (~7000 km northing ≈ 63°N; Lorenzo confirmed)**.
+  98 plots have `region.y` NA: litter frozen after some year (median 2008) in BOTH versions, 20 of them changed
+  between versions; none calibration/holdout (15 have SOC, all not calib-ready) → solved, Lorenzo may still ask.
+- ⚠ **S18 used the wrong split** (`site_raw$region`, North = above ~66°N): 148 of 456 calibration plots counted as
+  South are North for LUKE (258 S/S, 148 S→N, 50 N/N). ⬜ Rebuild S18 with `region.y` and restate its numbers in the
+  draft (+32% vs +13%, "within a few per cent", Intro input sentence). Lorenzo: do it inside the rerun, not now.
+- ⚠⚠ **The understorey CSV in Downloads is PRE-FIX.** Boris's corrected figure (common sites, kg C/ha/yr):
+  N ~600/510/575/370, S ~400/360/355/250 (1985/1995/2006/2023); our file N 1804/1527/867/519, S 1177/980/558/260 ⇒
+  old inventories ~3× inflated. The "total input flat, (J+u)/J 1.73→1.13" reading is VOID. Corrected levels
+  (0.4–0.6 tC/ha/yr) sit in the NID range 0.5–0.67. ⬜ **Lorenzo re-downloads from SoilModeling** (same name/date —
+  check it against the figure FIRST).
+- **Defects found in the understorey file (re-check on the corrected one):**
+  (1) AWEN columns sum to `total_litter` = 2 × `total_litter_c` ⇒ DRY MASS despite "kgCha" in the name (÷2);
+  (2) 2023 has no bryophytes/lichens (South 100% zero, North 66%); Boris proposes filling with the earlier
+  inventories' mean — we prefer computing 2023 from our own 2023 cover table (`Data/Understorey/2023_maaluokka1…xlsx`
+  has *sammalet* ~47% cover on ~all plots, *jäkälät* 1.4% on 32%); fallback = the plot's own 2006 value;
+  (3) **108 plots SPLIT into two half-series** (labels N AND S, 78 rows): band 7002–7098 km northing, all
+  `region.y`=2, 63 calib-ready. N copy = 1985/1995/2006 surveys then flat; S copy = the 2023 survey carried back flat
+  (no mosses). Cause: join on site + VMI_N_S while the label changed between the old surveys and 2023. Identify by
+  `uniqueN(VMI_N_S) > 1` per site — NOT by the id range 1047232–1059551 (13 N-only plots in it).
+  List: `Data/Understorey/understorey_split_plots_108.csv` (MUSTIKKA/VANHA/BIOSOIL ids, northing, calib_ready).
+  Fix = join on plot id only, re-interpolate (ideally Boris, in his workflow).
+- Coverage: all 689 understorey sites map via `soil_litter_site_key.csv`; 443 of 456 calib-ready plots covered
+  (13 missing: 11 South incl. 5 holdout, 2 North).
+- ⬜ **Reply to Boris** (draft in the session; add the split-plot table + list): corrected file?; AWEN dry mass?;
+  annual flux, above-ground only?; 2023 mosses from the cover table; tree-file changes = BioSoil 2006 only?;
+  the 98 frozen plots; Zenodo deposit / citation for the understorey.
+- **PLAN (agreed in outline):** 0) snapshot runs+diagnostics to `snapshots/20261103_pre_understorey/` (figures
+  auto-pick the newest run); 1) tree file → `Data/LitterData/`, derive AWEN file, repoint `Data_work.R` (l. 71–72),
+  extend `const_litter` to series that freeze part-way; 2) understorey added to the nwl AWEN columns AFTER the 1985
+  backcast (its 1985 is a real survey), with a switch; 2024 = copy of 2023 as now; 3) σ_input prior centre;
+  4) local checks: fixed-point test, official stocks exact, preflight pushforward (six models), scenario_switch_tests,
+  J_bar and 1985 level before/after; 5) Roihu `submit_arms.sh all` (Lorenzo does rsync/ssh) → `refresh_all_local.sh`
+  + recalibrated attribution; 6) restate: input level/trend, litter share (+7.3), input gap 1.28–1.75, headroom,
+  forecast, S18 (LUKE split + understorey vs the GHGI ground-vegetation term), Methods/Intro/R2 (manual).
+- ⬜ **DECISIONS (Lorenzo):** (a) σ_input centre — recommended **1.0** (1.08 was the understorey gap; what remains is
+  mortality 4–6% + understorey roots if absent → width, not centre); must be re-sourced in Methods. (b) the 13 plots
+  without understorey — recommended FILL with region × site-type mean (keeps the plot set). (c) pre-1985 understorey:
+  the pre-run scales the 1985–89 input by the Liski 2006 shape ⇒ assumes understorey followed it; ⬜ check whether
+  Liski's reconstruction includes ground vegetation; state the assumption.
+- Consequences: σ_input becomes "what the measured inputs still miss" (sharper R2 input gap); the residual RF uses
+  2023 understorey cover (`und.`) — drop/reinterpret once understorey is an input.
+
 ## SESSION 2026-11-02 (closed) — Introduction red marks DONE (`35175dc`, `b2729d8`) — PULL FIRST
 - ✅ Every `\gap`/`\refs` in the Introduction of `manuscript/HIKET_draft_v2.tex` addressed, citations READ before
   use. Key changes: policy sentence = EU 2018/841 (+2023/839) only, Paris dropped (bib `EU2018_841`); soil

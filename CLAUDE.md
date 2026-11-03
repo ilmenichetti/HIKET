@@ -740,6 +740,13 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **⏸ SESSION 2026-11-03 (closed): Boris's new litter (tree + UNDERSTOREY) → full rerun planned, WAITING for his
+  corrected understorey file.** ⚠ The understorey CSV in `~/Downloads` is PRE-FIX (old inventories ~3× inflated);
+  its AWEN columns are DRY MASS; 2023 lacks mosses/lichens; **108 plots are split into N/S half-series**
+  (`Data/Understorey/understorey_split_plots_108.csv`). Tree file: 0–2% change, new `region.y` = LUKE's standard
+  South/North split ⇒ **S18 used the wrong split** (148 plots). Plan, decisions (σ_input centre → 1.0?, the 13
+  uncovered plots) and the Boris reply: `NEXT_SESSION.md` top. Memory [[boris-litter-update-20261103]].
+
 - **✅ SESSION 2026-11-02 (closed): Introduction red marks of `HIKET_draft_v2.tex` all addressed** (`35175dc`,
   `b2729d8`), every citation read before use. ⚠⚠ **Blujdea et al. 2015: ~2013 only 5 EU states MODEL forest mineral
   soil, 7 measure, the rest assume no change ⇒ never write "most countries model it" — "many"/"often".** Open items
