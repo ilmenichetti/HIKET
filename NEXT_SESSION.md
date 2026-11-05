@@ -1,5 +1,19 @@
 # NEXT SESSION — start here
 
+## SESSION 2026-11-05 (closed) — SOC vs input proportionality; still waiting for Boris's corrected understorey
+`doublechecks/soc_vs_input_proportionality.R` → `doublechecks/figures/soc_vs_input.png` (+ `soc_vs_input_slopes*.csv`), on
+`20261012_1042*`, tree-only input. `log SOC = a + b log J10`; proportional = b 1. Not in the manuscript.
+- b: 1986–95 **0.03** (window truncated at 1985), 2006 **0.14**, 2024 **0.17**; models 0.93–0.97 / 0.56–0.64 / 0.30–0.50.
+- LUKE split (`region.y`, ~63°N; 198 N / 258 S): South 0.03 / 0.04 / 0.02 (CIs include 0), North −0.01 / 0.10 / 0.16; N–S difference not tested.
+- Within plot 2006→2024: observed **0.005** (−0.05, 0.06) vs models 0.33–0.51, flat in both regions. Sharpest contrast; not yet a panel.
+- Mean T takes b to 0.03 / 0.05 and its own effect is positive (+8%/°C). Window length barely matters to 20 yr.
+- ⚠ Rejects plot-level proportionality to THIS product over THESE windows, not long-run C = J × MTT; input error also attenuates b.
+⬜ Open: (1) rerun after Boris's understorey; (2) does the within-plot contrast go in the paper (Lorenzo)?; (3) move `region.y` out of
+`~/Downloads` into `site_attributes.csv` (script reads it there; same step as the S18 rebuild); (4) 9 calibrated plots with mire codes
+(median 103 tC/ha): exclude at the rerun? `site_main_class_2024` 2–3 meaning is assumed; (5) KA conflicts keep the first row, so a later
+peat row can pass (`Data_work.R:511`): count them; (6) confirm with Juha what H01/H12 mean and when assigned; (7) `is_peat` is hardcoded
+FALSE (`build_soc_homogenized.R:420`), drop it at the next baseline rebuild. Removing all 66 flagged plots moves b only to 0.16 / 0.18.
+
 ## SESSION 2026-11-03 (closed) — Boris's new litter estimates: PLAN AGREED, WAITING FOR HIS CORRECTED UNDERSTOREY FILE
 Files (Lorenzo: definitive unless errors), in `~/Downloads`, NOT yet in `Data/`:
 `tree_litter_per_site_year_by_component_30.10.26.csv` (1.0 GB — normal, the April file is the same size/layout) and

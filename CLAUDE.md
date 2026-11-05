@@ -740,6 +740,10 @@ guards key on those filenames.
 
 ## Known outstanding items
 
+- **✅ SESSION 2026-11-05 (closed): SOC vs input proportionality.** `doublechecks/soc_vs_input_proportionality.R`: log-log slope
+  0.03 / 0.14 / 0.17 by campaign (South ≈ 0.03), within-plot 2006→2024 0.005 vs models 0.33–0.51. ⚠ `is_peat` is hardcoded FALSE; the real
+  peat rules are `CODE_LAYER` H01/H12 and KA 11–13. Open items: `NEXT_SESSION.md` top. Memory [[soc-input-proportionality-20261105]].
+
 - **⏸ SESSION 2026-11-03 (closed): Boris's new litter (tree + UNDERSTOREY) → full rerun planned, WAITING for his
   corrected understorey file.** ⚠ The understorey CSV in `~/Downloads` is PRE-FIX (old inventories ~3× inflated);
   its AWEN columns are DRY MASS; 2023 lacks mosses/lichens; **108 plots are split into N/S half-series**
