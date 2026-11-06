@@ -73,7 +73,7 @@ cat("within 2006-2024 model slopes:\n"); for(m in FIG_MODELS) cat(m,round(coef(l
 # === North / South: LUKE's standard split (~7000 km northing, ~63 N), region.y in
 # Boris's tree-litter file. NOT region_label / site_raw$region: those split at ~66 N.
 # Region only is read from that file; J is still the current model input.
-REG_FILE <- path.expand("~/Downloads/tree_litter_per_site_year_by_component_30.10.26.csv")
+REG_FILE <- "Data/LitterData/tree_litter_per_site_year_by_component_30.10.26.csv"
 reg <- read.csv(pipe(sprintf("awk -F';' 'NR>1{print $13\";\"$NF}' '%s' | sort -u", REG_FILE)),
                 sep=";", header=FALSE, col.names=c("plot_id","region_y"), na.strings=c("NA",""))
 stopifnot(!anyDuplicated(reg$plot_id[!is.na(reg$plot_id)]) || all(tapply(reg$region_y,reg$plot_id,function(z) length(unique(z)))==1))

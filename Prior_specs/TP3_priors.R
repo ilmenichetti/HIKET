@@ -59,9 +59,13 @@ TP3_FREE_DEFAULTS <- c(
   # Arm A (Liski, 1.27) is run 20260820_1554*. The two anchors disagree by 18% on the
   # understorey share and the disagreement is UNRESOLVED (see above) -- we report both
   # rather than choose. Set HIKET_SIGMA_INPUT_CENTRE=1.27 to reproduce arm A.
-  # HIKET_SIGMA_INPUT_CENTRE (2026-09-23): unset => 1.08 (production, arm B, unchanged);
+  # CENTRE 1.05 (2026-11-06): the understorey is now IN the input, so 1.08 (which stood for it)
+  # would count it twice. What the input still lacks with a number attached is natural mortality:
+  # 0.10-0.16 tC/ha/yr (national inventory) over a total input of ~2.98 => 1.03-1.05. Exudates and
+  # mycorrhizal necromass have no comparable forest estimate and are left to the prior width.
+  # HIKET_SIGMA_INPUT_CENTRE: unset => 1.05 (production);
   # 1.27 reproduces arm A (Liski et al. 2006). On Roihu prefix with SINGULARITYENV_.
-  sigma_input = local({ v <- suppressWarnings(as.numeric(Sys.getenv("HIKET_SIGMA_INPUT_CENTRE", "1.08")))
+  sigma_input = local({ v <- suppressWarnings(as.numeric(Sys.getenv("HIKET_SIGMA_INPUT_CENTRE", "1.05")))
                         if (!is.finite(v) || v <= 0) stop("HIKET_SIGMA_INPUT_CENTRE must be a positive number")
                         v })
 )

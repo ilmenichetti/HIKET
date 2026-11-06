@@ -20,6 +20,11 @@ drops in without touching the calibration scripts.
    understorey excluded. A pre/post mismatch silently changes what `sigma_input` means at the join.
 3. Interpolate to 1917–1985 annual and normalise to [0,1].
 
+## ⚠ Changed 2026-11-06
+Understorey litter now enters the input after 1985, so the default basis is `total_input_all_TgC_yr`
+(`HIKET_PREINIT_BASIS=tree` restores the old one). This reverses Decision 1 below, for the same reason:
+the composition must match on both sides of 1985. Mean shape 0.450 -> 0.433; largest change in one year 0.14.
+
 ## Decisions in force (2026-08-20)
 
 1. **Use `total_input_tree_basis_TgC_yr`**, not `total_input_all_TgC_yr` — its composition matches

@@ -85,6 +85,12 @@ growing_stock_preinit_shape <- function(preinit_year = 1917L, t0_year = 1985L,
 #   upland per-hectare rise. It runs against our own argument, so it is the
 #   conservative direction.
 #
+# COMPOSITION CHANGED (2026-11-06). Understorey litter now enters the input after 1985, so the
+# reasoning above reverses: uniformity across the join requires ground vegetation before 1985
+# too. Default basis = total_input_all (tree terms + ground vegetation).
+# HIKET_PREINIT_BASIS=tree restores the tree basis. ⚠ In Liski et al. the tree terms cover all
+# forest land and ground vegetation upland only; both are divided by the upland area here. The
+# shape is normalised, so this affects only its timing.
 # Data + provenance + validation: Data/liski2006_litter_input/README.md
 # Contract is unchanged: length-68 vector on [0,1], 0 at 1917, 1 at 1985.
 # =============================================================================
@@ -95,7 +101,10 @@ liski_preinit_shape <- function(preinit_year = 1917L, t0_year = 1985L, n_pre = 6
   ar <- read.csv(acsv)
   years <- seq(preinit_year, t0_year, length.out = n_pre)
   # input to soil, tree basis; rule=2 holds the 1922 value back to 1917 (pre-series)
-  inp <- approx(d$year, d$total_input_tree_basis_TgC_yr, xout = years, rule = 2)$y
+  basis <- Sys.getenv("HIKET_PREINIT_BASIS", "all")
+  col   <- switch(basis, all = "total_input_all_TgC_yr", tree = "total_input_tree_basis_TgC_yr",
+                  stop("liski_preinit_shape: unknown HIKET_PREINIT_BASIS '", basis, "'", call. = FALSE))
+  inp <- approx(d$year, d[[col]], xout = years, rule = 2)$y
   # upland soil area: flat, then all growth 1965-1980, then flat (Korhonen dating)
   a0 <- ar$area_Mha[which.min(ar$year)]; a1 <- ar$area_Mha[which.max(ar$year)]
   a  <- rep(a0, n_pre)

@@ -68,8 +68,13 @@ library(readxl)
 # Layer vocabulary matches the old file exactly (organic, 0-5cm, 5-20cm, 0-10cm,
 # 10-20cm, 20-40cm), so the organic-quality flags in 1.1 work unchanged.
 SOC    <- read.csv("./Data/SOC_homogeneized/soc_homogenized_layers.csv")
-inputs <- read.csv("./Data/LitterData/tree_litter_per_site_year_awen_29.04.26.csv", sep = ";")
-inputs_by_component <- read.csv("./Data/LitterData/tree_litter_per_site_year_by_component_29.04.26.csv", sep = ";")
+# Tree litter, version 30.10.26 (B. Tupek): adds the BioSoil 2006 tree inventory (0-2% below the
+# 29.04.26 version). The AWEN file equals the component file summed (max difference 1e-14).
+# region.x is the former `region`; region.y is LUKE's standard South/North split (~63 N).
+inputs <- read.csv("./Data/LitterData/tree_litter_per_site_year_awen_30.10.26.csv", sep = ";")
+inputs_by_component <- read.csv("./Data/LitterData/tree_litter_per_site_year_by_component_30.10.26.csv", sep = ";")
+names(inputs)[names(inputs) == "region.x"] <- "region"
+names(inputs_by_component)[names(inputs_by_component) == "region.x"] <- "region"
 keys   <- read.csv("./Data/soil_litter_site_key.csv", sep = ";")
 
 keys_clean <- keys[!is.na(keys$koealatunnus_BIOSOIL) &
@@ -401,6 +406,10 @@ cat(sprintf("High-change plots (|rate| > 3 tC/ha/yr, FLAGGED but retained): %d\n
 # This filter also catches plots with zero litter after AWEN mapping (MRT = Inf)
 # that escape the raw zero-litter filter, which operates on inputs_matched
 # before compound-fraction assignment.
+# ⚠ Stays on TREE litter although understorey now enters the input (decision 2026-11-06): the
+# filter is a quality check on the tree-litter record. On total input ten northern plots would
+# return; their stock/input ratio exceeds 99.3% of the calibration observations, and they move
+# the log stock-log input slope 0.325 -> 0.261, so they stay out and go in the Limitations.
 MRT_EXCL_THRESHOLD <- 100L
 mean_litter_mrt <- aggregate(Cha ~ plot_id, data = inputs_total, FUN = mean)
 mean_soc_mrt    <- aggregate(soc_obs_tCha ~ plot_id, data = SOC_agg,    FUN = mean)
@@ -537,6 +546,11 @@ site_attributes <- merge(
 names(site_attributes)[names(site_attributes) == "CODE"]   <- "soil_code"
 names(site_attributes)[names(site_attributes) == "TEKSTI"] <- "soil_type"
 site_attributes <- merge(site_attributes, plot_region,               by = "plot_id", all.x = TRUE)
+# region_luke: LUKE's standard split (1 South, 2 North, ~63 N), from the litter product, so it is
+# SOC-independent. `region` above is the older split (North above ~66 N) and is left as it was.
+.reg_luke <- aggregate(region.y ~ plot_id, data = inputs_matched, FUN = function(x) x[1])
+names(.reg_luke)[2] <- "region_luke"
+site_attributes <- merge(site_attributes, .reg_luke, by = "plot_id", all.x = TRUE)
 site_attributes <- merge(site_attributes, ka_lookup[, c("plot_id", "KA")],
                          by = "plot_id", all.x = TRUE)
 site_attributes$peatland <- !is.na(site_attributes$KA) & site_attributes$KA %in% c(11L, 12L, 13L)
@@ -851,6 +865,63 @@ cat(sprintf("Constant-litter plots (CV < %.0e over 1986-2024, EXCLUDED from cali
             LITTER_CONST_CV_TOL, length(const_litter_plots)))
 if (length(const_litter_plots))
   cat("  plot_ids:", paste(sort(const_litter_plots), collapse = ", "), "\n")
+
+# --- Understorey litter (B. Tupek, version 05.11.26), added to the tree litter --------------
+# Plot-level litter of the ground vegetation, from NFI cover surveys in 1985, 1995, 2006, 2023,
+# LINEARLY interpolated between surveys (decision 2026-11-06). The alternative file reads each
+# year from a per-plot curve of litter on basal area through the four surveys, which produced
+# annual steps up to 551 kg C/ha with no consistent sign, so it is kept for reference only.
+#
+# Units: A/W/E/N_input_c are kg C/ha/yr and sum to total_litter_c. The *_litter_total columns
+# are DRY MASS (2 x carbon) and are used here only to detect missing mosses.
+# Placement: AFTER the 1985 backcast, because the 1985 understorey is a real survey; AFTER the
+# const_litter test, which concerns the TREE product and would otherwise stop firing, so that
+# plots with a fixed tree series would silently return to calibration. high_mrt and the
+# descriptive litter covariates in site_raw also stay on the tree litter, so the plot set does
+# not depend on this block. Switch: HIKET_UNDERSTOREY=0 leaves the tree litter only.
+# Pool: non-woody litter (nwl), AWEN as supplied.
+USE_UNDERSTOREY <- !identical(Sys.getenv("HIKET_UNDERSTOREY"), "0")
+understorey_plots <- integer(0)
+if (USE_UNDERSTOREY) {
+  und <- read.csv("./Data/Understorey/LINEAR_interpolated_understory_litter_per_site_year_awen_kgCha_05.11.26.csv",
+                  sep = ";")
+  und$plot_id <- keys_clean$koealatunnus_BIOSOIL[match(und$site, keys_clean$koealatunnus_MUSTIKKA)]
+  und <- und[!is.na(und$plot_id), ]
+  und_cols <- c(A = "A_input_c", W = "W_input_c", E = "E_input_c", N = "N_input_c")
+  stopifnot(all(abs(rowSums(und[, und_cols]) - und$total_litter_c) < 1e-6),   # AWEN is carbon
+            !anyNA(und[, und_cols]))
+
+  # Mosses missing from the 2023 survey: bryophytes zero in 2023 but present in 2006, with no
+  # 2023 moss record to replace them. Hold the plot's total at its 2006 value from 2007 on, the
+  # same treatment as plots whose 2023 survey is absent. Detected by rule, not listed.
+  .b06 <- und$bryophyte_litter_total[und$year == 2006L]; names(.b06) <- und$site[und$year == 2006L]
+  .b23 <- und$bryophyte_litter_total[und$year == 2023L]; names(.b23) <- und$site[und$year == 2023L]
+  .moss_gap <- names(.b23)[.b23 == 0 & .b06[names(.b23)] > 0]
+  for (s in .moss_gap) {
+    ix <- und$site == as.integer(s)
+    v  <- und[ix & und$year == 2006L, und_cols]
+    for (cc in und_cols) und[ix & und$year > 2006L, cc] <- v[[cc]]
+  }
+  cat(sprintf("Understorey: %d plots held at their 2006 value (2023 mosses missing)\n", length(.moss_gap)))
+
+  # Two sites can share a plot_id (none calibrated): average, since these are per-hectare fluxes.
+  und_py <- aggregate(und[, und_cols] / 1000, by = list(plot_id = und$plot_id, year = und$year), FUN = mean)
+  understorey_plots <- unique(und_py$plot_id)
+  .ix <- match(paste(input_wide$plot_id, input_wide$year), paste(und_py$plot_id, und_py$year))
+  .before <- rowSums(input_wide[, litter_cols, drop = FALSE])
+  for (k in names(und_cols)) {
+    cc  <- paste0("C_nwl_", k)
+    add <- und_py[[und_cols[[k]]]][.ix]
+    input_wide[[cc]] <- input_wide[[cc]] + ifelse(is.na(add), 0, add)
+  }
+  .after <- rowSums(input_wide[, litter_cols, drop = FALSE])
+  cat(sprintf("Understorey added: %d plots; mean input 1986-2023 %.3f -> %.3f tC/ha/yr (x%.3f)\n",
+              length(understorey_plots),
+              mean(.before[input_wide$year >= 1986L]), mean(.after[input_wide$year >= 1986L]),
+              mean(.after[input_wide$year >= 1986L]) / mean(.before[input_wide$year >= 1986L])))
+} else {
+  cat("[UNDERSTOREY OFF] HIKET_UNDERSTOREY=0: tree litter only\n")
+}
 
 input_monthly <- input_wide[rep(seq_len(nrow(input_wide)), each = 12), ]
 input_monthly$month <- rep(1:12, times = nrow(input_wide))
@@ -1364,6 +1435,10 @@ site_raw$calib_ready <- site_raw$has_climate     &
   !site_raw$high_mrt        &
   !site_raw$soc_outlier        &
   !site_raw$const_litter
+
+if (USE_UNDERSTOREY && !all(site_raw$plot_id[site_raw$calib_ready] %in% understorey_plots))
+  stop("Calibration-ready plots without understorey litter: ",
+       paste(setdiff(site_raw$plot_id[site_raw$calib_ready], understorey_plots), collapse = ", "))
 
 cat("\n=== SITE_RAW SUMMARY ===\n")
 cat("Total plots:               ", nrow(site_raw), "\n")

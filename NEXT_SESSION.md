@@ -1,5 +1,22 @@
 # NEXT SESSION — start here
 
+## SESSION 2026-11-06 — Boris's final inputs wired; FULL RERUN (`submit_arms.sh all`)
+**Inputs:** `Data/LitterData/tree_litter_*_30.10.26.csv`; `Data/Understorey/LINEAR_interpolated_*_05.11.26.csv` (AWEN = carbon, kg/ha; the
+`*_litter_total` columns are dry mass). Snapshot of the previous state: `snapshots/20261106_pre_understorey/`.
+**Decisions (Lorenzo):**
+- `LINEAR`, not `BA`: BA = per-plot `approx(BA at surveys -> litter)`, reproduced to <1 kg on 447/456 plots; steps to 551 kg C/ha on 237 plots; sign of litter vs BA a coin flip.
+- `sigma_input` centre **1.05**: natural mortality 0.10-0.16 tC/ha/yr (draft figure from the NID, ⬜ recheck when S18 is rebuilt) over ~2.9-3.0 ⇒ 1.03-1.05. Exudates etc. left to the width.
+- Liski pre-run shape now includes ground vegetation (mean 0.450 -> 0.433, largest single-year change 0.14 in the 1930s).
+- Zero-moss plots (223 overall, 7 calibration): total held at the 2006 value from 2007.
+- `high_mrt` stays on TREE litter ⇒ **455 plots** (110571 lost at 101 yr; 6 of 91 holdout plots change). Option B (total input, 465 plots) rejected: the 10 extra northern plots sit above 99.3% of observations on stock/input and move the log-log slope 0.325 -> 0.261.
+**Input effect, 455 plots:** `J_bar` 2.515 -> 2.897; 1985-89 mean 2.118 -> 2.59; ratio to the old input 1.25 (1985), 1.08 (2006), 1.13 (2023). SOC target unchanged.
+**Checks passed before launch:** fixed point byte-identical; official stocks exact; Data_work sanity checks; pushforward 0 blow-ups in all six (K=300, full N), production and balanced start; scenario switch `held` PASS in all six.
+**When the runs land:** rsync runs + diagnostics + model_inputs, `refresh_all_local.sh`, recalibrated attribution. Then by hand:
+⬜ S18 on the LUKE split (`region_luke` is now in `site_attributes.csv`), restate its numbers; ⬜ rerun `doublechecks/soc_vs_input_proportionality.R`; ⬜ residual RF: `und.` predictors are now part of the input;
+⬜ restate input level/trend, input gap (expect ~1.09-1.49 by arithmetic), attribution, transit times, headroom, forecast; ⬜ Methods: prior centre paragraph (`HIKET_methods_v2.tex` ~312), pre-1985 composition paragraph, understorey data, 455 plots;
+⬜ Limitations: 15 plots excluded by the tree-litter filter, 12 in the North, effect on the slope 0.325 -> 0.261; ⬜ Methods prior statement of median/95% range must be recomputed from the new window.
+**Open with Boris:** roots in the understorey? citation/Zenodo deposit.
+
 ## SESSION 2026-11-05 (closed) — SOC vs input proportionality; still waiting for Boris's corrected understorey
 `doublechecks/soc_vs_input_proportionality.R` → `doublechecks/figures/soc_vs_input.png` (+ `soc_vs_input_slopes*.csv`), on
 `20261012_1042*`, tree-only input. `log SOC = a + b log J10`; proportional = b 1. Not in the manuscript.

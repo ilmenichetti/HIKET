@@ -84,7 +84,9 @@ to reach R inside the r-env container):
 | `HIKET_LIK_DF` | Student-t degrees of freedom on the log scale; unset/`Inf` = Gaussian | Gaussian |
 | `HIKET_PRIOR_TIGHTEN` | multiplies Tier-2 **fraction** SDs only | 1 (0.4 unchanged) |
 | `HIKET_INPUT_SCEN_MULT` | input multiplier of the projection scenario (predictive stage) | 1.2 |
-| `HIKET_SIGMA_INPUT_CENTRE` | prior centre of `sigma_input` in all six models; `1.27` reproduces arm A (Liski 2006) | 1.08 (arm B, production) |
+| `HIKET_SIGMA_INPUT_CENTRE` | prior centre of `sigma_input` in all six models; `1.27` reproduces arm A (Liski 2006), `1.08` the runs before the understorey | 1.05 (natural mortality, since 2026-11-06) |
+| `HIKET_UNDERSTOREY` | `0` leaves the tree litter only (read by `Data_work.R`, not at calibration) | understorey in the input |
+| `HIKET_PREINIT_BASIS` | `tree` restores the tree-only Liski shape for the pre-run | `all` (includes ground vegetation) |
 | `HIKET_PRERUN_CLIM_YEARS` | `<y0>-<y1>`: mean climate of that window drives the 1917–1984 pre-run (and the equilibrium start, and the attribution's reference climate); stored in the input bundle, so predictive/attribution replay the run's own (`prerun_climate.R`) | unset = first 20 model years (1985–2004) |
 | `HIKET_N_CHAINS` / `_N_ITER` / `_N_BURNIN` | short test runs | 5 / 50000 / 5000 |
 | `HIKET_CLIMATE_HELD` | `1`: forward climate modifier held at the pre-run (reference) value — scenario arms of the recalibrated decomposition (`scenario_switches.R`); outputs tagged `_climheld` | off |
@@ -739,6 +741,11 @@ guards key on those filenames.
 ---
 
 ## Known outstanding items
+
+- **🚀 SESSION 2026-11-06: Boris's final inputs wired, FULL RERUN launching.** Tree litter 30.10.26 + `LINEAR` understorey 05.11.26
+  (BA version rejected: a per-plot lookup through four noisy surveys). Decisions: `sigma_input` centre **1.05**; Liski pre-run shape now
+  includes ground vegetation; `high_mrt` stays on TREE litter ⇒ **455 plots** (110571 lost, 6 of 91 holdout plots change). ⚠ `J_bar` 2.897.
+  Details, Limitations text to write and the restating list: `NEXT_SESSION.md` top. Memory [[boris-litter-update-20261103]].
 
 - **✅ SESSION 2026-11-05 (closed): SOC vs input proportionality.** `doublechecks/soc_vs_input_proportionality.R`: log-log slope
   0.03 / 0.14 / 0.17 by campaign (South ≈ 0.03), within-plot 2006→2024 0.005 vs models 0.33–0.51. ⚠ `is_peat` is hardcoded FALSE; the real
